@@ -24,15 +24,15 @@ echo
 #########################################################################
 
 function questions() {
-	banner
-	echo "${R} [${W}-${R}]${G}Select Desktop Environment"${W}
-	echo
-	echo "${Y}1. XFCE"${W}
-	echo
-	echo "${Y}2. LXQT"${W}
-	echo 
-	read -p "${Y}select an option (Default 1): "${W} desktop_answer
-	echo
+	# banner
+	# echo "${R} [${W}-${R}]${G}Select Desktop Environment"${W}
+	# echo
+	# echo "${Y}1. XFCE"${W}
+	# echo
+	# echo "${Y}2. LXQT"${W}
+	# echo 
+	# read -p "${Y}select an option (Default 1): "${W} desktop_answer
+	# echo
 	banner
 	echo "${R} [${W}-${R}]${G}Select Theme Style"${W}
 	echo
