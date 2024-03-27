@@ -7,8 +7,8 @@
 
 <div align="center">
 
-![GitHub stars](https://img.shields.io/github/stars/sabamdarif/termux-gui)
-![GitHub issues](https://img.shields.io/github/issues/sabamdarif/termux-gui)
+![GitHub stars](https://img.shields.io/github/stars/sabamdarif/termux-desktop)
+![GitHub issues](https://img.shields.io/github/issues/sabamdarif/termux-desktop)
 
 </div>
 
