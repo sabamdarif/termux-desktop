@@ -125,7 +125,7 @@ function package_install_and_check() {
     echo "${R} [${W}-${R}]${G} $1 is installed successfully${W}"
 else
     echo "${R} [${W}-${R}]${G} Installing package: $1${W}"
-    pkg install "$1"
+    pkg install "$1" -y
 fi
 
 }

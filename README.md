@@ -30,6 +30,7 @@
 - [Termux](https://termux.dev/en/) From [Github](https://github.com/termux/termux-app/releases) Or [Fdroid](https://f-droid.org/en/packages/com.termux/)
 > Termux from Google Play is unmaintained due to API requirements So use the F-Droid one instead.
 - 1GB of RAM (minimum) 2GB of RAM (recommended)
+- 1.5 - 2 GB Of Internet
 - VNC Client [RealVnc](https://play.google.com/store/apps/details?id=com.realvnc.viewer.android) Or [Nethunter Kex](https://store.nethunter.com/en/packages/com.offsec.nethunter.kex/)
 
 ## Basic Look:
@@ -76,7 +77,7 @@ pkg install wget -y
 ```
 
 ```
-wget https://raw.githubusercontent.com/sabamdarif/termux-gui/main/setup-termux-gui.sh && bash setup-termux-gui.sh
+wget https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-gui.sh && bash setup-termux-gui.sh
 ```
 ## Usage:
 - **Type `vncstart` OR `gui -start` to start vnc server.**
