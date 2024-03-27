@@ -19,7 +19,20 @@ printf "\033[32m code by @sabamdrif \033[0m\n"
 echo
 }
 
+#########################################################################
+################################### Ask Questions #######################
+#########################################################################
+
 function questions() {
+	banner
+	echo "${R} [${W}-${R}]${G}Select Desktop Environment"${W}
+	echo
+	echo "${Y}1. XFCE"${W}
+	echo
+	echo "${Y}2. LXQT"${W}
+	echo 
+	read -p "${Y}select an option (Default 1): "${W} desktop_answer
+	echo
 	banner
 	echo "${R} [${W}-${R}]${G}Select Theme Style"${W}
 	echo
@@ -91,6 +104,10 @@ function questions() {
 	read -p "${R} [${W}-${R}]${Y}Do you want to Setting Up termux-x11 (y/n) "${W} tx11_answer
 }
 
+#########################################################################
+############################### Shortcut Functions ######################
+#########################################################################
+
 function check_and_create_directory() {
     if [ ! -d "$HOME/$1" ]; then
         mkdir -p "$HOME/$1"
@@ -112,6 +129,10 @@ else
 fi
 
 }
+
+#########################################################################
+############### Update System And Install Required Packages #############
+#########################################################################
 
 function update_sys() {
 	banner
@@ -142,14 +163,18 @@ function install_desktop() {
         done
 }
 
+#########################################################################
+################ Install Selected Style And Wallpapers ##################
+#########################################################################
+
 function setup_config() {
 	banner
 	echo "${R} [${W}-${R}]${G} Setting Up Theme..."${W}
 	cd ~
 	if [[ ${style_answer} =~ ^[1-9][0-9]*$ ]]; then
-    wget https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/${style_answer}_look/${style_answer}_look.sh && bash ${style_answer}_look.sh
+    wget https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/xfce/${style_answer}_look/${style_answer}_look.sh && bash ${style_answer}_look.sh
 	else
-    wget https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/1_basic_look/1_basic_look.sh && bash 1_basic_look.sh
+    wget https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/xfce/1_look/1_look.sh && bash 1_basic_look.sh
 	fi
 	if [ "$ext_wall_answer" = "y" ]; then
 	echo "${R} [${W}-${R}]${G} Setting Up Some Extra Wallpapers..."${W}
@@ -173,6 +198,10 @@ function setup_folder() {
 #     ln -s "/sdcard/$dir" "$dir"
 # done
 }
+
+#########################################################################
+################ Add Vnc And Termux:x11 Launch Scripts ##################
+#########################################################################
 
 function setup_vnc() {
     banner
@@ -246,6 +275,9 @@ EOF
     fi
 }
 
+#########################################################################
+########################### Install Browser #############################
+#########################################################################
 
 function browser_installer() {
 	banner
@@ -274,6 +306,11 @@ function browser_installer() {
 	package_install_and_check "firefox"
 	fi
 }
+
+#########################################################################
+############################## Install Ide ##############################
+#########################################################################
+
 
 function ide_installer() {
 	banner
@@ -306,6 +343,11 @@ function ide_installer() {
 	fi
 }
 
+#########################################################################
+######################### Install Media Player ##########################
+#########################################################################
+
+
 function media_player_installer() {
 	banner
 	if [[ ${player_answer} == "1" ]]; then
@@ -336,6 +378,11 @@ function media_player_installer() {
 	fi
 }
 
+#########################################################################
+######################## Install Photo Editor ###########################
+#########################################################################
+
+
 function photo_editor_installer() {
 	banner
 	if [[ ${photo_editor_answer} == "1" ]]; then
@@ -364,6 +411,11 @@ function photo_editor_installer() {
 	fi
 }
 
+#########################################################################
+####################### Install Software Manager ########################
+#########################################################################
+
+
 function setup_synaptic() {
 	banner
     if [ "$synaptic_answer" == "y" ]; then
@@ -376,6 +428,11 @@ else
     sleep 1.5
 fi
 }
+
+#########################################################################
+############################## Setup Zsh ################################
+#########################################################################
+
 
 function setup_zsh() {
 	banner
@@ -390,6 +447,11 @@ else
 fi
 }
 
+#########################################################################
+############################ Install Wine ###############################
+#########################################################################
+
+
 function setup_wine() {
 	banner
     if [ "$wine_answer" == "y" ]; then
@@ -401,6 +463,11 @@ else
     sleep 1.5
 fi
 }
+
+#########################################################################
+################################ Notes ##################################
+#########################################################################
+
 
 function notes() {
 	banner

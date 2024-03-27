@@ -19,6 +19,10 @@ printf "\033[32m code by @sabamdrif \033[0m\n"
 echo
 }
 
+#########################################################################
+############################### Shortcut Functions ######################
+#########################################################################
+
 function check_and_create_directory() {
     if [ ! -d "$HOME/$1" ]; then
         mkdir -p "$HOME/$1"
@@ -41,21 +45,21 @@ fi
 
 }
 
-function get_file_name() {
+function get_file_name_number() {
     current_file=$(basename "$0")
     folder_name="${current_file%.sh}"
+    theme_number=$(echo "$folder_name" | grep -oE '[1-9][0-9]*')
 }
+
+#########################################################################
+############################### Theme Installer #########################
+#########################################################################
 
 function theme_installer() {
     banner
-    echo "${R} [${W}-${R}]${G} Setting Up MacOS Inspired Theme..."${W}
+    echo "${R} [${W}-${R}]${G} Setting Up Theme: ${C} ${theme_number}"${W}
 	echo
     sleep 3
-	echo "${R} [${W}-${R}]${G} Installing Additional Packages For Your Theme..."${W}
-	echo
-    package_install_and_check "cairo-dock-core"
-    package_install_and_check "vala-panel-appmenu"
-    banner
     echo "${R} [${W}-${R}]${G} Setting Up Wallpapers..."${W}
 	echo
 	check_and_create_directory "/data/data/com.termux/files/usr/share/backgrounds/"
@@ -85,9 +89,10 @@ function theme_installer() {
     wget https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/xfce/${folder_name}/config.tar.gz
     tar -zxvf config.tar.gz
     rm config.tar.gz
-    #cleanup
+    ############## Remove Installer Script ############
     cd ~
     rm $current_file
 }
 
+get_file_name_number
 theme_installer
