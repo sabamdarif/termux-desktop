@@ -33,34 +33,37 @@
 - 1.5 - 2 GB Of Internet
 - VNC Client [RealVnc](https://play.google.com/store/apps/details?id=com.realvnc.viewer.android) Or [Nethunter Kex](https://store.nethunter.com/en/packages/com.offsec.nethunter.kex/)
 
+<br>
+
 ## Basic Look:
 
 <center><img src="images/xfce/1_look/look.png"></center>
+<br>
 
-## See All Styles: [Here](xfce_styles.md)
+# See Other Styles: [Here](xfce_styles.md)
 
 ## Screenshots:
 > All gui apps screenshot
 
 ### Browsers:
 
-<center><img src="images/firefox-chromium.png"></center>
+<center><img src="images/apps/firefox-chromium.png"></center>
 
 ### Image Editors:
 
-<center><img src="images/inkscape-gimp.png"></center>
+<center><img src="images/apps/inkscape-gimp.png"></center>
 
 ### Code Editors:
 
-<center><img src="images/geany-vscode.png"></center>
+<center><img src="images/apps/geany-vscode.png"></center>
 
 ### Media Players:
 
-<center><img src="images/parole-vlc.png"></center>
+<center><img src="images/apps/parole-vlc.png"></center>
 
 ### Wine:
 
-<center><img src="images/wine.png"></center>
+<center><img src="images/apps/wine.png"></center>
 
 ## See More Available Apps: [Here](applist.md)
 
@@ -70,19 +73,37 @@
 ## Installation:
 
 >NOTE: This only works on Termux
->NOTE: Install wget in termux first
 
+>NOTE: A Fresh Desktop Install Is Always Best / Recommended
+
+### Steps:
+
+```
+pkg update -y
+```
 ```
 pkg install wget -y
 ```
+```
+wget https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop
+```
+```
+chmod +x setup-termux-desktop
+```
+```
+./setup-termux-desktop
+```
+### One Line Install:
 
 ```
-wget https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-gui.sh && bash setup-termux-gui.sh
+pkg update -y ; pkg install wget -y ; wget https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop ; chmod +x setup-termux-desktop ; ./setup-termux-desktop
 ```
+
+
 ## Usage:
 - **Type `vncstart` OR `gui -start` to start vnc server.**
 - **Type `vncstop` OR `gui -stop` to start vnc server.**
 - **Type `gui -tx11` to star using Termux:11.**
-- **Type `vncstop -f` to kill vncserver OR `gui -kill` to kill both.**
-
+- **Type `vncstop -f` to kill vncserver**
+- **Type `gui -kill` to kill both vncserver and Termux:x11 At Once**
 ## If you like my work then dont forget to give a Star :)
