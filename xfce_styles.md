@@ -9,7 +9,7 @@
 
 <br>
 
-## 2. MacOS Inspired:
+## 2. Modern Style:
 
 <center><img src="images/xfce/2_look/desktop.png"></center>
 
