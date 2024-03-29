@@ -1,6 +1,6 @@
 
 <br>
-<center><img src="images/xfce/1_look/desktop.png"></center>
+<center><img src="images/xfce/look_1/desktop.png"></center>
 <br>
 <p align="center"><b>Easily Install Termux Gui Desktop </b></p>
 <p align="center"><b>With Some Popular Gui Apps Directly In Termux</b></p>
@@ -25,7 +25,7 @@
 - :link: And Much More...
 
 ## Requirements:
-- No root permission is required to make this work
+- No Root Required
 - An Android 7+ phone
 - [Termux](https://termux.dev/en/) From [Github](https://github.com/termux/termux-app/releases) Or [Fdroid](https://f-droid.org/en/packages/com.termux/)
 > Termux from Google Play is unmaintained due to API requirements So use the F-Droid one instead.
@@ -37,7 +37,7 @@
 
 ## Basic Look:
 
-<center><img src="images/xfce/1_look/look.png"></center>
+<center><img src="images/xfce/look_1/look.png"></center>
 <br>
 
 # See Other Styles: [Here](xfce_styles.md)

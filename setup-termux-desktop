@@ -35,7 +35,7 @@ function questions() {
 	echo
 	echo "${R} [${W}-${R}]${G}Check the styles section in the github page"${W}
 	echo
-	echo "${R} [${W}-${R}]${B}https://github.com/sabamdarif/termux-desktop/blob/main/styles.md"${W}
+	echo "${R} [${W}-${R}]${B}https://github.com/sabamdarif/termux-desktop?tab=readme-ov-file#see-other-styles-here"${W}
 	echo
 	read -p "${R} [${W}-${R}]${Y}Type the number of the theme style (Default 1): "${W} style_answer
 	echo
@@ -94,7 +94,17 @@ function questions() {
 	echo
     read -p "${R} [${W}-${R}]${Y}Do you want to add some more wallpaper (y/n) "${W} ext_wall_answer
     banner
-	read -p "${R} [${W}-${R}]${Y}Do you want to install Wine ${C}[No Box86 /can run only arm64 based exe] ${Y} (y/n) "${W} wine_answer
+	echo "${R} [${W}-${R}]${G}Do you want to install wine in termux ${C}(without proot-distro)"${W}
+	echo
+	echo "${Y}1. Natively ${C}(can run only arm64 based exe) (Default)"${W}
+	echo
+	echo "${Y}2. Using Mobox ${C}(best)"${W}
+	echo
+	echo "${B}Know More About Mobox:- https://github.com/olegos2/mobox/"${W}
+	echo
+	echo "${Y}3. Skip"${W}
+	echo
+	read -p "${R} [${W}-${R}]${Y}Select Wine Installation Method"${W} wine_answer
     banner
     read -p "${R} [${W}-${R}]${Y}Do you want to Setting Up Zsh (y/n) "${W} zsh_answer
     banner
@@ -141,18 +151,36 @@ function get_file_name_number() {
 }
 
 function download_and_extract() {
-     local url="$1"
+   local url="$1"
     local target_dir="$2"
     local filename="${url##*/}"  # Extract filename from URL
     local filename_no_ext="${filename%.tar.gz}"  # Remove .tar.gz extension
-echo "${G} Doenloading ${C} ${filename_no_ext} ${G}Pack"${W}
-sleep 1.5
+
+    echo "${G}Downloading ${C}${filename_no_ext} ${G}Pack"${W}
+    sleep 1.5
+
     cd "$target_dir" || return 1
-    if curl -# -L "$url" -o "$filename"; then  # Show progress bar only
-        tar -zxvf "$filename"
-        rm "$filename"
-    else
+
+    local attempt=1
+    local success=false
+
+    while [ $attempt -le 3 ]; do
+        if curl -# -L "$url" -o "$filename"; then
+            tar -zxvf "$filename"
+            rm "$filename"
+            success=true
+            break
+        else
+            echo "${R}Failed to download ${C}${filename_no_ext}"${W}
+            echo "${Y}Retrying... Attempt ${C}${attempt}"${W}
+            ((attempt++))
+            sleep 1
+        fi
+    done
+
+    if [ "$success" = false ]; then
         echo "${R}Failed to download ${C}${filename_no_ext}"${W}
+        echo "${R}Please check your internet connection"${W}
     fi
 
 }
@@ -195,21 +223,21 @@ function install_desktop() {
 
 function theme_installer() {
     banner
-    echo "${R} [${W}-${R}]${G} Setting Up Theme: ${C} ${theme_number}"${W}
+    echo "${R} [${W}-${R}]${G} Setting Up Theme: ${C} ${style_answer}"${W}
 	echo
     sleep 3
     banner
     echo "${R} [${W}-${R}]${G} Setting Up Wallpapers..."${W}
 	echo
 	check_and_create_directory "$PREFIX/share/backgrounds/"
-	download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/xfce/${style_answer}_look/wallpaper.tar.gz" "$PREFIX/share/backgrounds/"
+	download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/xfce/look_${style_answer}/wallpaper.tar.gz" "$PREFIX/share/backgrounds/"
     banner
 	check_and_create_directory ".icons"
-	download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/xfce/${style_answer}_look/icon.tar.gz" "$HOME/.icons"
+	download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/xfce/look_${style_answer}/icon.tar.gz" "$HOME/.icons"
 	echo "${R} [${W}-${R}]${G} Installing Theme..."${W}
 	echo
 	check_and_create_directory ".themes"
-	download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/xfce/${style_answer}_look/theme.tar.gz" "$HOME/.themes"
+	download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/xfce/look_${style_answer}/theme.tar.gz" "$HOME/.themes"
 	echo "${R} [${W}-${R}]${G} Making Additional Configuration..."${W}
 	echo
 	check_and_create_directory ".config"
@@ -217,7 +245,7 @@ function theme_installer() {
         for the_config_dir in "${config_dirs[@]}"; do
 		check_and_backup ".config/$the_config_dir"
         done
-	download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/xfce/${style_answer}_look/config.tar.gz" "$HOME/.config/"
+	download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/xfce/look_${style_answer}/config.tar.gz" "$HOME/.config/"
 }
 
 #########################################################################
@@ -232,6 +260,7 @@ function additional_required_package_installler() {
 	pkg install fluent-icon-theme -y
     package_install_and_check "cairo-dock-core"
     package_install_and_check "vala-panel-appmenu"
+	package_install_and_check "rofi"
 	fi
 }
 
@@ -265,8 +294,16 @@ function setup_folder() {
 	banner
 	echo "${R} [${W}-${R}] ${G}Setting Up Storage..."${W}
 	echo
+	while true; do
 	termux-setup-storage
-	sleep 5
+	sleep 4
+    if [ -d ~/storage ]; then
+        break
+    else
+        echo "${R}Storage permission denied"${W}
+    fi
+    sleep 3
+done
 # 	cd $HOME
 # directories=(Music Downloads Pictures Videos)
 # for dir in "${directories[@]}"; do
@@ -510,15 +547,15 @@ fi
 
 function setup_zsh() {
 	banner
-    if [ "$zsh_answer" == "y" ]; then
+    if [ "$zsh_answer" == "n" ]; then
+	echo "${R} [${W}-${R}]${C}Canceling Zsh Setup..."${W}
+    sleep 1.5
+else
 	echo "${R} [${W}-${R}]${G}Setting Up Zsh.."${W}
 	echo
 	package_install_and_check "zsh"
 	package_install_and_check "git"
-	wget https://raw.githubusercontent.com/sabamdarif/short-linux-scripts/main/install-zsh.sh && bash install-zsh.sh   
-else
-    echo "${R} [${W}-${R}]${C}Canceling Zsh Setup..."${W}
-    sleep 1.5
+	wget https://raw.githubusercontent.com/sabamdarif/short-linux-scripts/main/install-zsh.sh && bash install-zsh.sh
 fi
 }
 
@@ -529,13 +566,22 @@ fi
 
 function setup_wine() {
 	banner
-    if [ "$wine_answer" == "y" ]; then
-	echo "${R} [${W}-${R}]${G}Installing Wine..."${W}
+    if [ "$wine_answer" == "1" ]; then
+	echo "${R} [${W}-${R}]${G}Installing Wine Natively In Termux"${W}
 	echo
-		 package_install_and_check "wine-stable"
+		 package_install_and_check "wine-staging"
+		 package_install_and_check "winetricks"
+	elif [ "$wine_answer" == "2" ]; then
+	echo "${R} [${W}-${R}]${G}Using Mobox To Install Wine In Termux"${W}
+	echo
+	echo "${R} [${W}-${R}]${G}Using Mobox To Install Wine In Termux"${W}
+	echo
+	curl -s -o ~/x https://raw.githubusercontent.com/olegos2/mobox/main/install && . ~/x
 else
-    echo "${R} [${W}-${R}]${C}Canceling Wine Setup..."${W}
-    sleep 1.5
+    echo "${R} [${W}-${R}]${G}Installing Wine Natively In Termux"${W}
+	echo
+		 package_install_and_check "wine-staging"
+		 package_install_and_check "winetricks"
 fi
 }
 
@@ -548,8 +594,10 @@ function notes() {
 	echo "${R} [${W}-${R}]${G}Installation Successfull..."${W}
 	echo
 	sleep 2
-	echo "${R} [${W}-${R}]${C}Now Restart Termux (Must)"${W}
+	echo "${R} [${W}-${R}]${C}Now Restart Termux ${G}(Must)"${W}
+	echo
 	echo "${R} [${W}-${R}]${C}See Uses Section in github to know how to use it"${W}
+	echo
 	echo "${R} [${W}-${R}]${C}URL:- ${B}https://github.com/sabamdarif/termux-desktop/blob/main/README.md#usage"${W}
 }
 

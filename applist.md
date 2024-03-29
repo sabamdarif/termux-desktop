@@ -31,3 +31,9 @@
 > pkg install darktable -y
 
 <center><img src="images/apps/darktable.png"></center>
+
+### Transmission (Bittorrent Client):
+
+> pkg install transmission-gtk -y
+
+<center><img src="images/apps/transmission.png"></center>
