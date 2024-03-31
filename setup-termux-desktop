@@ -16,100 +16,6 @@ printf "\033[32m code by @sabamdrif \033[0m\n"
 echo
 }
 
-#########################################################################
-################################### Ask Questions #######################
-#########################################################################
-
-function questions() {
-	# banner
-	# echo "${R} [${W}-${R}]${G}Select Desktop Environment"${W}
-	# echo
-	# echo "${Y}1. XFCE"${W}
-	# echo
-	# echo "${Y}2. LXQT"${W}
-	# echo 
-	# read -p "${Y}select an option (Default 1): "${W} desktop_answer
-	# echo
-	banner
-	echo "${R} [${W}-${R}]${G}Select Theme Style"${W}
-	echo
-	echo "${R} [${W}-${R}]${G}Check the styles section in the github page"${W}
-	echo
-	echo "${R} [${W}-${R}]${B}https://github.com/sabamdarif/termux-desktop?tab=readme-ov-file#see-other-styles-here"${W}
-	echo
-	read -p "${R} [${W}-${R}]${Y}Type the number of the theme style (Default 1): "${W} style_answer
-	echo
-	banner
-	echo "${R} [${W}-${R}]${G}Select browser you want to install"${W}
-	echo
-	echo "${Y}1. firefox"${W}
-	echo
-	echo "${Y}2. chromium"${W}
-	echo 
-	echo "${Y}3. firefox & chromium (both)"${W}
-	echo
-	echo "${Y}4. Skip"${W}
-	echo
-	read -p "${Y}select an option (Default 1): "${W} browser_answer
-	banner
-    echo "${R} [${W}-${R}]${G}Select IDE you want to install"${W}
-	echo
-	echo "${Y}1. VS Code"${W}
-	echo
-	echo "${Y}2. Geany (lightweight IDE)"${W}
-	echo
-	echo "${Y}3. Vlc & Audacious (both)"${W}
-	echo
-	echo "${Y}4. Skip"${W}
-	echo
-	read -p "${Y}select an option (Default 1): "${W} ide_answer
-    banner
-    echo "${R} [${W}-${R}]${G}Select Media Player you want to install"${W}
-	echo
-	echo "${Y}1. Vlc"${W}
-	echo
-	echo "${Y}2. Audacious"${W}
-	echo 
-	echo "${Y}3. Vlc & Audacious (both)"${W}
-	echo
-	echo "${Y}4. Skip"${W}
-	echo
-	read -p "${Y}select an option (Default 1): "${W} player_answer
-    banner
-    echo "${R} [${W}-${R}]${G}Select Photo Editor"${W}
-	echo
-	echo "${Y}1. Gimp"${W}
-	echo
-	echo "${Y}2. Inkscape"${W}
-	echo 
-	echo "${Y}3. Gimp & Inkscape (both)"${W}
-	echo
-	echo "${Y}4. Skip"${W}
-	echo
-	read -p "${Y}select an option (Default 1): "${W} photo_editor_answer
-    banner
-    read -p "${R} [${W}-${R}]${Y}Do you want to install a graphical package manager [Synaptic] (y/n) "${W} synaptic_answer
-	banner
-	echo "${R} [${W}-${R}]${G} By Default it only add 4 - 5 wallpaper"${W}
-	echo
-    read -p "${R} [${W}-${R}]${Y}Do you want to add some more wallpaper (y/n) "${W} ext_wall_answer
-    banner
-	echo "${R} [${W}-${R}]${G}Do you want to install wine in termux ${C}(without proot-distro)"${W}
-	echo
-	echo "${Y}1. Natively ${C}(can run only arm64 based exe) (Default)"${W}
-	echo
-	echo "${Y}2. Using Mobox ${C}(best)"${W}
-	echo
-	echo "${B}Know More About Mobox:- https://github.com/olegos2/mobox/"${W}
-	echo
-	echo "${Y}3. Skip"${W}
-	echo
-	read -p "${R} [${W}-${R}]${Y}Select Wine Installation Method"${W} wine_answer
-    banner
-    read -p "${R} [${W}-${R}]${Y}Do you want to Setting Up Zsh (y/n) "${W} zsh_answer
-    banner
-	read -p "${R} [${W}-${R}]${Y}Do you want to Setting Up termux-x11 (y/n) "${W} tx11_answer
-}
 
 #########################################################################
 ############################### Shortcut Functions ######################
@@ -151,12 +57,12 @@ function get_file_name_number() {
 }
 
 function download_and_extract() {
-   local url="$1"
+    local url="$1"
     local target_dir="$2"
     local filename="${url##*/}"  # Extract filename from URL
     local filename_no_ext="${filename%.tar.gz}"  # Remove .tar.gz extension
 
-    echo "${G}Downloading ${C}${filename_no_ext} ${G}Pack"${W}
+    echo "Downloading ${filename_no_ext} Pack"
     sleep 1.5
 
     cd "$target_dir" || return 1
@@ -171,18 +77,149 @@ function download_and_extract() {
             success=true
             break
         else
-            echo "${R}Failed to download ${C}${filename_no_ext}"${W}
-            echo "${Y}Retrying... Attempt ${C}${attempt}"${W}
+            echo "Failed to download ${filename_no_ext}"
+            echo "Retrying... Attempt $attempt"
             ((attempt++))
             sleep 1
         fi
     done
 
     if [ "$success" = false ]; then
-        echo "${R}Failed to download ${C}${filename_no_ext}"${W}
-        echo "${R}Please check your internet connection"${W}
+        echo "Failed to download ${filename_no_ext}"
+        echo "Please check your internet connection"
     fi
+}
 
+function count_subfolders() {
+    local owner="$1"
+    local repo="$2"
+    local path="$3"
+    local url="https://api.github.com/repos/$owner/$repo/contents/$path"
+    local response=$(curl -s "$url")
+    local subfolder_count=$(echo "$response" | jq -r '.[] | select(.type == "dir") | .name' | wc -l)
+    echo "$subfolder_count"
+}
+
+#########################################################################
+################################### Ask Questions #######################
+#########################################################################
+
+function questions_theme_select() {
+	 local owner="sabamdarif"
+    local repo="termux-desktop"
+    local main_folder="patch/xfce"
+    local subfolder_count_value=$(count_subfolders "$owner" "$repo" "$main_folder")
+
+    if [ -n "$subfolder_count_value" ]; then
+        echo "${R} [${W}-${R}]${G}Check the xfce styles section in github"${W}
+		echo
+		echo "${R} [${W}-${R}]${B}https://github.com/sabamdarif/termux-desktop/blob/main/xfce_styles.md"${W}
+		echo
+        echo "${R} [${W}-${R}]${G}Number of avilable styles for xfce is: ${C}${subfolder_count_value}"${W}
+        local style_answer
+        while true; do
+            read -p "${R} [${W}-${R}]${Y}Type number of the style you want to install (Default 1): "${W} style_answer
+            style_answer=${style_answer:-1}
+            if [ "$style_answer" -gt 0 ] && [ "$style_answer" -le "$subfolder_count_value" ]; then
+                break
+            else
+                echo "${R}The entered style number is incorrect."${W}
+				echo
+                echo "${R} [${W}-${R}]${Y}Please enter a number between 1 to ${subfolder_count_value}"${W}
+				echo
+				echo "${R} [${W}-${R}]${G}Check the xfce styles section in github"${W}
+				echo
+				echo "${R} [${W}-${R}]${B}https://github.com/sabamdarif/termux-desktop/blob/main/xfce_styles.md"${W}
+				echo
+            fi
+	done
+	 else
+        echo "Failed to retrieve subfolder count."
+    fi
+}
+
+function questions() {
+	# banner
+	# echo "${R} [${W}-${R}]${G}Select Desktop Environment"${W}
+	# echo
+	# echo "${Y}1. XFCE"${W}
+	# echo
+	# echo "${Y}2. LXQT"${W}
+	# echo 
+	# read -p "${Y}select an option (Default 1): "${W} desktop_answer
+	# echo
+	banner
+	questions_theme_select
+	banner
+	echo "${R} [${W}-${R}]${G}Select browser you want to install"${W}
+	echo
+	echo "${Y}1. firefox"${W}
+	echo
+	echo "${Y}2. chromium"${W}
+	echo 
+	echo "${Y}3. firefox & chromium (both)"${W}
+	echo
+	echo "${Y}4. Skip"${W}
+	echo
+	read -p "${Y}select an option (Default 1): "${W} browser_answer
+	banner
+	echo "${R} [${W}-${R}]${G}Select IDE you want to install"${W}
+	echo
+	echo "${Y}1. VS Code"${W}
+	echo
+	echo "${Y}2. Geany (lightweight IDE)"${W}
+	echo
+	echo "${Y}3. Vlc & Audacious (both)"${W}
+	echo
+	echo "${Y}4. Skip"${W}
+	echo
+	read -p "${Y}select an option (Default 1): "${W} ide_answer
+	banner
+	echo "${R} [${W}-${R}]${G}Select Media Player you want to install"${W}
+	echo
+	echo "${Y}1. Vlc"${W}
+	echo
+	echo "${Y}2. Audacious"${W}
+	echo 
+	echo "${Y}3. Vlc & Audacious (both)"${W}
+	echo
+	echo "${Y}4. Skip"${W}
+	echo
+	read -p "${Y}select an option (Default 1): "${W} player_answer
+	banner
+	echo "${R} [${W}-${R}]${G}Select Photo Editor"${W}
+	echo
+	echo "${Y}1. Gimp"${W}
+	echo
+	echo "${Y}2. Inkscape"${W}
+	echo 
+	echo "${Y}3. Gimp & Inkscape (both)"${W}
+	echo
+	echo "${Y}4. Skip"${W}
+	echo
+	read -p "${Y}select an option (Default 1): "${W} photo_editor_answer
+	banner
+    read -p "${R} [${W}-${R}]${Y}Do you want to install a graphical package manager [Synaptic] (y/n) "${W} synaptic_answer
+	banner
+	echo "${R} [${W}-${R}]${G} By Default it only add 4 - 5 wallpaper"${W}
+	echo
+    read -p "${R} [${W}-${R}]${Y}Do you want to add some more wallpaper (y/n) "${W} ext_wall_answer
+    banner
+	echo "${R} [${W}-${R}]${G}Do you want to install wine in termux ${C}(without proot-distro)"${W}
+	echo
+	echo "${Y}1. Natively ${C}(can run only arm64 based exe) (Default)"${W}
+	echo
+	echo "${Y}2. Using Mobox ${C}(best)"${W}
+	echo
+	echo "${R} [${W}-${R}]${B}Know More About Mobox:- https://github.com/olegos2/mobox/"${W}
+	echo
+	echo "${Y}3. Skip"${W}
+	echo
+	read -p "${R} [${W}-${R}]${Y}Select Wine Installation Method: "${W} wine_answer
+    banner
+    read -p "${R} [${W}-${R}]${Y}Do you want to Setting Up Zsh (y/n) "${W} zsh_answer
+    banner
+	read -p "${R} [${W}-${R}]${Y}Do you want to Setting Up termux-x11 (y/n) "${W} tx11_answer
 }
 
 #########################################################################
@@ -197,11 +234,11 @@ function update_sys() {
     pkg upgrade -y
 }
 
-function install_required_pack() {
+function install_required_packages() {
 	banner
     echo "${R} [${W}-${R}]${Y} Installling required packages..."${W}
 	echo
-      packs=(wget curl pulseaudio x11-repo tur-repo)
+      packs=(wget jq curl pulseaudio x11-repo tur-repo)
         for pack_name in "${packs[@]}"; do
             package_install_and_check "$pack_name"
         done
@@ -261,6 +298,9 @@ function additional_required_package_installler() {
     package_install_and_check "cairo-dock-core"
     package_install_and_check "vala-panel-appmenu"
 	package_install_and_check "rofi"
+	else
+	echo "${G} No Additional Packages Required For Theme: ${style_answer}"${W}
+	sleep 1
 	fi
 }
 
@@ -601,9 +641,9 @@ function notes() {
 	echo "${R} [${W}-${R}]${C}URL:- ${B}https://github.com/sabamdarif/termux-desktop/blob/main/README.md#usage"${W}
 }
 
-questions
 update_sys
-install_required_pack
+install_required_packages
+questions
 setup_folder
 setup_zsh
 install_desktop

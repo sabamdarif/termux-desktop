@@ -19,9 +19,9 @@
 - :books: Easy To Setup
 - :man_technologist: Two Code Editor ( VS Code & Geany )
 - :camera: Two Image Editor ( Gimp & Inkscape )
-- :wine_glass: Wine To Run Windows Apps ( [arm64 supported only](https://armrepo.ver.lt/) )
+- :wine_glass: Wine To Run Windows Apps
 - :art: New Sets of Beautiful Theme And Wallpapers
-- :paperclips: Termux:X11 Added
+- :paperclips: [Termux:X11](https://github.com/termux/termux-x11) Added
 - :link: And Much More...
 
 ## Requirements:
