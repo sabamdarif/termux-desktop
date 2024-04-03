@@ -1,0 +1,319 @@
+#!/data/data/com.termux/files/usr/bin/bash
+R="$(printf '\033[1;31m')"                           
+G="$(printf '\033[1;32m')"
+Y="$(printf '\033[1;33m')"
+B="$(printf '\033[1;34m')"
+C="$(printf '\033[1;36m')"                                       
+W="$(printf '\033[1;37m')"
+
+function banner() {
+clear
+printf "\033[33m ▀█▀ █▀▀ █▀█ █▀▄▀█ █░█ ▀▄▀   █▀▄ █▀▀ █▀ █▄▀ ▀█▀ █▀█ █▀█ \033[0m\n"
+printf "\033[33m ░█░ ██▄ █▀▄ █░▀░█ █▄█ █░█   █▄▀ ██▄ ▄█ █░█ ░█░ █▄█ █▀▀ \033[0m\n"
+echo
+printf "\033[32m Install Gui Desktop In Termux \033[0m\n"
+printf "\033[32m code by @sabamdrif \033[0m\n"
+echo
+}
+
+function check_and_create_directory() {
+    if [ ! -d "$HOME/$1" ]; then
+        mkdir -p "$HOME/$1"
+    fi
+}
+
+
+function distro_questions() {
+    banner
+    echo "${R} [${W}-${R}]${G}Select Distro You Want To Add"${W}
+    echo
+	echo "${Y}1. Debian"${W}
+	echo
+	echo "${Y}2. Ubuntu"${W}
+	echo 
+	echo "${Y}3. Alpine"${W}
+	echo
+	echo "${Y}4. Fedora"${W}
+	echo
+	read -p "${Y}select an option (Default 1): "${W} distro_answer
+    banner
+	read -p "${R} [${W}-${R}]${Y}Do you want to create a normal user account ${C}(Recomended) ${Y}(y/n) "${W} useradd_answer
+    if [ "$useradd_answer" = "n" ]; then
+    banner
+    echo "${R} [${W}-${R}]${G}Skiping User Account Setup"${W}
+    else
+    echo "${R} [${W}-${R}]${G}Create user account"${W}
+    echo
+    read -p "${R} [${W}-${R}]${G}Input username [Lowercase]: "${W} user_name
+    echo
+	read -p "${R} [${W}-${R}]${G}Input Password: "${W} pass
+    fi
+}
+
+function setup_distro() {
+    if [ "$distro_answer" = "1" ]; then
+    selected_distro="debian"
+    elif [ "$distro_answer" = "2" ]; then
+    selected_distro="ubuntu"
+    elif [ "$distro_answer" = "3" ]; then
+    selected_distro="alpine"
+    elif [ "$distro_answer" = "4" ]; then
+    selected_distro="fedora"
+    else
+    selected_distro="debian"
+    fi
+    banner
+    echo "${R} [${W}-${R}]${G}Installing ${C}proot-distro"${W}
+    echo
+    pkg update -y ; pkg install proot-distro -y
+    banner
+    echo "${R} [${W}-${R}]${G}Setup Selected Distro: ${C}${selected_distro}"${W}
+    echo
+    pd install $selected_distro
+
+    distro_path="$PREFIX/var/lib/proot-distro/installed-rootfs/$selected_distro"
+
+    if [ "$selected_distro" = "fedora" ]; then
+    package_manager="dnf"
+    elif [ "$selected_distro" = "alpine" ]; then
+    package_manager="apk"
+    else
+    package_manager="apt"
+    fi
+    
+    if [ "$selected_distro" = "alpine" ]; then
+    install_command="add"
+    remove_command="del"
+    remove_command2="del"
+    else
+    install_command="install"
+    remove_command="remove"
+    remove_command2="autoremove"
+    fi
+}
+
+#########################################################################
+######### Update Distro | Install Required Packages | Add User ##########
+#########################################################################
+
+function distro_basic_task() {
+
+    echo "${R}[${W}-${R}]${G} Updating ${C}$selected_distro ${G} And Install Required Packages"${W}
+    echo
+    if [ "$useradd_answer" = "y" ]; then
+    final_user_name="${user_name}"
+cat <<EOF > $distro_path/root/useradd.sh
+#!/bin/bash
+$package_manager update
+$package_manager install sudo pulseaudio -y
+useradd -m -s \$(which bash) ${final_user_name}
+echo "${final_user_name}:${pass}" | chpasswd
+chmod u+rw /etc/sudoers
+echo "$final_user_name ALL=(ALL:ALL) ALL" >> /etc/sudoers
+chmod u-w /etc/sudoers
+rm useradd.sh
+EOF
+    proot-distro login $selected_distro -- /bin/sh -c 'bash useradd.sh'
+    else
+    final_user_name="root"
+cat <<EOF > $distro_path/root/useradd.sh
+$package_manager update
+$package_manager install sudo pulseaudio -y
+rm useradd.sh
+EOF
+proot-distro login $selected_distro -- /bin/sh -c 'bash useradd.sh'
+    fi
+    #  if [ "$selected_distro" == "debian" ] || [ "$selected_distro" == "ubuntu" ]; then
+    # proot-distro login $selected_distro -- /bin/sh -c 'apt install nala -y'
+    # echo "alias apt='nala \$@ " >> $distro_path/home/$final_user_name/.bashrc
+    #fi
+
+}
+
+#########################################################################
+############################# Fix Sound Issue ###########################
+#########################################################################
+
+function fix_sound_issue() {
+    banner
+    echo "${R} [${W}-${R}]${G} Fixing Proot Distro Sound Problem..."${W}
+    echo
+    echo "export PULSE_SERVER=127.0.0.1" >> "$distro_path/etc/profile"
+cat <<EOF > "$HOME/.${selected_distro}-sound-access"
+pulseaudio --start --exit-idle-time=-1
+pacmd load-module module-native-protocol-tcp auth-ip-acl=127.0.0.1 auth-anonymous=1
+EOF
+}
+
+#########################################################################
+#################### Create App Installer Shortcut ######################
+#########################################################################
+
+function create_app_installer() {
+    echo "${R}[${W}-${R}]${G} Create App Launcher"${W}
+if [ "$useradd_answer" = "y" ]; then
+savepath="$distro_path/home/$final_user_name"
+else
+savepath="$distro_path/root"
+fi 
+cat <<EOF > "$PREFIX/bin/$selected_distro"
+#!/data/data/com.termux/files/usr/bin/bash
+
+replace_exec_line() {
+    sed -i 's/Exec=/Exec=pdrun /g' "$PREFIX/share/applications/\$1.desktop" 2>/dev/null
+}
+
+copy_desktop_files() {
+    for package in "\$@"; do
+        echo "${R}[${W}-${R}]${G}Adding ${C}\${package} ${G}To Termux Menu"
+        cp "$distro_path/usr/share/applications/\${package}.desktop" "$PREFIX/share/applications/" 2>/dev/null
+        replace_exec_line "\$package"
+        grep_pattern="$distro_path/usr/share/applications/\${package}*.desktop"
+
+        if [ "\$(ls -1 \$grep_pattern 2>/dev/null)" ]; then
+		for subpackage in \$grep_pattern; do
+
+			filename=\$(basename "\$subpackage")
+			filename_no_ext="\${filename%.desktop}"
+    # package_something="\${filename_no_ext#\${package}}"
+
+    echo "${R}[${W}-${R}]${G}Adding ${C}\$filename_no_ext  ${G}To Termux Menu"
+
+            cp "\$subpackage" "/data/data/com.termux/files/usr/share/applications/" 2>/dev/null
+
+            replace_exec_line "\$filename_no_ext"
+        done
+    fi
+    done
+}
+
+remove_desktop_files() {
+
+    for package in "\$@"; do
+        echo "${G}[${W}-${G}]${R}Removing ${C}\${package} ${R}From Termux Menu"
+        rm "$PREFIX/share/applications/\${package}.desktop" 2>/dev/null
+        grep_pattern="$distro_path/usr/share/applications/\${package}*.desktop"
+
+        if [ "\$(ls -1 \$grep_pattern 2>/dev/null)" ]; then
+		for subpackage in \$grep_pattern; do
+
+			filename=\$(basename "\$subpackage")
+			filename_no_ext="\${filename%.desktop}"
+    # package_something="\${filename_no_ext#\${package}}"
+
+    echo "${G}[${W}-${G}]${R}Removing ${C}\$filename_no_ext ${R}From Termux Menu"
+    rm "$PREFIX/share/applications/\${filename_no_ext}.desktop" 2>/dev/null
+        done
+    fi
+    done
+}
+
+if [ "\$#" -eq 0 ]; then
+    proot-distro login --user $final_user_name $selected_distro --shared-tmp
+elif [ "\$1" = "install" ]; then
+echo "sudo $package_manager $install_command \${@:2}
+rm packinstall.sh
+" > $savepath/packinstall.sh
+    proot-distro login --user $final_user_name $selected_distro -- /bin/sh -c 'bash packinstall.sh'
+    copy_desktop_files "\${@:2}"
+elif [ "\$1" = "$remove_command" ]; then
+echo "sudo $package_manager $remove_command \${@:2}
+rm packremove.sh
+" > $savepath/packremove.sh
+    proot-distro login --user $final_user_name $selected_distro -- /bin/sh -c 'bash packremove.sh'
+    remove_desktop_files "\${@:2}"
+elif [ "\$1" = "$remove_command2" ];then
+echo "sudo $package_manager $remove_command2 \${@:2}
+rm packremove.sh
+" > $savepath/packremove.sh
+    proot-distro login --user $final_user_name $selected_distro -- /bin/sh -c 'bash packremove.sh'
+    remove_desktop_files "\${@:2}"
+else
+echo "sudo $package_manager \$@
+rm else.sh
+" > $savepath/else.sh
+    proot-distro login --user $final_user_name $selected_distro -- /bin/sh -c 'bash else.sh'
+fi
+EOF
+
+chmod +x "$PREFIX/bin/$selected_distro"
+
+#########################################################################
+########################### Add To Menu Setup ###########################
+#########################################################################
+
+echo "${R} [${W}-${R}]${G}Installing ${C}zenity"${W}
+pkg install zenity -y
+cat <<EOF > $PREFIX/bin/add2menu
+#!/data/data/com.termux/files/usr/bin/bash
+
+action=\$(zenity --list --title="Choose Action" --text="Select an action:" --radiolist --column="" --column="Action" TRUE "Copy .desktop file" FALSE "Remove .desktop file")
+
+if [[ -z \$action ]]; then
+  zenity --info --text="No action selected. Quitting..." --title="Operation Cancelled"
+  exit 0
+fi
+
+if [[ \$action == "Copy .desktop file" ]]; then
+  selected_file=\$(zenity --file-selection --title="Select .desktop File" --file-filter="*.desktop" --filename="$distro_path/usr/share/applications/")
+
+  if [[ -z \$selected_file ]]; then
+    zenity --info --text="No file selected. Quitting..." --title="Operation Cancelled"
+    exit 0
+  fi
+
+  desktop_filename=\$(basename "\$selected_file")
+
+  cp "\$selected_file" "\$PREFIX/share/applications/"
+  sed -i 's/Exec=/Exec=pdrun /g' "\$PREFIX/share/applications/\$desktop_filename"
+
+  zenity --info --text="Operation completed successfully!" --title="Success"
+elif [[ \$action == "Remove .desktop file" ]]; then
+  selected_file=\$(zenity --file-selection --title="Select .desktop File to Remove" --file-filter="*.desktop" --filename="\$PREFIX/share/applications/")
+
+  if [[ -z \$selected_file ]]; then
+    zenity --info --text="No file selected for removal. Quitting..." --title="Operation Cancelled"
+    exit 0
+  fi
+
+  rm "\$selected_file"
+
+  zenity --info --text="File '\$desktop_filename' has been removed successfully!" --title="Success"
+fi
+EOF
+chmod +x "$PREFIX/bin/add2menu"
+
+check_and_create_directory "$PREFIX/share/applications/"
+cat <<EOF > "$PREFIX/share/applications/add2menu.desktop"
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Add To Menu
+Comment=
+Exec=add2menu
+Icon=edit-move
+Categories=System;
+Path=
+Terminal=false
+StartupNotify=false
+EOF
+chmod +x $PREFIX/share/applications/add2menu.desktop
+cp $PREFIX/share/applications/add2menu.desktop $HOME/Desktop/
+}
+
+function distro_app_launch_setup() {
+cat <<EOF > "$PREFIX/bin/pdrun"
+#!/data/data/com.termux/files/usr/bin/bash
+bash ~/.${selected_distro}-sound-access
+xhost +
+proot-distro login $selected_distro --user $final_user_name --shared-tmp -- env DISPLAY=:1.0 \$@
+EOF
+chmod +x "$PREFIX/bin/pdrun"
+}
+
+distro_questions
+setup_distro
+distro_basic_task
+fix_sound_issue
+create_app_installer
+distro_app_launch_setup

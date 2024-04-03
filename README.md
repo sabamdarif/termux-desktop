@@ -21,6 +21,7 @@
 - :camera: Two Image Editor ( Gimp & Inkscape )
 - :wine_glass: Wine To Run Windows Apps
 - :art: New Sets of Beautiful Theme And Wallpapers
+- :mechanical_arm: Hardware Acceleration Enabled
 - :paperclips: [Termux:X11](https://github.com/termux/termux-x11) Added
 - :link: And Much More...
 
@@ -29,8 +30,9 @@
 - An Android 7+ phone
 - [Termux](https://termux.dev/en/) From [Github](https://github.com/termux/termux-app/releases) Or [Fdroid](https://f-droid.org/en/packages/com.termux/)
 > Termux from Google Play is unmaintained due to API requirements So use the F-Droid one instead.
-- 1GB of RAM (minimum) 2GB of RAM (recommended)
+- 2GB of RAM (minimum) 3GB of RAM (recommended)
 - 1.5 - 2 GB Of Internet
+- 3 - 4 GB Of Free Storage (minimum)
 - VNC Client [RealVnc](https://play.google.com/store/apps/details?id=com.realvnc.viewer.android) Or [Nethunter Kex](https://store.nethunter.com/en/packages/com.offsec.nethunter.kex/)
 
 <br>
@@ -66,6 +68,18 @@
 <center><img src="images/apps/wine.png"></center>
 
 ## See More Available Apps: [Here](applist.md)
+
+## Want To Install More Apps Which Are Not Avilable Termux, Like: Libreoffice , Kdenlive e.c.t. (As Normal App)
+
+### Libre Office:
+
+<center><img src="images/apps/container-libreoffice-2.png"></center>
+
+### Kdenlive:
+
+<center><img src="images/apps/container-kdenlive-2.png"></center>
+
+## See How To Use Distro Container: [Click Here](proot-caontainer.md)
 
 <br>
 <br>
@@ -103,7 +117,8 @@ pkg update -y ; pkg install wget -y ; wget https://raw.githubusercontent.com/sab
 ## Usage:
 - **Type `vncstart` OR `gui -start` to start vnc server.**
 - **Type `vncstop` OR `gui -stop` to start vnc server.**
-- **Type `gui -tx11` to star using Termux:11.**
+- **Type `gui -tx11` OR `tx11start` to star using Termux:11.**
+- **Type `tx11stop` to stop Termux:11 server**
 - **Type `vncstop -f` to kill vncserver**
 - **Type `gui -kill` to kill both vncserver and Termux:x11 At Once**
 ## If you like my work then dont forget to give a Star :)

@@ -41,12 +41,14 @@ function check_and_backup() {
 }
 
 function package_install_and_check() {
-    if type -p "$1" &>/dev/null || [ -e "$PREFIX/bin/$1"* ] || [ -e "$PREFIX/bin/"*"$1" ]; then
-    echo "${R} [${W}-${R}]${G} $1 is installed successfully${W}"
-else
-    echo "${R} [${W}-${R}]${G} Installing package: ${C} $1"${W}
-    pkg install "$1" -y
-fi
+	for package_name in "$@"; do
+    echo "${R} [${W}-${R}]${G} Installing package: ${C}$package_name${W}"
+    pkg install "$package_name" -y
+	
+    if type -p "$package_name" &>/dev/null || [ -e "$PREFIX/bin/$package_name"* ] || [ -e "$PREFIX/bin/"*"$package_name" ]; then
+        echo "${R} [${W}-${R}]${G} $package_name is installed successfully${W}"
+    fi
+done
 
 }
 
@@ -205,21 +207,29 @@ function questions() {
 	echo
     read -p "${R} [${W}-${R}]${Y}Do you want to add some more wallpaper (y/n) "${W} ext_wall_answer
     banner
-	echo "${R} [${W}-${R}]${G}Do you want to install wine in termux ${C}(without proot-distro)"${W}
+	echo "${R}[${W}-${R}]${G}Do you want to install wine in termux ${C}(without proot-distro)"${W}
 	echo
 	echo "${Y}1. Natively ${C}(can run only arm64 based exe) (Default)"${W}
 	echo
 	echo "${Y}2. Using Mobox ${C}(best)"${W}
 	echo
-	echo "${R} [${W}-${R}]${B}Know More About Mobox:- https://github.com/olegos2/mobox/"${W}
+	echo "${R}[${W}-${R}]${B}Know More About Mobox:- https://github.com/olegos2/mobox/"${W}
 	echo
 	echo "${Y}3. Skip"${W}
 	echo
-	read -p "${R} [${W}-${R}]${Y}Select Wine Installation Method: "${W} wine_answer
+	read -p "${R}[${W}-${R}]${Y}Select Wine Installation Method: "${W} wine_answer
     banner
     read -p "${R} [${W}-${R}]${Y}Do you want to Setting Up Zsh (y/n) "${W} zsh_answer
     banner
-	read -p "${R} [${W}-${R}]${Y}Do you want to Setting Up termux-x11 (y/n) "${W} tx11_answer
+	read -p "${R} [${W}-${R}]${Y}Do you want to Setting Up termux-x11 ${C}(Rcomended) ${Y}(y/n) "${W} tx11_answer
+	banner
+	echo "${R} [${W}-${R}]${Y}Do you want to add a distro container (proot distro)"${W}
+	echo
+	echo "${R} [${W}-${R}]${G} It will help you to install those app which are not avilable in termux"${W}
+	echo
+	echo "${R} [${W}-${R}]${C}You can launch those installed apps from termux like other apps"${W}
+	echo
+	read -p "${R} [${W}-${R}]${Y}Do you want to continue (y/n) "${W} distro_add_answer
 }
 
 #########################################################################
@@ -238,7 +248,7 @@ function install_required_packages() {
 	banner
     echo "${R} [${W}-${R}]${Y} Installling required packages..."${W}
 	echo
-      packs=(wget jq curl pulseaudio x11-repo tur-repo)
+      packs=(wget jq curl nala pulseaudio x11-repo tur-repo)
         for pack_name in "${packs[@]}"; do
             package_install_and_check "$pack_name"
         done
@@ -249,9 +259,7 @@ function install_desktop() {
     banner
     echo "${R} [${W}-${R}]${G} Installing Xfce4 Desktop"${W}
 	echo
-	package_install_and_check "xfce4"
-	package_install_and_check "xfce4-goodies"
-	package_install_and_check "kvantum"
+	pkg install xfce4 xfce4-goodies virglrenderer-android xwayland kvantum -y
 }
 
 #########################################################################
@@ -293,7 +301,7 @@ function additional_required_package_installler() {
     banner
     echo "${R} [${W}-${R}]${G} Installing Additional Packages If Required..."${W}
 	echo
-	 if [ "$style_answer" == "2" ]; then
+	if [ "$style_answer" == "2" ]; then
 	pkg install fluent-icon-theme -y
     package_install_and_check "cairo-dock-core"
     package_install_and_check "vala-panel-appmenu"
@@ -344,12 +352,28 @@ function setup_folder() {
     fi
     sleep 3
 done
-# 	cd $HOME
-# directories=(Music Downloads Pictures Videos)
-# for dir in "${directories[@]}"; do
-#     check_and_create_directory "/sdcard/$dir"
-#     ln -s "/sdcard/$dir" "$dir"
-# done
+	cd $HOME
+	directories=(Desktop Music Downloads Pictures Videos)
+	for dir in "${directories[@]}"; do
+	check_and_create_directory "$dir"
+	check_and_create_directory "/sdcard/$dir"
+	done
+	ln -s "/sdcard/Music" "Music"
+	ln -s "/sdcard/Download" "Downloads"
+	ln -s "/sdcard/Pictures" "Pictures"
+	ln -s "/sdcard/Videos" "Videos"
+}
+
+#########################################################################
+########################### Proot Distro Setup ##########################
+#########################################################################
+function distro_container_setup() {
+	if [ "$distro_add_answer" = "y" ]; then
+	banner
+	echo "${R} [${W}-${R}]${G}Setting Up Distro Container"${W}
+	echo
+	wget https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/distro-container-setup ; chmod +x distro-container-setup ; ./distro-container-setup
+	fi
 }
 
 #########################################################################
@@ -361,6 +385,7 @@ function setup_vnc() {
     echo "${R} [${W}-${R}]${G} Setting Up Vnc..."${W}
     echo
     package_install_and_check "tigervnc"
+	package_install_and_check "xorg-xhost"
     check_and_create_directory ".vnc"
     check_and_delete "$HOME/.vnc/xstartup"
     cat << EOF > "$HOME/.vnc/xstartup"
@@ -368,16 +393,16 @@ function setup_vnc() {
 EOF
     chmod +x "$HOME/.vnc/xstartup"
     check_and_delete "$PREFIX/bin/vncstart"
-    cat <<EOF > "$PREFIX/bin/vncstart"
-    vncserver -geometry 1920x1080
+cat <<EOF > "$PREFIX/bin/vncstart"
+vncserver -geometry 1920x1080
 EOF
     chmod +x "$PREFIX/bin/vncstart"
     check_and_delete "$PREFIX/bin/vncstop"
     cat <<EOF > "$PREFIX/bin/vncstop"
 if [ "\$1" = "-f" ]; then
-    pkill Xtigervnc
+pkill Xtigervnc
 else
-    vncserver -kill :1
+vncserver -kill :1
 fi
 rm -rf \$HOME/.vnc/localhost:*.pid
 rm -rf \$PREFIX/tmp/.X1-lock
@@ -392,40 +417,51 @@ function gui_launcher() {
         echo "${R} [${W}-${R}]${G}Setting Up Termux:X11 "${W}
         echo
         package_install_and_check "termux-x11-nightly"
-        check_and_delete "$PREFIX/bin/gui"
-        cat << EOF > "$PREFIX/bin/gui"
+
+cat <<'EOF' > "$PREFIX/bin/tx11start"
+#!/data/data/com.termux/files/usr/bin/bash
+
+MESA_NO_ERROR=1 MESA_GL_VERSION_OVERRIDE=4.3COMPAT MESA_GLES_VERSION_OVERRIDE=3.2 virgl_test_server_android --angle-gl & > /dev/null 2>&1
+sleep 1
+XDG_RUNTIME_DIR=${TMPDIR} termux-x11 :1.0 &
+sleep 1
+am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1
+sleep 1
+env DISPLAY=:1.0 GALLIUM_DRIVER=virpipe dbus-launch --exit-with-session xfce4-session & > /dev/null 2>&1
+
+sleep 5
+process_id=$(ps -aux | grep '[x]fce4-screensaver' | awk '{print $2}')
+kill "$process_id" > /dev/null 2>&1
+EOF
+chmod +x $PREFIX/bin/tx11start
+
+cat <<'EOF' > "$PREFIX/bin/tx11stop"
+termux_x11_pid=$(pgrep -f "/system/bin/app_process / com.termux.x11.Loader :1.0")
+xfce_pid=$(pgrep -f "xfce4-session")
+if [ -n "$termux_x11_pid" ] && [ -n "$xfce_pid" ]; then
+kill -9 "$termux_x11_pid" "$xfce_pid"
+fi
+EOF
+chmod +x $PREFIX/bin/tx11stop
+
+sed -i '12s/^#//' $HOME/.termux/termux.properties
+check_and_delete "$PREFIX/bin/gui"
+cat << EOF > "$PREFIX/bin/gui"
 #!/data/data/com.termux/files/usr/bin/bash
 
 if [ "\$1" = "-start" ]; then
-    vncstart
+vncstart
 elif [ "\$1" = "-stop" ]; then
-    vncstop
+vncstop
 elif [ "\$1" = "-tx11" ]; then
-    XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :1.0 &
-    sleep 1
-    am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null
-    sleep 1
-    DISPLAY=:1 dbus-launch --exit-with-session xfce4-session > /dev/null 2>&1 &
-    sleep 2
-    # process_id=\$(ps -aux | grep '[x]fce4-screensaver' | awk '{print \$2}')
-    # kill "\$process_id" > /dev/null 2>&1
+tx11start
 elif [ "\$1" = "-kill" ]; then
-    termux_x11_pid=\$(pgrep -f "/system/bin/app_process / com.termux.x11.Loader :")
-    xfce_pid=\$(pgrep -f "xfce4-session")
-    if [ -n "\$termux_x11_pid" ] && [ -n "\$xfce_pid" ]; then
-        vncstop -f
-        kill -9 "\$termux_x11_pid"
+tx11stop
     fi
-    # pids=$(echo "\$info_output" | grep -o 'TERMUX_APP_PID=[0-9]\+' | awk -F= '{print}')
-    # for pid in \$pids; do
-    #    if [[ "\$pid" =~ ^[0-9]+$ ]]; then
-    #        kill "\$pid" > /dev/null 2>&1
-    #    fi
-    # done
-fi
 EOF
-        chmod +x "$PREFIX/bin/gui"
-    fi
+
+    chmod +x "$PREFIX/bin/gui"
+	    fi
 }
 
 #########################################################################
@@ -590,13 +626,24 @@ function setup_zsh() {
     if [ "$zsh_answer" == "n" ]; then
 	echo "${R} [${W}-${R}]${C}Canceling Zsh Setup..."${W}
     sleep 1.5
+	shell_name="bash"
 else
+shell_name="zsh"
 	echo "${R} [${W}-${R}]${G}Setting Up Zsh.."${W}
 	echo
 	package_install_and_check "zsh"
 	package_install_and_check "git"
 	wget https://raw.githubusercontent.com/sabamdarif/short-linux-scripts/main/install-zsh.sh && bash install-zsh.sh
 fi
+}
+
+function add_shell_shortcut() {
+cat <<EOF >> "$HOME/.${shell_name}rc"
+alias apt='nala \$@'
+alias pkg='nala \$@'
+EOF
+termux-reload-settings
+sleep 2
 }
 
 #########################################################################
@@ -639,6 +686,11 @@ function notes() {
 	echo "${R} [${W}-${R}]${C}See Uses Section in github to know how to use it"${W}
 	echo
 	echo "${R} [${W}-${R}]${C}URL:- ${B}https://github.com/sabamdarif/termux-desktop/blob/main/README.md#usage"${W}
+	if [ "$distro_add_answer" = "y" ]; then
+	echo "${R} [${W}-${R}]${C}See hoe to use distro container"${W}
+	echo
+	echo "${R} [${W}-${R}]${C}URL:- ${B}https://github.com/sabamdarif/termux-desktop/blob/main/proot-caontainer.md"${W}
+	fi
 }
 
 update_sys
@@ -646,6 +698,7 @@ install_required_packages
 questions
 setup_folder
 setup_zsh
+add_shell_shortcut
 install_desktop
 browser_installer
 ide_installer
@@ -656,4 +709,5 @@ setup_wine
 setup_config
 setup_vnc
 gui_launcher
+distro_container_setup
 notes
