@@ -1,0 +1,70 @@
+#!/data/data/com.termux/files/usr/bin/bash
+
+function hw_install_required_packages() {
+    banner
+    echo "${R} [${W}-${R}]${Y} Installing Required Packages For Hardware Acceleration"${W}
+	echo
+      hw_packs=(mesa-zink virglrenderer-mesa-zink vulkan-loader-android angle-android virglrenderer-android)
+        for hw_pack_name in "${hw_packs[@]}"; do
+            pkg install $hw_pack_name -y
+        done
+}
+
+function hw_questions() {
+    banner
+    echo "${R} [${W}-${R}]${G}Select Hardware Acceleration Method For Termux"${W}
+    echo
+	echo "${Y}1. ZINK"${W}
+	echo
+    echo "${Y}2. VIRGL"${W}
+	echo
+	echo "${Y}3. VIRGL ZINK"${W}
+	echo
+	read -p "${Y}select an option : "${W} termux_hw_answer
+    # if [ "$distro_add_answer" = "y" ]; then
+    # banner
+	# echo "${R} [${W}-${R}]${G}Select Hardware Acceleration Method For Proot Distro"${W}
+    # echo
+	# echo "${Y}1. ZINK"${W}
+	# echo
+	# echo "${Y}2. VIRGL ZINK"${W}
+	# echo
+    # echo "${Y}3. VIRGL"${W}
+	# echo
+    # echo "${Y}4. TURNIP"${W}
+	# echo
+	# read -p "${Y}select an option : "${W} pd_hw_answer
+    # fi
+}
+
+function setup_hw_method() {
+    if [ "termux_hw_answer" = "1" ];then
+    initialize_server_method="MESA_NO_ERROR=1 MESA_GL_VERSION_OVERRIDE=4.3COMPAT MESA_GLES_VERSION_OVERRIDE=3.2 GALLIUM_DRIVER=zink ZINK_DESCRIPTORS=lazy virgl_test_server --use-egl-surfaceless --use-gles &"
+    selected_hw_method="zink"
+    elif [ "termux_hw_answer" = "2" ];then
+    initialize_server_method="virgl_test_server_android &"
+    selected_hw_method="virpipe"
+    elif [ "termux_hw_answer" = "3" ];then
+    initialize_server_method="MESA_NO_ERROR=1 MESA_GL_VERSION_OVERRIDE=4.3COMPAT MESA_GLES_VERSION_OVERRIDE=3.2 GALLIUM_DRIVER=zink ZINK_DESCRIPTORS=lazy virgl_test_server --use-egl-surfaceless --use-gles &"
+    selected_hw_method="virpipe"
+    else
+    initialize_server_method="MESA_NO_ERROR=1 MESA_GL_VERSION_OVERRIDE=4.3COMPAT MESA_GLES_VERSION_OVERRIDE=3.2 GALLIUM_DRIVER=zink ZINK_DESCRIPTORS=lazy virgl_test_server --use-egl-surfaceless --use-gles &"
+    selected_hw_method="virpipe"
+    fi
+
+    # if [ "pd_hw_answer" = "1" ];then
+    # selected_hw_method="zink"
+    # elif [ "pd_hw_answer" = "2" ];then
+    # selected_hw_method="virpipe"
+    # elif [ "pd_hw_answer" = "3" ];then
+    # selected_hw_method="virpipe"
+    # elif [ "pd_hw_answer" = "4" ];then
+    # selected_hw_method="zink"
+    # else
+    # selected_hw_method="zink"
+    # fi
+}
+
+hw_questions
+hw_install_required_packages
+setup_hw_method

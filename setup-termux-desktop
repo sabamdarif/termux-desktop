@@ -259,7 +259,7 @@ function install_desktop() {
     banner
     echo "${R} [${W}-${R}]${G} Installing Xfce4 Desktop"${W}
 	echo
-	pkg install xfce4 xfce4-goodies virglrenderer-android xwayland kvantum -y
+	pkg install xfce4 xfce4-goodies xwayland kvantum -y
 }
 
 #########################################################################
@@ -294,7 +294,7 @@ function theme_installer() {
 }
 
 #########################################################################
-########################### Install Additional Packages #################
+################# Install Additional Packages For Theme #################
 #########################################################################
 
 function additional_required_package_installler() {
@@ -365,6 +365,14 @@ done
 }
 
 #########################################################################
+##################### Hardware Acceleration Setup #######################
+#########################################################################
+function hw_config() {
+# Working On Here
+    wget https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/enable-hw-acceleration ; chmod +x enable-hw-acceleration ; . enable-hw-acceleration
+}
+
+#########################################################################
 ########################### Proot Distro Setup ##########################
 #########################################################################
 function distro_container_setup() {
@@ -372,7 +380,7 @@ function distro_container_setup() {
 	banner
 	echo "${R} [${W}-${R}]${G}Setting Up Distro Container"${W}
 	echo
-	wget https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/distro-container-setup ; chmod +x distro-container-setup ; ./distro-container-setup
+	wget https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/distro-container-setup ; chmod +x distro-container-setup ; . distro-container-setup
 	fi
 }
 
@@ -394,19 +402,23 @@ EOF
     chmod +x "$HOME/.vnc/xstartup"
     check_and_delete "$PREFIX/bin/vncstart"
 cat <<EOF > "$PREFIX/bin/vncstart"
-vncserver -geometry 1920x1080
+${initialize_server_method}
+GALLIUM_DRIVER=${selected_hw_method} vncserver
 EOF
     chmod +x "$PREFIX/bin/vncstart"
     check_and_delete "$PREFIX/bin/vncstop"
-    cat <<EOF > "$PREFIX/bin/vncstop"
-if [ "\$1" = "-f" ]; then
+cat <<'EOF' > "$PREFIX/bin/vncstop"
+if [ "$1" = "-f" ]; then
 pkill Xtigervnc
 else
-vncserver -kill :1
+display_numbers=$(vncserver -list | awk '/^:[0-9]+/ {print $1}')
+
+for display in $display_numbers; do
+    vncserver -kill "$display"
 fi
-rm -rf \$HOME/.vnc/localhost:*.pid
-rm -rf \$PREFIX/tmp/.X1-lock
-rm -rf \$PREFIX/tmp/.X11-unix/X1
+rm $HOME/.vnc/localhost:*.log
+rm $PREFIX/tmp/.X1-lock
+rm $PREFIX/tmp/.X11-unix/X1
 EOF
     chmod +x "$PREFIX/bin/vncstop"
 }
@@ -418,20 +430,20 @@ function gui_launcher() {
         echo
         package_install_and_check "termux-x11-nightly"
 
-cat <<'EOF' > "$PREFIX/bin/tx11start"
+cat <<EOF >> "$PREFIX/bin/tx11start"
 #!/data/data/com.termux/files/usr/bin/bash
 
-MESA_NO_ERROR=1 MESA_GL_VERSION_OVERRIDE=4.3COMPAT MESA_GLES_VERSION_OVERRIDE=3.2 virgl_test_server_android --angle-gl & > /dev/null 2>&1
+${initialize_server_method}
 sleep 1
-XDG_RUNTIME_DIR=${TMPDIR} termux-x11 :1.0 &
+XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :1.0 &
 sleep 1
 am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1
 sleep 1
-env DISPLAY=:1.0 GALLIUM_DRIVER=virpipe dbus-launch --exit-with-session xfce4-session & > /dev/null 2>&1
+env DISPLAY=:1.0 GALLIUM_DRIVER=${selected_hw_method} dbus-launch --exit-with-session xfce4-session & > /dev/null 2>&1
 
 sleep 5
-process_id=$(ps -aux | grep '[x]fce4-screensaver' | awk '{print $2}')
-kill "$process_id" > /dev/null 2>&1
+process_id=\$(ps -aux | grep '[x]fce4-screensaver' | awk '{print \$2}')
+kill "\$process_id" > /dev/null 2>&1
 EOF
 chmod +x $PREFIX/bin/tx11start
 
@@ -439,7 +451,8 @@ cat <<'EOF' > "$PREFIX/bin/tx11stop"
 termux_x11_pid=$(pgrep -f "/system/bin/app_process / com.termux.x11.Loader :1.0")
 xfce_pid=$(pgrep -f "xfce4-session")
 if [ -n "$termux_x11_pid" ] && [ -n "$xfce_pid" ]; then
-kill -9 "$termux_x11_pid" "$xfce_pid"
+kill -9 "$termux_x11_pid" "$xfce_pid" 2>&1
+echo "Termux:X11 Stopped Successfully"
 fi
 EOF
 chmod +x $PREFIX/bin/tx11stop
@@ -707,7 +720,8 @@ photo_editor_installer
 setup_synaptic
 setup_wine
 setup_config
+distro_container_setup
+hw_config
 setup_vnc
 gui_launcher
-distro_container_setup
 notes

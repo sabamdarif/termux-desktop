@@ -1,6 +1,6 @@
 ## More Natively Working Apps:
 
->Most of the apps are available in tur(termux user repo) or x11 repo
+>Most of the apps are available in tur(termux user repo) or in x11 repo
 
 ### Audacity:
 

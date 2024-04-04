@@ -1,8 +1,8 @@
 ## Use Distro Container To Add More Apps In Termux:
 
-- <b>Termux Natively Support Only For Few Apps</b>
-- <b>My Scripe Help You Install More Apps From Another Distro</b>
-- <b>No Need To Login Into That Proot Distro</b>
+- <b>Termux Natively Support Only Few Apps</b>
+- <b>My Scripe Help You Install More Apps From Another Distro Into Termux</b>
+- <b>No Need To Login Into That Proot Distro To Use The Installed Apps</b>
 - <b>You Can See Installed Apps In Termux Desktop Apps Menu</b>
 - <b>You Can Launch Those Installed Apps Directly From Termux</b>
 

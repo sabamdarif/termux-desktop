@@ -67,17 +67,14 @@
 
 <center><img src="images/apps/wine.png"></center>
 
-## See More Available Apps: [Here](applist.md)
+## See More Natively Supported Apps: [Here](applist.md)
 
-## Want To Install More Apps Which Are Not Avilable Termux, Like: Libreoffice , Kdenlive e.c.t. (As Normal App)
+## Want To Install More Apps (Like: Libreoffice) Which Are Not Avilable Termux:
 
 ### Libre Office:
 
 <center><img src="images/apps/container-libreoffice-2.png"></center>
 
-### Kdenlive:
-
-<center><img src="images/apps/container-kdenlive-2.png"></center>
 
 ## See How To Use Distro Container: [Click Here](proot-caontainer.md)
 
@@ -121,4 +118,4 @@ pkg update -y ; pkg install wget -y ; wget https://raw.githubusercontent.com/sab
 - **Type `tx11stop` to stop Termux:11 server**
 - **Type `vncstop -f` to kill vncserver**
 - **Type `gui -kill` to kill both vncserver and Termux:x11 At Once**
-## If you like my work then dont forget to give a Star :)
+## If you like my work then don't forget to give a Star :)
