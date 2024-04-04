@@ -21,7 +21,7 @@
 - :camera: Two Image Editor ( Gimp & Inkscape )
 - :wine_glass: Wine To Run Windows Apps
 - :art: New Sets of Beautiful Theme And Wallpapers
-- :mechanical_arm: Hardware Acceleration Enabled
+- :mechanical_arm: [Hardware Acceleration Enabled](hw-acceleration.md)
 - :paperclips: [Termux:X11](https://github.com/termux/termux-x11) Added
 - :link: And Much More...
 

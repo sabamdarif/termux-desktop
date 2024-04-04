@@ -308,7 +308,7 @@ cat <<EOF > "$PREFIX/bin/pdrun"
 #!/data/data/com.termux/files/usr/bin/bash
 bash ~/.${selected_distro}-sound-access
 xhost +
-proot-distro login $selected_distro --user $final_user_name --shared-tmp -- env DISPLAY=:1.0 \$@
+proot-distro login $selected_distro --user $final_user_name --shared-tmp -- env DISPLAY=:1.0 GALLIUM_DRIVER=${selected_hw_method} \$@
 EOF
 chmod +x "$PREFIX/bin/pdrun"
 }

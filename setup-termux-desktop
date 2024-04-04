@@ -720,8 +720,8 @@ photo_editor_installer
 setup_synaptic
 setup_wine
 setup_config
-distro_container_setup
 hw_config
+distro_container_setup
 setup_vnc
 gui_launcher
 notes
