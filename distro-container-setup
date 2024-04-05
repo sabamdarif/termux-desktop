@@ -21,9 +21,25 @@ function distro_questions() {
     else
     echo "${R} [${W}-${R}]${G}Create user account"${W}
     echo
+    while true; do
     read -p "${R} [${W}-${R}]${G}Input username [Lowercase]: "${W} user_name
     echo
-	read -p "${R} [${W}-${R}]${G}Input Password: "${W} pass
+    read -p "${R} [${W}-${R}]${G}Input Password: "${W} pass
+    echo
+    read -p "${R} [${W}-${R}]${Y}Do you want to continue with username ${C}$user_name ${Y}and password ${C}$pass${Y}? (y/n) : " choice
+    case $choice in
+        [y]* )
+            echo "${R} [${W}-${R}]${G}Continuing with username ${C}$user_name ${G}and password ${C}$pass"
+            break;;
+        [n]* )
+            echo "${G}Please provide username and password again."${W}
+            echo
+            ;;
+        * )
+            echo "${R}Invalid input. Please enter 'y' or 'n'."${W}
+            ;;
+    esac
+done
     fi
 }
 
@@ -75,8 +91,8 @@ function setup_distro() {
 #########################################################################
 
 function distro_basic_task() {
-
-    echo "${R}[${W}-${R}]${G} Updating ${C}$selected_distro ${G} And Install Required Packages"${W}
+    banner
+    echo "${R}[${W}-${R}]${G} Updating ${C}$selected_distro ${G}And Install Required Packages"${W}
     echo
     if [ "$useradd_answer" = "y" ]; then
     final_user_name="${user_name}"

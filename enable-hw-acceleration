@@ -27,6 +27,10 @@ function hw_questions() {
 	read -p "${Y}select an option : "${W} termux_hw_answer
 }
 
+#########################################################################
+################# Add HW Server Initialize Method #######################
+#########################################################################
+
 function setup_hw_method() {
     if [ "termux_hw_answer" = "1" ];then
     initialize_server_method="MESA_NO_ERROR=1 MESA_GL_VERSION_OVERRIDE=4.3COMPAT MESA_GLES_VERSION_OVERRIDE=3.2 GALLIUM_DRIVER=zink ZINK_DESCRIPTORS=lazy virgl_test_server --use-egl-surfaceless --use-gles &"

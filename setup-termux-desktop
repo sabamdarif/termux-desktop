@@ -64,7 +64,7 @@ function download_and_extract() {
     local filename="${url##*/}"  # Extract filename from URL
     local filename_no_ext="${filename%.tar.gz}"  # Remove .tar.gz extension
 
-    echo "Downloading ${filename_no_ext} Pack"
+    echo "${G}Downloading ${C}${filename_no_ext} ${G}Pack"
     sleep 1.5
 
     cd "$target_dir" || return 1
@@ -248,10 +248,7 @@ function install_required_packages() {
 	banner
     echo "${R} [${W}-${R}]${Y} Installling required packages..."${W}
 	echo
-      packs=(wget jq curl nala pulseaudio x11-repo tur-repo)
-        for pack_name in "${packs[@]}"; do
-            package_install_and_check "$pack_name"
-        done
+            package_install_and_check "wget jq curl nala pulseaudio x11-repo tur-repo"
         update_sys
 }
 
@@ -417,9 +414,9 @@ for display in $display_numbers; do
     vncserver -kill "$display"
 done
 fi
-rm $HOME/.vnc/localhost:*.log 2>/dev/null
-rm $PREFIX/tmp/.X1-lock 2>/dev/null
-rm $PREFIX/tmp/.X11-unix/X1 2>/dev/null
+rm $HOME/.vnc/localhost:*.log > /dev/null 2>&1
+rm $PREFIX/tmp/.X1-lock > /dev/null 2>&1
+rm $PREFIX/tmp/.X11-unix/X1 > /dev/null 2>&1
 EOF
     chmod +x "$PREFIX/bin/vncstop"
 }
@@ -452,7 +449,7 @@ cat <<'EOF' > "$PREFIX/bin/tx11stop"
 termux_x11_pid=$(pgrep -f "/system/bin/app_process / com.termux.x11.Loader :1.0")
 xfce_pid=$(pgrep -f "xfce4-session")
 if [ -n "$termux_x11_pid" ] && [ -n "$xfce_pid" ]; then
-kill -9 "$termux_x11_pid" "$xfce_pid" 2>&1
+kill -9 "$termux_x11_pid" "$xfce_pid" > /dev/null 2>&1
 echo "Termux:X11 Stopped Successfully"
 fi
 EOF
@@ -522,6 +519,8 @@ function ide_installer() {
 	echo
     sleep 1
 		package_install_and_check "code-oss"
+		echo 'code-oss $@' > $PREFIX/bin/code
+		chmod +x $PREFIX/bin/code
 	elif [[ ${ide_answer} == "2" ]]; then
     echo "${R} [${W}-${R}]${G} installing Geany..."${W}
 	echo
@@ -543,6 +542,8 @@ function ide_installer() {
 	echo
     sleep 1
 		package_install_and_check "code-oss"
+		echo 'code-oss $@' > $PREFIX/bin/code
+		chmod +x $PREFIX/bin/code
 	fi
 }
 
@@ -555,8 +556,7 @@ function media_player_installer() {
 	if [[ ${player_answer} == "1" ]]; then
     echo "${R} [${W}-${R}]${G} Installing Vlc..."${W}
 	echo
-		package_install_and_check "vlc-qt-static"
-		package_install_and_check "vlc-qt"
+		package_install_and_check "vlc-qt-static vlc-qt"
 	elif [[ ${player_answer} == "2" ]]; then
     echo "${R} [${W}-${R}]${G} installing Audacious..."${W}
 	echo
@@ -670,7 +670,7 @@ function setup_wine() {
     if [ "$wine_answer" == "1" ]; then
 	echo "${R} [${W}-${R}]${G}Installing Wine Natively In Termux"${W}
 	echo
-		 package_install_and_check "wine-staging"
+		 package_install_and_check "wine-stable"
 		 package_install_and_check "winetricks"
 	elif [ "$wine_answer" == "2" ]; then
 	echo "${R} [${W}-${R}]${G}Using Mobox To Install Wine In Termux"${W}
@@ -678,10 +678,12 @@ function setup_wine() {
 	echo "${R} [${W}-${R}]${G}Using Mobox To Install Wine In Termux"${W}
 	echo
 	curl -s -o ~/x https://raw.githubusercontent.com/olegos2/mobox/main/install && . ~/x
+	elif [ "$wine_answer" == "3" ]; then
+	echo "${R} [${W}-${R}]${C} Skipping wine Installation..."${W}
 else
     echo "${R} [${W}-${R}]${G}Installing Wine Natively In Termux"${W}
 	echo
-		 package_install_and_check "wine-staging"
+		 package_install_and_check "wine-stable"
 		 package_install_and_check "winetricks"
 fi
 }
