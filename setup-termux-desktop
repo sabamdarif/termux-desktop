@@ -415,10 +415,11 @@ display_numbers=$(vncserver -list | awk '/^:[0-9]+/ {print $1}')
 
 for display in $display_numbers; do
     vncserver -kill "$display"
+done
 fi
-rm $HOME/.vnc/localhost:*.log
-rm $PREFIX/tmp/.X1-lock
-rm $PREFIX/tmp/.X11-unix/X1
+rm $HOME/.vnc/localhost:*.log 2>/dev/null
+rm $PREFIX/tmp/.X1-lock 2>/dev/null
+rm $PREFIX/tmp/.X11-unix/X1 2>/dev/null
 EOF
     chmod +x "$PREFIX/bin/vncstop"
 }

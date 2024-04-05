@@ -1,9 +1,4 @@
 # Hardware Acceleration in Termux
-## This Test Was Made By [DroidMaster](https://github.com/LinuxDroidMaster)
-
-🔥[[Video -By DroidMaster] Hardware Acceleration Part 1 - What it is, how it is used (VIRGL AND ZINK)](https://www.youtube.com/watch?v=fgGOizUDQpY)   
-🔥[[Video -By DroidMaster] Hardware Acceleration Part 2 - (VIRGL, ZINK, TURNIP) - how can you use them](https://youtu.be/07kq4RHbXrE?si=5ClDpIm8Kr3M0Y_D)
-
 
 ### How To use Hardware Acceleration in Termux ?
 
@@ -18,6 +13,7 @@
 ```
 pdrun program
 ```
+<center><img src="images/pdrun-glmark2.png"></center>
 
 #### 2nd Method 
 - <b>Add The Program To Termux Menu</b>
@@ -27,16 +23,35 @@ pdrun program
 
 # Use [Cpu Z](https://play.google.com/store/apps/details?id=com.cpuid.cpu_z&pcampaignid=web_share) To Know About Your GPU
 
+<center><img src="images/cpu-z.png"></center>
+
+## Glmark2 In Termux
+<center><img src="images/termux-glmark2.png"></center>
+
+## How to Change Hardware Acceleration Methode ?
+
+- <b>Go To `$PREFIX/bin`</b>
+
+- <b>type `nano / vim vncstart` and `nano / vim tx11start` and `nano / vim pdrun`</b>
+
+- <b>Here You Find A Line Called `GALLIUM_DRIVER=`</b>
+
+- <b>Change The Word After `=` with `zink / virpipe` Which You Want And Save It</b>
+
+<br><br>
+
 # Performance results 
 
 Device used: Lenovo Legion Y700 2022 model (Snapdragon 870 - Adreno 650)
 
-### GLMARK2
-To install glmark2: 
-```
-# In Termux: pkg install glmark2
-# In proot-distro (Debian): sudo apt install glmark2
-```
+### This Test Was Made By [DroidMaster](https://github.com/LinuxDroidMaster)
+
+🔥[[Video -By DroidMaster] Hardware Acceleration Part 1 - What it is, how it is used (VIRGL AND ZINK)](https://www.youtube.com/watch?v=fgGOizUDQpY)   
+🔥[[Video -By DroidMaster] Hardware Acceleration Part 2 - (VIRGL, ZINK, TURNIP) - how can you use them](https://youtu.be/07kq4RHbXrE?si=5ClDpIm8Kr3M0Y_D)
+
+
+### GLMARK2 
+
 > [!IMPORTANT]  
 > The following tests were done in a proot distro environment with Debian and a XFCE4 desktop.
 

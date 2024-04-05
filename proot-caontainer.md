@@ -21,7 +21,10 @@
   - <b>Or You Will Find A App Call `Add To Menu` Open It And Select The App You Want To Add</b>
 
   - <b>Now You Find This In Your App Menu</b>
-    <center><img src="images/apps/container-add2menu.png"></center>
+
+    <center><img src="images/add2menu-icon.png"></center>
+    <center><img src="images/add2menu-option.png"></center>
+    <center><img src="images/add2menu-main-window.png"></center>
 
 <br>
 

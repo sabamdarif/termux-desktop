@@ -78,6 +78,12 @@
 
 ## See How To Use Distro Container: [Click Here](proot-caontainer.md)
 
+## Hardware Acceleration In Distro Container And Also In Termux:
+
+<center><img src="images/pdrun-glmark2.png"></center>
+
+## Know More About Hardware Acceleration: [Here](hw-acceleration.md)
+
 <br>
 <br>
 
