@@ -64,7 +64,7 @@ function download_and_extract() {
     local filename="${url##*/}"  # Extract filename from URL
     local filename_no_ext="${filename%.tar.gz}"  # Remove .tar.gz extension
 
-    echo "${G}Downloading ${C}${filename_no_ext} ${G}Pack"
+    echo "${G}Downloading ${C}${filename_no_ext} ${G}Pack"${W}
     sleep 1.5
 
     cd "$target_dir" || return 1
@@ -248,7 +248,10 @@ function install_required_packages() {
 	banner
     echo "${R} [${W}-${R}]${Y} Installling required packages..."${W}
 	echo
-            package_install_and_check "wget jq curl nala pulseaudio x11-repo tur-repo"
+	packs=(wget jq curl nala pulseaudio x11-repo tur-repo)
+	for pack_name in "${packs[@]}"; do
+	package_install_and_check "$pack_name"
+	done
         update_sys
 }
 
@@ -703,7 +706,7 @@ function notes() {
 	echo
 	echo "${R} [${W}-${R}]${C}URL:- ${B}https://github.com/sabamdarif/termux-desktop/blob/main/README.md#usage"${W}
 	if [ "$distro_add_answer" = "y" ]; then
-	echo "${R} [${W}-${R}]${C}See hoe to use distro container"${W}
+	echo "${R} [${W}-${R}]${C}See how to use distro container"${W}
 	echo
 	echo "${R} [${W}-${R}]${C}URL:- ${B}https://github.com/sabamdarif/termux-desktop/blob/main/proot-caontainer.md"${W}
 	fi
