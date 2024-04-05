@@ -221,66 +221,70 @@ chmod +x "$PREFIX/bin/$selected_distro"
 #########################################################################
 
 echo "${R} [${W}-${R}]${G}Installing ${C}zenity"${W}
-pkg install zenity -y
+package_install_and_check "zenity"
+
+check_and_create_directory "$PREFIX/share/applications/pd_added"
 echo "#!/data/data/com.termux/files/usr/bin/bash
 distro_path="$distro_path"
 " > $PREFIX/bin/add2menu
 cat <<'EOF' >> $PREFIX/bin/add2menu
 
-# Function to list .desktop files with Name parameter
 list_desktop_files_with_name() {
-    find "$1" -name "*.desktop" -type f -exec awk -F '=' '/^Name=/ {gsub(/.desktop$/,"",$2); print $2, FILENAME}' {} \; | awk '{split($2, arr, "/"); print $1, substr(arr[length(arr)], 1, length(arr[length(arr)])-8)}'
+    find "$1" -name "*.desktop" -type f -exec awk -F '=' '/^Name=/ {gsub(/.desktop$/,"",$2); print $2}' {} \;
 }
 
-action=$(zenity --list --title="Choose Action" --text="Select an action:" --radiolist --column="" --column="Action" TRUE "Select To Application" FALSE "Select To Remove Application")
+action=$(zenity --list --title="Choose Action" --text="Select an action:" --checklist --column="" --column="Action" FALSE "Add Application To Termux Menu" FALSE "Remove Application From Termux Menu")
 
 if [[ -z $action ]]; then
-    zenity --info --text="No action selected. Quitting..." --title="Operation Cancelled"
-    exit 0
+  zenity --info --text="No action selected. Quitting..." --title="Operation Cancelled"
+  exit 0
 fi
 
-if [[ $action == "Select To Application" ]]; then
-    # Get the list of .desktop files with Name parameter
-    files=$(list_desktop_files_with_name "$distro_path/usr/share/applications/")
+if [[ $action == *"Add Application To Termux Menu"* ]]; then
+  # Get the list of .desktop files with Name parameter
+  files=$(list_desktop_files_with_name "$distro_path/usr/share/applications/")
 
-    # Display the list of files and ask user to select
-    selected=$(zenity --list --title="Select The App" --text="Select The App You Want To Add Termux Menu" --column="Select" --column="File" --column="Package Name" --checklist $files)
+  # Display the list of files and ask user to select
+  selected_names=$(zenity --list --title="Select .desktop Files" --text="Select The App Name To Add:" --checklist --column="Include" --column="Name" --separator="," $files)
 
-    if [[ -z $selected ]]; then
-        zenity --info --text="No files selected. Quitting..." --title="Operation Cancelled"
-        exit 0
-    fi
+  if [[ -z $selected_names ]]; then
+    zenity --info --text="No file selected. Quitting..." --title="Operation Cancelled"
+    exit 0
+  fi
 
-    # Loop through each selected file
-    while read -r line; do
-        selected_name=$(echo "$line" | awk '{print $1}')
-        selected_file=$(echo "$line" | awk '{print $2}')
-        
-        # Perform desired action for each selected file
-        # For now, let's just display the selected name
-        zenity --info --text="Selected Name: $selected_name" --title="Selected Application"
-    done <<< "$selected"
-elif [[ $action == "Select To Remove Application" ]]; then
-    # Get the list of .desktop files with Name parameter
-    files=$(list_desktop_files_with_name "$PREFIX/share/applications/")
+  IFS=',' read -ra selected_names_array <<< "$selected_names"
 
-    # Display the list of files and ask user to select
-    selected=$(zenity --list --title="Select The App" --text="Select The App You Want To Remove Termux Menu" --column="Select" --column="File" --column="Package Name" --checklist $files)
+  for selected_name in "${selected_names_array[@]}"; do
+    selected_file=$(find "$distro_path/usr/share/applications/" -name "*.desktop" -type f -exec awk -F '=' -v name="$selected_name" '$0 ~ "Name=" name {print FILENAME}' {} \;)
 
-    if [[ -z $selected ]]; then
-        zenity --info --text="No files selected for removal. Quitting..." --title="Operation Cancelled"
-        exit 0
-    fi
+    cp "$selected_file" "$PREFIX/share/applications/pd_added/"
+    sed -i 's/Exec=/Exec=pdrun /g' "$PREFIX/share/applications/pd_added/${selected_file##*/}"
 
-    # Loop through each selected file
-    while read -r line; do
-        selected_name=$(echo "$line" | awk '{print $1}')
-        selected_file=$(echo "$line" | awk '{print $2}')
+    zenity --info --text="File '$selected_name' added successfully! Now Log Out And Log In Back" --title="Success"
+  done
+fi
 
-        # Perform desired action for each selected file
-        # For now, let's just display the selected name
-        zenity --info --text="Selected Name to Remove: $selected_name" --title="Selected Application to Remove"
-    done <<< "$selected"
+if [[ $action == *"Remove Application From Termux Menu"* ]]; then
+  # Get the list of .desktop files with Name parameter
+  files=$(list_desktop_files_with_name "$PREFIX/share/applications/pd_added/")
+
+  # Display the list of files and ask user to select
+  selected_names=$(zenity --list --title="Select .desktop Files to Remove" --text="Choose .desktop files to remove:" --checklist --column="Include" --column="Name" --separator="," $files)
+
+  if [[ -z $selected_names ]]; then
+    zenity --info --text="No file selected for removal. Quitting..." --title="Operation Cancelled"
+    exit 0
+  fi
+
+  IFS=',' read -ra selected_names_array <<< "$selected_names"
+
+  for selected_name in "${selected_names_array[@]}"; do
+    selected_file=$(find "$PREFIX/share/applications/pd_added/" -name "*.desktop" -type f -exec awk -F '=' -v name="$selected_name" '$0 ~ "Name=" name {print FILENAME}' {} \;)
+
+    rm "$selected_file"
+
+    zenity --info --text="File '$selected_name' has been removed successfully!" --title="Success"
+  done
 fi
 EOF
 chmod +x "$PREFIX/bin/add2menu"
