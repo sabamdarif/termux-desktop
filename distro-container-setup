@@ -15,7 +15,7 @@ function distro_questions() {
 	read -p "${Y}select an option (Default 1): "${W} distro_answer
     banner
 	read -p "${R} [${W}-${R}]${Y}Do you want to create a normal user account ${C}(Recomended) ${Y}(y/n) "${W} useradd_answer
-    if [ "$useradd_answer" = "n" ]; then
+    if [[ "$useradd_answer" == "n" ]]; then
     banner
     echo "${R} [${W}-${R}]${G}Skiping User Account Setup"${W}
     else
@@ -44,13 +44,13 @@ done
 }
 
 function setup_distro() {
-    if [ "$distro_answer" = "1" ]; then
+    if [[ "$distro_answer" == "1" ]]; then
     selected_distro="debian"
-    elif [ "$distro_answer" = "2" ]; then
+    elif [[ "$distro_answer" == "2" ]]; then
     selected_distro="ubuntu"
-    elif [ "$distro_answer" = "3" ]; then
+    elif [[ "$distro_answer" == "3" ]]; then
     selected_distro="alpine"
-    elif [ "$distro_answer" = "4" ]; then
+    elif [[ "$distro_answer" == "4" ]]; then
     selected_distro="fedora"
     else
     selected_distro="debian"
@@ -67,15 +67,15 @@ function setup_distro() {
 
     distro_path="$PREFIX/var/lib/proot-distro/installed-rootfs/$selected_distro"
 
-    if [ "$selected_distro" = "fedora" ]; then
+    if [[ "$selected_distro" == "fedora" ]]; then
     package_manager="dnf"
-    elif [ "$selected_distro" = "alpine" ]; then
+    elif [[ "$selected_distro" == "alpine" ]]; then
     package_manager="apk"
     else
     package_manager="apt"
     fi
     
-    if [ "$selected_distro" = "alpine" ]; then
+    if [[ "$selected_distro" == "alpine" ]]; then
     install_command="add"
     remove_command="del"
     remove_command2="del"
@@ -94,7 +94,7 @@ function distro_basic_task() {
     banner
     echo "${R}[${W}-${R}]${G} Updating ${C}$selected_distro ${G}And Install Required Packages"${W}
     echo
-    if [ "$useradd_answer" = "y" ]; then
+    if [[ "$useradd_answer" == "y" ]]; then
     final_user_name="${user_name}"
 cat <<EOF > $distro_path/root/useradd.sh
 #!/bin/bash
@@ -145,7 +145,7 @@ EOF
 
 function distro_create_app_installer() {
     echo "${R}[${W}-${R}]${G} Create App Launcher"${W}
-if [ "$useradd_answer" = "y" ]; then
+if [[ "$useradd_answer" == "y" ]]; then
 savepath="$distro_path/home/$final_user_name"
 else
 savepath="$distro_path/root"
@@ -164,7 +164,7 @@ copy_desktop_files() {
         replace_exec_line "\$package"
         grep_pattern="$distro_path/usr/share/applications/\${package}*.desktop"
 
-        if [ "\$(ls -1 \$grep_pattern 2>/dev/null)" ]; then
+        if [[ "\$(ls -1 \$grep_pattern 2>/dev/null)" ]]; then
 		for subpackage in \$grep_pattern; do
 
 			filename=\$(basename "\$subpackage")
@@ -188,7 +188,7 @@ remove_desktop_files() {
         rm "$PREFIX/share/applications/\${package}.desktop" 2>/dev/null
         grep_pattern="$distro_path/usr/share/applications/\${package}*.desktop"
 
-        if [ "\$(ls -1 \$grep_pattern 2>/dev/null)" ]; then
+        if [[ "\$(ls -1 \$grep_pattern 2>/dev/null)" ]]; then
 		for subpackage in \$grep_pattern; do
 
 			filename=\$(basename "\$subpackage")
@@ -202,21 +202,21 @@ remove_desktop_files() {
     done
 }
 
-if [ "\$#" -eq 0 ]; then
+if [[ "\$#" -eq 0 ]]; then
     proot-distro login --user $final_user_name $selected_distro --shared-tmp
-elif [ "\$1" = "install" ]; then
+elif [[ "\$1" = "install" ]]; then
 echo "sudo $package_manager $install_command \${@:2}
 rm packinstall.sh
 " > $savepath/packinstall.sh
     proot-distro login --user $final_user_name $selected_distro -- /bin/sh -c 'bash packinstall.sh'
     copy_desktop_files "\${@:2}"
-elif [ "\$1" = "$remove_command" ]; then
+elif [[ "\$1" = "$remove_command" ]]; then
 echo "sudo $package_manager $remove_command \${@:2}
 rm packremove.sh
 " > $savepath/packremove.sh
     proot-distro login --user $final_user_name $selected_distro -- /bin/sh -c 'bash packremove.sh'
     remove_desktop_files "\${@:2}"
-elif [ "\$1" = "$remove_command2" ];then
+elif [[ "\$1" = "$remove_command2" ]];then
 echo "sudo $package_manager $remove_command2 \${@:2}
 rm packremove.sh
 " > $savepath/packremove.sh

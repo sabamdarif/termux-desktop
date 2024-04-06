@@ -26,7 +26,7 @@ function hw_questions() {
 	echo
 	read -p "${Y}select an option : "${W} termux_hw_answer
 
-    if [ "termux_hw_answer" = "1" ] || [ "termux_hw_answer" = "" ];then
+    if [[ $termux_hw_answer == "1" || $termux_hw_answer == "3" ]]; then
     echo
     echo "${R} [${W}-${R}]${G}Select Hardware Acceleration Method Distro Container"${W}
     echo
@@ -47,30 +47,30 @@ function hw_questions() {
 #########################################################################
 
 function setup_hw_method() {
-    if [ "termux_hw_answer" = "1" ];then
+   if [[ $termux_hw_answer = "1" ]]; then
     initialize_server_method="MESA_NO_ERROR=1 MESA_GL_VERSION_OVERRIDE=4.3COMPAT MESA_GLES_VERSION_OVERRIDE=3.2 GALLIUM_DRIVER=zink ZINK_DESCRIPTORS=lazy virgl_test_server --use-egl-surfaceless --use-gles &"
     selected_hw_method="zink"
     selected_pd_hw_method="zink"
-    elif [ "termux_hw_answer" = "2" ];then
+elif [[ $termux_hw_answer = "2" ]]; then
     initialize_server_method="virgl_test_server_android &"
     selected_hw_method="virpipe"
     selected_pd_hw_method="virpipe"
-    elif [ "termux_hw_answer" = "3" ];then
+elif [[ $termux_hw_answer = "3" ]]; then
     initialize_server_method="MESA_NO_ERROR=1 MESA_GL_VERSION_OVERRIDE=4.3COMPAT MESA_GLES_VERSION_OVERRIDE=3.2 GALLIUM_DRIVER=zink ZINK_DESCRIPTORS=lazy virgl_test_server --use-egl-surfaceless --use-gles &"
     selected_hw_method="virpipe"
     selected_pd_hw_method="virpipe"
-    else
+else
     initialize_server_method="MESA_NO_ERROR=1 MESA_GL_VERSION_OVERRIDE=4.3COMPAT MESA_GLES_VERSION_OVERRIDE=3.2 GALLIUM_DRIVER=zink ZINK_DESCRIPTORS=lazy virgl_test_server --use-egl-surfaceless --use-gles &"
     selected_hw_method="virpipe"
-    fi
-    if [ "pd_hw_answer" = "1" ];then
+fi
+if [[ $pd_hw_answer = "1" ]]; then
     selected_pd_hw_method="zink"
-    elif [ "pd_hw_answer" = "2" ];then
+elif [[ $pd_hw_answer = "2" ]]; then
     selected_pd_hw_method="virpipe"
-    else
+else
     echo "${R} [${W}-${R}]${G}Uses The Previous Selection For Distro"${W}
     echo
-    fi
+fi
 }
 
 hw_questions
