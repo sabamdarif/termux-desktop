@@ -219,9 +219,9 @@ function questions() {
 	echo
 	read -p "${R}[${W}-${R}]${Y}Select Wine Installation Method: "${W} wine_answer
     banner
-    read -p "${R} [${W}-${R}]${Y}Do you want to Setting Up Zsh (y/n) "${W} zsh_answer
+    read -p "${R} [${W}-${R}]${Y}Do you want to Configure Zsh (y/n) "${W} zsh_answer
     banner
-	read -p "${R} [${W}-${R}]${Y}Do you want to Setting Up termux-x11 ${C}(Rcomended) ${Y}(y/n) "${W} tx11_answer
+	read -p "${R} [${W}-${R}]${Y}Do you want to Configure termux-x11 ${C}(Rcomended) ${Y}(y/n) "${W} tx11_answer
 	banner
 	echo "${R} [${W}-${R}]${Y}Do you want to add a distro container (proot distro)"${W}
 	echo
@@ -268,11 +268,11 @@ function install_desktop() {
 
 function theme_installer() {
     banner
-    echo "${R} [${W}-${R}]${G} Setting Up Theme: ${C} ${style_answer}"${W}
+    echo "${R} [${W}-${R}]${G} Configure Theme: ${C} ${style_answer}"${W}
 	echo
     sleep 3
     banner
-    echo "${R} [${W}-${R}]${G} Setting Up Wallpapers..."${W}
+    echo "${R} [${W}-${R}]${G} Configure Wallpapers..."${W}
 	echo
 	check_and_create_directory "$PREFIX/share/backgrounds/"
 	download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/xfce/look_${style_answer}/wallpaper.tar.gz" "$PREFIX/share/backgrounds/"
@@ -318,7 +318,7 @@ function additional_required_package_installler() {
 
 function setup_config() {
 	banner
-	echo "${R} [${W}-${R}]${G} Setting Up Xfce Style: ${C}${style_answer}${W}"
+	echo "${R} [${W}-${R}]${G} Configure Xfce Style: ${C}${style_answer}${W}"
 	echo
 	banner
 	cd ~
@@ -329,8 +329,11 @@ function setup_config() {
     style_answer="1"
 	theme_installer
 	fi
-	if [ "$ext_wall_answer" = "y" ]; then
-	echo "${R} [${W}-${R}]${G} Setting Up Some Extra Wallpapers..."${W}
+	if [ "$ext_wall_answer" = "n" ]; then
+	echo "${R} [${W}-${R}]${C}Skipping Extra Wallpapers Setup..."${W}
+	echo
+	else
+	echo "${R} [${W}-${R}]${G}Configure Some Extra Wallpapers..."${W}
 	echo
 	check_and_create_directory "$PREFIX/share/backgrounds/"
 	download_and_extract "https://archive.org/download/wallpaper-extra.tar/wallpaper-extra.tar.gz" "$PREFIX/share/backgrounds/"
@@ -340,7 +343,7 @@ function setup_config() {
 
 function setup_folder() {
 	banner
-	echo "${R} [${W}-${R}] ${G}Setting Up Storage..."${W}
+	echo "${R} [${W}-${R}] ${G}Configure Storage..."${W}
 	echo
 	while true; do
 	termux-setup-storage
@@ -368,7 +371,9 @@ done
 ##################### Hardware Acceleration Setup #######################
 #########################################################################
 function hw_config() {
-# Working On Here
+	banner
+	echo "${R} [${W}-${R}]${G}Configure Hardware Acceleration"${W}
+	echo
     wget https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/enable-hw-acceleration ; chmod +x enable-hw-acceleration ; . enable-hw-acceleration
 }
 
@@ -376,9 +381,13 @@ function hw_config() {
 ########################### Proot Distro Setup ##########################
 #########################################################################
 function distro_container_setup() {
-	if [ "$distro_add_answer" = "y" ]; then
+	if [ "$distro_add_answer" = "n" ]; then
 	banner
-	echo "${R} [${W}-${R}]${G}Setting Up Distro Container"${W}
+	echo "${R} [${W}-${R}]${C}Skipping Distro Container Setup..."${W}
+	echo
+	else
+	banner
+	echo "${R} [${W}-${R}]${G}Configure Distro Container"${W}
 	echo
 	wget https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/distro-container-setup ; chmod +x distro-container-setup ; . distro-container-setup
 	fi
@@ -390,7 +399,7 @@ function distro_container_setup() {
 
 function setup_vnc() {
     banner
-    echo "${R} [${W}-${R}]${G} Setting Up Vnc..."${W}
+    echo "${R} [${W}-${R}]${G} Configure Vnc..."${W}
     echo
     package_install_and_check "tigervnc"
 	package_install_and_check "xorg-xhost"
@@ -425,9 +434,19 @@ EOF
 }
 
 function gui_launcher() {
-    if [ "$tx11_answer" = "y" ]; then
+    if [ "$tx11_answer" = "n" ]; then
+cat << EOF > "$PREFIX/bin/gui"
+#!/data/data/com.termux/files/usr/bin/bash
+
+if [ "\$1" = "-start" ]; then
+vncstart
+elif [ "\$1" = "-stop" ]; then
+vncstop
+fi
+EOF
+	else
         banner
-        echo "${R} [${W}-${R}]${G}Setting Up Termux:X11 "${W}
+        echo "${R} [${W}-${R}]${G}Configure Termux:X11 "${W}
         echo
         package_install_and_check "termux-x11-nightly"
 
@@ -463,19 +482,18 @@ check_and_delete "$PREFIX/bin/gui"
 cat << EOF > "$PREFIX/bin/gui"
 #!/data/data/com.termux/files/usr/bin/bash
 
-if [ "\$1" = "-start" ]; then
-vncstart
-elif [ "\$1" = "-stop" ]; then
-vncstop
-elif [ "\$1" = "-tx11" ]; then
+if [ "\$1" = "-tx11" ]; then
 tx11start
 elif [ "\$1" = "-kill" ]; then
 tx11stop
-    fi
+elif [ "\$1" = "-start" ]; then
+vncstart
+elif [ "\$1" = "-stop" ]; then
+vncstop
+fi
 EOF
-
-    chmod +x "$PREFIX/bin/gui"
 	    fi
+chmod +x "$PREFIX/bin/gui"
 }
 
 #########################################################################
@@ -559,7 +577,8 @@ function media_player_installer() {
 	if [[ ${player_answer} == "1" ]]; then
     echo "${R} [${W}-${R}]${G} Installing Vlc..."${W}
 	echo
-		package_install_and_check "vlc-qt-static vlc-qt"
+		package_install_and_check "vlc-qt-static"
+		package_install_and_check "vlc-qt"
 	elif [[ ${player_answer} == "2" ]]; then
     echo "${R} [${W}-${R}]${G} installing Audacious..."${W}
 	echo
@@ -567,7 +586,8 @@ function media_player_installer() {
 	elif [[ ${player_answer} == "3" ]]; then
     echo "${R} [${W}-${R}]${G} Installing Vlc..."${W}
 	echo
-		package_install_and_check "vlc-qt-static/x11 vlc-qt/x11"
+		package_install_and_check "vlc-qt-static"
+		package_install_and_check "vlc-qt"
     echo "${R} [${W}-${R}]${G} installing Audacious..."${W}
 	echo
 		package_install_and_check "audacious"
@@ -624,13 +644,14 @@ function photo_editor_installer() {
 function setup_synaptic() {
 	banner
     if [ "$synaptic_answer" == "y" ]; then
-	echo "${R} [${W}-${R}]${G}Installing Synaptic Graphical Package Manager..."${W}
-	echo
-		   package_install_and_check "synaptic"
-else
-    echo "${R} [${W}-${R}]${C}Canceling Synaptic Setup.."${W}
+	banner
+    echo "${R} [${W}-${R}]${C}Skipping Synaptic Setup.."${W}
 	echo
     sleep 1.5
+	else
+	echo "${R} [${W}-${R}]${G}Installing Synaptic Graphical Package Manager..."${W}
+	echo
+	package_install_and_check "synaptic"
 fi
 }
 
@@ -646,7 +667,7 @@ function setup_zsh() {
 	shell_name="bash"
 else
 shell_name="zsh"
-	echo "${R} [${W}-${R}]${G}Setting Up Zsh.."${W}
+	echo "${R} [${W}-${R}]${G}Configure Zsh.."${W}
 	echo
 	package_install_and_check "zsh"
 	package_install_and_check "git"
