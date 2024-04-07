@@ -213,7 +213,7 @@ function questions() {
 	echo
 	echo "${Y}2. Using Mobox ${C}(best)"${W}
 	echo
-	echo "${R}[${W}-${R}]${B}Know More About Mobox:- https://github.com/olegos2/mobox/"${W}
+	echo "  ${R}[${W}-${R}]${B} Know More About Mobox:- https://github.com/olegos2/mobox/"${W}
 	echo
 	echo "${Y}3. Skip"${W}
 	echo
@@ -221,7 +221,7 @@ function questions() {
     banner
     read -p "${R} [${W}-${R}]${Y}Do you want to Configure Zsh (y/n) "${W} zsh_answer
 	banner
-	read -p "${R} [${W}-${R}]${Y}Do you want install ${C}nala${Y}better implantation of APT(y/n) "${W} nala_answer
+	read -p "${R} [${W}-${R}]${Y}Do you want install ${C}nala ${Y}better implantation of APT (y/n) "${W} nala_answer
     banner
 	read -p "${R} [${W}-${R}]${Y}Do you want to Configure termux-x11 ${C}(Rcomended) ${Y}(y/n) "${W} tx11_answer
 	banner
@@ -256,14 +256,6 @@ function install_required_packages() {
 	done
 	update_sys
 	banner
-	if [[ "$nala_answer" == "n" ]];then
-	echo "${R} [${W}-${R}]${C}Skipping nala Setup..."${W}
-	echo
-	else
-	echo "${R} [${W}-${R}]${Y} Installling nala"${W}
-	echo
-	package_install_and_check "nala"
-	fi
 }
 
 function install_desktop() {
@@ -369,13 +361,12 @@ done
 	cd $HOME
 	directories=(Desktop Music Downloads Pictures Videos)
 	for dir in "${directories[@]}"; do
-	check_and_create_directory "$dir"
 	check_and_create_directory "/sdcard/$dir"
 	done
-	ln -s "/sdcard/Music" "Music"
-	ln -s "/sdcard/Download" "Downloads"
-	ln -s "/sdcard/Pictures" "Pictures"
-	ln -s "/sdcard/Videos" "Videos"
+	ln -s "/sdcard/Music" "$HOME/"
+	ln -s /sdcard/Download $HOME/Downloads
+	ln -s "/sdcard/Pictures" "$HOME/"
+	ln -s "/sdcard/Videos" "$HOME/"
 }
 
 #########################################################################
@@ -671,7 +662,16 @@ fi
 ############################## Setup Zsh ################################
 #########################################################################
 
-function setup_zsh() {
+function setup_zsh_nala() {
+	banner
+	if [[ "$nala_answer" == "n" ]];then
+	echo "${R} [${W}-${R}]${C}Skipping nala Setup..."${W}
+	echo
+	else
+	echo "${R} [${W}-${R}]${Y} Installling nala"${W}
+	echo
+	package_install_and_check "nala"
+	fi
 	banner
     if [[ "$zsh_answer" == "n" ]]; then
 	echo "${R} [${W}-${R}]${C}Canceling Zsh Setup..."${W}
@@ -738,7 +738,10 @@ function notes() {
 	echo "${R} [${W}-${R}]${C}See Uses Section in github to know how to use it"${W}
 	echo
 	echo "${R} [${W}-${R}]${C}URL:- ${B}https://github.com/sabamdarif/termux-desktop/blob/main/README.md#usage"${W}
-	if [[ "$distro_add_answer" == "y" ]]; then
+	if [[ "$distro_add_answer" == "n" ]]; then
+	echo "${R} [${W}-${R}]${C}You skip distro container setup"${W}
+	echo
+	else
 	echo "${R} [${W}-${R}]${C}See how to use distro container"${W}
 	echo
 	echo "${R} [${W}-${R}]${C}URL:- ${B}https://github.com/sabamdarif/termux-desktop/blob/main/proot-caontainer.md"${W}
@@ -750,7 +753,7 @@ update_sys
 install_required_packages
 questions
 setup_folder
-setup_zsh
+setup_zsh_nala
 add_shell_shortcut
 install_desktop
 browser_installer

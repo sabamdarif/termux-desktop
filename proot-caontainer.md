@@ -36,6 +36,8 @@
 - <b>Type `Distro-Name install package name` Install And Add Them Automaticly In Termux Menu</b>
 
    > LIke: debian install libreoffice
+
+   > If Packages Failed To Add Automaticly Using This Method Then Please Add Them Manually using "Add To Menu"
    <center><img src="images/apps/container-install-libreoffice.png"></center> 
 - <b>Type `Distro-Name` To Login Into Distro</b>
 

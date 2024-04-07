@@ -25,6 +25,8 @@
 - :paperclips: [Termux:X11](https://github.com/termux/termux-x11) Added
 - :link: And Much More...
 
+# Read Everything Carefully Before Installing It !
+
 ## Requirements:
 - No Root Required
 - An Android 7+ phone
