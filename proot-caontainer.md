@@ -3,8 +3,8 @@
 - <b>Termux Natively Support Only Few Apps</b>
 - <b>My Scripe Help You Install More Apps From Another Distro Into Termux</b>
 - <b>No Need To Login Into That Proot Distro To Use The Installed Apps</b>
-- <b>You Can See Installed Apps In Termux Desktop Apps Menu</b>
-- <b>You Can Launch Those Installed Apps Directly From Termux</b>
+- <b>You Can See Those Apps In Termux Desktop's Apps Menu</b>
+- <b>You Can Also Launch Those Apps Directly From Termux</b>
 
 ## How To use It:
 
@@ -28,7 +28,7 @@
 
 <br>
 
-### Another Shortcut Way To Do This {BETA}:
+### Another Shortcut Way To Install And Add Them At Once {BETA}:
 
 - <b>Type `Distro-Name update or upgrade` To Update or Upgrade The Distro</b>
 
@@ -38,7 +38,10 @@
    > LIke: debian install libreoffice
 
    > If Packages Failed To Add Automaticly Using This Method Then Please Add Them Manually using "Add To Menu"
-   <center><img src="images/apps/container-install-libreoffice.png"></center> 
+   <center><img src="images/apps/container-install-libreoffice.png"></center>
+
+### How To Login Into Your Installed Distro:
+
 - <b>Type `Distro-Name` To Login Into Distro</b>
 
     >Like: type debian to login into debian

@@ -71,7 +71,7 @@
 
 ## See More Natively Supported Apps: [Here](applist.md)
 
-## Want To Install More Apps (Like: Libreoffice) Which Are Not Avilable Termux:
+## Want To Install More Apps (Like: Libreoffice) Which Are Not Avilable In Termux:
 
 ### Libre Office:
 

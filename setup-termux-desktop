@@ -419,7 +419,9 @@ EOF
     chmod +x "$PREFIX/bin/vncstart"
     check_and_delete "$PREFIX/bin/vncstop"
 cat <<'EOF' > "$PREFIX/bin/vncstop"
-if [ "$1" == "-f" ]; then
+#!/data/data/com.termux/files/usr/bin/bash
+
+if [[ "$1" == "-f" ]]; then
 pkill Xtigervnc
 else
 display_numbers=$(vncserver -list | awk '/^:[0-9]+/ {print $1}')
@@ -471,6 +473,8 @@ EOF
 chmod +x $PREFIX/bin/tx11start
 
 cat <<'EOF' > "$PREFIX/bin/tx11stop"
+#!/data/data/com.termux/files/usr/bin/bash
+
 termux_x11_pid=$(pgrep -f "/system/bin/app_process / com.termux.x11.Loader :1.0")
 xfce_pid=$(pgrep -f "xfce4-session")
 if [[ -n "$termux_x11_pid" ]] && [[ -n "$xfce_pid" ]]; then
@@ -581,7 +585,6 @@ function media_player_installer() {
     echo "${R} [${W}-${R}]${G} Installing Vlc..."${W}
 	echo
 		package_install_and_check "vlc-qt-static"
-		package_install_and_check "vlc-qt"
 	elif [[ ${player_answer} == "2" ]]; then
     echo "${R} [${W}-${R}]${G} installing Audacious..."${W}
 	echo
@@ -590,7 +593,6 @@ function media_player_installer() {
     echo "${R} [${W}-${R}]${G} Installing Vlc..."${W}
 	echo
 		package_install_and_check "vlc-qt-static"
-		package_install_and_check "vlc-qt"
     echo "${R} [${W}-${R}]${G} installing Audacious..."${W}
 	echo
 		package_install_and_check "audacious"
@@ -602,7 +604,6 @@ function media_player_installer() {
     echo "${R} [${W}-${R}]${G} Installing Vlc..."${W}
 	echo
 		package_install_and_check "vlc-qt-static"
-		package_install_and_check "vlc-qt"
 	fi
 }
 

@@ -25,10 +25,11 @@ pdrun program
 
 <center><img src="images/cpu-z.png"></center>
 
-## Glmark2 In Termux
+## Hardware Acceleration In Termux:
+
 <center><img src="images/termux-glmark2.png"></center>
 
-## How to Change Hardware Acceleration Methode ?
+## How to Change Hardware Acceleration Method ?
 
 - <b>Go To `$PREFIX/bin`</b>
 
@@ -40,11 +41,11 @@ pdrun program
 
 <br><br>
 
-# Performance results 
-
-Device used: Lenovo Legion Y700 2022 model (Snapdragon 870 - Adreno 650)
+# Performance results:
 
 ### This Test Was Made By [DroidMaster](https://github.com/LinuxDroidMaster)
+
+> Device used: Lenovo Legion Y700 2022 model (Snapdragon 870 - Adreno 650)
 
 🔥[[Video -By DroidMaster] Hardware Acceleration Part 1 - What it is, how it is used (VIRGL AND ZINK)](https://www.youtube.com/watch?v=fgGOizUDQpY)   
 🔥[[Video -By DroidMaster] Hardware Acceleration Part 2 - (VIRGL, ZINK, TURNIP) - how can you use them](https://youtu.be/07kq4RHbXrE?si=5ClDpIm8Kr3M0Y_D)

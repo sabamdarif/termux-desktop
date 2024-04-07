@@ -150,7 +150,7 @@ if [[ "$useradd_answer" == "n" ]]; then
 savepath="$distro_path/root"
 else
 savepath="$distro_path/home/$final_user_name"
-fi 
+fi
 cat <<EOF > "$PREFIX/bin/$selected_distro"
 #!/data/data/com.termux/files/usr/bin/bash
 
@@ -318,6 +318,10 @@ chmod +x $PREFIX/share/applications/add2menu.desktop
 cp $PREFIX/share/applications/add2menu.desktop $HOME/Desktop/
 }
 
+#########################################################################
+########################## App Launcher Setup ###########################
+#########################################################################
+
 function distro_app_launch_setup() {
 cat <<EOF > "$PREFIX/bin/pdrun"
 #!/data/data/com.termux/files/usr/bin/bash
@@ -328,9 +332,27 @@ EOF
 chmod +x "$PREFIX/bin/pdrun"
 }
 
+#########################################################################
+###################### Distro Directory Link/Setup ######################
+#########################################################################
+
+function distro_folders_link() {
+    echo "${R} [${W}-${R}]${G}Link Distro Directories With Internal Storage"${W}
+cat <<EOF > "$savepath/setup-folders.sh"
+directories=(Desktop Music Downloads Pictures Videos)
+for dir in "${directories[@]}"; do
+ln -s "/data/data/com.termux/files/home/$dir" "$HOME/"
+done
+rm setup-folders.sh
+EOF
+proot-distro login --user $final_user_name $selected_distro -- /bin/sh -c 'bash setup-folders.sh'
+}
+
+
 distro_questions
 setup_distro
 distro_basic_task
 distro_fix_sound_issue
 distro_create_app_installer
 distro_app_launch_setup
+distro_folders_link
