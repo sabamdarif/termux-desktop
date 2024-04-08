@@ -2,7 +2,7 @@
 
 function hw_install_required_packages() {
     banner
-    echo "${R} [${W}-${R}]${Y} Installing Required Packages For Hardware Acceleration"${W}
+    echo "${R} [${W}-${R}]${G} Installing Required Packages For Hardware Acceleration"${W}
 	echo
       hw_packs=(mesa-zink virglrenderer-mesa-zink vulkan-loader-android angle-android virglrenderer-android)
         for hw_pack_name in "${hw_packs[@]}"; do

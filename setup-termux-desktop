@@ -271,7 +271,7 @@ function install_desktop() {
 
 function theme_installer() {
     banner
-    echo "${R} [${W}-${R}]${G} Configure Theme: ${C} ${style_answer}"${W}
+    echo "${R} [${W}-${R}]${G} Configure Theme: ${C}${style_answer}"${W}
 	echo
     sleep 3
     banner
@@ -363,6 +363,7 @@ done
 	for dir in "${directories[@]}"; do
 	check_and_create_directory "/sdcard/$dir"
 	done
+	check_and_create_directory "Desktop"
 	ln -s "/sdcard/Music" "$HOME/"
 	ln -s /sdcard/Download $HOME/Downloads
 	ln -s "/sdcard/Pictures" "$HOME/"
@@ -566,7 +567,7 @@ function ide_installer() {
 	echo
 	sleep 2
 	else
-    echo "${R} [${W}-${R}]${Y} Installing Vs Code(Code-Oss)..."${W}
+    echo "${R} [${W}-${R}]${G} Installing Vs Code(Code-Oss)..."${W}
 	echo
     sleep 1
 		package_install_and_check "code-oss"
@@ -669,7 +670,7 @@ function setup_zsh_nala() {
 	echo "${R} [${W}-${R}]${C}Skipping nala Setup..."${W}
 	echo
 	else
-	echo "${R} [${W}-${R}]${Y} Installling nala"${W}
+	echo "${R} [${W}-${R}]${G} Installling nala"${W}
 	echo
 	package_install_and_check "nala"
 	fi

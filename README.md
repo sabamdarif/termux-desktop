@@ -24,8 +24,9 @@
 - :mechanical_arm: [Hardware Acceleration Enabled](hw-acceleration.md)
 - :paperclips: [Termux:X11](https://github.com/termux/termux-x11) Added
 - :link: And Much More...
+<br>
 
-# Read Everything Carefully Before Installing It !
+## :warning: Read Everything Carefully Before Installing It !
 
 ## Requirements:
 - No Root Required
@@ -73,7 +74,7 @@
 
 ## Want To Install More Apps (Like: Libreoffice) Which Are Not Avilable In Termux:
 
-### Libre Office:
+## Libre Office:
 
 <center><img src="images/apps/container-libreoffice-2.png"></center>
 
@@ -89,13 +90,13 @@
 <br>
 <br>
 
-## Installation:
+# Installation:
 
 >NOTE: This only works on Termux
 
 >NOTE: A Fresh Desktop Install Is Always Best / Recommended
 
-### Steps:
+## Steps:
 
 ```
 pkg update -y
@@ -112,7 +113,7 @@ chmod +x setup-termux-desktop
 ```
 ./setup-termux-desktop
 ```
-### One Line Install:
+## One Line Install:
 
 ```
 pkg update -y ; pkg install wget -y ; wget https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop ; chmod +x setup-termux-desktop ; ./setup-termux-desktop
@@ -126,4 +127,4 @@ pkg update -y ; pkg install wget -y ; wget https://raw.githubusercontent.com/sab
 - **Type `tx11stop` to stop Termux:11 server**
 - **Type `vncstop -f` to kill vncserver**
 - **Type `gui -kill` to kill both vncserver and Termux:x11 At Once**
-## If you like my work then don't forget to give a Star :)
+## If you like my work then don't forget to give a Star :smile:

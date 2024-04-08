@@ -94,20 +94,26 @@ function distro_basic_task() {
     banner
     echo "${R}[${W}-${R}]${G} Updating ${C}$selected_distro ${G}And Install Required Packages"${W}
     echo
+    if [[ "$selected_distro" == "alpine" ]]; then
+    required_packs="apk add shadow sudo pulseaudio"
+    else
+    required_packs="$package_manager $install_command sudo pulseaudio -y"
+    fi
     if [[ "$useradd_answer" == "n" ]]; then
     final_user_name="root"
-cat <<EOF > $distro_path/root/useradd.sh
+cat <<EOF > $HOME/useradd.sh
 $package_manager update
-$package_manager $install_command sudo pulseaudio -y
+$required_packs
 rm useradd.sh
 EOF
+proot-distro login $selected_distro -- /bin/sh -c 'mv /data/data/com.termux/files/home/useradd.sh $HOME'
 proot-distro login $selected_distro -- /bin/sh -c 'bash useradd.sh'
     else
     final_user_name="${user_name}"
-cat <<EOF > $distro_path/root/useradd.sh
+cat <<EOF > $HOME/useradd.sh
 #!/bin/bash
 $package_manager update
-$package_manager $install_command sudo pulseaudio -y
+$required_packs
 useradd -m -s \$(which bash) ${final_user_name}
 echo "${final_user_name}:${pass}" | chpasswd
 chmod u+rw /etc/sudoers
@@ -115,7 +121,8 @@ echo "$final_user_name ALL=(ALL:ALL) ALL" >> /etc/sudoers
 chmod u-w /etc/sudoers
 rm useradd.sh
 EOF
-    proot-distro login $selected_distro -- /bin/sh -c 'bash useradd.sh'
+proot-distro login $selected_distro -- /bin/sh -c 'mv /data/data/com.termux/files/home/useradd.sh $HOME'
+proot-distro login $selected_distro -- /bin/sh -c 'bash useradd.sh'
     fi
     #  if [ "$selected_distro" == "debian" ] || [ "$selected_distro" == "ubuntu" ]; then
     # proot-distro login $selected_distro -- /bin/sh -c 'apt install nala -y'
@@ -144,6 +151,7 @@ EOF
 #########################################################################
 
 function distro_create_app_installer() {
+    banner
     echo "${R}[${W}-${R}]${G} Creating App Launcher"${W}
     check_and_create_directory "$PREFIX/share/applications/pd_added"
 if [[ "$useradd_answer" == "n" ]]; then
@@ -230,7 +238,7 @@ chmod +x "$PREFIX/bin/$selected_distro"
 #########################################################################
 ########################### Add To Menu Setup ###########################
 #########################################################################
-
+banner
 echo "${R} [${W}-${R}]${G}Installing ${C}zenity"${W}
 package_install_and_check "zenity"
 
