@@ -1,5 +1,15 @@
 # Hardware Acceleration in Termux
 
+- <b>When You Run The Installer Script Just Chose The Hardware Acceleration Method</b>
+- <b>If You Type Yes For Distro Container Setup So You Need To Chose A Method For The Distro Too</b>
+- <b>Then Everything Will Be Configured Automaticly</b>
+
+### Use [Cpu Z](https://play.google.com/store/apps/details?id=com.cpuid.cpu_z&pcampaignid=web_share) To Know About Your GPU
+
+<center><img src="images/cpu-z.png"></center>
+
+<b>Search On Google About Your Gpu , Which Supprot Best With It virpipe or zink (you will probably find any reddit post about it)
+
 ### How To use Hardware Acceleration in Termux ?
 
 - <b>Start Termux Desktop Using Vnc Or Termux:x11</b>(probably Best Way To Do That)
@@ -20,10 +30,6 @@ pdrun program
 - <b>Run The Program From Termux Menu</b>
 
 <br><br>
-
-# Use [Cpu Z](https://play.google.com/store/apps/details?id=com.cpuid.cpu_z&pcampaignid=web_share) To Know About Your GPU
-
-<center><img src="images/cpu-z.png"></center>
 
 ## Hardware Acceleration In Termux:
 

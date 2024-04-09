@@ -14,20 +14,30 @@
 
 ## Features:
 
-- :globe_with_meridians: 2 Browsers ( Chromium & Mozilla Firefox )
-- :tv: VLC Media Player work fine
 - :books: Easy To Setup
-- :man_technologist: Two Code Editor ( VS Code & Geany )
-- :camera: Two Image Editor ( Gimp & Inkscape )
+- :art: New Beautiful Theme And Styles
 - :wine_glass: Wine To Run Windows Apps
-- :art: New Sets of Beautiful Theme And Wallpapers
-- :mechanical_arm: [Hardware Acceleration Enabled](hw-acceleration.md)
-- :paperclips: [Termux:X11](https://github.com/termux/termux-x11) Added
+- :mechanical_arm: Hardware Acceleration Enabled
+- :paperclips: Termux:X11 Or Vnc For Gui Access
+-  :jigsaw: One Click To Install Some useful Apps
+   - :globe_with_meridians: Browser: Firefox Or Chromium
+   - :man_technologist: Code Editor: VS Code Or Geany
+   - :camera: Image Editor: Gimp Or Inkscape
+   - :wine_glass: Wine To Run Windows Apps
 - :link: And Much More...
 <br>
 
-## :warning: Read Everything Carefully Before Installing It !
+## :warning: Read Everything Carefully Before Using It !
 
+### 1. Check Basic Requirment: [from here](#requirements)
+### 2. Check All Avilable Desktop Styles: [from here](#styles)
+### 3. Check About Hardware Acceleration : [from here](#hw-acceleration)
+### 4. Check About Distro Container: [from here](#distro-container)
+### 5. Check Natively Supported Apps list: [from here](#supported-apps)
+### 6. Installation: [from here](#installation)
+
+
+<a name="requirements"></a>
 ## Requirements:
 - No Root Required
 - An Android 7+ phone
@@ -37,6 +47,7 @@
 - 1.5 - 2 GB Of Internet
 - 3 - 4 GB Of Free Storage (minimum)
 - VNC Client [RealVnc](https://play.google.com/store/apps/details?id=com.realvnc.viewer.android) Or [Nethunter Kex](https://store.nethunter.com/en/packages/com.offsec.nethunter.kex/)
+- [Termux:X11](https://github.com/termux/termux-x11/releases)
 
 <br>
 
@@ -45,6 +56,7 @@
 <center><img src="images/xfce/look_1/look.png"></center>
 <br>
 
+<a name="styles"></a>
 # See Other Styles: [Here](xfce_styles.md)
 
 ## Screenshots:
@@ -70,6 +82,7 @@
 
 <center><img src="images/apps/wine.png"></center>
 
+<a name="supported-apps"></a>
 ## See More Natively Supported Apps: [Here](applist.md)
 
 ## Want To Install More Apps (Like: Libreoffice) Which Are Not Avilable In Termux:
@@ -78,18 +91,21 @@
 
 <center><img src="images/apps/container-libreoffice-2.png"></center>
 
-
+<a name="distro-container"></a>
 ## See How To Use Distro Container: [Click Here](proot-caontainer.md)
 
 ## Hardware Acceleration In Distro Container And Also In Termux:
 
 <center><img src="images/pdrun-glmark2.png"></center>
 
+<a name="hw-acceleration"></a>
+
 ## Know More About Hardware Acceleration: [Here](hw-acceleration.md)
 
 <br>
 <br>
 
+<a name="installation"></a>
 # Installation:
 
 >NOTE: This only works on Termux
