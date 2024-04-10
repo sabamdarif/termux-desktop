@@ -273,6 +273,7 @@ function theme_installer() {
     banner
     echo "${R} [${W}-${R}]${G} Configure Theme: ${C}${style_answer}"${W}
 	echo
+	package_install_and_check "gnome-themes-extra"
     sleep 3
     banner
     echo "${R} [${W}-${R}]${G} Configure Wallpapers..."${W}
@@ -309,6 +310,8 @@ function additional_required_package_installler() {
     package_install_and_check "cairo-dock-core"
     package_install_and_check "vala-panel-appmenu"
 	package_install_and_check "rofi"
+	elif [[ "$style_answer" == "4" ]]; then
+    package_install_and_check "gtk2-engines-murrine"
 	else
 	echo "${G} No Additional Packages Required For Theme: ${style_answer}"${W}
 	sleep 1

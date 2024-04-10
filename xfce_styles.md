@@ -27,7 +27,7 @@
 </details>
 <br>
 
-## 2. Minimalist Setup 1:
+## 3. Minimalist Setup 1:
 
 <center><img src="images/xfce/look_3/desktop.png"></center>
 
@@ -40,6 +40,21 @@
 
 </details>
 <br>
+
+## 4. Windows10 Style:
+
+<center><img src="images/xfce/look_4/desktop.png"></center>
+
+<details style ="font-size: larger">
+<summary><b style ="font-size: larger">Screenshots: </b></summary>
+
+|Apps|Menubar|Buttons|
+|--|--|--|
+|![img](images/xfce/look_4/basic-apps.png)|![img](images/xfce/look_4/menu.png)|![img](images/xfce/look_4/win-like-close.png)|
+
+</details>
+<br>
+
 <br>
 
 # More Coming soon...
