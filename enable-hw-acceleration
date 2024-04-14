@@ -10,37 +10,6 @@ function hw_install_required_packages() {
         done
 }
 
-function hw_questions() {
-    banner
-    echo "${R} [${W}-${R}]${G}First Read This"${W}
-    echo
-    echo "${R} [${W}-${R}]${B}This:- https://github.com/sabamdarif/termux-desktop/blob/main/hw-acceleration.md"${W}
-    echo
-    echo "${R} [${W}-${R}]${G}Select Hardware Acceleration Method Which Support Best Fot Your Device"${W}
-    echo
-	echo "${Y}1. ZINK"${W}
-	echo
-    echo "${Y}2. VIRGL"${W}
-	echo
-	echo "${Y}3. VIRGL ZINK"${W}
-	echo
-	read -p "${Y}select an option : "${W} termux_hw_answer
-
-    if [[ $termux_hw_answer == "1" || $termux_hw_answer == "3" ]]; then
-    echo
-    echo "${R} [${W}-${R}]${G}Select Hardware Acceleration Method Distro Container"${W}
-    echo
-    echo "${R} [${W}-${R}]${G}If You Are Not Sure So Skip It It Will Use The Previous One"${W}
-    echo
-    echo "${Y}1. ZINK"${W}
-	echo
-    echo "${Y}2. VIRGL ZINK"${W}
-	echo
-	echo "${Y}3. Skip"${W}
-	echo
-	read -p "${Y}select an option : "${W} pd_hw_answer
-    fi
-}
 
 #########################################################################
 ################# Add HW Server Initialize Method #######################
@@ -73,6 +42,5 @@ else
 fi
 }
 
-hw_questions
 hw_install_required_packages
 setup_hw_method

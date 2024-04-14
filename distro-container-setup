@@ -1,44 +1,5 @@
 #!/data/data/com.termux/files/usr/bin/bash
 
-function distro_questions() {
-    banner
-    echo "${R} [${W}-${R}]${G}Select Distro You Want To Add"${W}
-    echo
-	echo "${Y}1. Debian"${W}
-	echo
-	echo "${Y}2. Ubuntu"${W}
-	echo 
-	read -p "${Y}select an option (Default 1): "${W} distro_answer
-    banner
-	read -p "${R} [${W}-${R}]${Y}Do you want to create a normal user account ${C}(Recomended) ${Y}(y/n) "${W} useradd_answer
-    if [[ "$useradd_answer" == "n" ]]; then
-    banner
-    echo "${R} [${W}-${R}]${G}Skiping User Account Setup"${W}
-    else
-    echo "${R} [${W}-${R}]${G}Create user account"${W}
-    echo
-    while true; do
-    read -p "${R} [${W}-${R}]${G}Input username [Lowercase]: "${W} user_name
-    echo
-    read -p "${R} [${W}-${R}]${G}Input Password: "${W} pass
-    echo
-    read -p "${R} [${W}-${R}]${Y}Do you want to continue with username ${C}$user_name ${Y}and password ${C}$pass${Y}? (y/n) : " choice
-    case $choice in
-        [y]* )
-            echo "${R} [${W}-${R}]${G}Continuing with username ${C}$user_name ${G}and password ${C}$pass"
-            break;;
-        [n]* )
-            echo "${G}Please provide username and password again."${W}
-            echo
-            ;;
-        * )
-            echo "${R}Invalid input. Please enter 'y' or 'n'."${W}
-            ;;
-    esac
-done
-    fi
-}
-
 function setup_distro() {
     if [[ "$distro_answer" == "1" ]]; then
     selected_distro="debian"
@@ -304,7 +265,7 @@ cat <<EOF > "$PREFIX/bin/pdrun"
 #!/data/data/com.termux/files/usr/bin/bash
 bash ~/.${selected_distro}-sound-access
 xhost +
-proot-distro login $selected_distro --user $final_user_name --shared-tmp -- env DISPLAY=:1.0 GALLIUM_DRIVER=${selected_pd_hw_method} \$@
+proot-distro login $selected_distro --user $final_user_name --shared-tmp -- env DISPLAY=:1.0 GALLIUM_DRIVER=${selected_pd_hw_method} MESA_GL_VERSION_OVERRIDE=4.0 \$@
 EOF
 chmod +x "$PREFIX/bin/pdrun"
 }
@@ -326,7 +287,6 @@ proot-distro login --user $final_user_name $selected_distro -- /bin/sh -c 'bash 
 }
 
 
-distro_questions
 setup_distro
 distro_basic_task
 distro_fix_sound_issue

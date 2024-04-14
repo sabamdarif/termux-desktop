@@ -27,13 +27,13 @@
 - :link: And Much More...
 <br>
 
-## :warning: Read Everything Carefully Before Using It !
+## :warning: Check out them first :point_down:
 
 ### 1. Check Basic Requirment: [from here](#requirements)
-### 2. Check All Avilable Desktop Styles: [from here](#styles)
-### 3. Check About Hardware Acceleration : [from here](#hw-acceleration)
-### 4. Check About Distro Container: [from here](#distro-container)
-### 5. Check Natively Supported Apps list: [from here](#supported-apps)
+### 2. Check All Avilable Desktop Styles: [from here](xfce_styles.md)
+### 3. Check About Hardware Acceleration : [from here](hw-acceleration.md)
+### 4. Check About Distro Container: [from here](proot-caontainer.md)
+### 5. Check Natively Supported Apps list: [from here](applist.md)
 ### 6. Installation: [from here](#installation)
 
 
@@ -56,7 +56,6 @@
 <center><img src="images/xfce/look_1/look.png"></center>
 <br>
 
-<a name="styles"></a>
 # See Other Styles: [Here](xfce_styles.md)
 
 ## Screenshots:
@@ -82,7 +81,6 @@
 
 <center><img src="images/apps/wine.png"></center>
 
-<a name="supported-apps"></a>
 ## See More Natively Supported Apps: [Here](applist.md)
 
 ## Want To Install More Apps (Like: Libreoffice) Which Are Not Avilable In Termux:
@@ -91,14 +89,12 @@
 
 <center><img src="images/apps/container-libreoffice-2.png"></center>
 
-<a name="distro-container"></a>
 ## See How To Use Distro Container: [Click Here](proot-caontainer.md)
 
 ## Hardware Acceleration In Distro Container And Also In Termux:
 
 <center><img src="images/pdrun-glmark2.png"></center>
 
-<a name="hw-acceleration"></a>
 
 ## Know More About Hardware Acceleration: [Here](hw-acceleration.md)
 
