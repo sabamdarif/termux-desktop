@@ -36,16 +36,15 @@
 ### 5. Check Natively Supported Apps list: [from here](applist.md)
 ### 6. Installation: [from here](#installation)
 
-
 <a name="requirements"></a>
-## Requirements:
+## Minimum Requirements:
 - No Root Required
-- An Android 7+ phone
+- Android 7+ phone
 - [Termux](https://termux.dev/en/) From [Github](https://github.com/termux/termux-app/releases) Or [Fdroid](https://f-droid.org/en/packages/com.termux/)
 > Termux from Google Play is unmaintained due to API requirements So use the F-Droid one instead.
-- 2GB of RAM (minimum) 3GB of RAM (recommended)
+- 2GB of RAM 3GB of RAM
 - 1.5 - 2 GB Of Internet
-- 3 - 4 GB Of Free Storage (minimum)
+- 3 - 4 GB Of Free Storage
 - VNC Client [RealVnc](https://play.google.com/store/apps/details?id=com.realvnc.viewer.android) Or [Nethunter Kex](https://store.nethunter.com/en/packages/com.offsec.nethunter.kex/)
 - [Termux:X11](https://github.com/termux/termux-x11/releases)
 
@@ -130,7 +129,6 @@ chmod +x setup-termux-desktop
 ```
 pkg update -y ; pkg install wget -y ; wget https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop ; chmod +x setup-termux-desktop ; ./setup-termux-desktop
 ```
-
 
 ## Usage:
 - **Type `vncstart` OR `gui -start` to start vnc server.**
