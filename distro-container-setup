@@ -85,97 +85,93 @@ proot-distro login $selected_distro -- /bin/sh -c 'bash useradd.sh'
 function distro_create_app_installer() {
     banner
     echo "${R}[${W}-${R}]${G} Creating App Launcher"${W}
-    check_and_create_directory "$PREFIX/share/applications/pd_added"
-if [[ "$useradd_answer" == "n" ]]; then
-savepath="$distro_path/root"
-else
-savepath="$distro_path/home/$final_user_name"
+
+if [[ "$useradd_answer" == "y" ]]; then
+save_user_path="$distro_path/home/$final_user_name"
 fi
-cat <<EOF > "$PREFIX/bin/$selected_distro"
+save_root_path="$distro_path/root"
+
+cat <<TOP_EOF > "$PREFIX/bin/$selected_distro"
 #!/data/data/com.termux/files/usr/bin/bash
 
-replace_exec_line() {
-    sed -i 's/Exec=/Exec=pdrun /g' "$PREFIX/share/applications/pd_added/\$1.desktop" 2>/dev/null
-}
-
-copy_desktop_files() {
-    for package in "\$@"; do
-        echo "${R}[${W}-${R}]${G}Adding ${C}\${package} ${G}To Termux Menu"
-        cp "$distro_path/usr/share/applications/\${package}.desktop" "$PREFIX/share/applications/pd_added/" 2>/dev/null
-        replace_exec_line "\$package"
-        grep_pattern="$distro_path/usr/share/applications/\${package}*.desktop"
-
-        if [[ "\$(ls -1 \$grep_pattern 2>/dev/null)" ]]; then
-		for subpackage in \$grep_pattern; do
-			filename=\$(basename "\$subpackage")
-			filename_no_ext="\${filename%.desktop}"
-    # package_something="\${filename_no_ext#\${package}}"
-    echo "${R}[${W}-${R}]${G}Adding ${C}\$filename_no_ext  ${G}To Termux Menu"
-            cp "\$subpackage" "$PREFIX/share/applications/pd_added/" 2>/dev/null
-            replace_exec_line "\$filename_no_ext"
-        done
-    fi
-    done
-}
-
-remove_desktop_files() {
-    for package in "\$@"; do
-        echo "${G}[${W}-${G}]${R}Removing ${C}\${package} ${R}From Termux Menu"
-        rm "$PREFIX/share/applications/pd_added/\${package}.desktop" 2>/dev/null
-        grep_pattern="$distro_path/usr/share/applications/\${package}*.desktop"
-
-        if [[ "\$(ls -1 \$grep_pattern 2>/dev/null)" ]]; then
-		for subpackage in \$grep_pattern; do
-			filename=\$(basename "\$subpackage")
-			filename_no_ext="\${filename%.desktop}"
-    # package_something="\${filename_no_ext#\${package}}"
-
-    echo "${G}[${W}-${G}]${R}Removing ${C}\$filename_no_ext ${R}From Termux Menu"
-    rm "$PREFIX/share/applications/pd_added/\${filename_no_ext}.desktop" 2>/dev/null
-        done
-    fi
-    done
-}
-
 if [[ "\$#" -eq 0 ]]; then
-    proot-distro login --user $final_user_name $selected_distro --shared-tmp
+    proot-distro login --user saba debian --shared-tmp
+
 elif [[ "\$1" = "install" ]]; then
-echo "sudo apt install \${@:2}
-rm packinstall.sh
-" > $savepath/packinstall.sh
-    proot-distro login --user $final_user_name $selected_distro -- /bin/sh -c 'bash packinstall.sh'
-    copy_desktop_files "\${@:2}"
-elif [[ "\$1" = "remove" ]]; then
-echo "sudo apt remove \${@:2}
-rm packremove.sh
-" > $savepath/packremove.sh
-    proot-distro login --user $final_user_name $selected_distro -- /bin/sh -c 'bash packremove.sh'
-    remove_desktop_files "\${@:2}"
-elif [[ "\$1" = "autoremove" ]];then
-echo "sudo apt autoremove \${@:2}
-rm packremove.sh
-" > $savepath/packremove.sh
-    proot-distro login --user $final_user_name $selected_distro -- /bin/sh -c 'bash packremove.sh'
-    remove_desktop_files "\${@:2}"
+if [[ ! -d "/data/data/com.termux/files/usr/share/applications/pd_added" ]]; then
+        mkdir -p "/data/data/com.termux/files/usr/share/applications/pd_added"
+        fi
+proot-distro login --user saba debian --shared-tmp -- env DISPLAY=:1.0 apt install \${@:2}
+cat <<EOF > "$save_root_path/packinstall.sh"
+packages=(\${@:2})
+EOF
+cat <<'EOF' >> "$save_root_path/packinstall.sh"
+for package_name in "\${packages[@]}"; do
+desktop_files=\$(dpkg-query -W -f='\${binary:Package}\n' | grep "^\$package_name\(-.*\)\?\$" | xargs dpkg-query -L | grep "^/usr/share/applications/.*\.desktop\$")
+if [ -z "\$desktop_files" ]; then
+    echo "${R}[${W}-${R}]${G} No .desktop files found for package ${C}'\$package_name' ${G}in/usr/share/applications."
 else
-echo "sudo apt \$@
-rm else.sh
-" > $savepath/else.sh
-    proot-distro login --user $final_user_name $selected_distro -- /bin/sh -c 'bash else.sh'
+    for desktop_files_name in \$desktop_files; do
+        desktop_files_with_ext=\$(basename "\$desktop_files_name")
+        desktop_files_without_ext="\${desktop_files_with_ext%.desktop}"
+        echo "${R}[${W}-${R}]${G} Adding ${C}\${desktop_files_without_ext} ${G}To Termux Menu"
+        sudo cp "/usr/share/applications/\${desktop_files_with_ext}" "/data/data/com.termux/files/usr/share/applications/pd_added/"
+        sudo sed -i 's/Exec=/Exec=pdrun /g' "/data/data/com.termux/files/usr/share/applications/pd_added/\${desktop_files_with_ext}"
+    done
 fi
-gtk-update-icon-cache
+done
+rm packinstall.sh
+EOF
+proot-distro login debian -- /bin/bash -c 'bash packinstall.sh'
+
+elif [[ "\$1" = "remove" ]] || [[ "\$1" = "remove" ]]; then
+proot-distro login --user saba debian --shared-tmp -- env DISPLAY=:1.0 apt \$1 \${@:2}
+cat <<EOF > "$save_root_path/packremove.sh"
+packages=(\${@:2})
 EOF
 
+cat <<'EOF' >> "$save_root_path/packremove.sh"
+for package_name in "\${packages[@]}"; do
+desktop_files=\$(dpkg-query -W -f='\${binary:Package}\n' | grep "^\$package_name\(-.*\)\?\$" | xargs dpkg-query -L | grep "^/usr/share/applications/.*\.desktop\$")
+if [ -z "\$desktop_files" ]; then
+    echo "${R}[${W}-${R}]${G} No .desktop files found for package ${C}'\$package_name' ${G}in/usr/share/applications."
+else
+    for desktop_files_name in \$desktop_files; do
+        desktop_files_with_ext=\$(basename "\$desktop_files_name")
+        desktop_files_without_ext="\${desktop_files_with_ext%.desktop}"
+        echo "${R}[${W}-${R}]${G} Removing ${C}\${desktop_files_without_ext} ${G}From Termux Menu" 
+        sudo rm /data/data/com.termux/files/usr/share/applications/pd_added/\${desktop_files_with_ext}
+    done
+fi
+done
+rm packremove.sh
+EOF
+proot-distro login debian -- /bin/bash -c 'bash packremove.sh'
+else
+echo "sudo apt \$@
+" > $save_root_path/else.sh
+proot-distro login debian -- /bin/sh -c 'bash else.sh'
+fi
+
+if [[ \$1 = "install" ]] || [[ \$1 = "remove" ]] || [[ \$1 = "autoremove" ]]; then
+gtk-update-icon-cache
+xfdesktop --reload
+xfce4-panel -r
+fi
+
+TOP_EOF
+
 chmod +x "$PREFIX/bin/$selected_distro"
+
 
 #########################################################################
 ########################### Add To Menu Setup ###########################
 #########################################################################
 banner
-echo "${R}[${W}-${R}]${G}Installing ${C}zenity"${W}
 package_install_and_check "zenity"
 
-check_and_create_directory "$PREFIX/share/applications/pd_added"
+check_and_create_directory "data/data/com.termux/files/usr/share/applications/pd_added"
+
 echo "#!/data/data/com.termux/files/usr/bin/bash
 distro_path="$distro_path"
 " > $PREFIX/bin/add2menu
@@ -269,7 +265,7 @@ cat <<EOF > "$PREFIX/bin/pdrun"
 #!/data/data/com.termux/files/usr/bin/bash
 bash ~/.${selected_distro}-sound-access
 xhost +
-proot-distro login $selected_distro --user $final_user_name --shared-tmp -- env DISPLAY=:1.0 $selected_pd_hw_method \$@
+proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:1.0 $selected_pd_hw_method \$@
 EOF
 chmod +x "$PREFIX/bin/pdrun"
 }

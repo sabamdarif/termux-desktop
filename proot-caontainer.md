@@ -34,7 +34,7 @@
 
 <br>
 
-### Another Shortcut Way To Install And Add Them At Once {BETA}:
+### Another Shortcut Way To Install And Add Them At Once :
 
 - <b>Type `Distro-Name update or upgrade` To Update or Upgrade The Distro</b>
 
