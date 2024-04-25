@@ -848,6 +848,9 @@ function setup_fonts() {
 	if [[ "$terminal_utility_setup_answer" == "y" ]];then
 	echo "${R}[${W}-${R}]${G} Installing Fonts..."${W}
 	package_install_and_check "nerdfix fontconfig-utils"
+	check_and_create_directory "$HOME/.termux"
+	wget -O $HOME/.termux/font.ttf https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/font.ttf
+	fc-cache -v -f
 	fi
 }
 

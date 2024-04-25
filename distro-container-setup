@@ -101,7 +101,7 @@ elif [[ "\$1" = "install" ]]; then
 if [[ ! -d "/data/data/com.termux/files/usr/share/applications/pd_added" ]]; then
         mkdir -p "/data/data/com.termux/files/usr/share/applications/pd_added"
         fi
-proot-distro login --user saba debian --shared-tmp -- env DISPLAY=:1.0 apt install \${@:2}
+proot-distro login --user saba debian --shared-tmp -- env DISPLAY=:1.0 sudo apt install \${@:2}
 cat <<EOF > "$save_root_path/packinstall.sh"
 packages=(\${@:2})
 EOF
@@ -125,7 +125,7 @@ EOF
 proot-distro login debian -- /bin/bash -c 'bash packinstall.sh'
 
 elif [[ "\$1" = "remove" ]] || [[ "\$1" = "remove" ]]; then
-proot-distro login --user saba debian --shared-tmp -- env DISPLAY=:1.0 apt \$1 \${@:2}
+proot-distro login --user saba debian --shared-tmp -- env DISPLAY=:1.0 sudo apt \$1 \${@:2}
 cat <<EOF > "$save_root_path/packremove.sh"
 packages=(\${@:2})
 EOF
@@ -149,6 +149,7 @@ EOF
 proot-distro login debian -- /bin/bash -c 'bash packremove.sh'
 else
 echo "sudo apt \$@
+rm else.sh
 " > $save_root_path/else.sh
 proot-distro login debian -- /bin/sh -c 'bash else.sh'
 fi
