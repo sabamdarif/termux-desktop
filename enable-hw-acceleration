@@ -4,15 +4,11 @@ function hw_install_required_packages() {
     banner
     echo "${R} [${W}-${R}]${G} Installing Required Packages For Hardware Acceleration"${W}
 	echo
-      hw_packs=(mesa-zink virglrenderer-mesa-zink vulkan-loader-android angle-android virglrenderer-android)
-        for hw_pack_name in "${hw_packs[@]}"; do
-            pkg install $hw_pack_name -y
-        done
+    package_install_and_check "mesa-zink virglrenderer-mesa-zink vulkan-loader-android angle-android virglrenderer-android"
     if [[ $pd_hw_answer = "3" ]]; then
-    pkg install mesa-vulkan-icd-freedreno mesa-zink -y
+    package_install_and_check "mesa-vulkan-icd-freedreno mesa-zink"
     fi
 }
-
 
 #########################################################################
 ################# Add HW Server Initialize Method #######################

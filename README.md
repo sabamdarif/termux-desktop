@@ -27,16 +27,20 @@
 - :link: And Much More...
 <br>
 
+
 ## :warning: Check out them first :point_down:
 
 ### 1. Check Basic Requirment: [from here](#requirements)
 ### 2. Check All Avilable Desktop Styles: [from here](xfce_styles.md)
+<a name="usage"></a>
+
 ### 3. Check About Hardware Acceleration : [from here](hw-acceleration.md)
 ### 4. Check About Distro Container: [from here](proot-caontainer.md)
 ### 5. Check Natively Supported Apps list: [from here](applist.md)
 ### 6. Installation: [from here](#installation)
 
 <a name="requirements"></a>
+
 ## Minimum Requirements:
 - No Root Required
 - Android 7+ phone
@@ -101,6 +105,7 @@
 <br>
 
 <a name="installation"></a>
+
 # Installation:
 
 >NOTE: This only works on Termux

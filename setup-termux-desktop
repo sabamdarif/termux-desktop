@@ -43,18 +43,18 @@ function check_and_backup() {
 function package_install_and_check() {
 	packs_list=($@)
 	for package_name in "${packs_list[@]}"; do
-    echo "${R}[${W}-${R}]${G} Installing package: ${C}$package_name${W}"
+    echo "${R}[${W}-${R}]${G} Installing package: ${C}$package_name "${W}
     pkg install "$package_name" -y
 	if [ $? -ne 0 ]; then
     apt --fix-broken install -y
 	dpkg --configure -a
     fi
 	if dpkg -s "$package_name" >/dev/null 2>&1; then
-    echo "${R}[${W}-${R}]${G} $package_name installed successfully ${W}"
+    echo "${R}[${W}-${R}]${G} $package_name installed successfully "${W}
 	else
 	if
     type -p "$package_name" &>/dev/null || [ -e "$PREFIX/bin/$package_name"* ] || [ -e "$PREFIX/bin/"*"$package_name" ]; then
-        echo "${R}[${W}-${R}]${G} $package_name installed successfully ${W}"
+        echo "${R}[${W}-${R}]${G} $package_name installed successfully "${W}
 	fi
     fi
 done
@@ -72,7 +72,7 @@ function download_and_extract() {
     local target_dir="$2"
     local filename="${url##*/}"
 
-    echo "Downloading ${filename}..."
+    echo "${C}Downloading ${G}${filename}..."${W}
     sleep 1.5
 
     cd "$target_dir" || return 1
@@ -156,7 +156,9 @@ function confirmation_y_or_n() {
 }
 
 function get_latest_release() {
-  curl -s "https://api.github.com/repos/$1/$2/releases/latest" |
+	local repo_woner="$1"
+	local repo_name="$2"
+  curl -s "https://api.github.com/repos/$repo_woner/$repo_name/releases/latest" |
   grep '"tag_name":' |
   sed -E 's/.*"([^"]+)".*/\1/'
 }
@@ -285,8 +287,6 @@ function questions() {
 	confirmation_y_or_n "Do you want to configure Zsh" zsh_answer
 	banner
 	confirmation_y_or_n "Do you want install some terminal utility to make better terminal exprience" terminal_utility_setup_answer
-    banner
-	confirmation_y_or_n "Do you want to configure termux-x11 ${C}(Rcomended)" tx11_answer
 	banner
 	echo "${R}[${W}-${R}]${Y}Do you want to add a distro container (proot distro)"${W}
 	echo
@@ -295,6 +295,16 @@ function questions() {
 	echo "${R}[${W}-${R}]${C}You can launch those installed apps from termux like other apps"${W}
 	echo
 	confirmation_y_or_n "Do you want to continue" distro_add_answer
+	if [[ "$distro_add_answer" == "y" ]] && [[ "$zsh_answer" == "y" ]]; then
+	banner
+	confirmation_y_or_n "Do you want to configure Zsh also for distro container" distro_zsh_answer
+	fi
+	if [[ "$distro_add_answer" == "y" ]] && [[ "$terminal_utility_setup_answer" == "y" ]]; then
+	banner
+	confirmation_y_or_n "Do you want install the terminal utility also for distro container" distro_terminal_utility_setup_answer
+	fi
+	banner
+	confirmation_y_or_n "Do you want to configure termux-x11 ${C}(Rcomended)" tx11_answer
 }
 
 function hw_questions() {
@@ -467,7 +477,7 @@ function additional_required_package_installler() {
 
 function setup_config() {
 	banner
-	echo "${R}[${W}-${R}]${G} Configure Xfce Style: ${C}${style_answer}${W}"
+	echo "${R}[${W}-${R}]${G} Configure Xfce Style: ${C}${style_answer}"${W}
 	echo
 	banner
 	cd ~
@@ -520,6 +530,7 @@ done
 #########################################################################
 ##################### Hardware Acceleration Setup #######################
 #########################################################################
+
 function hw_config() {
 	banner
 	echo "${R}[${W}-${R}]${G}Configure Hardware Acceleration"${W}
@@ -530,6 +541,7 @@ function hw_config() {
 #########################################################################
 ########################### Proot Distro Setup ##########################
 #########################################################################
+
 function distro_container_setup() {
 	if [[ "$distro_add_answer" == "n" ]]; then
 	banner
@@ -657,27 +669,16 @@ chmod +x "$PREFIX/bin/gui"
 function browser_installer() {
 	banner
 	if [[ ${browser_answer} == "1" ]]; then
-    echo "${R}[${W}-${R}]${G} Installing Firefox..."${W}
-	echo
 		package_install_and_check "firefox"
 	elif [[ ${browser_answer} == "2" ]]; then
-    echo "${R}[${W}-${R}]${G} installing Chromium..."${W}
-	echo
 	package_install_and_check "chromium"
 	elif [[ ${browser_answer} == "3" ]]; then
-    echo "${R}[${W}-${R}]${G} Installing Firefox..."${W}
-	echo
-	package_install_and_check "firefox"
-    echo "${R}[${W}-${R}]${G} installing Chromium..."${W}
-	echo
-	package_install_and_check "chromium"
+	package_install_and_check "firefox chromium"
 	elif [[ ${browser_answer} == "4" ]]; then
     echo "${R}[${W}-${R}]${C} Skipping Browser Installation..."${W}
 	echo
 	sleep 2
 	else
-    echo "${R}[${W}-${R}]${G} Installing Firefox..."${W}
-	echo
 	package_install_and_check "firefox"
 	fi
 }
@@ -689,30 +690,16 @@ function browser_installer() {
 function ide_installer() {
 	banner
 	if [[ ${ide_answer} == "1" ]]; then
-    echo "${R}[${W}-${R}]${G} Installing Vs Code(Code-Oss)..."${W}
-	echo
-    sleep 1
 		package_install_and_check "code-oss code-is-code-oss"
 	elif [[ ${ide_answer} == "2" ]]; then
-    echo "${R}[${W}-${R}]${G} installing Geany..."${W}
-	echo
 		package_install_and_check "geany"
 	elif [[ ${ide_answer} == "3" ]]; then
-    echo "${R}[${W}-${R}]${G} Installing Vs Code(Code-Oss)..."${W}
-	echo
-    sleep 1
-		package_install_and_check "code-oss code-is-code-oss"
-    echo "${R}[${W}-${R}]${G} installing Geany..."${W}
-    echo
-		package_install_and_check "geany"
+		package_install_and_check "code-oss code-is-code-oss geany"
 	elif [[ ${ide_answer} == "4" ]]; then
     echo "${R}[${W}-${R}]${C} Skipping Ide Installation..."${W}
 	echo
 	sleep 2
 	else
-    echo "${R}[${W}-${R}]${G} Installing Vs Code(Code-Oss)..."${W}
-	echo
-    sleep 1
 		package_install_and_check "code-oss code-is-code-oss"
 	fi
 }
@@ -724,27 +711,17 @@ function ide_installer() {
 function media_player_installer() {
 	banner
 	if [[ ${player_answer} == "1" ]]; then
-    echo "${R}[${W}-${R}]${G} Installing Vlc..."${W}
-	echo
 		package_install_and_check "vlc-qt-static"
 	elif [[ ${player_answer} == "2" ]]; then
-    echo "${R}[${W}-${R}]${G} installing Audacious..."${W}
-	echo
 		package_install_and_check "audacious"
 	elif [[ ${player_answer} == "3" ]]; then
-    echo "${R}[${W}-${R}]${G} Installing Vlc..."${W}
-	echo
-		package_install_and_check "vlc-qt-static"
-    echo "${R}[${W}-${R}]${G} installing Audacious..."${W}
-	echo
-		package_install_and_check "audacious"
+		package_install_and_check "vlc-qt-static audacious"
+		package_install_and_check ""
 	elif [[ ${player_answer} == "4" ]]; then
     echo "${R}[${W}-${R}]${C} Skipping Media Player Installation..."${W}
 	echo
 	sleep 2
 	else
-    echo "${R}[${W}-${R}]${G} Installing Vlc..."${W}
-	echo
 		package_install_and_check "vlc-qt-static"
 	fi
 }
@@ -753,31 +730,19 @@ function media_player_installer() {
 ######################## Install Photo Editor ###########################
 #########################################################################
 
-
 function photo_editor_installer() {
 	banner
 	if [[ ${photo_editor_answer} == "1" ]]; then
-    echo "${R}[${W}-${R}]${G} Installing GIMP..."${W}
-	echo
 		package_install_and_check "gimp"
 	elif [[ ${photo_editor_answer} == "2" ]]; then
-    echo "${R}[${W}-${R}]${G} installing Inkscape..."${W}
-	echo
 		package_install_and_check "inkscape"
 	elif [[ ${photo_editor_answer} == "3" ]]; then
-    echo "${R}[${W}-${R}]${G} Installing GIMP..."${W}
-	echo
-		package_install_and_check "gimp"
-    echo "${R}[${W}-${R}]${G} installing Inkscape..."${W}
-	echo
-		package_install_and_check "inkscape"
+		package_install_and_check "gimp inkscape"
 	elif [[ ${photo_editor_answer} == "4" ]]; then
     echo "${R}[${W}-${R}]${C} Skipping Photo Editor Installation..."${W}
 	echo
 	sleep 2
 	else
-    echo "${R}[${W}-${R}]${G} Installing GIMP..."${W}
-	echo
 		package_install_and_check "gimp"
 	fi
 }
@@ -785,7 +750,6 @@ function photo_editor_installer() {
 #########################################################################
 ####################### Install Software Manager ########################
 #########################################################################
-
 
 function setup_synaptic() {
 	banner
@@ -815,8 +779,7 @@ else
 shell_name="zsh"
 	echo "${R}[${W}-${R}]${G}Configure Zsh.."${W}
 	echo
-	package_install_and_check "zsh"
-	package_install_and_check "git"
+	package_install_and_check "zsh git"
 	wget https://raw.githubusercontent.com/sabamdarif/short-linux-scripts/main/install-zsh.sh && bash install-zsh.sh
 fi
 }
@@ -828,6 +791,15 @@ function terminal_utility_setup() {
 	echo
 	else
 	banner
+	echo "${R}[${W}-${R}]${C}Configure Terminal Utility..."${W}
+	echo
+	mv $PREFIX/ect/motd $PREFIX/ect/motd.bak
+	mv $PREFIX/ect/motd-playstore $PREFIX/ect/motd-playstore.bak
+	mv $PREFIX/ect/motd.sh $PREFIX/ect/motd.sh.bak
+	wget -O $PREFIX/etc/motd.sh https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/other/motd.sh
+	echo "$PREFIX/etc/motd.sh" >> termux-login.sh
+	check_and_create_directory "$HOME/.termux"
+	wget -O $HOME/.termux/colors.properties https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/other/colors.properties
 	package_install_and_check "nala bat eza"
 	cat <<'EOF' >> "$HOME/.${shell_name}rc"
 alias apt='nala $@'
@@ -849,7 +821,7 @@ function setup_fonts() {
 	echo "${R}[${W}-${R}]${G} Installing Fonts..."${W}
 	package_install_and_check "nerdfix fontconfig-utils"
 	check_and_create_directory "$HOME/.termux"
-	wget -O $HOME/.termux/font.ttf https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/font.ttf
+	wget -O $HOME/.termux/font.ttf https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/other/font.ttf
 	fc-cache -v -f
 	fi
 }
@@ -858,14 +830,12 @@ function setup_fonts() {
 ############################ Install Wine ###############################
 #########################################################################
 
-
 function setup_wine() {
 	banner
     if [[ "$wine_answer" == "1" ]]; then
 	echo "${R}[${W}-${R}]${G}Installing Wine Natively In Termux"${W}
 	echo
-		 package_install_and_check "wine-stable"
-		 package_install_and_check "winetricks"
+		 package_install_and_check "wine-stable winetricks"
 	elif [[ "$wine_answer" == "2" ]]; then
 	echo "${R}[${W}-${R}]${G}Using Mobox To Install Wine In Termux"${W}
 	echo
@@ -877,8 +847,7 @@ function setup_wine() {
 else
     echo "${R}[${W}-${R}]${G}Installing Wine Natively In Termux"${W}
 	echo
-		 package_install_and_check "wine-stable"
-		 package_install_and_check "winetricks"
+		 package_install_and_check "wine-stable winetricks"
 fi
 }
 
