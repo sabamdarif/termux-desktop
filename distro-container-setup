@@ -98,7 +98,7 @@ function distro_zsh_answer() {
 	echo "${R}[${W}-${R}]${G}Configure Zsh for ${selected_distro}.."${W}
 	echo
     proot-distro login $selected_distro --shared-tmp -- env DISPLAY=:1.0 apt install git zsh -y
-    proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:1.0 wget https://raw.githubusercontent.com/sabamdarif/short-linux-scripts/main/install-zsh.sh && bash install-zsh.sh
+    proot-distro login --user $final_user_name $selected_distro -- /bin/sh -c 'wget https://raw.githubusercontent.com/sabamdarif/short-linux-scripts/main/install-zsh.sh && bash install-zsh.sh'
 fi
 }
 
@@ -111,12 +111,12 @@ function distro_terminal_utility_setup() {
 	banner
     echo "${R}[${W}-${R}]${C}Configure Terminal Utility..."${W}
     echo
-	proot-distro login $selected_distro --shared-tmp -- env DISPLAY=:1.0 apt install nala bat eza -y
+	proot-distro login $selected_distro --shared-tmp -- env DISPLAY=:1.0 apt install nala bat lsd -y
 	cat <<'EOF' >> "$save_path/.${distro_shell_name}rc"
 alias apt='nala $@'
-alias pkg='nala $@'
+alias apt-get='nala $@'
 alias cat='bat $@'
-alias ls='eza --icons $@'
+alias ls='lsd $@'
 EOF
 sleep 2
 	fi

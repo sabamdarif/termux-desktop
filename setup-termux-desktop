@@ -35,7 +35,7 @@ if [[ -e "$1" ]]; then
 
 function check_and_backup() {
 	if [[ -e "$HOME/$1" ]]; then
-	mv $HOME/$1 $HOME/${1}-backup
+	mv $HOME/$1 $HOME/${1}.bak
 	mkdir -p "$HOME/$1"
     fi
 }
@@ -793,12 +793,13 @@ function terminal_utility_setup() {
 	banner
 	echo "${R}[${W}-${R}]${C}Configure Terminal Utility..."${W}
 	echo
-	mv $PREFIX/ect/motd $PREFIX/ect/motd.bak
-	mv $PREFIX/ect/motd-playstore $PREFIX/ect/motd-playstore.bak
-	mv $PREFIX/ect/motd.sh $PREFIX/ect/motd.sh.bak
+	check_and_backup "$PREFIX/ect/motd"
+	check_and_backup "$PREFIX/ect/motd-playstore"
+	check_and_backup "$PREFIX/ect/motd.sh"
 	wget -O $PREFIX/etc/motd.sh https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/other/motd.sh
-	echo "$PREFIX/etc/motd.sh" >> termux-login.sh
+	echo "bash $PREFIX/etc/motd.sh" >> $PREFIX/etc/termux-login.sh
 	check_and_create_directory "$HOME/.termux"
+	check_and_backup "$HOME/.termux/colors.properties"
 	wget -O $HOME/.termux/colors.properties https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/other/colors.properties
 	package_install_and_check "nala bat eza"
 	cat <<'EOF' >> "$HOME/.${shell_name}rc"
@@ -821,8 +822,9 @@ function setup_fonts() {
 	echo "${R}[${W}-${R}]${G} Installing Fonts..."${W}
 	package_install_and_check "nerdfix fontconfig-utils"
 	check_and_create_directory "$HOME/.termux"
+	check_and_backup "$HOME/.termux/font.ttf"
 	wget -O $HOME/.termux/font.ttf https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/other/font.ttf
-	fc-cache -v -f
+	fc-cache -f
 	fi
 }
 
@@ -883,7 +885,6 @@ fi
 hw_questions
 setup_folder
 setup_zsh
-terminal_utility_setup
 setup_fonts
 install_desktop
 browser_installer
@@ -897,5 +898,6 @@ hw_config
 distro_container_setup
 setup_vnc
 gui_launcher
+terminal_utility_setup
 notes
 termux-wake-unlock
