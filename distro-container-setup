@@ -9,12 +9,12 @@ function setup_distro() {
     selected_distro="debian"
     fi
     banner
-    echo "${R}[${W}-${R}]${G}Installing ${C}proot-distro"${W}
+    echo "${R}[${W}-${R}]${G}${BOLD}Installing ${C}proot-distro"${W}
     echo
     update_sys
     package_install_and_check "proot-distro"
     banner
-    echo "${R}[${W}-${R}]${G}Setup Selected Distro: ${C}${selected_distro}"${W}
+    echo "${R}[${W}-${R}]${G}${BOLD}Setup Selected Distro: ${C}${selected_distro}"${W}
     echo
     pd install $selected_distro
 
@@ -27,7 +27,7 @@ function setup_distro() {
 
 function distro_fix_sound_issue() {
     banner
-    echo "${R}[${W}-${R}]${G} Fixing Proot Distro Sound Problem..."${W}
+    echo "${R}[${W}-${R}]${G}${BOLD}Fixing Proot Distro Sound Problem..."${W}
     echo
     echo "export PULSE_SERVER=127.0.0.1" >> "$distro_path/etc/profile"
 cat <<EOF > "$HOME/.${selected_distro}-sound-access"
@@ -42,7 +42,7 @@ EOF
 
 function distro_basic_task() {
     banner
-    echo "${R}[${W}-${R}]${G} Updating ${C}$selected_distro ${G}And Install Required Packages"${W}
+    echo "${R}[${W}-${R}]${G}${BOLD}Updating ${C}$selected_distro ${G}And Install Required Packages"${W}
     echo
     if [[ "pd_audio_config_answer" == "n" ]]; then
     distro_packs="sudo"
@@ -95,7 +95,7 @@ function distro_zsh_answer() {
 	distro_shell_name="bash"
     else
     distro_shell_name="zsh"
-	echo "${R}[${W}-${R}]${G}Configure Zsh for ${selected_distro}.."${W}
+	echo "${R}[${W}-${R}]${G}${BOLD}Configure Zsh for ${selected_distro}.."${W}
 	echo
     proot-distro login $selected_distro --shared-tmp -- env DISPLAY=:1.0 apt install git zsh -y
     proot-distro login --user $final_user_name $selected_distro -- /bin/sh -c 'wget https://raw.githubusercontent.com/sabamdarif/short-linux-scripts/main/install-zsh.sh && bash install-zsh.sh'
@@ -109,14 +109,14 @@ function distro_terminal_utility_setup() {
 	echo
 	else
 	banner
-    echo "${R}[${W}-${R}]${C}Configure Terminal Utility..."${W}
+    echo "${R}[${W}-${R}]${C}${BOLD}Configure Terminal Utility..."${W}
     echo
-	proot-distro login $selected_distro --shared-tmp -- env DISPLAY=:1.0 apt install nala bat lsd -y
+	proot-distro login $selected_distro --shared-tmp -- env DISPLAY=:1.0 apt install nala bat rust-eza -y
 	cat <<'EOF' >> "$save_path/.${distro_shell_name}rc"
-alias apt='nala $@'
-alias apt-get='nala $@'
+alias apt='nala '
+alias apt-get='nala '
 alias cat='bat $@'
-alias ls='lsd $@'
+alias ls='eza --icons $@'
 EOF
 sleep 2
 	fi
@@ -128,7 +128,7 @@ sleep 2
 
 function distro_create_app_installer() {
     banner
-    echo "${R}[${W}-${R}]${G} Creating App Launcher"${W}
+    echo "${R}[${W}-${R}]${G}${BOLD}Creating App Launcher"${W}
 
 if [[ "$useradd_answer" == "y" ]]; then
 save_user_path="$distro_path/home/$final_user_name"
@@ -200,8 +200,7 @@ fi
 
 if [[ \$1 = "install" ]] || [[ \$1 = "remove" ]] || [[ \$1 = "autoremove" ]]; then
 gtk-update-icon-cache
-xfdesktop --reload
-xfce4-panel -r
+xfce4-panel -r >/dev/null 2>&1
 fi
 
 TOP_EOF
@@ -238,7 +237,7 @@ if [[ $action == *"Add Application To Termux Menu"* ]]; then
   files=$(list_desktop_files_with_name "$distro_path/usr/share/applications/")
 
   # Display the list of files and ask user to select
-  selected_names=$(zenity --list --title="Select .desktop Files" --text="Select The App Name To Add:" --checklist --column="Include" --column="Name" --separator="," $files)
+  selected_names=$(zenity --list --title="Add To Termux Menu" --text="Select The App Name To Add:" --checklist --column="Include" --column="Name" --separator="," $files)
 
   if [[ -z $selected_names ]]; then
     zenity --info --text="No file selected. Quitting..." --title="Operation Cancelled"
@@ -252,8 +251,10 @@ if [[ $action == *"Add Application To Termux Menu"* ]]; then
 
     cp "$selected_file" "$PREFIX/share/applications/pd_added/"
     sed -i 's/Exec=/Exec=pdrun /g' "$PREFIX/share/applications/pd_added/${selected_file##*/}"
+    gtk-update-icon-cache
+    xfce4-panel -r >/dev/null 2>&1
 
-    zenity --info --text="File '$selected_name' added successfully! Now Log Out And Log In Back" --title="Success"
+    zenity --info --text="File '$selected_name' added successfully!" --title="Success"
   done
 fi
 
@@ -262,7 +263,7 @@ if [[ $action == *"Remove Application From Termux Menu"* ]]; then
   files=$(list_desktop_files_with_name "$PREFIX/share/applications/pd_added/")
 
   # Display the list of files and ask user to select
-  selected_names=$(zenity --list --title="Select .desktop Files to Remove" --text="Choose .desktop files to remove:" --checklist --column="Include" --column="Name" --separator="," $files)
+  selected_names=$(zenity --list --title="Remove From Termux Menu" --text="Choose .desktop files to remove:" --checklist --column="Include" --column="Name" --separator="," $files)
 
   if [[ -z $selected_names ]]; then
     zenity --info --text="No file selected for removal. Quitting..." --title="Operation Cancelled"
@@ -275,6 +276,8 @@ if [[ $action == *"Remove Application From Termux Menu"* ]]; then
     selected_file=$(find "$PREFIX/share/applications/pd_added/" -name "*.desktop" -type f -exec awk -F '=' -v name="$selected_name" '$0 ~ "Name=" name {print FILENAME}' {} \;)
 
     rm "$selected_file"
+    gtk-update-icon-cache
+    xfce4-panel -r >/dev/null 2>&1
 
     zenity --info --text="File '$selected_name' has been removed successfully!" --title="Success"
   done
@@ -316,12 +319,12 @@ chmod +x "$PREFIX/bin/pdrun"
 }
 
 #########################################################################
-###################### Distro Directory Link/Setup ######################
+############### Distro Directory , Theme And Icon Link ##################
 #########################################################################
 
 function distro_folders_link() {
-    echo "${R}[${W}-${R}]${G}Link Distro Directories With Internal Storage"${W}
-cat <<EOF > "$savepath/setup-folders.sh"
+    echo "${R}[${W}-${R}]${G}${BOLD}Link Distro Directories With Internal Storage"${W}
+cat <<EOF > "$save_path/setup-folders.sh"
 #!/bin/bash
 directories=(Desktop Music Downloads Pictures Videos)
 for dir in "\${directories[@]}"; do
@@ -330,8 +333,15 @@ done
 rm setup-folders.sh
 EOF
 proot-distro login --user $final_user_name $selected_distro -- /bin/sh -c 'bash setup-folders.sh'
-}
+    echo "${R}[${W}-${R}]${G}${BOLD}Link Distro Termux Themes And Icons With $selected_distro "${W}
+    sleep 0.5
+    proot-distro login $selected_distro --shared-tmp -- env DISPLAY=:1.0 apt install xdg-desktop-portal-gtk -y
+    check_and_create_directory ".icons"
+    ln -s /data/data/com.termux/files/home/.icons $save_path
+    check_and_create_directory ".themes"
+    ln -s /data/data/com.termux/files/home/.themes $save_path
 
+}
 
 setup_distro
 distro_basic_task

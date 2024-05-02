@@ -13,6 +13,7 @@ fi
 cpu=$(</sys/class/thermal/thermal_zone0/temp)
 TEMP=$(echo $cpu | cut -c 1-2)
 PROCESSOR_NAME=$(cat /proc/cpuinfo | grep Hardware | cut -d ' ' -f 2)
+PROCESSOR_COUNT=$(grep -ioP 'processor\t:' /proc/cpuinfo | wc -l)
 
 [[ "$TEMP" -lt "60" ]] && FG=${G}
 [[ "$TEMP" -gt "60" ]] && FG=${Y}                      
