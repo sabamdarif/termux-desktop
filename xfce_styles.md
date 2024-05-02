@@ -1,4 +1,4 @@
-## 1. Basic Look:
+## 1. Basic Style:
 
 <center><img src="images/xfce/look_1/look.png"></center>
 

@@ -18,17 +18,17 @@
 - :art: New Beautiful Theme And Styles
 - :wine_glass: Wine To Run Windows Apps
 - :mechanical_arm: Hardware Acceleration Enabled
-- :paperclips: Termux:X11 Or Vnc For Gui Access
+- :paperclips: Termux:X11 / Vnc For Gui Access
 -  :jigsaw: One Click To Install Some useful Apps
-   - :globe_with_meridians: Browser: Firefox Or Chromium
-   - :man_technologist: Code Editor: VS Code Or Geany
-   - :camera: Image Editor: Gimp Or Inkscape
+   - :globe_with_meridians: Browser: Firefox / Chromium
+   - :man_technologist: Code Editor: VS Code / Geany
+   - :camera: Image Editor: Gimp / Inkscape
    - :wine_glass: Wine To Run Windows Apps
 - :link: And Much More...
 <br>
 
 
-## :warning: Check out them first :point_down:
+## :warning: Index Links :point_down:
 
 ### 1. Check Basic Requirment: [from here](#requirements)
 ### 2. Check All Avilable Desktop Styles: [from here](xfce_styles.md)
@@ -55,7 +55,7 @@
 
 <br>
 
-## Basic Look:
+## Default Look:
 
 <center><img src="images/xfce/look_1/look.png"></center>
 <br>
