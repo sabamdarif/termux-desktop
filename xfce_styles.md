@@ -55,6 +55,25 @@
 </details>
 <br>
 
+## 4. MacOS Inspired-1 Style:
+
+<center><img src="images/xfce/look_5/desktop.png"></center>
+
+<details style ="font-size: larger">
+<summary><b style ="font-size: larger">Screenshots: </b></summary>
+
+|Apps|App Menu|
+|--|--|
+|![img](images/xfce/look_5/basic-apps.png)|![img](images/xfce/look_5/menu.png)|
+
+|Menu|Hover Effect|
+|--|--|
+|![img](images/xfce/look_5/logo.png)|![img](images/xfce/look_5/hover.gif)|
+
+
+</details>
+<br>
+
 <br>
 
 # More Coming soon...

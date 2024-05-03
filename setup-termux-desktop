@@ -553,13 +553,13 @@ done
 	termux-reload-settings
 	directories=(Desktop Music Downloads Pictures Videos)
 	for dir in "${directories[@]}"; do
-	check_and_create_directory "sdcard/$dir"
+	check_and_create_directory "storage/shared/$dir"
 	done
 	check_and_create_directory "Desktop"
-	ln -s "/sdcard/Music" "$HOME/"
-	ln -s /sdcard/Download $HOME/Downloads
-	ln -s "/sdcard/Pictures" "$HOME/"
-	ln -s "/sdcard/Videos" "$HOME/"
+	ln -s "/storage/shared/Music" "$HOME/"
+	ln -s /storage/shared/Download $HOME/Downloads
+	ln -s "/storage/shared/Pictures" "$HOME/"
+	ln -s "/storage/shared/Videos" "$HOME/"
 }
 
 #########################################################################
@@ -571,6 +571,7 @@ function hw_config() {
 	echo "${R}[${W}-${R}]${G}${BOLD} Configuring Hardware Acceleration"${W}
 	echo
     wget https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/enable-hw-acceleration ; chmod +x enable-hw-acceleration ; . enable-hw-acceleration
+	rm enable-hw-acceleration
 }
 
 #########################################################################
@@ -587,6 +588,7 @@ function distro_container_setup() {
 	echo "${R}[${W}-${R}]${G}${BOLD} Configuring Distro Container"${W}
 	echo
 	wget https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/distro-container-setup ; chmod +x distro-container-setup ; . distro-container-setup
+	rm distro-container-setup
 	fi
 }
 
