@@ -455,7 +455,7 @@ function install_desktop() {
     banner
     echo "${R}[${W}-${R}]${G}${BOLD} Installing Xfce4 Desktop"${W}
 	echo
-	pkg install xfce4 xfce4-goodies xwayland kvantum -y
+	package_install_and_check "xfce4 xfce4-goodies xwayland kvantum"
 }
 
 #########################################################################
@@ -498,13 +498,16 @@ function additional_required_package_installler() {
     banner
     echo "${R}[${W}-${R}]${G}${BOLD} Installing Additional Packages If Required..."${W}
 	echo
-	if [[ "$style_answer" == "2" ]]; then
-	package_install_and_check "fluent-icon-theme"
-    package_install_and_check "cairo-dock-core"
-    package_install_and_check "vala-panel-appmenu"
+	if [[ "$style_answer" == "2" ]] || [[ "$style_answer" == "5" ]] || [[ "$style_answer" == "6" ]]; then
+	package_install_and_check "cairo-dock-core"
+	elif [[ "$style_answer" == "2" ]] || || [[ "$style_answer" == "6" ]]; then
 	package_install_and_check "rofi"
+	elif [[ "$style_answer" == "2" ]]; then
+	package_install_and_check "fluent-icon-theme vala-panel-appmenu"
 	elif [[ "$style_answer" == "4" ]]; then
     package_install_and_check "gtk2-engines-murrine"
+	elif [[ "$style_answer" == "5" ]] || [[ "$style_answer" == "6" ]]; then
+	cp $HOME/.config/xpple_menu/applications/* $PREFIX/share/applications/
 	else
 	echo "${G} No Additional Packages Required For Theme: ${style_answer}"${W}
 	sleep 1
@@ -520,8 +523,8 @@ function setup_config() {
 	if [[ ${style_answer} =~ ^[1-9][0-9]*$ ]]; then
 	banner
 	echo "${R}[${W}-${R}]${G}${BOLD} Configuring Xfce Style: ${C}${style_answer}"${W}
+	theme_installer
 	additional_required_package_installler
-    theme_installer
 	fi
 	if [[ "$ext_wall_answer" == "n" ]]; then
 	echo "${R}[${W}-${R}]${C}Skipping Extra Wallpapers Setup..."${W}
