@@ -104,7 +104,7 @@ function distro_terminal_utility_setup() {
 	banner
     echo "${R}[${W}-${R}]${C}${BOLD}Configuring Terminal Utility..."${W}
     echo
-	proot-distro login $selected_distro --shared-tmp -- env DISPLAY=:1.0 apt install nala bat rust-eza -y
+	proot-distro login $selected_distro --shared-tmp -- env DISPLAY=:1.0 apt install nala bat eza -y
 	cat <<'EOF' >> "$save_path/.${distro_shell_name}rc"
 alias apt='nala '
 alias apt-get='nala '

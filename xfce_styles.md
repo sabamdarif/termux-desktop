@@ -4,12 +4,14 @@
 Theme Used: 
 <br>
 
-1.[Nordic-darker](https://www.gnome-look.org/p/1267246)
-2.[Qogir](https://www.pling.com/p/1230631/)
+- [Nordic-darker](https://www.gnome-look.org/p/1267246)
+- [Qogir](https://www.pling.com/p/1230631/)
 
-Icon Used: 
-1.[kora](https://www.pling.com/p/1256209/)
-2.[Qogir](https://www.pling.com/p/1296407/)
+Icon Used:
+<br>
+
+- [kora](https://www.pling.com/p/1256209/)
+- [Qogir](https://www.pling.com/p/1296407/)
 
 </b>
 </details>
@@ -31,10 +33,12 @@ Icon Used:
 Theme Used: 
 <br>
 
-1.[WhiteSur-Light](https://www.pling.com/p/1403328)
+- [WhiteSur-Light](https://www.pling.com/p/1403328)
 
-Icon Used: 
-1.[Fluent](https://www.pling.com/p/1477945)
+Icon Used:
+<br>
+
+- [Fluent](https://www.pling.com/p/1477945)
 
 </b>
 </details>
@@ -63,14 +67,16 @@ Icon Used:
 Theme Used: 
 <br>
 
-1.[Materia Manjaro gtk](https://www.pling.com/p/1300363/)
-2.[Tokyo Night GTK Theme](https://www.gnome-look.org/p/1681315/)
+- [Materia Manjaro gtk](https://www.pling.com/p/1300363/)
+- [Tokyo Night GTK Theme](https://www.gnome-look.org/p/1681315/)
 
-Icon Used: 
-1.[Tela circle](https://www.gnome-look.org/p/1359276)
+Icon Used:
+<br>
+
+- [Tela circle](https://www.gnome-look.org/p/1359276)
 
 Cursor Theme: 
-1.[Bibata Modern Ice](https://www.pling.com/p/1197198/)
+- [Bibata Modern Ice](https://www.pling.com/p/1197198/)
 
 </b>
 </details>
@@ -95,15 +101,17 @@ Cursor Theme:
 Theme Used: 
 <br>
 
-1.[Qogir](https://www.pling.com/p/1230631/)
-2.[Redstone](https://www.opendesktop.org/p/1013482/)
+- [Qogir](https://www.pling.com/p/1230631/)
+- [Redstone](https://www.opendesktop.org/p/1013482/)
 
-Icon Used: 
-1.[We10X special](https://www.pling.com/p/1366371/)
-2.[Windows 10](https://github.com/B00merang-Artwork/Windows-10/)
+Icon Used:
+<br>
+
+- [We10X special](https://www.pling.com/p/1366371/)
+- [Windows 10](https://github.com/B00merang-Artwork/Windows-10/)
 
 Cursor Theme: 
-1.[Windows 10](https://www.gnome-look.org/p/1829490)
+- [Windows 10](https://www.gnome-look.org/p/1829490)
 
 </b>
 </details>
@@ -128,13 +136,15 @@ Cursor Theme:
 Theme Used: 
 <br>
 
-1.[WhiteSur](https://www.pling.com/p/1403328)
+- [WhiteSur](https://www.pling.com/p/1403328)
 
-Icon Used: 
-1.[WhiteSur icon](https://www.gnome-look.org/p/1405756)
+Icon Used:
+<br>
+
+- [WhiteSur icon](https://www.gnome-look.org/p/1405756)
 
 Cursor Theme: 
-1.[WhiteSur cursors](https://www.gnome-look.org/p/1411743)
+- [WhiteSur cursors](https://www.gnome-look.org/p/1411743)
 
 </b>
 </details>
@@ -164,13 +174,15 @@ Cursor Theme:
 Theme Used: 
 <br>
 
-1.[WhiteSur](https://www.pling.com/p/1403328)
+- [WhiteSur](https://www.pling.com/p/1403328)
 
-Icon Used: 
-1.[WhiteSur icon](https://www.gnome-look.org/p/1405756)
+Icon Used:
+<br>
+
+- [WhiteSur icon](https://www.gnome-look.org/p/1405756)
 
 Cursor Theme: 
-1.[McMojave cursors](https://www.gnome-look.org/p/1355701)
+- [McMojave cursors](https://www.gnome-look.org/p/1355701)
 
 </b>
 </details>

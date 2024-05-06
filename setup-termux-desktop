@@ -500,7 +500,7 @@ function additional_required_package_installler() {
 	echo
 	if [[ "$style_answer" == "2" ]] || [[ "$style_answer" == "5" ]] || [[ "$style_answer" == "6" ]]; then
 	package_install_and_check "cairo-dock-core"
-	elif [[ "$style_answer" == "2" ]] || || [[ "$style_answer" == "6" ]]; then
+	elif [[ "$style_answer" == "2" ]] || [[ "$style_answer" == "6" ]]; then
 	package_install_and_check "rofi"
 	elif [[ "$style_answer" == "2" ]]; then
 	package_install_and_check "fluent-icon-theme vala-panel-appmenu"
