@@ -106,8 +106,8 @@ function distro_terminal_utility_setup() {
     echo
 	proot-distro login $selected_distro --shared-tmp -- env DISPLAY=:1.0 apt install nala bat eza -y
 	cat <<'EOF' >> "$save_path/.${distro_shell_name}rc"
-alias apt='nala '
-alias apt-get='nala '
+alias apt='sudo nala '
+alias apt-get='sudo nala '
 alias cat='bat $@'
 alias ls='eza --icons $@'
 EOF

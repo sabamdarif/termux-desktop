@@ -1,3 +1,17 @@
+## 0. Stock :
+
+<center><img src="images/xfce/look_0/desktop.png"></center>
+
+<details style ="font-size: larger">
+<summary><b style ="font-size: larger">Screenshots: </b></summary>
+
+|Apps|App Menu|
+|--|--|
+|![img](images/xfce/look_0/apps.png)|![img](images/xfce/look_0/app-menu.png)|
+
+</details>
+<br>
+
 ## 1. Basic Style:
 <details>
 <summary><b style ="font-size: small">Style Details: </summary>

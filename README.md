@@ -32,13 +32,11 @@
 
 ### 1. Check Basic Requirment: [from here](#requirements)
 ### 2. Check All Avilable Desktop Styles: [from here](xfce_styles.md)
-
-<a name="usage"></a>
-
 ### 3. Check About Hardware Acceleration : [from here](hw-acceleration.md)
 ### 4. Check About Distro Container: [from here](proot-caontainer.md)
 ### 5. Check Natively Supported Apps list: [from here](applist.md)
 ### 6. Installation: [from here](#installation)
+### 7. Uses: [from here](#uses)
 
 <a name="requirements"></a>
 
@@ -136,11 +134,14 @@ chmod +x setup-termux-desktop
 pkg update -y ; pkg install wget -y ; wget https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop ; chmod +x setup-termux-desktop ; ./setup-termux-desktop
 ```
 
-## Usage:
+<a name="uses"></a>
+
+## Uses:
 - **Type `vncstart` OR `gui -start` to start vnc server.**
 - **Type `vncstop` OR `gui -stop` to start vnc server.**
 - **Type `gui -tx11` OR `tx11start` to star using Termux:11.**
 - **Type `tx11stop` to stop Termux:11 server**
 - **Type `vncstop -f` to kill vncserver**
 - **Type `gui -kill` to kill both vncserver and Termux:x11 At Once**
+- **Type `change-td-style` To Change Desktop Style**
 ## If you like my work then don't forget to give a Star :smile:

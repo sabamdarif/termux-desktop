@@ -118,8 +118,8 @@ function download_and_extract() {
     done
 
     if [[ "$success" = false ]]; then
-        echo "Failed to download ${filename}"
-        echo "Please check your internet connection"
+        echo "${R}Failed to download ${C}${filename}${W}"
+        echo "${C}Please check your internet connection${W}"
     fi
 }
 
@@ -163,6 +163,10 @@ function get_latest_release() {
   sed -E 's/.*"([^"]+)".*/\1/'
 }
 
+#########################################################################
+########################## Ask Required Questions #######################
+#########################################################################
+
 function select_option() {
 	var_name="$1"
 	read -p "${Y}select an option (Default 1): "${W} $var_name
@@ -172,34 +176,37 @@ function select_option() {
 	sleep 0.2
 }
 
-#########################################################################
-########################## Ask Required Questions #######################
-#########################################################################
-
 function questions_theme_select() {
     local owner="sabamdarif"
     local repo="termux-desktop"
     local main_folder="patch/xfce"
     local subfolder_count_value=$(count_subfolders "$owner" "$repo" "$main_folder")
 
+    wget -O styles.md https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/xfce_styles.md
     if [[ -n "$subfolder_count_value" ]]; then
         echo "${R}[${W}-${R}]${G}Check the xfce styles section in github"${W}
 		echo
 		echo "${R}[${W}-${R}]${B}https://github.com/sabamdarif/termux-desktop/blob/main/xfce_styles.md"${W}
 		echo
-        echo "${R}[${W}-${R}]${G}Number of avilable styles for xfce is: ${C}${subfolder_count_value}"${W}
+        echo "${R}[${W}-${R}]${G}Number of avilable custom styles for xfce is: ${C}${subfolder_count_value}"${W}
+		echo
+        echo "${R}[${W}-${R}]${G}Available Styles:${W}"
+		echo
+grep -oP '## \d+\..+?(?=(\n## \d+\.|\Z))' styles.md | while read -r style; do
+    echo "${Y}${style#### }${W}"
+done
         while true; do
 		    echo
             read -p "${R}[${W}-${R}]${Y}Type number of the style (Default 1): "${W} style_answer
             style_answer=${style_answer:-1}
-            if [[ "$style_answer" -le "$subfolder_count_value" ]]; then
+            if [[ "$style_answer" =~ ^[0-9][0-9]*$ ]] && [[ "$style_answer" -le "$subfolder_count_value" ]]; then
+			style_name=$(grep -oP "^## $style_answer\..+?(?=(\n## \d+\.|\Z))" styles.md | sed -e "s/^## $style_answer\. //" -e "s/:$//")
                 break
             else
+			    echo
                 echo "${R}The entered style number is incorrect."${W}
 				echo
                 echo "${R}[${W}-${R}]${Y}Please enter a number between 0 to ${subfolder_count_value}"${W}
-				echo
-				echo "${R}[${W}-${R}]${Y} 0 mean stock / without any customization"${W}
 				echo
 				echo "${R}[${W}-${R}]${G}Check the xfce styles section in github"${W}
 				echo
@@ -210,7 +217,6 @@ function questions_theme_select() {
 	 else
         echo "${R}Failed to get total avilable styles value."${W}
     fi
-
 }
 
 function questions() {
@@ -443,10 +449,7 @@ function install_required_packages() {
 	banner
     echo "${R}[${W}-${R}]${Y}${BOLD} Installling required packages..."${W}
 	echo
-	packs=(wget jq curl pulseaudio x11-repo tur-repo)
-	for pack_name in "${packs[@]}"; do
-	package_install_and_check "$pack_name"
-	done
+	package_install_and_check "wget jq curl pulseaudio x11-repo tur-repo"
 	update_sys
 	banner
 }
@@ -464,7 +467,9 @@ function install_desktop() {
 
 function theme_installer() {
     banner
-    echo "${R}[${W}-${R}]${G}${BOLD} Configuring Theme: ${C}${style_answer}"${W}
+	check_and_create_directory "$PREFIX/etc/termux-desktop/"
+	custom_theme="$PREFIX/etc/termux-desktop/custom_theme.txt"
+    echo "${R}[${W}-${R}]${G}${BOLD} Configuring Theme: ${C}${style_name}"${W}
 	echo
 	package_install_and_check "gnome-themes-extra"
     sleep 3
@@ -488,6 +493,7 @@ function theme_installer() {
 		check_and_backup ".config/$the_config_dir"
         done
 	download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/xfce/look_${style_answer}/config.tar.gz" "$HOME/.config/"
+	echo "$style_name" > $custom_theme
 }
 
 #########################################################################
@@ -905,7 +911,8 @@ function notes() {
 	echo
 	echo "${R}[${W}-${R}]${C}${BOLD}See Uses Section in github to know how to use it"${W}
 	echo
-	echo "${R}[${W}-${R}]${C}URL:- ${B}https://github.com/sabamdarif/termux-desktop/blob/main/README.md#usage"${W}
+	echo "${R}[${W}-${R}]${C}URL:- ${B}https://github.com/sabamdarif/termux-desktop/blob/main/README.md#uses"${W}
+	echo
 	if [[ "$distro_add_answer" == "y" ]]; then
 	echo "${R}[${W}-${R}]${C}${BOLD}See how to use distro container"${W}
 	echo
@@ -934,8 +941,9 @@ setup_synaptic
 setup_wine
 if [[ "$style_answer" == "0" ]]; then
     banner
-	echo "${R}[${W}-${R}]${G} Configuring Stock Xfce Style..."${W}
+	echo "${R}[${W}-${R}]${G}${BOLD} Configuring Stock Xfce Style..."${W}
 	echo
+	echo "Stock" > $custom_theme
 else
 setup_config
 fi
@@ -944,5 +952,10 @@ distro_container_setup
 setup_vnc
 gui_launcher
 terminal_utility_setup
+banner
+echo "${R}[${W}-${R}]${G}${BOLD} Adding Style Change Option"${W}
+echo
+wget -O $PREFIX/bin/change-td-style  https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/change-td-style
+chmod +x $PREFIX/bin/change-td-style
 notes
 termux-wake-unlock
