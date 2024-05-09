@@ -163,6 +163,18 @@ function get_latest_release() {
   sed -E 's/.*"([^"]+)".*/\1/'
 }
 
+function install_font_for_style() {
+	local style_number="$1"
+	echo "${R}[${W}-${R}]${G}Installing Fonts..."${W}
+	check_and_create_directory ".fonts"
+	cd $HOME/.fonts
+	wget https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/xfce/look_${style_number}/font.tar.gz
+	tar -xzvf font.tar.gz
+	rm font.tar.gz
+	fc-cache -f
+	cd
+}
+
 #########################################################################
 ########################## Ask Required Questions #######################
 #########################################################################
@@ -514,6 +526,8 @@ function additional_required_package_installler() {
     package_install_and_check "gtk2-engines-murrine"
 	elif [[ "$style_answer" == "5" ]] || [[ "$style_answer" == "6" ]]; then
 	cp $HOME/.config/xpple_menu/applications/* $PREFIX/share/applications/
+	elif [[ "$style_answer" == "7" ]]; then
+	install_font_for_style "7"
 	else
 	echo "${G} No Additional Packages Required For Theme: ${style_answer}"${W}
 	sleep 1

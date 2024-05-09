@@ -224,8 +224,42 @@ Cursor Theme:
 #### How to change app menu style:
 - Go To `$HOME/.config/rofi/`
 - Open The `launcher.sh`
-- And The Theme Number
+- And Change The Style Number
 <img src="images/xfce/look_6/app-menu-change.png">
+</details>
+<br>
+
+## 7. Windows 95:
+
+<details>
+<summary><b style ="font-size: small">Style Details: </summary>
+Theme Used: 
+<br>
+
+- [Chicago95](https://github.com/grassmunk/Chicago95)
+
+Icon Used:
+<br>
+
+- [Chicago95](https://github.com/grassmunk/Chicago95)
+
+Cursor Theme:
+
+- [Chicago95](https://github.com/grassmunk/Chicago95)
+
+</b>
+</details>
+<br>
+
+<center><img src="images/xfce/look_7/desktop.png"></center>
+
+<details style ="font-size: larger">
+<summary><b style ="font-size: larger">Screenshots: </b></summary>
+
+|Start Menu|Apps|
+|--|--|
+|![img](images/xfce/look_7/start-menu.png)|![img](images/xfce/look_7/basic-apps.png)|
+
 </details>
 <br>
 

@@ -144,4 +144,5 @@ pkg update -y ; pkg install wget -y ; wget https://raw.githubusercontent.com/sab
 - **Type `vncstop -f` to kill vncserver**
 - **Type `gui -kill` to kill both vncserver and Termux:x11 At Once**
 - **Type `change-td-style` To Change Desktop Style**
-## If you like my work then don't forget to give a Star :smile:
+
+## If you like my work then don't forget to give a Star :blush:
