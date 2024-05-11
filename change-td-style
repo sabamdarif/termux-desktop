@@ -8,6 +8,16 @@ C="$(printf '\033[1;36m')"
 W="$(printf '\033[1;37m')"
 BOLD="$(printf '\033[1m')"
 
+function banner() {
+clear
+echo "${Y} ▀█▀ █▀▀ █▀█ █▀▄▀█ █░█ ▀▄▀   █▀▄ █▀▀ █▀ █▄▀ ▀█▀ █▀█ █▀█ "${W}
+echo "${Y} ░█░ ██▄ █▀▄ █░▀░█ █▄█ █░█   █▄▀ ██▄ ▄█ █░█ ░█░ █▄█ █▀▀ "${W}
+echo
+echo "${C}${BOLD} Install Gui Desktop In Termux ${W}"
+echo "${C}${BOLD} code by @sabamdrif ${W}"
+echo
+}
+
 #########################################################################
 ############################### Shortcut Functions ######################
 #########################################################################
@@ -21,13 +31,6 @@ function check_and_create_directory() {
 function check_and_delete() {
 if [[ -e "$1" ]]; then
         rm -rf $1
-    fi
-}
-
-function check_and_backup() {
-	if [[ -e "$HOME/$1" ]]; then
-	mv $HOME/$1 $HOME/${1}.bak
-	mkdir -p "$HOME/$1"
     fi
 }
 
@@ -124,6 +127,18 @@ function count_subfolders() {
     echo "$subfolder_count"
 }
 
+function install_font_for_style() {
+	local style_number="$1"
+	echo "${R}[${W}-${R}]${G}Installing Fonts..."${W}
+	check_and_create_directory ".fonts"
+	cd $HOME/.fonts
+	wget https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/xfce/look_${style_number}/font.tar.gz
+	tar -xzvf font.tar.gz
+	rm font.tar.gz
+	fc-cache -f
+	cd
+}
+
 function confirmation_y_or_n() {
 	 while true; do
         read -p "${R}[${W}-${R}]${Y}${BOLD} $1 ${Y}(y/n) "${W} response
@@ -146,23 +161,6 @@ function confirmation_y_or_n() {
 
 }
 
-function get_latest_release() {
-	local repo_woner="$1"
-	local repo_name="$2"
-  curl -s "https://api.github.com/repos/$repo_woner/$repo_name/releases/latest" |
-  grep '"tag_name":' |
-  sed -E 's/.*"([^"]+)".*/\1/'
-}
-
-function select_option() {
-	var_name="$1"
-	read -p "${Y}select an option (Default 1): "${W} $var_name
-	$var_name=${$var_name:-1}
-	echo
-	echo "${R}[${W}-${R}]${G}Continuing with answer: $var_name"${W}
-	sleep 0.2
-}
-
 custom_theme="$PREFIX/etc/termux-desktop/custom_theme.txt"
 
 function check_current_theme() {
@@ -181,12 +179,23 @@ function check_current_theme() {
 ############################# Change Style ##############################
 #########################################################################
 
+function check_up() {
+termux_x11_pid=$(pgrep -f /system/bin/app_process.*com.termux.x11.Loader)
+xfce_pid=$(pgrep -f "xfce4-session")
+if [ -n "$termux_x11_pid" ] || [ -n "$xfce_pid" ]; then
+echo "${G}Please Stop The Gui First"${W}
+exit 0
+fi
+}
+
 function questions_theme_select() {
     local owner="sabamdarif"
     local repo="termux-desktop"
     local main_folder="patch/xfce"
     local subfolder_count_value=$(count_subfolders "$owner" "$repo" "$main_folder")
+	cd $HOME
     wget -O styles.md https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/xfce_styles.md
+    banner
     if [[ -n "$subfolder_count_value" ]]; then
         echo "${R}[${W}-${R}]${G}Check the xfce styles section in github"${W}
 		echo
@@ -203,10 +212,11 @@ function questions_theme_select() {
 		    echo
             read -p "${R}[${W}-${R}]${Y}Type number of the style (Default 1): "${W} style_answer
             style_answer=${style_answer:-1}
-            if [[ "$style_answer" -le "$subfolder_count_value" ]]; then
-            style_name=$(grep -oP "^## $style_answer\..+?(?=(\n## \d+\.|\Z))" styles.md | sed -e "s/^## $style_answer\. //" -e "s/:$//")
+            if [[ "$style_answer" =~ ^[0-9][0-9]*$ ]] && [[ "$style_answer" -le "$subfolder_count_value" ]]; then
+			style_name=$(grep -oP "^## $style_answer\..+?(?=(\n## \d+\.|\Z))" styles.md | sed -e "s/^## $style_answer\. //" -e "s/:$//")
                 break
             else
+			    echo
                 echo "${R}The entered style number is incorrect."${W}
 				echo
                 echo "${R}[${W}-${R}]${Y}Please enter a number between 0 to ${subfolder_count_value}"${W}
@@ -217,24 +227,27 @@ function questions_theme_select() {
 				echo
             fi
 	done
-    rm styles.md
-    else
-    echo "${R}Failed to get total avilable styles value."${W}
+	rm styles.md
+	 else
+        echo "${R}Failed to get total avilable styles value."${W}
     fi
 }
 
 function check_and_get_icon_wallpaper_theme() {
+    gui -kill
+    rm ~/.cache/sessions/x*
+    banner
     echo "${R}[${W}-${R}]${G}${BOLD}Configuring Icon Pack"${W}
     echo
     check_and_create_directory ".icons"
     download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/xfce/look_${style_answer}/icon.tar.gz" "$HOME/.icons/"
     echo "${R}[${W}-${R}]${G}${BOLD}Configuring Themes Pack"${W}
     echo
-    heck_and_create_directory ".themes"
+    check_and_create_directory ".themes"
     download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/xfce/look_${style_answer}/icon.tar.gz" "$HOME/.themes/"
     echo "${R}[${W}-${R}]${G}${BOLD} Configuring Wallpapers..."${W}
 	echo
-	check_and_create_directory "$PREFIX/share/backgrounds/"
+    mkdir -p "$PREFIX/share/backgrounds/"
 	download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/xfce/look_${style_answer}/wallpaper.tar.gz" "$PREFIX/share/backgrounds/"
 }
 
@@ -252,6 +265,8 @@ function additional_required_package_installler() {
     package_install_and_check "gtk2-engines-murrine"
 	elif [[ "$style_answer" == "5" ]] || [[ "$style_answer" == "6" ]]; then
 	cp $HOME/.config/xpple_menu/applications/* $PREFIX/share/applications/
+	elif [[ "$style_answer" == "7" ]]; then
+	install_font_for_style "7"
 	else
 	echo "${G} No Additional Packages Required For Theme: ${style_answer}"${W}
 	sleep 1
@@ -259,6 +274,7 @@ function additional_required_package_installler() {
 }
 
 function setup_config() {
+    banner
     echo "${R}[${W}-${R}]${G}${BOLD}Configuring Style ${C} ${style_name}"${W}
     config_dirs=(autostart cairo-dock dconf gtk-3.0 Mousepad pulse Thunar menu ristretto rofi xfce4)
         for the_config_dir in "${config_dirs[@]}"; do
@@ -268,6 +284,7 @@ function setup_config() {
     echo "${style_name}" > $custom_theme
 }
 
+check_up
 check_current_theme
 questions_theme_select
 if [[ "${style_answer}" == "0" ]];then

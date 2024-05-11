@@ -104,12 +104,12 @@ function distro_terminal_utility_setup() {
 	banner
     echo "${R}[${W}-${R}]${C}${BOLD}Configuring Terminal Utility..."${W}
     echo
-	proot-distro login $selected_distro --shared-tmp -- env DISPLAY=:1.0 apt install nala bat eza -y
+	proot-distro login $selected_distro --shared-tmp -- env DISPLAY=:1.0 apt install nala bat lsd -y
 	cat <<'EOF' >> "$save_path/.${distro_shell_name}rc"
 alias apt='sudo nala '
 alias apt-get='sudo nala '
 alias cat='bat $@'
-alias ls='eza --icons $@'
+alias ls='lsd $@'
 EOF
 sleep 2
 	fi
@@ -207,7 +207,7 @@ chmod +x "$PREFIX/bin/$selected_distro"
 banner
 package_install_and_check "zenity"
 
-check_and_create_directory "data/data/com.termux/files/usr/share/applications/pd_added"
+mkdir -p "$PREFIX/share/applications/pd_added"
 
 echo "#!/data/data/com.termux/files/usr/bin/bash
 distro_path="$distro_path"
@@ -279,7 +279,7 @@ gtk-update-icon-cache
 EOF
 chmod +x "$PREFIX/bin/add2menu"
 
-check_and_create_directory "$PREFIX/share/applications/"
+mkdir -p "$PREFIX/share/applications/"
 cat <<EOF > "$PREFIX/share/applications/add2menu.desktop"
 [Desktop Entry]
 Version=1.0
@@ -328,7 +328,6 @@ EOF
 proot-distro login --user $final_user_name $selected_distro -- /bin/sh -c 'bash setup-folders.sh'
     echo "${R}[${W}-${R}]${G}${BOLD}Link Distro Termux Themes And Icons With $selected_distro "${W}
     sleep 0.5
-    proot-distro login $selected_distro --shared-tmp -- env DISPLAY=:1.0 apt install xdg-desktop-portal-gtk -y
     check_and_create_directory ".icons"
     ln -s /data/data/com.termux/files/home/.icons $save_path
     check_and_create_directory ".themes"

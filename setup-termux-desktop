@@ -34,9 +34,8 @@ if [[ -e "$1" ]]; then
 }
 
 function check_and_backup() {
-	if [[ -e "$HOME/$1" ]]; then
-	mv $HOME/$1 $HOME/${1}.bak
-	mkdir -p "$HOME/$1"
+	if [[ -e "$1" ]]; then
+	mv $1 ${1}.bak
     fi
 }
 
@@ -179,22 +178,14 @@ function install_font_for_style() {
 ########################## Ask Required Questions #######################
 #########################################################################
 
-function select_option() {
-	var_name="$1"
-	read -p "${Y}select an option (Default 1): "${W} $var_name
-	$var_name=${$var_name:-1}
-	echo
-	echo "${R}[${W}-${R}]${G}Continuing with answer: $var_name"${W}
-	sleep 0.2
-}
-
 function questions_theme_select() {
     local owner="sabamdarif"
     local repo="termux-desktop"
     local main_folder="patch/xfce"
     local subfolder_count_value=$(count_subfolders "$owner" "$repo" "$main_folder")
-
+	cd $HOME
     wget -O styles.md https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/xfce_styles.md
+	banner
     if [[ -n "$subfolder_count_value" ]]; then
         echo "${R}[${W}-${R}]${G}Check the xfce styles section in github"${W}
 		echo
@@ -226,6 +217,7 @@ done
 				echo
             fi
 	done
+	rm styles.md
 	 else
         echo "${R}Failed to get total avilable styles value."${W}
     fi
@@ -479,8 +471,6 @@ function install_desktop() {
 
 function theme_installer() {
     banner
-	check_and_create_directory "$PREFIX/etc/termux-desktop/"
-	custom_theme="$PREFIX/etc/termux-desktop/custom_theme.txt"
     echo "${R}[${W}-${R}]${G}${BOLD} Configuring Theme: ${C}${style_name}"${W}
 	echo
 	package_install_and_check "gnome-themes-extra"
@@ -488,7 +478,7 @@ function theme_installer() {
     banner
     echo "${R}[${W}-${R}]${G}${BOLD} Configuring Wallpapers..."${W}
 	echo
-	check_and_create_directory "$PREFIX/share/backgrounds/"
+	mkdir -p "$PREFIX/share/backgrounds/"
 	download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/xfce/look_${style_answer}/wallpaper.tar.gz" "$PREFIX/share/backgrounds/"
     banner
 	check_and_create_directory ".icons"
@@ -502,10 +492,20 @@ function theme_installer() {
 	check_and_create_directory ".config"
 	config_dirs=(autostart cairo-dock dconf gtk-3.0 Mousepad pulse Thunar menu ristretto rofi xfce4)
         for the_config_dir in "${config_dirs[@]}"; do
-		check_and_backup ".config/$the_config_dir"
+		check_and_backup "$HOME/.config/$the_config_dir"
         done
 	download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/xfce/look_${style_answer}/config.tar.gz" "$HOME/.config/"
+}
+
+function add_theme_change_option() {
+	banner
+	echo "${R}[${W}-${R}]${G}${BOLD} Adding Style Change Option"${W}
+	echo
+	mkdir -p "$PREFIX/etc/termux-desktop/"
+	custom_theme="$PREFIX/etc/termux-desktop/custom_theme.txt"
 	echo "$style_name" > $custom_theme
+	wget -O $PREFIX/bin/change-td-style  https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/change-td-style
+	chmod +x $PREFIX/bin/change-td-style
 }
 
 #########################################################################
@@ -552,7 +552,7 @@ function setup_config() {
 	else
 	echo "${R}[${W}-${R}]${G}${BOLD} Configuring Some Extra Wallpapers..."${W}
 	echo
-	check_and_create_directory "$PREFIX/share/backgrounds/"
+	mkdir -p "$PREFIX/share/backgrounds/"
 	download_and_extract "https://archive.org/download/wallpaper-extra.tar/wallpaper-extra.tar.gz" "$PREFIX/share/backgrounds/"
 	fi
 	
@@ -576,13 +576,13 @@ done
 	termux-reload-settings
 	directories=(Desktop Music Downloads Pictures Videos)
 	for dir in "${directories[@]}"; do
-	check_and_create_directory "storage/shared/$dir"
+	check_and_create_directory "/data/data/com.termux/files/home/storage/shared/$dir"
 	done
 	check_and_create_directory "Desktop"
-	ln -s "/storage/shared/Music" "$HOME/"
-	ln -s /storage/shared/Download $HOME/Downloads
-	ln -s "/storage/shared/Pictures" "$HOME/"
-	ln -s "/storage/shared/Videos" "$HOME/"
+	ln -s "/data/data/com.termux/files/home/storage/shared/Music" "$HOME/"
+	ln -s "/data/data/com.termux/files/home/storage/shared/Download" "$HOME/Downloads"
+	ln -s "/data/data/com.termux/files/home/storage/shared/Pictures" "$HOME/"
+	ln -s "/data/data/com.termux/files/home/storage/shared/Videos" "$HOME/"
 }
 
 #########################################################################
@@ -858,7 +858,7 @@ function terminal_utility_setup() {
 	check_and_backup "$PREFIX/ect/motd.sh"
 	wget -O $PREFIX/etc/motd.sh https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/other/motd.sh
 	echo "bash $PREFIX/etc/motd.sh" >> $PREFIX/etc/termux-login.sh
-	check_and_create_directory "$HOME/.termux"
+	check_and_create_directory ".termux"
 	check_and_backup "$HOME/.termux/colors.properties"
 	wget -O $HOME/.termux/colors.properties https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/other/colors.properties
 	package_install_and_check "nala bat eza"
@@ -882,9 +882,11 @@ function setup_fonts() {
 	banner
 	echo "${R}[${W}-${R}]${G}${BOLD} Installing Fonts..."${W}
 	package_install_and_check "nerdfix fontconfig-utils"
-	check_and_create_directory "$HOME/.termux"
+	check_and_create_directory ".termux"
+	check_and_create_directory ".fonts"
 	check_and_backup "$HOME/.termux/font.ttf"
 	wget -O $HOME/.termux/font.ttf https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/other/font.ttf
+	cp $HOME/.termux/font.ttf $HOME/.fonts/
 	fc-cache -f
 	fi
 }
@@ -937,6 +939,7 @@ function notes() {
 termux-wake-lock
 sleep 2
 update_sys
+cd $HOME
 install_required_packages
 questions
 if [[ "$distro_add_answer" == "y" ]]; then
@@ -966,10 +969,6 @@ distro_container_setup
 setup_vnc
 gui_launcher
 terminal_utility_setup
-banner
-echo "${R}[${W}-${R}]${G}${BOLD} Adding Style Change Option"${W}
-echo
-wget -O $PREFIX/bin/change-td-style  https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/change-td-style
-chmod +x $PREFIX/bin/change-td-style
+add_theme_change_option
 notes
 termux-wake-unlock
