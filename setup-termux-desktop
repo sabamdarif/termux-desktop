@@ -6,6 +6,7 @@ B="$(printf '\033[1;34m')"
 C="$(printf '\033[1;36m')"                                       
 W="$(printf '\033[1;37m')"
 BOLD="$(printf '\033[1m')"
+config_file="$PREFIX/etc/termux-desktop/configuration"
 
 function banner() {
 clear
@@ -22,21 +23,24 @@ echo
 #########################################################################
 
 function check_and_create_directory() {
-    if [[ ! -d "$HOME/$1" ]]; then
-        mkdir -p "$HOME/$1"
+    if [[ ! -d "$1" ]]; then
+        mkdir -p "$1"
     fi
 }
 
 function check_and_delete() {
-if [[ -e "$1" ]]; then
-        rm -rf $1
+	local list=($@)
+	for files in "${list[@]}"; do
+	if [[ -e "$files" ]]; then
+	    rm -rf $files
     fi
+	done
 }
 
 function check_and_backup() {
 	if [[ -e "$1" ]]; then
-	mv $1 ${1}.bak
-    fi
+		mv "$1" "${1}.bak"
+	fi
 }
 
 function package_install_and_check() {
@@ -53,8 +57,19 @@ function package_install_and_check() {
 	else
 	if
     type -p "$package_name" &>/dev/null || [ -e "$PREFIX/bin/$package_name"* ] || [ -e "$PREFIX/bin/"*"$package_name" ]; then
-        echo "${R}[${W}-${R}]${G} $package_name installed successfully "${W}
+        echo "${R}[${W}-${R}]${C} $package_name ${G}installed successfully "${W}
 	fi
+    fi
+done
+
+}
+
+function package_check_and_remove() {
+	packs_list=($@)
+	for package_name in "${packs_list[@]}"; do
+	if dpkg -s "$package_name" >/dev/null 2>&1; then
+	echo "${R}[${W}-${R}]${G}${BOLD} Removeing package: ${C}$package_name "${W}
+    apt autoremove "$package_name" -y
     fi
 done
 
@@ -165,7 +180,7 @@ function get_latest_release() {
 function install_font_for_style() {
 	local style_number="$1"
 	echo "${R}[${W}-${R}]${G}Installing Fonts..."${W}
-	check_and_create_directory ".fonts"
+	check_and_create_directory "$HOME/.fonts"
 	cd $HOME/.fonts
 	wget https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/xfce/look_${style_number}/font.tar.gz
 	tar -xzvf font.tar.gz
@@ -438,7 +453,7 @@ done
 }
 
 #########################################################################
-########### Update System And Install Required Packages Repo ############
+#### Update System And Install Required Packages Repo And Bssic Task ####
 #########################################################################
 
 function update_sys() {
@@ -455,14 +470,17 @@ function install_required_packages() {
 	echo
 	package_install_and_check "wget jq curl pulseaudio x11-repo tur-repo"
 	update_sys
-	banner
 }
 
 function install_desktop() {
     banner
+	mkdir -p "$PREFIX/etc/termux-desktop"
+	touch $config_file
+	chmod +x $config_file
     echo "${R}[${W}-${R}]${G}${BOLD} Installing Xfce4 Desktop"${W}
 	echo
 	package_install_and_check "xfce4 xfce4-goodies xwayland kvantum"
+	echo "de=\"xfce\"" >> $config_file
 }
 
 #########################################################################
@@ -478,32 +496,31 @@ function theme_installer() {
     banner
     echo "${R}[${W}-${R}]${G}${BOLD} Configuring Wallpapers..."${W}
 	echo
-	mkdir -p "$PREFIX/share/backgrounds/"
+	check_and_create_directory "$PREFIX/share/backgrounds"
 	download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/xfce/look_${style_answer}/wallpaper.tar.gz" "$PREFIX/share/backgrounds/"
     banner
-	check_and_create_directory ".icons"
+	check_and_create_directory "$HOME/.icons"
 	download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/xfce/look_${style_answer}/icon.tar.gz" "$HOME/.icons"
 	echo "${R}[${W}-${R}]${G}${BOLD} Installing Theme..."${W}
 	echo
-	check_and_create_directory ".themes"
+	check_and_create_directory "$HOME/.themes"
 	download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/xfce/look_${style_answer}/theme.tar.gz" "$HOME/.themes"
 	echo "${R}[${W}-${R}]${G} Making Additional Configuration..."${W}
 	echo
-	check_and_create_directory ".config"
+	check_and_create_directory "$HOME/.config"
 	config_dirs=(autostart cairo-dock dconf gtk-3.0 Mousepad pulse Thunar menu ristretto rofi xfce4)
         for the_config_dir in "${config_dirs[@]}"; do
 		check_and_backup "$HOME/.config/$the_config_dir"
         done
 	download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/xfce/look_${style_answer}/config.tar.gz" "$HOME/.config/"
+	echo "current_style=\"$style_name\"" >> $config_file
 }
 
 function add_theme_change_option() {
 	banner
 	echo "${R}[${W}-${R}]${G}${BOLD} Adding Style Change Option"${W}
 	echo
-	mkdir -p "$PREFIX/etc/termux-desktop/"
-	custom_theme="$PREFIX/etc/termux-desktop/custom_theme.txt"
-	echo "$style_name" > $custom_theme
+	check_and_create_directory "$PREFIX/etc/termux-desktop"
 	wget -O $PREFIX/bin/change-td-style  https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/change-td-style
 	chmod +x $PREFIX/bin/change-td-style
 }
@@ -552,7 +569,7 @@ function setup_config() {
 	else
 	echo "${R}[${W}-${R}]${G}${BOLD} Configuring Some Extra Wallpapers..."${W}
 	echo
-	mkdir -p "$PREFIX/share/backgrounds/"
+	check_and_create_directory "$PREFIX/share/backgrounds"
 	download_and_extract "https://archive.org/download/wallpaper-extra.tar/wallpaper-extra.tar.gz" "$PREFIX/share/backgrounds/"
 	fi
 	
@@ -576,13 +593,13 @@ done
 	termux-reload-settings
 	directories=(Desktop Music Downloads Pictures Videos)
 	for dir in "${directories[@]}"; do
-	check_and_create_directory "/data/data/com.termux/files/home/storage/shared/$dir"
+	check_and_create_directory "$HOME/storage/shared/$dir"
 	done
-	check_and_create_directory "Desktop"
-	ln -s "/data/data/com.termux/files/home/storage/shared/Music" "$HOME/"
-	ln -s "/data/data/com.termux/files/home/storage/shared/Download" "$HOME/Downloads"
-	ln -s "/data/data/com.termux/files/home/storage/shared/Pictures" "$HOME/"
-	ln -s "/data/data/com.termux/files/home/storage/shared/Videos" "$HOME/"
+	check_and_create_directory "$HOME/Desktop"
+	ln -s "$HOME/storage/shared/Music" "$HOME/"
+	ln -s "$HOME/storage/shared/Download" "$HOME/Downloads"
+	ln -s "$HOME/storage/shared/Pictures" "$HOME/"
+	ln -s "$HOME/storage/shared/Videos" "$HOME/"
 }
 
 #########################################################################
@@ -613,6 +630,7 @@ function distro_container_setup() {
 	wget https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/distro-container-setup ; chmod +x distro-container-setup ; . distro-container-setup
 	rm distro-container-setup
 	fi
+	echo "setup_distro_container=\"$distro_add_answer\"" >> $config_file
 }
 
 #########################################################################
@@ -625,7 +643,7 @@ function setup_vnc() {
     echo
     package_install_and_check "tigervnc"
 	package_install_and_check "xorg-xhost"
-    check_and_create_directory ".vnc"
+    check_and_create_directory "$HOME/.vnc"
     check_and_delete "$HOME/.vnc/xstartup"
     cat << EOF > "$HOME/.vnc/xstartup"
     startxfce4 &
@@ -655,6 +673,8 @@ rm $PREFIX/tmp/.X1-lock > /dev/null 2>&1
 rm $PREFIX/tmp/.X11-unix/X1 > /dev/null 2>&1
 EOF
     chmod +x "$PREFIX/bin/vncstop"
+echo "setup_vnc=\"y\"" >> $config_file
+	
 }
 
 function gui_launcher() {
@@ -720,6 +740,7 @@ fi
 EOF
     fi
 chmod +x "$PREFIX/bin/gui"
+echo "setup_tx11=\"$tx11_answer\"" >> $config_file
 }
 
 #########################################################################
@@ -730,16 +751,21 @@ function browser_installer() {
 	banner
 	if [[ ${browser_answer} == "1" ]]; then
 		package_install_and_check "firefox"
+	echo "installed_browser=\"firefox\"" >> $config_file
 	elif [[ ${browser_answer} == "2" ]]; then
 	package_install_and_check "chromium"
+	echo "installed_browser=\"chromium\"" >> $config_file
 	elif [[ ${browser_answer} == "3" ]]; then
 	package_install_and_check "firefox chromium"
+	echo "installed_browser=\"both\"" >> $config_file
 	elif [[ ${browser_answer} == "4" ]]; then
     echo "${R}[${W}-${R}]${C} Skipping Browser Installation..."${W}
+	echo "installed_browser=\"skip\"" >> $config_file
 	echo
 	sleep 2
 	else
 	package_install_and_check "firefox"
+	echo "installed_browser=\"firefox\"" >> $config_file
 	fi
 }
 
@@ -751,16 +777,21 @@ function ide_installer() {
 	banner
 	if [[ ${ide_answer} == "1" ]]; then
 		package_install_and_check "code-oss code-is-code-oss"
+	echo "installed_ide=\"code\"" >> $config_file
 	elif [[ ${ide_answer} == "2" ]]; then
 		package_install_and_check "geany"
+	echo "installed_ide=\"geany\"" >> $config_file
 	elif [[ ${ide_answer} == "3" ]]; then
 		package_install_and_check "code-oss code-is-code-oss geany"
+	echo "installed_ide=\"both\"" >> $config_file
 	elif [[ ${ide_answer} == "4" ]]; then
     echo "${R}[${W}-${R}]${C} Skipping Ide Installation..."${W}
 	echo
+	echo "installed_ide=\"skip\"" >> $config_file
 	sleep 2
 	else
 		package_install_and_check "code-oss code-is-code-oss"
+	echo "installed_ide=\"code\"" >> $config_file
 	fi
 }
 
@@ -772,17 +803,21 @@ function media_player_installer() {
 	banner
 	if [[ ${player_answer} == "1" ]]; then
 		package_install_and_check "vlc-qt-static"
+	echo "installed_media_player=\"vlc\"" >> $config_file
 	elif [[ ${player_answer} == "2" ]]; then
 		package_install_and_check "audacious"
+	echo "installed_media_player=\"audacious\"" >> $config_file
 	elif [[ ${player_answer} == "3" ]]; then
 		package_install_and_check "vlc-qt-static audacious"
-		package_install_and_check ""
+	echo "installed_media_player=\"both\"" >> $config_file
 	elif [[ ${player_answer} == "4" ]]; then
     echo "${R}[${W}-${R}]${C} Skipping Media Player Installation..."${W}
 	echo
 	sleep 2
+	echo "installed_media_player=\"skip\"" >> $config_file
 	else
 		package_install_and_check "vlc-qt-static"
+	echo "installed_media_player=\"vlc\"" >> $config_file
 	fi
 }
 
@@ -794,17 +829,23 @@ function photo_editor_installer() {
 	banner
 	if [[ ${photo_editor_answer} == "1" ]]; then
 		package_install_and_check "gimp"
+	echo "installed_photo_editor=\"gimp\"" >> $config_file
 	elif [[ ${photo_editor_answer} == "2" ]]; then
 		package_install_and_check "inkscape"
+	echo "installed_photo_editor=\"inkscape\"" >> $config_file
 	elif [[ ${photo_editor_answer} == "3" ]]; then
 		package_install_and_check "gimp inkscape"
+	echo "installed_photo_editor=\"both\"" >> $config_file
 	elif [[ ${photo_editor_answer} == "4" ]]; then
     echo "${R}[${W}-${R}]${C} Skipping Photo Editor Installation..."${W}
 	echo
 	sleep 2
+	echo "installed_photo_editor=\"skip\"" >> $config_file
 	else
 		package_install_and_check "gimp"
+	echo "installed_photo_editor=\"gimp\"" >> $config_file
 	fi
+
 }
 
 #########################################################################
@@ -823,6 +864,7 @@ function setup_synaptic() {
 	echo
 	package_install_and_check "synaptic"
 	fi
+	echo "install_synaptic=\"$synaptic_answer\"" >> $config_file
 }
 
 #########################################################################
@@ -842,6 +884,7 @@ function setup_zsh() {
 	package_install_and_check "zsh git"
 	wget https://raw.githubusercontent.com/sabamdarif/short-linux-scripts/main/install-zsh.sh && bash install-zsh.sh
 fi
+echo "setup_zsh=\"$zsh_answer\"" >> $config_file
 }
 
 function terminal_utility_setup() {
@@ -857,8 +900,8 @@ function terminal_utility_setup() {
 	check_and_backup "$PREFIX/ect/motd-playstore"
 	check_and_backup "$PREFIX/ect/motd.sh"
 	wget -O $PREFIX/etc/motd.sh https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/other/motd.sh
-	echo "bash $PREFIX/etc/motd.sh" >> $PREFIX/etc/termux-login.sh
-	check_and_create_directory ".termux"
+	echo "bash $PREFIX/etc/motd.sh" > $PREFIX/etc/termux-login.sh
+	check_and_create_directory "$HOME/.termux"
 	check_and_backup "$HOME/.termux/colors.properties"
 	wget -O $HOME/.termux/colors.properties https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/other/colors.properties
 	package_install_and_check "nala bat eza"
@@ -871,6 +914,7 @@ EOF
 termux-reload-settings
 sleep 2
 	fi
+echo "terminal_utility_setup=\"$terminal_utility_setup_answer\"" >> $config_file
 }
 
 #########################################################################
@@ -882,8 +926,8 @@ function setup_fonts() {
 	banner
 	echo "${R}[${W}-${R}]${G}${BOLD} Installing Fonts..."${W}
 	package_install_and_check "nerdfix fontconfig-utils"
-	check_and_create_directory ".termux"
-	check_and_create_directory ".fonts"
+	check_and_create_directory "$HOME/.termux"
+	check_and_create_directory "$HOME/.fonts"
 	check_and_backup "$HOME/.termux/font.ttf"
 	wget -O $HOME/.termux/font.ttf https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/other/font.ttf
 	cp $HOME/.termux/font.ttf $HOME/.fonts/
@@ -900,17 +944,21 @@ function setup_wine() {
     if [[ "$wine_answer" == "1" ]]; then
 	echo "${R}[${W}-${R}]${G}${BOLD} Installing Wine Natively In Termux"${W}
 	echo
-		 package_install_and_check "wine-stable winetricks"
+		package_install_and_check "wine-stable winetricks"
+		echo "setup_wine=\"default-wine\"" >> $config_file
 	elif [[ "$wine_answer" == "2" ]]; then
 	echo "${R}[${W}-${R}]${G}${BOLD} Use Mobox Installer To Install Wine In Termux"${W}
 	echo
 	curl -s -o ~/x https://raw.githubusercontent.com/olegos2/mobox/main/install && . ~/x
+	echo "setup_wine=\"mobox\"" >> $config_file
 	elif [[ "$wine_answer" == "3" ]]; then
 	echo "${R}[${W}-${R}]${C} Skipping wine Installation..."${W}
+	echo "setup_wine=\"skip\"" >> $config_file
 else
     echo "${R}[${W}-${R}]${G}Installing Wine Natively In Termux"${W}
 	echo
-		 package_install_and_check "wine-stable winetricks"
+		package_install_and_check "wine-stable winetricks"
+		echo "setup_wine=\"default-wine\"" >> $config_file
 fi
 }
 
@@ -936,6 +984,125 @@ function notes() {
 	fi
 }
 
+#########################################################################
+################################ Remove #################################
+#########################################################################
+
+function remove_termux_desktop() {
+	if [[ ! -e "$config_file" ]]; then
+	echo "${R}[${W}-${R}]${C}${BOLD}Please Install Termux Desktop First"${W}
+	exit 0
+	else
+	banner
+	echo "${R}[${W}-${R}]${R}${BOLD}Remove Termux Desktop"${W}
+	echo
+	confirmation_y_or_n "Are You Sure You Want To Remove Termux Desktop Completely" ask_remove
+	if [[ "$ask_remove" == "n" ]]; then
+	echo "${R}[${W}-${R}]${G}${BOLD}Canceling..."${W}
+	exit 0
+	else
+	echo "${R}[${W}-${R}]${R}${BOLD}Removeing Termux Desktop"${W}
+	sleep 3
+	. $config_file
+	#remove basic packages
+	package_check_and_remove "pulseaudio x11-repo tur-repo"
+	#remove desktop related packages
+	if [[ "$de" == "xfce" ]];then
+	package_check_and_remove "xfce4 xfce4-goodies xwayland kvantum"
+	fi
+	#remove zsh
+	if [[ "$setup_zsh" == "y" ]];then
+	package_check_and_remove "zsh"
+	check_and_delete ".oh-my-zsh .zsh_history .zshrc"
+	fi
+	#remove terminal utility
+	if [[ "$terminal_utility_setup" == "y" ]];then
+	check_and_delete "$PREFIX/etc/motd.sh $PREFIX/etc/termux-login.sh $HOME/.termux $HOME/.fonts/font.ttf"
+	package_check_and_remove "nerdfix fontconfig-utils nala bat eza"
+	fi
+	#remove browser
+	if [[ "$installed_browser" == "firefox" ]];then
+	package_check_and_remove "firefox"
+	elif [[ "$installed_browser" == "chromium" ]];then
+	package_check_and_remove "chromium"
+	elif [[ "$installed_browser" == "both" ]];then
+	package_check_and_remove "firefox chromium"
+	fi
+	#remove ide
+	if [[ "$installed_ide" == "code" ]];then
+	package_check_and_remove "code-oss code-is-code-oss"
+	elif [[ "$installed_ide" == "geany" ]];then
+	package_check_and_remove "geany"
+	elif [[ "$installed_ide" == "both" ]];then
+	package_check_and_remove "code-oss code-is-code-oss geany"
+	fi
+	#remove media player
+	if [[ "$installed_media_player" == "vlc" ]];then
+	package_check_and_remove "vlc-qt-static"
+	elif [[ "$installed_media_player" == "audacious" ]];then
+	package_check_and_remove "audacious"
+	elif [[ "$installed_media_player" == "both" ]];then
+	package_check_and_remove "vlc-qt-static audacious"
+	fi
+	#remove photo editor
+	if [[ "$installed_photo_editor" == "gimp" ]];then
+	package_check_and_remove "gimp"
+	elif [[ "$installed_photo_editor" == "audacious" ]];then
+	package_check_and_remove "audacious"
+	elif [[ "$installed_photo_editor" == "both" ]];then
+	package_check_and_remove "gimp audacious"
+	fi
+	#remove synaptic
+	if [[ "$install_synaptic" == "y" ]];then
+	package_check_and_remove "synaptic"
+	fi
+	#remove wine
+	if [[ "$setup_wine" == "default-wine" ]];then
+	package_check_and_remove "wine winetricks"
+	# elif [[ "$setup_wine" == "mobox" ]];then
+	fi
+	#remove styles
+	if [[ "$current_style" == "Modern Style" ]] || [[ "$current_style" == "MacOS Inspired-1 Style" ]] || [[ "$current_style" == "MacOS Inspired-2 Style" ]];then
+	package_check_and_remove "cairo-dock-core"
+	elif [[ "$current_style" == "Modern Style" ]] || [[ "$current_style" == "MacOS Inspired-2 Style" ]];then
+	package_check_and_remove "rofi"
+	elif [[ "$current_style" == "Modern Style" ]];then
+	package_check_and_remove "fluent-icon-theme vala-panel-appmenu"
+	elif [[ "$current_style" == "Windows10 Style" ]];then
+	package_check_and_remove "gtk2-engines-murrine"
+	fi
+	check_and_delete "$PREFIX/share/backgrounds $HOME/.themes $HOME/.icons $PREFIX/bin/change-td-style"
+	check_and_delete "$HOME/.config/$the_config_dir"
+	#remove hw packages
+	if [[ "$distro_answer" == "3" ]];then
+	package_check_and_remove "mesa-vulkan-icd-freedreno mesa-zink"
+	else
+	package_check_and_remove "mesa-zink virglrenderer-mesa-zink vulkan-loader-android angle-android virglrenderer-android"
+	fi
+	#remove distro container
+	if [[ "$setup_distro_container" == "y" ]];then
+	if [[ "$distro_answer" == "1" ]];then
+	proot-distro remove debian
+	elif [[ "$distro_answer" == "2" ]];then
+	proot-distro remove ubuntu
+	fi
+	proot-distro clear-cache
+	package_check_and_remove "proot-distro"
+	fi
+	#remove vnc and termux x11
+	if [[ "$setup_vnc" == "y" ]];then
+	package_check_and_remove "tigervnc xorg-xhost"
+	check_and_delete "$HOME/.vnc/xstartup $PREFIX/bin/vncstart $PREFIX/bin/vncstop $PREFIX/bin/gui $PREFIX/bin/tx11start $PREFIX/bin/tx11stop"
+	fi
+	if [[ "$setup_tx11" == "y" ]];then
+	package_check_and_remove "termux-x11-nightly"
+	fi
+	check_and_delete "$PREFIX/etc/termux-desktop"
+	fi
+	fi
+}
+
+function install_termux_desktop() {
 termux-wake-lock
 sleep 2
 update_sys
@@ -960,7 +1127,7 @@ if [[ "$style_answer" == "0" ]]; then
     banner
 	echo "${R}[${W}-${R}]${G}${BOLD} Configuring Stock Xfce Style..."${W}
 	echo
-	echo "Stock" > $custom_theme
+	echo "current_style=\"Stock\"" >> $config_file
 else
 setup_config
 fi
@@ -972,3 +1139,12 @@ terminal_utility_setup
 add_theme_change_option
 notes
 termux-wake-unlock
+}
+
+if [[ "$1" == "-r" ]]; then
+    remove_termux_desktop
+elif [[ "$1" == "" ]]; then
+    install_termux_desktop
+else
+    echo "${R}[${W}-${R}]${G}${BOLD} Use ${C}setup-termux-desktop -r ${G}to remove Termux desktop or type only ${C}setup-termux-desktop ${G}to continue the installation."${W}
+fi

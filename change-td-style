@@ -23,8 +23,8 @@ echo
 #########################################################################
 
 function check_and_create_directory() {
-    if [[ ! -d "$HOME/$1" ]]; then
-        mkdir -p "$HOME/$1"
+    if [[ ! -d "$1" ]]; then
+        mkdir -p "$1"
     fi
 }
 
@@ -130,7 +130,7 @@ function count_subfolders() {
 function install_font_for_style() {
 	local style_number="$1"
 	echo "${R}[${W}-${R}]${G}Installing Fonts..."${W}
-	check_and_create_directory ".fonts"
+	check_and_create_directory "$HOME/.fonts"
 	cd $HOME/.fonts
 	wget https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/xfce/look_${style_number}/font.tar.gz
 	tar -xzvf font.tar.gz
@@ -239,15 +239,15 @@ function check_and_get_icon_wallpaper_theme() {
     banner
     echo "${R}[${W}-${R}]${G}${BOLD}Configuring Icon Pack"${W}
     echo
-    check_and_create_directory ".icons"
+    check_and_create_directory "$HOME/.icons"
     download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/xfce/look_${style_answer}/icon.tar.gz" "$HOME/.icons/"
     echo "${R}[${W}-${R}]${G}${BOLD}Configuring Themes Pack"${W}
     echo
-    check_and_create_directory ".themes"
+    check_and_create_directory "$HOME/.themes"
     download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/xfce/look_${style_answer}/icon.tar.gz" "$HOME/.themes/"
     echo "${R}[${W}-${R}]${G}${BOLD} Configuring Wallpapers..."${W}
 	echo
-    mkdir -p "$PREFIX/share/backgrounds/"
+    check_and_create_directory "$PREFIX/share/backgrounds/"
 	download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/xfce/look_${style_answer}/wallpaper.tar.gz" "$PREFIX/share/backgrounds/"
 }
 
