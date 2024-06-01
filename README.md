@@ -44,7 +44,7 @@
 - No Root Required
 - Android 7+ phone
 - [Termux](https://termux.dev/en/) From [Github](https://github.com/termux/termux-app/releases) Or [Fdroid](https://f-droid.org/en/packages/com.termux/)
-> Termux from Google Play is unmaintained due to API requirements So use the F-Droid one instead.
+> Termux from Google Play is unmaintained due to API requirements So sould use the F-Droid one instead.
 - 2GB of RAM 3GB of RAM
 - 1.5 - 2 GB Of Internet
 - 3 - 4 GB Of Free Storage
@@ -109,7 +109,7 @@
 
 >NOTE: This only works on Termux
 
->NOTE: A Fresh Desktop Install Is Always Best / Recommended
+>NOTE: A Fresh Install Is Always Recommended / Best 
 
 ## Steps:
 
@@ -137,11 +137,21 @@ pkg update -y ; pkg install wget -y ; wget https://raw.githubusercontent.com/sab
 <a name="uses"></a>
 
 ## Uses:
-- **Type `vncstart` OR `gui -start` to start vnc server.**
-- **Type `vncstop` OR `gui -stop` to start vnc server.**
-- **Type `gui -tx11` OR `tx11start` to star using Termux:11.**
+
+- **Type `tx11start` to star using Termux:11.**
 - **Type `tx11stop` to stop Termux:11 server**
+- **Type `vncstart` to start using Termux:11.**
+- **Type `vncstop` to stop Termux:11 server**
 - **Type `vncstop -f` to kill vncserver**
+
+### If you select only one of them to access gui
+- **Type `gui --start / gui -l` to start gui**
+- **Type `gui --stop / gui -s` to stop gui**
+
+### If you select both for gui access
+- **Type `gui --start tx11/vnc or gui -l tx11/vnc` to start Termux:X11 or VNC**
+- **Type `gui --stop tx11/vnc or gui -s tx11/vnc` to stop Termux:X11 or VNC**
+
 - **Type `gui -kill` to kill both vncserver and Termux:x11 At Once**
 - **Type `change-td-style` To Change Desktop Style**
 - **Type `./setup-termux-desktop -r` To Remove Termux Desktop**
