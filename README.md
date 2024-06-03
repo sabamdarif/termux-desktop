@@ -37,6 +37,7 @@
 ### 5. Check Natively Supported Apps list: [from here](applist.md)
 ### 6. Installation: [from here](#installation)
 ### 7. Uses: [from here](#uses)
+### 8. See More: [from here](see-more.md)
 
 <a name="requirements"></a>
 

@@ -58,7 +58,10 @@ function distro_basic_task() {
     final_user_name="${user_name}"
 cat <<EOF > $HOME/useradd.sh
 #!/bin/bash
-useradd -m -s \$(which bash) ${final_user_name}
+groupadd storage
+groupadd wheel
+useradd -m -g users -s $(which bash) ${final_user_name}
+usermod -aG wheel,polkitd,audio,video,storage ${final_user_name}
 echo "${final_user_name}:${pass}" | chpasswd
 chmod u+rw /etc/sudoers
 echo "$final_user_name ALL=(ALL:ALL) ALL" >> /etc/sudoers
@@ -104,12 +107,93 @@ function distro_terminal_utility_setup() {
 	banner
     echo "${R}[${W}-${R}]${C}${BOLD}Configuring Terminal Utility..."${W}
     echo
-	proot-distro login $selected_distro --shared-tmp -- env DISPLAY=:1.0 apt install nala bat lsd -y
+	proot-distro login $selected_distro --shared-tmp -- env DISPLAY=:1.0 apt install nala fastfetch bat lsd -y
 	cat <<'EOF' >> "$save_path/.${distro_shell_name}rc"
-alias apt='sudo nala '
-alias apt-get='sudo nala '
+alias apt='sudo nala $@'
+alias apt-get='sudo nala $@'
 alias cat='bat $@'
 alias ls='lsd $@'
+alias mkdir='mkdir -p'
+alias neofetch='fastfetch'
+#######################################################
+# SPECIAL FUNCTIONS
+#######################################################
+# Extracts any archive(s) (if unp isn't installed)
+extract() {
+	for archive in "$@"; do
+		if [ -f "$archive" ]; then
+			case $archive in
+			*.tar.bz2) tar xvjf $archive ;;
+                        *.tar.xz) tar -xvf $archive ;;
+                        *.tar.gz) tar -xzvf $archive ;;
+			*.tar.gz) tar xvzf $archive ;;
+			*.bz2) bunzip2 $archive ;;
+			*.rar) rar x $archive ;;
+			*.gz) gunzip $archive ;;
+			*.tar) tar xvf $archive ;;
+			*.tbz2) tar xvjf $archive ;;
+			*.tgz) tar xvzf $archive ;;
+			*.zip) unzip $archive ;;
+			*.Z) uncompress $archive ;;
+			*.7z) 7z x $archive ;;
+			*) echo "don't know how to extract '$archive'..." ;;
+			esac
+		else
+			echo "'$archive' is not a valid file!"
+		fi
+	done
+}
+# Searches for text in all files in the current folder
+ftext() {
+	# -i case-insensitive
+	# -I ignore binary files
+	# -H causes filename to be printed
+	# -r recursive search
+	# -n causes line number to be printed
+	# optional: -F treat search term as a literal, not a regular expression
+	# optional: -l only print filenames and not the matching lines ex. grep -irl "$1" *
+	grep -iIHrn --color=always "$1" . | less -r
+}
+# Copy file with a progress bar
+cpp() {
+	set -e
+	strace -q -ewrite cp -- "${1}" "${2}" 2>&1 |
+		awk '{
+	count += $NF
+	if (count % 10 == 0) {
+		percent = count / total_size * 100
+		printf "%3d%% [", percent
+		for (i=0;i<=percent;i++)
+			printf "="
+			printf ">"
+			for (i=percent;i<100;i++)
+				printf " "
+				printf "]\r"
+			}
+		}
+	END { print "" }' total_size="$(stat -c '%s' "${1}")" count=0
+}
+# Copy and go to the directory
+cpg() {
+	if [ -d "$2" ]; then
+		cp "$1" "$2" && cd "$2"
+	else
+		cp "$1" "$2"
+	fi
+}
+# Move and go to the directory
+mvg() {
+	if [ -d "$2" ]; then
+		mv "$1" "$2" && cd "$2"
+	else
+		mv "$1" "$2"
+	fi
+}
+# Create and go to the directory
+mkdirg() {
+	mkdir -p "$1"
+	cd "$1"
+}
 EOF
 sleep 2
 	fi
