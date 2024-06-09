@@ -56,11 +56,11 @@ function distro_basic_task() {
     final_user_name="root"
     else
     final_user_name="${user_name}"
-cat <<EOF > $HOME/useradd.sh
+cat <<EOF > $distro_path/root/useradd.sh
 #!/bin/bash
 groupadd storage
 groupadd wheel
-useradd -m -g users -s $(which bash) ${final_user_name}
+useradd -m -g users -s \$(which bash) ${final_user_name}
 usermod -aG wheel,polkitd,audio,video,storage ${final_user_name}
 echo "${final_user_name}:${pass}" | chpasswd
 chmod u+rw /etc/sudoers
@@ -68,7 +68,6 @@ echo "$final_user_name ALL=(ALL:ALL) ALL" >> /etc/sudoers
 chmod u-w /etc/sudoers
 rm useradd.sh
 EOF
-proot-distro login $selected_distro -- /bin/sh -c 'mv /data/data/com.termux/files/home/useradd.sh $HOME'
 proot-distro login $selected_distro -- /bin/sh -c 'bash useradd.sh'
     fi
 
@@ -115,6 +114,8 @@ alias cat='bat $@'
 alias ls='lsd $@'
 alias mkdir='mkdir -p'
 alias neofetch='fastfetch'
+alias tx11start='echo please run from termux, not inside proot distro.'
+alias tx11stop='echo please run from termux, not inside proot distro.'
 #######################################################
 # SPECIAL FUNCTIONS
 #######################################################

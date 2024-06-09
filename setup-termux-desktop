@@ -13,8 +13,8 @@ clear
 echo "${Y} ▀█▀ █▀▀ █▀█ █▀▄▀█ █░█ ▀▄▀   █▀▄ █▀▀ █▀ █▄▀ ▀█▀ █▀█ █▀█ "${W}
 echo "${Y} ░█░ ██▄ █▀▄ █░▀░█ █▄█ █░█   █▄▀ ██▄ ▄█ █░█ ░█░ █▄█ █▀▀ "${W}
 echo
-echo "${C}${BOLD} Install Gui Desktop In Termux ${W}"
-echo "${C}${BOLD} code by @sabamdrif ${W}"
+echo "${C}${BOLD} Install Gui Desktop In Termux"${W}
+echo "${C}${BOLD} code by @sabamdrif"${W}
 echo
 }
 
@@ -729,10 +729,11 @@ chmod +x $PREFIX/bin/tx11start
 
 cat <<'EOF' > "$PREFIX/bin/tx11stop"
 #!/data/data/com.termux/files/usr/bin/bash
-termux_x11_pid=$(pgrep -f /system/bin/app_process.*com.termux.x11.Loader)
+termux_x11_pid=$(pgrep -f "/system/bin/app_process / com.termux.x11.Loader :1.0")
 xfce_pid=$(pgrep -f "xfce4-session")
-if [ -n "$termux_x11_pid" ] || [ -n "$xfce_pid" ]; then
-  kill -9 "$termux_x11_pid" "$xfce_pid" > /dev/null 2>&1
+if [[ -n "$termux_x11_pid" ]] || [[ -n "$xfce_pid" ]]; then
+kill -9 "$termux_x11_pid" "$xfce_pid" > /dev/null 2>&1
+pkill -f com.termux.x11 > /dev/null 2>&1
 echo "Termux:X11 Stopped Successfully"
 fi
 EOF

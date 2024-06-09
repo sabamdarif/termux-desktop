@@ -8,11 +8,11 @@
 - **zoxide:** A smarter cd command
 
 #### How to use them ?
-- *cd* is replaced with *zoxide* (use the cd command as normal it will use zoxide to change directories)
-- use *pkg* or *apt* it will automatically use *nala* to install packages
-- use *ls* it will use *eza* for that
-- use *neofetch* it will use *fastfetch* for that
-- use *cat* it will use *bat* fot that
+- ***cd*** is replaced with ***zoxide*** (*use the cd command as normal it will use zoxide to change directories*)
+- use ***pkg*** or ***apt*** command it will automatically use ***nala*** to install packages
+- use ***ls*** command it will use ***eza*** for that
+- use ***neofetch*** command it will use ***fastfetch*** for that
+- use ***cat*** command it will use ***bat*** fot that
 #### 2.Special Functions
 
 - **extract:** Use extract command to extract any archive
