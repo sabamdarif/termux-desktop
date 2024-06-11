@@ -64,20 +64,21 @@ function check_and_restore() {
 
 function package_install_and_check() {
 	packs_list=($@)
-	for package_name in "${packs_list[@]}"; do
-    echo "${R}[${W}-${R}]${G}${BOLD} Installing package: ${C}$package_name "${W}
+for package_name in "${packs_list[@]}"; do
+    echo "${R}[${W}-${R}]${G}${BOLD} Installing package: ${C}$package_name ${W}"
     pkg install "$package_name" -y
-	if [ $? -ne 0 ]; then
-    apt --fix-broken install -y
-	dpkg --Configuring -a
+    if [ $? -ne 0 ]; then
+        echo "${R}[${W}-${R}]${G}${BOLD} Error detected during installation of: ${C}$package_name ${W}"
+        apt --fix-broken install -y
+        dpkg --configure -a
+        pkg install "$package_name" -y
     fi
-	if dpkg -s "$package_name" >/dev/null 2>&1; then
-    echo "${R}[${W}-${R}]${G} $package_name installed successfully "${W}
-	else
-	if
-    type -p "$package_name" &>/dev/null || [ -e "$PREFIX/bin/$package_name"* ] || [ -e "$PREFIX/bin/"*"$package_name" ]; then
-        echo "${R}[${W}-${R}]${C} $package_name ${G}installed successfully "${W}
-	fi
+    if dpkg -s "$package_name" >/dev/null 2>&1; then
+        echo "${R}[${W}-${R}]${G} $package_name installed successfully ${W}"
+    else
+        if type -p "$package_name" &>/dev/null || [ -e "$PREFIX/bin/$package_name"* ] || [ -e "$PREFIX/bin/"*"$package_name" ]; then
+            echo "${R}[${W}-${R}]${C} $package_name ${G}installed successfully ${W}"
+        fi
     fi
 done
 
@@ -100,6 +101,28 @@ function get_file_name_number() {
     theme_number=$(echo "$folder_name" | grep -oE '[1-9][0-9]*')
 }
 
+function extract_archive() {
+	set -e
+	local archive="$1"
+	total_size=$(stat -c '%s' "$archive")
+	case "$archive" in
+    *.tar.gz)
+        pv -s $total_size -p -r "$archive" | tar xzf -
+        ;;
+    *.tar.xz)
+        pv -s $total_size -p -r "$archive" | tar xJf -
+        ;;
+    *.tar)
+        pv -s $total_size -p -r "$archive" | tar xf -
+        ;;
+    *)
+        echo "${R}Unsupported archive format: ${C}$archive"${W}
+        exit 1
+        ;;
+esac
+
+}
+
 function download_and_extract() {
     local url="$1"
     local target_dir="$2"
@@ -116,28 +139,24 @@ function download_and_extract() {
     while [[ $attempt -le 3 ]]; do
         if [[ $filename == *.tar.gz ]]; then
             if curl -# -L "$url" -o "$filename"; then
-                tar -zxvf "$filename"
+			echo ""
+			    extract_archive "$filename"
                 rm "$filename"
                 success=true
                 break
             fi
         elif [[ $filename == *.tar ]]; then
             if curl -# -L "$url" -o "$filename"; then
-                tar -xvf "$filename"
+			echo ""
+                extract_archive "$filename"
                 rm "$filename"
                 success=true
                 break
             fi
         elif [[ $filename == *.tar.xz ]]; then
             if curl -# -L "$url" -o "$filename"; then
-                tar -xvf "$filename"
-                rm "$filename"
-                success=true
-                break
-            fi
-        elif [[ $filename == *.zip ]]; then
-            if curl -# -L "$url" -o "$filename"; then
-                unzip "$filename"
+			echo ""
+                extract_archive "$filename"
                 rm "$filename"
                 success=true
                 break
@@ -443,7 +462,7 @@ function distro_questions() {
 	echo "${R}[${W}-${R}]${G}Continuing with answer: $distro_answer"${W}
 	sleep 0.2
 	banner
-	confirmation_y_or_n "Do you want to Configuring audio support for distro container" pd_audio_config_answer
+	confirmation_y_or_n "Do you want to configure audio support for distro container" pd_audio_config_answer
     banner
 	confirmation_y_or_n "Do you want to create a normal user account ${C}(Recomended)" useradd_answer
 	echo
@@ -451,7 +470,19 @@ function distro_questions() {
     banner
     echo "${R}[${W}-${R}]${G}Skiping User Account Setup"${W}
     else
-    echo "${R}[${W}-${R}]${G}${BOLD}Create user account"${W}
+	echo "${R}[${W}-${R}]${G}${BOLD} Select user type"${W}
+    echo
+	echo "${Y}1. User with password confirmation"${W}
+	echo
+	echo "${Y}2. User with no password confirmation"${W}
+	echo 
+	read -p "${Y}select an option (Default 1): "${W} distro_pass_type
+	distro_pass_type=${distro_pass_type:-1}
+	echo
+	echo "${R}[${W}-${R}]${G}Continuing with answer: $distro_pass_type"${W}
+	if [[ "$distro_pass_type" == "1" ]];then
+	echo
+    echo "${R}[${W}-${R}]${G}${BOLD} Create user account"${W}
     echo
     while true; do
     read -p "${R}[${W}-${R}]${G}Input username [Lowercase]: "${W} user_name
@@ -477,6 +508,30 @@ function distro_questions() {
             ;;
     esac
 done
+elif [[ "$distro_pass_type" == "2" ]];then
+while true; do
+    read -p "${R}[${W}-${R}]${G}Input username [Lowercase]: "${W} user_name
+    echo
+    read -p "${R}[${W}-${R}]${Y}Do you want to continue with username ${C}$user_name ${Y}? (y/n) : "${W} choice
+	echo
+	choice="${choice:-y}"
+	echo
+	echo "${R}[${W}-${R}]${G}Continuing with answer: $choice"${W}
+	sleep 0.3
+    case $choice in
+        [yY]* )
+            echo "${R}[${W}-${R}]${G}Continuing with username ${C}$user_name "${W}
+            break;;
+        [nN]* )
+             echo "${G}Please provide username again."${W}
+            echo
+            ;;
+        * )
+            echo "${R}Invalid input. Please enter 'y' or 'n'."${W}
+            ;;
+    esac
+done
+fi
     fi
 }
 
@@ -486,7 +541,7 @@ done
 
 function update_sys() {
 	banner
-    echo "${R}[${W}-${R}]${G}${BOLD}Updating System...."${W}
+    echo "${R}[${W}-${R}]${G}${BOLD} Updating System...."${W}
 	echo
     pkg update -y -o Dpkg::Options::="--force-confold"
 	pkg upgrade -y -o Dpkg::Options::="--force-confold"
@@ -496,7 +551,7 @@ function install_required_packages() {
 	banner
     echo "${R}[${W}-${R}]${Y}${BOLD} Installling required packages..."${W}
 	echo
-	package_install_and_check "wget jq curl pulseaudio x11-repo tur-repo"
+	package_install_and_check "wget pv jq curl pulseaudio termux-am x11-repo tur-repo"
 	update_sys
 }
 
@@ -592,7 +647,7 @@ function setup_config() {
 	additional_required_package_installler
 	fi
 	if [[ "$ext_wall_answer" == "n" ]]; then
-	echo "${R}[${W}-${R}]${C}Skipping Extra Wallpapers Setup..."${W}
+	echo "${R}[${W}-${R}]${C} Skipping Extra Wallpapers Setup..."${W}
 	echo
 	else
 	echo "${R}[${W}-${R}]${G}${BOLD} Configuring Some Extra Wallpapers..."${W}
@@ -613,7 +668,7 @@ function setup_folder() {
     if [[ -d ~/storage ]]; then
         break
     else
-        echo "${R}Storage permission denied"${W}
+        echo "${R} Storage permission denied"${W}
     fi
     sleep 3
 done
@@ -649,7 +704,7 @@ function hw_config() {
 function distro_container_setup() {
 	if [[ "$distro_add_answer" == "n" ]]; then
 	banner
-	echo "${R}[${W}-${R}]${C}Skipping Distro Container Setup..."${W}
+	echo "${R}[${W}-${R}]${C} Skipping Distro Container Setup..."${W}
 	echo
 	else
 	banner
@@ -966,11 +1021,11 @@ function setup_synaptic() {
 	banner
     if [[ "$synaptic_answer" == "n" ]]; then
 	banner
-    echo "${R}[${W}-${R}]${C}Skipping Synaptic Setup.."${W}
+    echo "${R}[${W}-${R}]${C} Skipping Synaptic Setup.."${W}
 	echo
     sleep 1.5
 	else
-	echo "${R}[${W}-${R}]${G}Installing Synaptic Graphical Package Manager..."${W}
+	echo "${R}[${W}-${R}]${G} Installing Synaptic Graphical Package Manager..."${W}
 	echo
 	package_install_and_check "synaptic"
 	fi
@@ -984,12 +1039,12 @@ function setup_synaptic() {
 function setup_zsh() {
 	banner
     if [[ "$zsh_answer" == "n" ]]; then
-	echo "${R}[${W}-${R}]${C}Canceling Zsh Setup..."${W}
+	echo "${R}[${W}-${R}]${C} Canceling Zsh Setup..."${W}
     sleep 1.5
 	shell_name="bash"
 	else
 	shell_name="zsh"
-	echo "${R}[${W}-${R}]${G}${BOLD}Configuring Zsh.."${W}
+	echo "${R}[${W}-${R}]${G}${BOLD} Configuring Zsh.."${W}
 	echo
 	package_install_and_check "zsh git"
 	wget https://raw.githubusercontent.com/sabamdarif/short-linux-scripts/main/install-zsh.sh && bash install-zsh.sh
@@ -1004,7 +1059,7 @@ function terminal_utility_setup() {
 	echo
 	else
 	banner
-	echo "${R}[${W}-${R}]${C}${BOLD}Configuring Terminal Utility..."${W}
+	echo "${R}[${W}-${R}]${C}${BOLD} Configuring Terminal Utility..."${W}
 	echo
 	check_and_backup "$PREFIX/etc/motd"
 	check_and_backup "$PREFIX/etc/motd-playstore"
@@ -1163,19 +1218,19 @@ fi
 
 function notes() {
 	banner
-	echo "${R}[${W}-${R}]${G}${BOLD}Installation Successfull..."${W}
+	echo "${R}[${W}-${R}]${G}${BOLD} Installation Successfull..."${W}
 	echo
 	sleep 2
-	echo "${R}[${W}-${R}]${C}${BOLD}Now Restart Termux ${G}(Must)"${W}
+	echo "${R}[${W}-${R}]${C}${BOLD} Now Restart Termux ${G}(Must)"${W}
 	echo
-	echo "${R}[${W}-${R}]${C}${BOLD}See Uses Section in github to know how to use it"${W}
+	echo "${R}[${W}-${R}]${C}${BOLD} See Uses Section in github to know how to use it"${W}
 	echo
-	echo "${R}[${W}-${R}]${C}URL:- ${B}https://github.com/sabamdarif/termux-desktop/blob/main/README.md#uses"${W}
+	echo "${R}[${W}-${R}]${C} URL:- ${B}https://github.com/sabamdarif/termux-desktop/blob/main/README.md#uses"${W}
 	echo
 	if [[ "$distro_add_answer" == "y" ]]; then
-	echo "${R}[${W}-${R}]${C}${BOLD}See how to use distro container"${W}
+	echo "${R}[${W}-${R}]${C}${BOLD} See how to use distro container"${W}
 	echo
-	echo "${R}[${W}-${R}]${C}URL:- ${B}https://github.com/sabamdarif/termux-desktop/blob/main/proot-caontainer.md"${W}
+	echo "${R}[${W}-${R}]${C} URL:- ${B}https://github.com/sabamdarif/termux-desktop/blob/main/proot-caontainer.md"${W}
 	fi
 }
 
@@ -1185,18 +1240,18 @@ function notes() {
 
 function remove_termux_desktop() {
 	if [[ ! -e "$config_file" ]]; then
-	echo "${R}[${W}-${R}]${C}${BOLD}Please Install Termux Desktop First"${W}
+	echo "${R}[${W}-${R}]${C}${BOLD} Please Install Termux Desktop First"${W}
 	exit 0
 	else
 	banner
-	echo "${R}[${W}-${R}]${R}${BOLD}Remove Termux Desktop"${W}
-	echo
+	echo "${R}[${W}-${R}]${R}${BOLD} Remove Termux Desktop"${W}
+	echo ""
 	confirmation_y_or_n "Are You Sure You Want To Remove Termux Desktop Completely" ask_remove
 	if [[ "$ask_remove" == "n" ]]; then
 	echo "${R}[${W}-${R}]${G}${BOLD}Canceling..."${W}
 	exit 0
 	else
-	echo "${R}[${W}-${R}]${R}${BOLD}Removeing Termux Desktop"${W}
+	echo "${R}[${W}-${R}]${R}${BOLD} Removeing Termux Desktop"${W}
 	sleep 3
 	. $config_file
 	#remove basic packages
@@ -1305,9 +1360,10 @@ function remove_termux_desktop() {
 }
 
 function install_termux_desktop() {
+update_sys
+sleep 2
 termux-wake-lock
 sleep 2
-update_sys
 cd $HOME
 install_required_packages
 questions

@@ -56,6 +56,7 @@ function distro_basic_task() {
     final_user_name="root"
     else
     final_user_name="${user_name}"
+if [[ "$distro_pass_type" == "1" ]];then
 cat <<EOF > $distro_path/root/useradd.sh
 #!/bin/bash
 groupadd storage
@@ -64,10 +65,23 @@ useradd -m -g users -s \$(which bash) ${final_user_name}
 usermod -aG wheel,polkitd,audio,video,storage ${final_user_name}
 echo "${final_user_name}:${pass}" | chpasswd
 chmod u+rw /etc/sudoers
-echo "$final_user_name ALL=(ALL:ALL) ALL" >> /etc/sudoers
+echo "$final_user_name ALL=(ALL:ALL) ALL" | tee -a /etc/sudoers
 chmod u-w /etc/sudoers
 rm useradd.sh
 EOF
+elif [[ "$distro_pass_type" == "2" ]];then
+cat <<EOF > $distro_path/root/useradd.sh
+#!/bin/bash
+groupadd storage
+groupadd wheel
+useradd -m -g users -s \$(which bash) ${final_user_name}
+usermod -aG wheel,polkitd,audio,video,storage ${final_user_name}
+chmod u+rw /etc/sudoers
+echo "$final_user_name ALL=(ALL) NOPASSWD:ALL" | tee -a /etc/sudoers
+chmod u-w /etc/sudoers
+rm useradd.sh
+EOF
+fi
 proot-distro login $selected_distro -- /bin/sh -c 'bash useradd.sh'
     fi
 
@@ -90,7 +104,7 @@ function distro_zsh_answer() {
 	distro_shell_name="bash"
     else
     distro_shell_name="zsh"
-	echo "${R}[${W}-${R}]${G}${BOLD}Configuring Zsh for ${selected_distro}.."${W}
+	echo "${R}[${W}-${R}]${G}${BOLD} Configuring Zsh for ${selected_distro}${G}.."${W}
 	echo
     proot-distro login $selected_distro --shared-tmp -- env DISPLAY=:1.0 apt install git zsh -y
     proot-distro login --user $final_user_name $selected_distro -- /bin/sh -c 'wget https://raw.githubusercontent.com/sabamdarif/short-linux-scripts/main/install-zsh.sh && bash install-zsh.sh'
@@ -106,7 +120,28 @@ function distro_terminal_utility_setup() {
 	banner
     echo "${R}[${W}-${R}]${C}${BOLD}Configuring Terminal Utility..."${W}
     echo
-	proot-distro login $selected_distro --shared-tmp -- env DISPLAY=:1.0 apt install nala fastfetch bat lsd -y
+    local device_arch=$(uname -m)
+    case "$device_arch" in
+        aarch64)
+            archtype="arm64"
+            ;;
+        arm)
+            archtype="armhf"
+            ;;
+        amd64|x86_64)
+            archtype="amd64"
+            ;;
+        i*86|x86)
+            archtype="i386"
+            ;;
+        *)
+            echo "${R} unknown architecture"${W}
+            ;;
+    esac
+    local version=$(get_latest_release "fastfetch-cli" "fastfetch")
+    wget -O $distro_path/root/fastfetch.deb https://github.com/fastfetch-cli/fastfetch/releases/download/${version}/fastfetch-linux-${archtype}.deb
+    proot-distro login $selected_distro --shared-tmp -- env DISPLAY=:1.0 apt install  ./fastfetch.deb -y && rm fastfetch.deb
+	proot-distro login $selected_distro --shared-tmp -- env DISPLAY=:1.0 apt install nala bat lsd -y
 	cat <<'EOF' >> "$save_path/.${distro_shell_name}rc"
 alias apt='sudo nala $@'
 alias apt-get='sudo nala $@'
@@ -225,7 +260,7 @@ if [[ ! -d "/data/data/com.termux/files/usr/share/applications/pd_added" ]]; the
         fi
 proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:1.0 sudo apt install \${@:2}
 cat <<EOF > "$save_root_path/packinstall.sh"
-packages=(\${@:2})
+packages=(${@:2})
 EOF
 cat <<'EOF' >> "$save_root_path/packinstall.sh"
 for package_name in "\${packages[@]}"; do
@@ -249,9 +284,8 @@ proot-distro login $selected_distro -- /bin/bash -c 'bash packinstall.sh'
 elif [[ "\$1" = "remove" ]] || [[ "\$1" = "remove" ]]; then
 proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:1.0 sudo apt \$1 \${@:2}
 cat <<EOF > "$save_root_path/packremove.sh"
-packages=(\${@:2})
+packages=(${@:2})
 EOF
-
 cat <<'EOF' >> "$save_root_path/packremove.sh"
 for package_name in "\${packages[@]}"; do
 desktop_files=\$(dpkg-query -W -f='\${binary:Package}\n' | grep "^\$package_name\(-.*\)\?\$" | xargs dpkg-query -L | grep "^/usr/share/applications/.*\.desktop\$")
