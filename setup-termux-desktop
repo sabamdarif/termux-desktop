@@ -66,12 +66,12 @@ function package_install_and_check() {
 	packs_list=($@)
 for package_name in "${packs_list[@]}"; do
     echo "${R}[${W}-${R}]${G}${BOLD} Installing package: ${C}$package_name ${W}"
-    pkg install "$package_name" -y
+    apt install "$package_name" -y
     if [ $? -ne 0 ]; then
         echo "${R}[${W}-${R}]${G}${BOLD} Error detected during installation of: ${C}$package_name ${W}"
         apt --fix-broken install -y
         dpkg --configure -a
-        pkg install "$package_name" -y
+        apt install "$package_name" -y
     fi
     if dpkg -s "$package_name" >/dev/null 2>&1; then
         echo "${R}[${W}-${R}]${G} $package_name installed successfully ${W}"
@@ -81,7 +81,7 @@ for package_name in "${packs_list[@]}"; do
         fi
     fi
 done
-
+echo ""
 }
 
 function package_check_and_remove() {
@@ -464,23 +464,23 @@ function distro_questions() {
 	banner
 	confirmation_y_or_n "Do you want to configure audio support for distro container" pd_audio_config_answer
     banner
-	confirmation_y_or_n "Do you want to create a normal user account ${C}(Recomended)" useradd_answer
+	confirmation_y_or_n "Do you want to create a normal user account ${C}(Recomended)" pd_useradd_answer
 	echo
-    if [[ "$useradd_answer" == "n" ]]; then
+    if [[ "$pd_useradd_answer" == "n" ]]; then
     banner
     echo "${R}[${W}-${R}]${G}Skiping User Account Setup"${W}
     else
-	echo "${R}[${W}-${R}]${G}${BOLD} Select user type"${W}
+	echo "${R}[${W}-${R}]${G}${BOLD} Select user account type"${W}
     echo
 	echo "${Y}1. User with password confirmation"${W}
 	echo
 	echo "${Y}2. User with no password confirmation"${W}
 	echo 
-	read -p "${Y}select an option (Default 1): "${W} distro_pass_type
-	distro_pass_type=${distro_pass_type:-1}
+	read -p "${Y}select an option (Default 1): "${W} pd_pass_type
+	pd_pass_type=${pd_pass_type:-1}
 	echo
-	echo "${R}[${W}-${R}]${G}Continuing with answer: $distro_pass_type"${W}
-	if [[ "$distro_pass_type" == "1" ]];then
+	echo "${R}[${W}-${R}]${G}Continuing with answer: $pd_pass_type"${W}
+	if [[ "$pd_pass_type" == "1" ]];then
 	echo
     echo "${R}[${W}-${R}]${G}${BOLD} Create user account"${W}
     echo
@@ -508,7 +508,7 @@ function distro_questions() {
             ;;
     esac
 done
-elif [[ "$distro_pass_type" == "2" ]];then
+elif [[ "$pd_pass_type" == "2" ]];then
 while true; do
     read -p "${R}[${W}-${R}]${G}Input username [Lowercase]: "${W} user_name
     echo
@@ -674,7 +674,7 @@ function setup_folder() {
 done
 	cd $HOME
 	termux-reload-settings
-	directories=(Desktop Music Downloads Pictures Videos)
+	directories=(Desktop Music Download Pictures Videos)
 	for dir in "${directories[@]}"; do
 	check_and_create_directory "$HOME/storage/shared/$dir"
 	done
