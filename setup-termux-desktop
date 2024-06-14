@@ -35,7 +35,7 @@ function check_and_delete() {
             if [[ -d "$file" ]]; then
                 rm -rf "$file"
             else
-                rm -f "$file"
+                rm "$file"
             fi
         fi
     done
@@ -465,6 +465,7 @@ function distro_questions() {
 	confirmation_y_or_n "Do you want to configure audio support for distro container" pd_audio_config_answer
     banner
 	confirmation_y_or_n "Do you want to create a normal user account ${C}(Recomended)" pd_useradd_answer
+	echo "pd_useradd_answer=\"$pd_useradd_answer\"" >> $config_file
 	echo
     if [[ "$pd_useradd_answer" == "n" ]]; then
     banner
@@ -478,6 +479,7 @@ function distro_questions() {
 	echo 
 	read -p "${Y}select an option (Default 1): "${W} pd_pass_type
 	pd_pass_type=${pd_pass_type:-1}
+	echo "pd_pass_type=\"$pd_pass_type\"" >> $config_file
 	echo
 	echo "${R}[${W}-${R}]${G}Continuing with answer: $pd_pass_type"${W}
 	if [[ "$pd_pass_type" == "1" ]];then
@@ -508,6 +510,8 @@ function distro_questions() {
             ;;
     esac
 done
+echo "user_name=\"$user_name\"" >> $config_file
+echo "pass=\"$pass\"" >> $config_file
 elif [[ "$pd_pass_type" == "2" ]];then
 while true; do
     read -p "${R}[${W}-${R}]${G}Input username [Lowercase]: "${W} user_name
@@ -531,6 +535,7 @@ while true; do
             ;;
     esac
 done
+echo "user_name=\"$user_name\"" >> $config_file
 fi
     fi
 }
@@ -557,9 +562,6 @@ function install_required_packages() {
 
 function install_desktop() {
     banner
-	mkdir -p "$PREFIX/etc/termux-desktop"
-	touch $config_file
-	chmod +x $config_file
     echo "${R}[${W}-${R}]${G}${BOLD} Installing Xfce4 Desktop"${W}
 	echo
 	package_install_and_check "xfce4 xfce4-goodies xwayland kvantum"
@@ -593,7 +595,7 @@ function theme_installer() {
 	check_and_create_directory "$HOME/.config"
 	config_dirs=(autostart cairo-dock dconf gtk-3.0 Mousepad pulse Thunar menu ristretto rofi xfce4)
         for the_config_dir in "${config_dirs[@]}"; do
-		check_and_backup "$HOME/.config/$the_config_dir"
+		check_and_delete "$HOME/.config/$the_config_dir"
         done
 	download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/xfce/look_${style_answer}/config.tar.gz" "$HOME/.config/"
 	echo "current_style=\"$style_name\"" >> $config_file
@@ -649,11 +651,13 @@ function setup_config() {
 	if [[ "$ext_wall_answer" == "n" ]]; then
 	echo "${R}[${W}-${R}]${C} Skipping Extra Wallpapers Setup..."${W}
 	echo
-	else
+	if [[ "$ext_wall_answer" == "y" ]]; then
 	echo "${R}[${W}-${R}]${G}${BOLD} Configuring Some Extra Wallpapers..."${W}
 	echo
 	check_and_create_directory "$PREFIX/share/backgrounds"
 	download_and_extract "https://archive.org/download/wallpaper-extra.tar/wallpaper-extra.tar.gz" "$PREFIX/share/backgrounds/"
+	else
+	echo "${R} Unknown selection"${W}
 	fi
 	
 }
@@ -725,7 +729,6 @@ function setup_vnc() {
     echo "${R}[${W}-${R}]${G}${BOLD} Configuring Vnc..."${W}
     echo
     package_install_and_check "tigervnc"
-	package_install_and_check "xorg-xhost"
     check_and_create_directory "$HOME/.vnc"
     check_and_delete "$HOME/.vnc/xstartup"
     cat << EOF > "$HOME/.vnc/xstartup"
@@ -797,7 +800,7 @@ chmod +x $PREFIX/bin/tx11stop
 
 function gui_launcher() {
 	check_and_delete "$PREFIX/bin/gui"
-	
+	package_install_and_check "xorg-xhost"
 	if [[ "gui_mode" == "1" ]]; then
 	setup_termux_x11
 	echo "selected_gui_mode=\"termux_x11\"" >> $config_file
@@ -1345,7 +1348,7 @@ function remove_termux_desktop() {
 	#remove vnc and termux x11
 	check_and_delete "$PREFIX/bin/gui"
 	if [[ "$selected_gui_mode" == "termux_x11" ]];then
-	package_check_and_remove "termux-x11-nightly"
+	package_check_and_remove "termux-x11-nightly xorg-xhost"
 	check_and_delete "$PREFIX/bin/tx11start $PREFIX/bin/tx11stop"
 	elif [[ "$selected_gui_mode" == "vnc" ]];then
 	package_check_and_remove "tigervnc xorg-xhost"
@@ -1359,12 +1362,47 @@ function remove_termux_desktop() {
 	fi
 }
 
+#########################################################################
+########################## Change Style #################################
+#########################################################################
+
+function gui_check_up() {
+termux_x11_pid=$(pgrep -f /system/bin/app_process.*com.termux.x11.Loader)
+xfce_pid=$(pgrep -f "xfce4-session")
+if [ -n "$termux_x11_pid" ] || [ -n "$xfce_pid" ]; then
+echo "${G}Please Stop The Gui First"${W}
+exit 0
+fi
+}
+
+function change_style() {
+	if [[ ! -e "$config_file" ]]; then
+	echo -e "${C} It look like you haven't install the desktop yet\n Please install the desktop first"${W}
+	exit 0
+	else
+	gui_check_up
+	. $config_file
+	echo "${R}[${W}-${R}]${G} Your currently installed style is ${BOLD}$current_style "${W}
+	echo
+	sleep 3
+	questions_theme_select
+	rm ~/.cache/sessions/x*
+	setup_config
+	fi
+}
+
+#########################################################################
+######################### Call Functions ################################
+#########################################################################
+cd $HOME
 function install_termux_desktop() {
 update_sys
 sleep 2
 termux-wake-lock
 sleep 2
-cd $HOME
+mkdir -p "$PREFIX/etc/termux-desktop"
+touch $config_file
+chmod +x $config_file
 install_required_packages
 questions
 if [[ "$distro_add_answer" == "y" ]]; then
@@ -1398,10 +1436,34 @@ notes
 termux-wake-unlock
 }
 
-if [[ "$1" == "-r" ]]; then
-    remove_termux_desktop
-elif [[ "$1" == "" ]]; then
-    install_termux_desktop
-else
-    echo "${R}[${W}-${R}]${G}${BOLD} Use ${C}setup-termux-desktop -r ${G}to remove Termux desktop or type only ${C}setup-termux-desktop ${G}to continue the installation."${W}
-fi
+function uses() {
+	echo "${R}[${W}-${R}]${G}${BOLD} Use ${C}./setup-termux-desktop --help or -h ${G}to show help"${W}
+	echo "${R}[${W}-${R}]${G}${BOLD} Use ${C}./setup-termux-desktop --remove or -r ${G}to remove Termux desktop"${W}
+	echo "${R}[${W}-${R}]${G}${BOLD} Use ${C} ./setup-termux-desktop --install or -i ${G}to start install"${W}
+	echo "${R}[${W}-${R}]${G}${BOLD} Or, Use ${C} ./setup-termux-desktop ${G}to start install"${W}
+}
+
+case $1 in
+    --remove|-r)
+        remove_termux_desktop
+        ;;
+    --install|-i)
+        install_termux_desktop
+        ;;
+    --change|-c)
+        case $2 in
+            style)
+                change_style
+                ;;
+            *)
+                echo "${R}[${W}-${R}]${G}${BOLD} Please slect what you want to change"${W}
+                ;;
+        esac
+        ;;
+    --help|-h)
+        uses
+        ;;
+    *)
+        install_termux_desktop
+        ;;
+esac
