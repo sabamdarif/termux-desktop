@@ -1,11 +1,11 @@
 ## :hammer_and_wrench:Learn about terminal utilities:
 
 ### 1.Extra Installed Packages
-- **nala:** Nala is a front-end  for apt
-- **bat:** Better replacement of cat
-- **eza:** A modern, maintained replacement for ls
-- **fastfetch:** Better replacement of neofetch
-- **zoxide:** A smarter cd command
+- **[nala](https://github.com/volitank/nala):** Nala is a front-end  for apt
+- **[bat](https://github.com/sharkdp/bat):** Better replacement of cat
+- **[eza](https://github.com/eza-community/eza):** A modern, maintained replacement for ls
+- **[fastfetch](https://github.com/fastfetch-cli/fastfetch):** Better replacement of neofetch
+- **[zoxide](https://github.com/ajeetdsouza/zoxide):** A smarter cd command
 
 #### How to use them ?
 - ***cd*** is replaced with ***zoxide*** (*use the cd command as normal it will use zoxide to change directories*)

@@ -651,7 +651,7 @@ function setup_config() {
 	if [[ "$ext_wall_answer" == "n" ]]; then
 	echo "${R}[${W}-${R}]${C} Skipping Extra Wallpapers Setup..."${W}
 	echo
-	if [[ "$ext_wall_answer" == "y" ]]; then
+	elif [[ "$ext_wall_answer" == "y" ]]; then
 	echo "${R}[${W}-${R}]${G}${BOLD} Configuring Some Extra Wallpapers..."${W}
 	echo
 	check_and_create_directory "$PREFIX/share/backgrounds"
@@ -659,7 +659,6 @@ function setup_config() {
 	else
 	echo "${R} Unknown selection"${W}
 	fi
-	
 }
 
 function setup_folder() {
