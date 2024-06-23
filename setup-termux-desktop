@@ -288,9 +288,13 @@ function questions() {
 	desktop_answer=${desktop_answer:-1}
 	if [[ "$desktop_answer" == "1" ]]; then
 	de_name="xfce"
+	theme_folder="$HOME/.themes/"
+	icon_folder="$HOME/.icons/"
 	de_startup="xfce4-session"
 	elif [[ "$desktop_answer" == "2" ]];then
 	de_name="lxqt"
+	theme_folder="$PREFIX/share/themes/"
+	icon_folder="$PREFIX/share/icons/"
 	de_startup="startlxqt"
 	fi
 	echo "current_style=\"$de_startup\"" >> $config_file
@@ -578,7 +582,7 @@ function install_desktop() {
 	elif [[ "$desktop_answer" == "2" ]]; then
 	echo "${R}[${W}-${R}]${G}${BOLD} Installing Lxqt Desktop"${W}
 	echo
-	package_install_and_check "lxqt xwayland kvantum"
+	package_install_and_check "lxqt xorg-xsetroot xwayland kvantum"
 	fi
 	echo "de=\"$de_name\"" >> $config_file
 }
@@ -599,16 +603,20 @@ function theme_installer() {
 	check_and_create_directory "$PREFIX/share/backgrounds"
 	download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/${de_name}/look_${style_answer}/wallpaper.tar.gz" "$PREFIX/share/backgrounds/"
     banner
-	check_and_create_directory "$HOME/.icons"
-	download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/${de_name}/look_${style_answer}/icon.tar.gz" "$HOME/.icons"
+	check_and_create_directory "$icon_folder"
+	download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/${de_name}/look_${style_answer}/icon.tar.gz" "$icon_folder"
 	echo "${R}[${W}-${R}]${G}${BOLD} Installing Theme..."${W}
 	echo
-	check_and_create_directory "$HOME/.themes"
-	download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/${de_name}/look_${style_answer}/theme.tar.gz" "$HOME/.themes"
+	check_and_create_directory "$theme_folder"
+	download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/${de_name}/look_${style_answer}/theme.tar.gz" "$theme_folder"
 	echo "${R}[${W}-${R}]${G} Making Additional Configuration..."${W}
 	echo
 	check_and_create_directory "$HOME/.config"
+	if [[ "$de_name" == "xfce" ]]
 	config_dirs=(autostart cairo-dock dconf gtk-3.0 Mousepad pulse Thunar menu ristretto rofi xfce4)
+	elif [[ "$de_name" == "lxqt" ]]
+	config_dirs=(fontconfig gtk-3.0 lxqt pcmanfm-qt QtProject.conf glib-2.0 Kvantum openbox qterminal.org)
+    fi
         for the_config_dir in "${config_dirs[@]}"; do
 		check_and_delete "$HOME/.config/$the_config_dir"
         done
