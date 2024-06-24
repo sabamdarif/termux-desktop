@@ -107,13 +107,25 @@ function extract_archive() {
 	total_size=$(stat -c '%s' "$archive")
 	case "$archive" in
     *.tar.gz)
+	if [[ -f "$archive" ]]; then
         pv -s $total_size -p -r "$archive" | tar xzf -
+	else
+	echo "${R} $archive doesn't exist"${W}
+	fi
         ;;
     *.tar.xz)
+	if [[ -f "$archive" ]]; then
         pv -s $total_size -p -r "$archive" | tar xJf -
+	else
+	echo "${R} $archive doesn't exist"${W}
+	fi
         ;;
     *.tar)
+	if [[ -f "$archive" ]]; then
         pv -s $total_size -p -r "$archive" | tar xf -
+	else
+	echo "${R} $archive doesn't exist"${W}
+	fi
         ;;
     *)
         echo "${R}Unsupported archive format: ${C}$archive"${W}
@@ -220,7 +232,7 @@ function install_font_for_style() {
 	echo "${R}[${W}-${R}]${G}Installing Fonts..."${W}
 	check_and_create_directory "$HOME/.fonts"
 	cd $HOME/.fonts
-	wget https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/xfce/look_${style_number}/font.tar.gz
+	wget https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/$de_name/look_${style_number}/font.tar.gz
 	tar -xzvf font.tar.gz
 	rm font.tar.gz
 	fc-cache -f
@@ -234,17 +246,17 @@ function install_font_for_style() {
 function questions_theme_select() {
     local owner="sabamdarif"
     local repo="termux-desktop"
-    local main_folder="patch/xfce"
+    local main_folder="patch/$de_name"
     local subfolder_count_value=$(count_subfolders "$owner" "$repo" "$main_folder")
 	cd $HOME
-    wget -O styles.md https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/xfce_styles.md
+    wget -O styles.md https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/${de_name}_styles.md
 	banner
     if [[ -n "$subfolder_count_value" ]]; then
-        echo "${R}[${W}-${R}]${G}Check the xfce styles section in github"${W}
+        echo "${R}[${W}-${R}]${G}Check the $de_name styles section in github"${W}
 		echo
-		echo "${R}[${W}-${R}]${B}https://github.com/sabamdarif/termux-desktop/blob/main/xfce_styles.md"${W}
+		echo "${R}[${W}-${R}]${B}https://github.com/sabamdarif/termux-desktop/blob/main/${de_name}_styles.md"${W}
 		echo
-        echo "${R}[${W}-${R}]${G}Number of avilable custom styles for xfce is: ${C}${subfolder_count_value}"${W}
+        echo "${R}[${W}-${R}]${G}Number of avilable custom styles for $de_name is: ${C}${subfolder_count_value}"${W}
 		echo
         echo "${R}[${W}-${R}]${G}Available Styles:${W}"
 		echo
@@ -264,9 +276,9 @@ done
 				echo
                 echo "${R}[${W}-${R}]${Y}Please enter a number between 0 to ${subfolder_count_value}"${W}
 				echo
-				echo "${R}[${W}-${R}]${G}Check the xfce styles section in github"${W}
+				echo "${R}[${W}-${R}]${G}Check the $de_name styles section in github"${W}
 				echo
-				echo "${R}[${W}-${R}]${B}https://github.com/sabamdarif/termux-desktop/blob/main/xfce_styles.md"${W}
+				echo "${R}[${W}-${R}]${B}https://github.com/sabamdarif/termux-desktop/blob/main/${de_name}_styles.md"${W}
 				echo
             fi
 	done
@@ -277,15 +289,28 @@ done
 }
 
 function questions() {
-	# banner
-	# echo "${R}[${W}-${R}]${G}Select Desktop Environment"${W}
-	# echo
-	# echo "${Y}1. XFCE"${W}
-	# echo
-	# echo "${Y}2. LXQT"${W}
-	# echo 
-	# read -p "${Y}select an option (Default 1): "${W} desktop_answer
-	# echo
+	banner
+	echo "${R}[${W}-${R}]${G}Select Desktop Environment"${W}
+	echo
+	echo "${Y}1. XFCE"${W}
+	echo
+	echo "${Y}2. LXQT"${W}
+	echo 
+	read -p "${Y}select an option (Default 1): "${W} desktop_answer
+	desktop_answer=${desktop_answer:-1}
+	if [[ "$desktop_answer" == "1" ]]; then
+	de_name="xfce"
+	theme_folder="$HOME/.themes/"
+	icon_folder="$HOME/.icons/"
+	de_startup="xfce4-session"
+	elif [[ "$desktop_answer" == "2" ]];then
+	de_name="lxqt"
+	theme_folder="$PREFIX/share/themes/"
+	icon_folder="$PREFIX/share/icons/"
+	de_startup="startlxqt"
+	fi
+	echo "current_style=\"$de_startup\"" >> $config_file
+	echo "de_name=\"$de_name\"" >> $config_file
 	banner
 	questions_theme_select
 	banner
@@ -562,10 +587,16 @@ function install_required_packages() {
 
 function install_desktop() {
     banner
+	if [[ "$desktop_answer" == "1" ]]; then
     echo "${R}[${W}-${R}]${G}${BOLD} Installing Xfce4 Desktop"${W}
 	echo
 	package_install_and_check "xfce4 xfce4-goodies xwayland kvantum"
-	echo "de=\"xfce\"" >> $config_file
+	elif [[ "$desktop_answer" == "2" ]]; then
+	echo "${R}[${W}-${R}]${G}${BOLD} Installing Lxqt Desktop"${W}
+	echo
+	package_install_and_check "lxqt xorg-xsetroot xwayland kvantum"
+	fi
+	echo "de=\"$de_name\"" >> $config_file
 }
 
 #########################################################################
@@ -582,32 +613,27 @@ function theme_installer() {
     echo "${R}[${W}-${R}]${G}${BOLD} Configuring Wallpapers..."${W}
 	echo
 	check_and_create_directory "$PREFIX/share/backgrounds"
-	download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/xfce/look_${style_answer}/wallpaper.tar.gz" "$PREFIX/share/backgrounds/"
+	download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/${de_name}/look_${style_answer}/wallpaper.tar.gz" "$PREFIX/share/backgrounds/"
     banner
-	check_and_create_directory "$HOME/.icons"
-	download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/xfce/look_${style_answer}/icon.tar.gz" "$HOME/.icons"
+	check_and_create_directory "$icon_folder"
+	download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/${de_name}/look_${style_answer}/icon.tar.gz" "$icon_folder"
 	echo "${R}[${W}-${R}]${G}${BOLD} Installing Theme..."${W}
 	echo
-	check_and_create_directory "$HOME/.themes"
-	download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/xfce/look_${style_answer}/theme.tar.gz" "$HOME/.themes"
+	check_and_create_directory "$theme_folder"
+	download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/${de_name}/look_${style_answer}/theme.tar.gz" "$theme_folder"
 	echo "${R}[${W}-${R}]${G} Making Additional Configuration..."${W}
 	echo
 	check_and_create_directory "$HOME/.config"
+	if [[ "$de_name" == "xfce" ]]
 	config_dirs=(autostart cairo-dock dconf gtk-3.0 Mousepad pulse Thunar menu ristretto rofi xfce4)
+	elif [[ "$de_name" == "lxqt" ]]
+	config_dirs=(fontconfig gtk-3.0 lxqt pcmanfm-qt QtProject.conf glib-2.0 Kvantum openbox qterminal.org)
+    fi
         for the_config_dir in "${config_dirs[@]}"; do
 		check_and_delete "$HOME/.config/$the_config_dir"
         done
-	download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/xfce/look_${style_answer}/config.tar.gz" "$HOME/.config/"
+	download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/${de_name}/look_${style_answer}/config.tar.gz" "$HOME/.config/"
 	echo "current_style=\"$style_name\"" >> $config_file
-}
-
-function add_theme_change_option() {
-	banner
-	echo "${R}[${W}-${R}]${G}${BOLD} Adding Style Change Option"${W}
-	echo
-	check_and_create_directory "$PREFIX/etc/termux-desktop"
-	wget -O $PREFIX/bin/change-td-style  https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/change-td-style
-	chmod +x $PREFIX/bin/change-td-style
 }
 
 #########################################################################
@@ -616,6 +642,7 @@ function add_theme_change_option() {
 
 function additional_required_package_installler() {
     banner
+	if [[ "$de_name" == "xfce" ]]; then
     echo "${R}[${W}-${R}]${G}${BOLD} Installing Additional Packages If Required..."${W}
 	echo
 	if [[ "$style_answer" == "2" ]] || [[ "$style_answer" == "5" ]] || [[ "$style_answer" == "6" ]]; then
@@ -634,6 +661,7 @@ function additional_required_package_installler() {
 	echo "${G} No Additional Packages Required For Theme: ${style_answer}"${W}
 	sleep 1
 	fi
+	fi
 }
 
 #########################################################################
@@ -644,7 +672,7 @@ function setup_config() {
 	cd ~
 	if [[ ${style_answer} =~ ^[1-9][0-9]*$ ]]; then
 	banner
-	echo "${R}[${W}-${R}]${G}${BOLD} Configuring Xfce Style: ${C}${style_answer}"${W}
+	echo "${R}[${W}-${R}]${G}${BOLD} Configuring $de_name Style: ${C}${style_answer}"${W}
 	theme_installer
 	additional_required_package_installler
 	fi
@@ -731,7 +759,7 @@ function setup_vnc() {
     check_and_create_directory "$HOME/.vnc"
     check_and_delete "$HOME/.vnc/xstartup"
     cat << EOF > "$HOME/.vnc/xstartup"
-    startxfce4 &
+    $de_startup &
 EOF
     chmod +x "$HOME/.vnc/xstartup"
     check_and_delete "$PREFIX/bin/vncstart"
@@ -767,7 +795,7 @@ function setup_termux_x11() {
         echo
         package_install_and_check "termux-x11-nightly"
 		sed -i '12s/^#//' $HOME/.termux/termux.properties
-		cat <<EOF >> "$PREFIX/bin/tx11start"
+		cat <<EOF > "$PREFIX/bin/tx11start"
 #!/data/data/com.termux/files/usr/bin/bash
 
 ${initialize_server_method}
@@ -776,23 +804,28 @@ XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :1.0 &
 sleep 1
 am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1
 sleep 1
-env DISPLAY=:1.0 $selected_hw_method dbus-launch --exit-with-session xfce4-session & > /dev/null 2>&1
-
+env DISPLAY=:1.0 $selected_hw_method dbus-launch --exit-with-session $de_startup & > /dev/null 2>&1
 sleep 5
-process_id=\$(ps -aux | grep '[x]fce4-screensaver' | awk '{print \$2}')
-kill "\$process_id" > /dev/null 2>&1
 EOF
+
+if [[ "$de_name" == "xfce" ]]; then
+cat <<'EOF' >> "$PREFIX/bin/tx11start"
+process_id=$(ps -aux | grep '[x]fce4-screensaver' | awk '{print \$2}')
+kill "$process_id" > /dev/null 2>&1
+EOF
+fi
 chmod +x $PREFIX/bin/tx11start
 
-cat <<'EOF' > "$PREFIX/bin/tx11stop"
+cat <<EOF > "$PREFIX/bin/tx11stop"
 #!/data/data/com.termux/files/usr/bin/bash
-termux_x11_pid=$(pgrep -f "/system/bin/app_process / com.termux.x11.Loader :1.0")
-xfce_pid=$(pgrep -f "xfce4-session")
-if [[ -n "$termux_x11_pid" ]] || [[ -n "$xfce_pid" ]]; then
-kill -9 "$termux_x11_pid" "$xfce_pid" > /dev/null 2>&1
+termux_x11_pid=\$(pgrep -f "/system/bin/app_process / com.termux.x11.Loader :1.0")
+de_pid=\$(pgrep -f "$de_startup")
+if [[ -n "\$termux_x11_pid" ]] || [[ -n "\$de_pid" ]]; then
+kill -9 "\$termux_x11_pid" "\$de_pid" > /dev/null 2>&1
 pkill -f com.termux.x11 > /dev/null 2>&1
 echo "Termux:X11 Stopped Successfully"
 fi
+exec 2>/dev/null
 EOF
 chmod +x $PREFIX/bin/tx11stop
 }
@@ -1259,8 +1292,10 @@ function remove_termux_desktop() {
 	#remove basic packages
 	package_check_and_remove "pulseaudio x11-repo tur-repo"
 	#remove desktop related packages
-	if [[ "$de" == "xfce" ]];then
+	if [[ "$de_name" == "xfce" ]];then
 	package_check_and_remove "xfce4 xfce4-goodies xwayland kvantum"
+	elif [[ "$de_name" == "lxqt" ]]; then
+	package_check_and_remove "lxqt xwayland kvantum"
 	fi
 	#remove zsh
 	if [[ "$setup_zsh" == "y" ]];then
@@ -1367,8 +1402,8 @@ function remove_termux_desktop() {
 
 function gui_check_up() {
 termux_x11_pid=$(pgrep -f /system/bin/app_process.*com.termux.x11.Loader)
-xfce_pid=$(pgrep -f "xfce4-session")
-if [ -n "$termux_x11_pid" ] || [ -n "$xfce_pid" ]; then
+de_pid=$(pgrep -f "$de_startup")
+if [ -n "$termux_x11_pid" ] || [ -n "$de_pid" ]; then
 echo "${G}Please Stop The Gui First"${W}
 exit 0
 fi
@@ -1399,7 +1434,7 @@ update_sys
 sleep 2
 termux-wake-lock
 sleep 2
-mkdir -p "$PREFIX/etc/termux-desktop"
+check_and_create_directory "$PREFIX/etc/termux-desktop"
 touch $config_file
 chmod +x $config_file
 install_required_packages
@@ -1420,7 +1455,7 @@ setup_synaptic
 setup_wine
 if [[ "$style_answer" == "0" ]]; then
     banner
-	echo "${R}[${W}-${R}]${G}${BOLD} Configuring Stock Xfce Style..."${W}
+	echo "${R}[${W}-${R}]${G}${BOLD} Configuring Stock $de_name Style..."${W}
 	echo
 	echo "current_style=\"Stock\"" >> $config_file
 else
@@ -1430,7 +1465,6 @@ hw_config
 distro_container_setup
 gui_launcher
 terminal_utility_setup
-add_theme_change_option
 notes
 termux-wake-unlock
 }

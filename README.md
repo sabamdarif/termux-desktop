@@ -31,7 +31,7 @@
 ## :warning: Index Links :point_down:
 
 ### 1. Check Basic Requirment: [from here](#requirements)
-### 2. Check All Avilable Desktop Styles: [from here](xfce_styles.md)
+### 2. Check All Avilable Desktop Styles: [XFCE](xfce_styles.md) , [LXQT](lxqt_styles.md)
 ### 3. Check About Hardware Acceleration : [from here](hw-acceleration.md)
 ### 4. Check About Distro Container: [from here](proot-caontainer.md)
 ### 5. Check Natively Supported Apps list: [from here](applist.md)
