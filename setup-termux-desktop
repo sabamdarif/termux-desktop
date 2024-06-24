@@ -107,13 +107,25 @@ function extract_archive() {
 	total_size=$(stat -c '%s' "$archive")
 	case "$archive" in
     *.tar.gz)
+	if [[ -f "$archive" ]]; then
         pv -s $total_size -p -r "$archive" | tar xzf -
+	else
+	echo "${R} $archive doesn't exist"${W}
+	fi
         ;;
     *.tar.xz)
+	if [[ -f "$archive" ]]; then
         pv -s $total_size -p -r "$archive" | tar xJf -
+	else
+	echo "${R} $archive doesn't exist"${W}
+	fi
         ;;
     *.tar)
+	if [[ -f "$archive" ]]; then
         pv -s $total_size -p -r "$archive" | tar xf -
+	else
+	echo "${R} $archive doesn't exist"${W}
+	fi
         ;;
     *)
         echo "${R}Unsupported archive format: ${C}$archive"${W}
@@ -813,6 +825,7 @@ kill -9 "\$termux_x11_pid" "\$de_pid" > /dev/null 2>&1
 pkill -f com.termux.x11 > /dev/null 2>&1
 echo "Termux:X11 Stopped Successfully"
 fi
+exec 2>/dev/null
 EOF
 chmod +x $PREFIX/bin/tx11stop
 }
