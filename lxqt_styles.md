@@ -1,5 +1,16 @@
 ## 0. Stock :
 
+<center><img src="images/lxqt/look_0/desktop.png"></center>
+
+<details style ="font-size: larger">
+<summary><b style ="font-size: larger">Screenshots: </b></summary>
+
+|Apps|Start Menu|
+|--|--|
+|![img](images/lxqt/look_0/apps.png)|![img](images/lxqt/look_0/start-menu.png)|
+
+</details>
+<br>
 
 ## 1. Nordic LXQT
 
