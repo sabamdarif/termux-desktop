@@ -297,13 +297,16 @@ function questions() {
 	echo "${Y}2. LXQT"${W}
 	echo 
 	read -p "${Y}select an option (Default 1): "${W} desktop_answer
+	echo
+	echo "${R}[${W}-${R}]${G}Continuing with answer: $desktop_answer"${W}
+	sleep 0.2
 	desktop_answer=${desktop_answer:-1}
 	if [[ "$desktop_answer" == "1" ]]; then
 	de_name="xfce"
 	theme_folder="$HOME/.themes/"
 	icon_folder="$HOME/.icons/"
 	de_startup="xfce4-session"
-	elif [[ "$desktop_answer" == "2" ]];then
+	elif [[ "$desktop_answer" == "2" ]]; then
 	de_name="lxqt"
 	theme_folder="$PREFIX/share/themes/"
 	icon_folder="$PREFIX/share/icons/"
@@ -507,7 +510,7 @@ function distro_questions() {
 	echo "pd_pass_type=\"$pd_pass_type\"" >> $config_file
 	echo
 	echo "${R}[${W}-${R}]${G}Continuing with answer: $pd_pass_type"${W}
-	if [[ "$pd_pass_type" == "1" ]];then
+	if [[ "$pd_pass_type" == "1" ]]; then
 	echo
     echo "${R}[${W}-${R}]${G}${BOLD} Create user account"${W}
     echo
@@ -537,7 +540,7 @@ function distro_questions() {
 done
 echo "user_name=\"$user_name\"" >> $config_file
 echo "pass=\"$pass\"" >> $config_file
-elif [[ "$pd_pass_type" == "2" ]];then
+elif [[ "$pd_pass_type" == "2" ]]; then
 while true; do
     read -p "${R}[${W}-${R}]${G}Input username [Lowercase]: "${W} user_name
     echo
@@ -624,9 +627,9 @@ function theme_installer() {
 	echo "${R}[${W}-${R}]${G} Making Additional Configuration..."${W}
 	echo
 	check_and_create_directory "$HOME/.config"
-	if [[ "$de_name" == "xfce" ]]
+	if [[ "$de_name" == "xfce" ]]; then
 	config_dirs=(autostart cairo-dock dconf gtk-3.0 Mousepad pulse Thunar menu ristretto rofi xfce4)
-	elif [[ "$de_name" == "lxqt" ]]
+	elif [[ "$de_name" == "lxqt" ]]; then
 	config_dirs=(fontconfig gtk-3.0 lxqt pcmanfm-qt QtProject.conf glib-2.0 Kvantum openbox qterminal.org)
     fi
         for the_config_dir in "${config_dirs[@]}"; do
@@ -1088,7 +1091,7 @@ echo "setup_zsh=\"$zsh_answer\"" >> $config_file
 }
 
 function terminal_utility_setup() {
-  if [[ "$terminal_utility_setup_answer" == "n" ]];then
+  if [[ "$terminal_utility_setup_answer" == "n" ]]; then
     banner
 	echo "${R}[${W}-${R}]${C}Skipping Terminal Utility Setup..."${W}
 	echo
@@ -1207,7 +1210,7 @@ echo "terminal_utility_setup=\"$terminal_utility_setup_answer\"" >> $config_file
 #########################################################################
 
 function setup_fonts() {
-	if [[ "$terminal_utility_setup_answer" == "y" ]];then
+	if [[ "$terminal_utility_setup_answer" == "y" ]]; then
 	banner
 	echo "${R}[${W}-${R}]${G}${BOLD} Installing Fonts..."${W}
 	package_install_and_check "nerdfix fontconfig-utils"
@@ -1292,18 +1295,18 @@ function remove_termux_desktop() {
 	#remove basic packages
 	package_check_and_remove "pulseaudio x11-repo tur-repo"
 	#remove desktop related packages
-	if [[ "$de_name" == "xfce" ]];then
+	if [[ "$de_name" == "xfce" ]]; then
 	package_check_and_remove "xfce4 xfce4-goodies xwayland kvantum"
 	elif [[ "$de_name" == "lxqt" ]]; then
 	package_check_and_remove "lxqt xwayland kvantum"
 	fi
 	#remove zsh
-	if [[ "$setup_zsh" == "y" ]];then
+	if [[ "$setup_zsh" == "y" ]]; then
 	package_check_and_remove "zsh"
 	check_and_delete ".oh-my-zsh .zsh_history .zshrc"
 	fi
 	#remove terminal utility
-	if [[ "$terminal_utility_setup" == "y" ]];then
+	if [[ "$terminal_utility_setup" == "y" ]]; then
 	check_and_restore "$PREFIX/etc/motd"
 	check_and_restore "$PREFIX/etc/motd-playstore"
 	check_and_restore "$PREFIX/etc/motd.sh"
@@ -1311,69 +1314,69 @@ function remove_termux_desktop() {
 	package_check_and_remove "nerdfix fontconfig-utils nala bat eza"
 	fi
 	#remove browser
-	if [[ "$installed_browser" == "firefox" ]];then
+	if [[ "$installed_browser" == "firefox" ]]; then
 	package_check_and_remove "firefox"
-	elif [[ "$installed_browser" == "chromium" ]];then
+	elif [[ "$installed_browser" == "chromium" ]]; then
 	package_check_and_remove "chromium"
-	elif [[ "$installed_browser" == "both" ]];then
+	elif [[ "$installed_browser" == "both" ]]; then
 	package_check_and_remove "firefox chromium"
 	fi
 	#remove ide
-	if [[ "$installed_ide" == "code" ]];then
+	if [[ "$installed_ide" == "code" ]]; then
 	package_check_and_remove "code-oss code-is-code-oss"
-	elif [[ "$installed_ide" == "geany" ]];then
+	elif [[ "$installed_ide" == "geany" ]]; then
 	package_check_and_remove "geany"
-	elif [[ "$installed_ide" == "both" ]];then
+	elif [[ "$installed_ide" == "both" ]]; then
 	package_check_and_remove "code-oss code-is-code-oss geany"
 	fi
 	#remove media player
-	if [[ "$installed_media_player" == "vlc" ]];then
+	if [[ "$installed_media_player" == "vlc" ]]; then
 	package_check_and_remove "vlc-qt-static"
-	elif [[ "$installed_media_player" == "audacious" ]];then
+	elif [[ "$installed_media_player" == "audacious" ]]; then
 	package_check_and_remove "audacious"
-	elif [[ "$installed_media_player" == "both" ]];then
+	elif [[ "$installed_media_player" == "both" ]]; then
 	package_check_and_remove "vlc-qt-static audacious"
 	fi
 	#remove photo editor
-	if [[ "$installed_photo_editor" == "gimp" ]];then
+	if [[ "$installed_photo_editor" == "gimp" ]]; then
 	package_check_and_remove "gimp"
-	elif [[ "$installed_photo_editor" == "audacious" ]];then
+	elif [[ "$installed_photo_editor" == "audacious" ]]; then
 	package_check_and_remove "audacious"
-	elif [[ "$installed_photo_editor" == "both" ]];then
+	elif [[ "$installed_photo_editor" == "both" ]]; then
 	package_check_and_remove "gimp audacious"
 	fi
 	#remove synaptic
-	if [[ "$install_synaptic" == "y" ]];then
+	if [[ "$install_synaptic" == "y" ]]; then
 	package_check_and_remove "synaptic"
 	fi
 	#remove wine
-	if [[ "$setup_wine" == "default-wine" ]];then
+	if [[ "$setup_wine" == "default-wine" ]]; then
 	package_check_and_remove "wine winetricks"
-	# elif [[ "$setup_wine" == "mobox" ]];then
+	# elif [[ "$setup_wine" == "mobox" ]]; then
 	fi
 	#remove styles
-	if [[ "$current_style" == "Modern Style" ]] || [[ "$current_style" == "MacOS Inspired-1 Style" ]] || [[ "$current_style" == "MacOS Inspired-2 Style" ]];then
+	if [[ "$current_style" == "Modern Style" ]] || [[ "$current_style" == "MacOS Inspired-1 Style" ]] || [[ "$current_style" == "MacOS Inspired-2 Style" ]]; then
 	package_check_and_remove "cairo-dock-core"
-	elif [[ "$current_style" == "Modern Style" ]] || [[ "$current_style" == "MacOS Inspired-2 Style" ]];then
+	elif [[ "$current_style" == "Modern Style" ]] || [[ "$current_style" == "MacOS Inspired-2 Style" ]]; then
 	package_check_and_remove "rofi"
-	elif [[ "$current_style" == "Modern Style" ]];then
+	elif [[ "$current_style" == "Modern Style" ]]; then
 	package_check_and_remove "fluent-icon-theme vala-panel-appmenu"
-	elif [[ "$current_style" == "Windows10 Style" ]];then
+	elif [[ "$current_style" == "Windows10 Style" ]]; then
 	package_check_and_remove "gtk2-engines-murrine"
 	fi
 	check_and_delete "$PREFIX/share/backgrounds $HOME/.themes $HOME/.icons $PREFIX/bin/change-td-style"
 	check_and_delete "$HOME/.config/$the_config_dir"
 	#remove hw packages
-	if [[ "$distro_answer" == "3" ]];then
+	if [[ "$distro_answer" == "3" ]]; then
 	package_check_and_remove "mesa-vulkan-icd-freedreno mesa-zink"
 	else
 	package_check_and_remove "mesa-zink virglrenderer-mesa-zink vulkan-loader-android angle-android virglrenderer-android"
 	fi
 	#remove distro container
-	if [[ "$setup_distro_container" == "y" ]];then
-	if [[ "$distro_answer" == "1" ]];then
+	if [[ "$setup_distro_container" == "y" ]]; then
+	if [[ "$distro_answer" == "1" ]]; then
 	proot-distro remove debian
-	elif [[ "$distro_answer" == "2" ]];then
+	elif [[ "$distro_answer" == "2" ]]; then
 	proot-distro remove ubuntu
 	fi
 	proot-distro clear-cache
@@ -1381,13 +1384,13 @@ function remove_termux_desktop() {
 	fi
 	#remove vnc and termux x11
 	check_and_delete "$PREFIX/bin/gui"
-	if [[ "$selected_gui_mode" == "termux_x11" ]];then
+	if [[ "$selected_gui_mode" == "termux_x11" ]]; then
 	package_check_and_remove "termux-x11-nightly xorg-xhost"
 	check_and_delete "$PREFIX/bin/tx11start $PREFIX/bin/tx11stop"
-	elif [[ "$selected_gui_mode" == "vnc" ]];then
+	elif [[ "$selected_gui_mode" == "vnc" ]]; then
 	package_check_and_remove "tigervnc xorg-xhost"
 	check_and_delete "$HOME/.vnc/xstartup $PREFIX/bin/vncstart $PREFIX/bin/vncstop $PREFIX/bin/gui $PREFIX/bin/tx11start $PREFIX/bin/tx11stop"
-	elif [[ "$selected_gui_mode" == "both" ]];then
+	elif [[ "$selected_gui_mode" == "both" ]]; then
 	package_check_and_remove "termux-x11-nightly tigervnc xorg-xhost"
 	check_and_delete "$PREFIX/bin/tx11start $PREFIX/bin/tx11stop $HOME/.vnc/xstartup $PREFIX/bin/vncstart $PREFIX/bin/vncstop $PREFIX/bin/gui $PREFIX/bin/tx11start $PREFIX/bin/tx11stop"
 	fi
