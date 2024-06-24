@@ -132,7 +132,7 @@ W="$(printf '\033[0m')"
 BOLD="$(printf '\033[1m')"
 EOF
 declare -f banner get_latest_release package_install_and_check >> $save_path/pd_zsh_setup.sh
-cat <<'EOF' >> $save_path/pd_setup.sh
+cat <<'EOF' >> $save_path/pd_zsh_setup.sh
 banner
 package_install_and_check "git zsh wget"
 wget https://raw.githubusercontent.com/sabamdarif/short-linux-scripts/main/install-zsh.sh && bash install-zsh.sh
