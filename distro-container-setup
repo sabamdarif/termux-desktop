@@ -47,7 +47,7 @@ function distro_basic_task() {
     proot-distro login $selected_distro --shared-tmp -- env DISPLAY=:1.0 apt update
     if [[ "pd_audio_config_answer" == "n" ]]; then
     distro_packs="sudo"
-    else
+    elif [[ "pd_audio_config_answer" == "y" ]]; then
     distro_packs="sudo pulseaudio"
     distro_fix_sound_issue
     fi
@@ -70,7 +70,7 @@ EOF
 proot-distro login $selected_distro -- /bin/bash -c 'bash pd_basic_setup.sh'
     if [[ "$pd_useradd_answer" == "n" ]]; then
     final_user_name="root"
-    else
+    elif [[ "$pd_useradd_answer" == "y" ]]; then
     final_user_name="${user_name}"
     fi
 if [[ "$pd_pass_type" == "1" ]];then
@@ -110,7 +110,7 @@ function distro_zsh_answer() {
     banner
     if [[ "$pd_useradd_answer" == "y" ]]; then
     save_path="$distro_path/home/$final_user_name"
-    else
+    elif [[ "$pd_useradd_answer" == "n" ]]; then
     save_path="$distro_path/root"
     fi
     if [[ "$distro_zsh_answer" == "n" ]]; then
@@ -130,8 +130,31 @@ B="$(printf '\033[1;34m')"
 C="$(printf '\033[1;36m')"                                       
 W="$(printf '\033[0m')"
 BOLD="$(printf '\033[1m')"
+
+function package_install_and_check() {
+	packs_list=($@)
+for package_name in "${packs_list[@]}"; do
+    echo "${R}[${W}-${R}]${G}${BOLD} Installing package: ${C}$package_name ${W}"
+    sudo apt install "$package_name" -y
+    if [ $? -ne 0 ]; then
+        echo "${R}[${W}-${R}]${G}${BOLD} Error detected during installation of: ${C}$package_name ${W}"
+        sudo apt --fix-broken install -y
+        sudo dpkg --configure -a
+        sudo apt install "$package_name" -y
+    fi
+    if dpkg -s "$package_name" >/dev/null 2>&1; then
+        echo "${R}[${W}-${R}]${G} $package_name installed successfully ${W}"
+    else
+        if type -p "$package_name" &>/dev/null || [ -e "$PREFIX/bin/$package_name"* ] || [ -e "$PREFIX/bin/"*"$package_name" ]; then
+            echo "${R}[${W}-${R}]${C} $package_name ${G}installed successfully ${W}"
+        fi
+    fi
+done
+echo ""
+}
+
 EOF
-declare -f banner get_latest_release package_install_and_check >> $save_path/pd_zsh_setup.sh
+declare -f banner get_latest_release >> $save_path/pd_zsh_setup.sh
 cat <<'EOF' >> $save_path/pd_zsh_setup.sh
 banner
 package_install_and_check "git zsh wget"
@@ -147,7 +170,7 @@ function distro_terminal_utility_setup() {
     banner
 	echo "${R}[${W}-${R}]${C}Skipping Terminal Utility Setup For ${selected_distro}..."${W}
 	echo
-	else
+	elif [[ "$distro_terminal_utility_setup_answer" == "y" ]];then
 	banner
     echo "${R}[${W}-${R}]${C}${BOLD}Configuring Terminal Utility..."${W}
     echo
@@ -160,8 +183,31 @@ B="$(printf '\033[1;34m')"
 C="$(printf '\033[1;36m')"                                       
 W="$(printf '\033[0m')"
 BOLD="$(printf '\033[1m')"
+
+function package_install_and_check() {
+	packs_list=($@)
+for package_name in "${packs_list[@]}"; do
+    echo "${R}[${W}-${R}]${G}${BOLD} Installing package: ${C}$package_name ${W}"
+    sudo apt install "$package_name" -y
+    if [ $? -ne 0 ]; then
+        echo "${R}[${W}-${R}]${G}${BOLD} Error detected during installation of: ${C}$package_name ${W}"
+        sudo apt --fix-broken install -y
+        sudo dpkg --configure -a
+        sudo apt install "$package_name" -y
+    fi
+    if dpkg -s "$package_name" >/dev/null 2>&1; then
+        echo "${R}[${W}-${R}]${G} $package_name installed successfully ${W}"
+    else
+        if type -p "$package_name" &>/dev/null || [ -e "$PREFIX/bin/$package_name"* ] || [ -e "$PREFIX/bin/"*"$package_name" ]; then
+            echo "${R}[${W}-${R}]${C} $package_name ${G}installed successfully ${W}"
+        fi
+    fi
+done
+echo ""
+}
+
 EOF
-declare -f banner get_latest_release package_install_and_check >> $distro_path/root/pd_setup.sh
+declare -f banner get_latest_release >> $distro_path/root/pd_setup.sh
 cat <<'EOF' >> $distro_path/root/pd_setup.sh
 banner
 package_install_and_check "nala zoxide bat wget gpg"

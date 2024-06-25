@@ -312,7 +312,7 @@ function questions() {
 	icon_folder="$PREFIX/share/icons/"
 	de_startup="startlxqt"
 	fi
-	echo "current_style=\"$de_startup\"" >> $config_file
+	echo "de_startup=\"$de_startup\"" >> $config_file
 	echo "de_name=\"$de_name\"" >> $config_file
 	banner
 	questions_theme_select
@@ -1298,7 +1298,7 @@ function remove_termux_desktop() {
 	if [[ "$de_name" == "xfce" ]]; then
 	package_check_and_remove "xfce4 xfce4-goodies xwayland kvantum"
 	elif [[ "$de_name" == "lxqt" ]]; then
-	package_check_and_remove "lxqt xwayland kvantum"
+	package_check_and_remove "lxqt xorg-xsetroot xwayland kvantum"
 	fi
 	#remove zsh
 	if [[ "$setup_zsh" == "y" ]]; then
@@ -1364,6 +1364,7 @@ function remove_termux_desktop() {
 	elif [[ "$current_style" == "Windows10 Style" ]]; then
 	package_check_and_remove "gtk2-engines-murrine"
 	fi
+	#Remove folders
 	check_and_delete "$PREFIX/share/backgrounds $HOME/.themes $HOME/.icons $PREFIX/bin/change-td-style"
 	check_and_delete "$HOME/.config/$the_config_dir"
 	#remove hw packages
