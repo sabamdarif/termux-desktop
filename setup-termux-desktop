@@ -610,7 +610,9 @@ function theme_installer() {
     banner
     echo "${R}[${W}-${R}]${G}${BOLD} Configuring Theme: ${C}${style_name}"${W}
 	echo
+	if [[ "$de_name" == "xfce" ]]; then
 	package_install_and_check "gnome-themes-extra"
+	fi
     sleep 3
     banner
     echo "${R}[${W}-${R}]${G}${BOLD} Configuring Wallpapers..."${W}
@@ -808,12 +810,12 @@ sleep 1
 am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1
 sleep 1
 env DISPLAY=:1.0 $selected_hw_method dbus-launch --exit-with-session $de_startup & > /dev/null 2>&1
-sleep 5
 EOF
 
 if [[ "$de_name" == "xfce" ]]; then
 cat <<'EOF' >> "$PREFIX/bin/tx11start"
-process_id=$(ps -aux | grep '[x]fce4-screensaver' | awk '{print \$2}')
+sleep 5
+process_id=$(ps -aux | grep '[x]fce4-screensaver' | awk '{print $2}')
 kill "$process_id" > /dev/null 2>&1
 EOF
 fi
