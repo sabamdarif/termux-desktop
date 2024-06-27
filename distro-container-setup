@@ -363,7 +363,7 @@ if [[ ! -d "/data/data/com.termux/files/usr/share/applications/pd_added" ]]; the
         fi
 proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:1.0 sudo apt install \${@:2}
 cat <<EOF > "$save_root_path/packinstall.sh"
-packages=(${@:2})
+packages=(\${@:2})
 EOF
 cat <<'EOF' >> "$save_root_path/packinstall.sh"
 for package_name in "\${packages[@]}"; do

@@ -115,13 +115,7 @@
 ## Steps:
 
 ```
-pkg update -y
-```
-```
-pkg install wget -y
-```
-```
-wget https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop
+curl -L https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop -o setup-termux-desktop
 ```
 ```
 chmod +x setup-termux-desktop
@@ -132,7 +126,7 @@ chmod +x setup-termux-desktop
 ## One Line Install:
 
 ```
-pkg update -y ; pkg install wget -y ; wget https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop ; chmod +x setup-termux-desktop ; ./setup-termux-desktop
+curl -sL https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop | bash
 ```
 
 <a name="uses"></a>
