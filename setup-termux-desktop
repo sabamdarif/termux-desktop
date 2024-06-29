@@ -730,7 +730,7 @@ function hw_config() {
 	banner
 	echo "${R}[${W}-${R}]${G}${BOLD} Configuring Hardware Acceleration"${W}
 	echo
-    wget https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/enable-hw-acceleration ; chmod +x ${current_path}/enable-hw-acceleration ; . ${current_path}/enable-hw-acceleration
+    wget -O ${current_path}/enable-hw-acceleration https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/enable-hw-acceleration ; chmod +x ${current_path}/enable-hw-acceleration ; . ${current_path}/enable-hw-acceleration
 	rm ${current_path}/enable-hw-acceleration
 }
 
@@ -747,7 +747,7 @@ function distro_container_setup() {
 	banner
 	echo "${R}[${W}-${R}]${G}${BOLD} Configuring Distro Container"${W}
 	echo
-	wget https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/distro-container-setup ; chmod +x ${current_path}/distro-container-setup ; . ${current_path}/distro-container-setup
+	wget -O ${current_path}/distro-container-setup https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/distro-container-setup ; chmod +x ${current_path}/distro-container-setup ; . ${current_path}/distro-container-setup
 	rm ${current_path}/distro-container-setup
 	fi
 	echo "setup_distro_container=\"$distro_add_answer\"" >> $config_file
@@ -1298,13 +1298,6 @@ function notes() {
 	fi
 }
 
-function script_setup() {
-	echo "${G}Downloading Script..."${W}
-	echo
-	curl -# -L "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop" -o "setup-termux-desktop"
-	chmod +x setup-termux-desktop
-}
-
 #########################################################################
 ################################ Remove #################################
 #########################################################################
@@ -1503,7 +1496,6 @@ hw_config
 distro_container_setup
 gui_launcher
 terminal_utility_setup
-script_setup
 notes
 termux-wake-unlock
 }

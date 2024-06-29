@@ -113,13 +113,7 @@
 >NOTE: A Fresh Install Is Always Recommended / Best 
 
 ```
-pkg update -y -o Dpkg::Options::="--force-confold"
-```
-```
-pkg install wget -y
-```
-```
-wget https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop
+curl -Lf https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop -o setup-termux-desktop
 ```
 ```
 chmod +x setup-termux-desktop
@@ -130,7 +124,7 @@ chmod +x setup-termux-desktop
 ## One Line Install:
 
 ```
-pkg update -y -o Dpkg::Options::="--force-confold" ; pkg install wget -y ; wget https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop ; chmod +x setup-termux-desktop ; ./setup-termux-desktop
+curl -Lf https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop -o setup-termux-desktop ; chmod +x setup-termux-desktop ; ./setup-termux-desktop
 ```
 
 <a name="uses"></a>
