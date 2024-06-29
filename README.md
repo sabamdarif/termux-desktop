@@ -112,10 +112,14 @@
 
 >NOTE: A Fresh Install Is Always Recommended / Best 
 
-## Steps:
-
 ```
-curl -Lf https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop -o setup-termux-desktop
+pkg update -y -o Dpkg::Options::="--force-confold"
+```
+```
+pkg install wget -y
+```
+```
+wget https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop
 ```
 ```
 chmod +x setup-termux-desktop
@@ -126,7 +130,7 @@ chmod +x setup-termux-desktop
 ## One Line Install:
 
 ```
-curl -sLf https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop | bash
+pkg update -y -o Dpkg::Options::="--force-confold" ; pkg install wget -y ; wget https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop ; chmod +x setup-termux-desktop ; ./setup-termux-desktop
 ```
 
 <a name="uses"></a>
