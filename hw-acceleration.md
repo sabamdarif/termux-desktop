@@ -23,6 +23,13 @@
 ```
 pdrun program
 ```
+> By Default it run with gpu acceleration
+
+```
+pdrun --no--gpu program
+```
+> To run program without gpu acceleration
+
 <center><img src="images/pdrun-glmark2.png"></center>
 
 #### 2nd Method 

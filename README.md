@@ -115,7 +115,7 @@
 ## Steps:
 
 ```
-curl -L https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop -o setup-termux-desktop
+curl -Lf https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop -o setup-termux-desktop
 ```
 ```
 chmod +x setup-termux-desktop
@@ -126,17 +126,19 @@ chmod +x setup-termux-desktop
 ## One Line Install:
 
 ```
-curl -sL https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop | bash
+curl -sLf https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop | bash
 ```
 
 <a name="uses"></a>
 
 ## Uses:
 
-- **Type `tx11start` to star using Termux:11.**
+- **Type `tx11start` to star Termux:11.**
+- **Type `tx11start --no-gpu` to star Termux:11 without gpu acceleration**
 - **Type `tx11stop` to stop Termux:11 server**
-- **Type `vncstart` to start using Termux:11.**
-- **Type `vncstop` to stop Termux:11 server**
+- **Type `vncstart` to start vncserver**
+- **Type `vncstart ---no-gpu` to start vncserver without gpu acceleration**
+- **Type `vncstop` to stop vncserver**
 - **Type `vncstop -f` to kill vncserver**
 
 ### If you select only one of them to access gui

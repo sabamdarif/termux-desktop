@@ -249,7 +249,7 @@ function questions_theme_select() {
     local main_folder="patch/$de_name"
     local subfolder_count_value=$(count_subfolders "$owner" "$repo" "$main_folder")
 	cd $HOME
-    wget -O styles.md https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/${de_name}_styles.md
+    wget -O ${current_path}/styles.md https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/${de_name}_styles.md
 	banner
     if [[ -n "$subfolder_count_value" ]]; then
         echo "${R}[${W}-${R}]${G}Check the $de_name styles section in github"${W}
@@ -282,7 +282,7 @@ done
 				echo
             fi
 	done
-	rm styles.md
+	rm ${current_path}/styles.md
 	 else
         echo "${R}Failed to get total avilable styles value."${W}
     fi
@@ -524,6 +524,7 @@ function distro_questions() {
 	choice="${choice:-y}"
 	echo
 	echo "${R}[${W}-${R}]${G}Continuing with answer: $choice"${W}
+	echo ""
 	sleep 0.3
     case $choice in
         [yY]* )
@@ -729,8 +730,8 @@ function hw_config() {
 	banner
 	echo "${R}[${W}-${R}]${G}${BOLD} Configuring Hardware Acceleration"${W}
 	echo
-    wget https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/enable-hw-acceleration ; chmod +x enable-hw-acceleration ; . enable-hw-acceleration
-	rm enable-hw-acceleration
+    wget https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/enable-hw-acceleration ; chmod +x ${current_path}/enable-hw-acceleration ; . ${current_path}/enable-hw-acceleration
+	rm ${current_path}/enable-hw-acceleration
 }
 
 #########################################################################
@@ -746,8 +747,8 @@ function distro_container_setup() {
 	banner
 	echo "${R}[${W}-${R}]${G}${BOLD} Configuring Distro Container"${W}
 	echo
-	wget https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/distro-container-setup ; chmod +x distro-container-setup ; . distro-container-setup
-	rm distro-container-setup
+	wget https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/distro-container-setup ; chmod +x ${current_path}/distro-container-setup ; . ${current_path}/distro-container-setup
+	rm ${current_path}/distro-container-setup
 	fi
 	echo "setup_distro_container=\"$distro_add_answer\"" >> $config_file
 }
@@ -769,8 +770,21 @@ EOF
     chmod +x "$HOME/.vnc/xstartup"
     check_and_delete "$PREFIX/bin/vncstart"
 cat <<EOF > "$PREFIX/bin/vncstart"
+#!/data/data/com.termux/files/usr/bin/bash
+
+case \$1 in
+--no-gpu)
+vncserver
+;;
+--help|-h)
+echo "${G}Type ${C}vncstart ${G}to start vncserver with gpu acceleration"${W}
+echo "${G}Type ${C}vncstart ---no-gpu ${G}to start vncserver without gpu acceleration"${W}
+;;
+*)
 ${initialize_server_method}
 $selected_hw_method vncserver
+;;
+esac
 EOF
     chmod +x "$PREFIX/bin/vncstart"
     check_and_delete "$PREFIX/bin/vncstop"
@@ -803,13 +817,28 @@ function setup_termux_x11() {
 		cat <<EOF > "$PREFIX/bin/tx11start"
 #!/data/data/com.termux/files/usr/bin/bash
 
-${initialize_server_method}
-sleep 1
+case \$1 in
+--no-gpu)
 XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :1.0 &
 sleep 1
 am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1
 sleep 1
-env DISPLAY=:1.0 $selected_hw_method dbus-launch --exit-with-session $de_startup & > /dev/null 2>&1
+env DISPLAY=:1.0 dbus-launch --exit-with-session xfce4-session > /dev/null 2>&1 &
+;;
+--help|-h)
+echo -e "${G}Type ${C}tx11start ${G}to start termux:x11 with gpu acceleration"${W}
+echo -e "${G}Type ${C}tx11start ---no-gpu ${G}to start termux:x11 without gpu acceleration"${W}
+;;
+*)
+MESA_NO_ERROR=1 MESA_GL_VERSION_OVERRIDE=4.3COMPAT MESA_GLES_VERSION_OVERRIDE=3.2 GALLIUM_DRIVER=zink ZINK_DESCRIPTORS=lazy virgl_test_server --use-egl-surfaceless --use-gles &
+sleep 1
+XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :1.0 &
+sleep 1
+am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1 &
+sleep 1
+env DISPLAY=:1.0 GALLIUM_DRIVER=zink MESA_GL_VERSION_OVERRIDE=4.0 dbus-launch --exit-with-session xfce4-session > /dev/null 2>&1 &
+;;
+esac
 EOF
 
 if [[ "$de_name" == "xfce" ]]; then
@@ -835,12 +864,7 @@ EOF
 chmod +x $PREFIX/bin/tx11stop
 }
 
-function gui_launcher() {
-	check_and_delete "$PREFIX/bin/gui"
-	package_install_and_check "xorg-xhost"
-	if [[ "gui_mode" == "1" ]]; then
-	setup_termux_x11
-	echo "selected_gui_mode=\"termux_x11\"" >> $config_file
+function gui_termux_x11() {
 cat << EOF > "$PREFIX/bin/gui"
 #!/data/data/com.termux/files/usr/bin/bash
 case \$1 in
@@ -859,9 +883,9 @@ gui -h
 ;;
 esac
 EOF
-	elif [[ "gui_mode" == "2" ]]; then
-	setup_vnc
-	echo "selected_gui_mode=\"vnc\"" >> $config_file
+}
+
+function gui_vnc() {
 cat << EOF > "$PREFIX/bin/gui"
 #!/data/data/com.termux/files/usr/bin/bash
 case \$1 in
@@ -880,10 +904,9 @@ gui -h
 ;;
 esac
 EOF
-	elif [[ "gui_mode" == "3" ]]; then
-	setup_termux_x11
-	setup_vnc
-	echo "selected_gui_mode=\"both\"" >> $config_file
+}
+
+function gui_both() {
 cat << EOF > "$PREFIX/bin/gui"
 #!/data/data/com.termux/files/usr/bin/bash
 case \$1 in
@@ -923,27 +946,28 @@ case \$1 in
         ;;
 esac
 EOF
+}
+
+function gui_launcher() {
+	check_and_delete "$PREFIX/bin/gui"
+	package_install_and_check "xorg-xhost"
+	if [[ "$gui_mode" == "1" ]]; then
+	setup_termux_x11
+	echo "selected_gui_mode=\"termux_x11\"" >> $config_file
+	gui_termux_x11
+	elif [[ "$gui_mode" == "2" ]]; then
+	setup_vnc
+	echo "selected_gui_mode=\"vnc\"" >> $config_file
+	gui_vnc
+	elif [[ "$gui_mode" == "3" ]]; then
+	setup_termux_x11
+	setup_vnc
+	echo "selected_gui_mode=\"both\"" >> $config_file
+	gui_both
 	else
-setup_termux_x11
-echo "selected_gui_mode=\"termux_x11\"" >> $config_file
-cat << EOF > "$PREFIX/bin/gui"
-#!/data/data/com.termux/files/usr/bin/bash
-case \$1 in
---start|-l)
-tx11start
-;;
---stop|-s)
-tx11stop
-;;
---help|-h)
-echo -e "${G} Use ${C}gui --start / gui -l ${G}to start termux:x11\n Use ${C}gui --stop / gui -s ${G}to stop termux:x11"${W}
-;;
-*)
-echo "${R}Invalid choise"${W}
-gui -h
-;;
-esac
-EOF
+	setup_termux_x11
+	echo "selected_gui_mode=\"termux_x11\"" >> $config_file
+	gui_termux_x11
 	fi
 chmod +x "$PREFIX/bin/gui"
 }
@@ -1253,7 +1277,7 @@ fi
 }
 
 #########################################################################
-################################ Notes ##################################
+########################### Finish | Notes ##############################
 #########################################################################
 
 function notes() {
@@ -1272,6 +1296,13 @@ function notes() {
 	echo
 	echo "${R}[${W}-${R}]${C} URL:- ${B}https://github.com/sabamdarif/termux-desktop/blob/main/proot-caontainer.md"${W}
 	fi
+}
+
+function script_setup() {
+	echo "${G}Downloading Script..."${W}
+	echo
+	curl -# -L "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop" -o "setup-termux-desktop"
+	chmod +x setup-termux-desktop
 }
 
 #########################################################################
@@ -1435,6 +1466,7 @@ function change_style() {
 ######################### Call Functions ################################
 #########################################################################
 cd $HOME
+current_path=$(pwd)
 function install_termux_desktop() {
 update_sys
 sleep 2
@@ -1471,6 +1503,7 @@ hw_config
 distro_container_setup
 gui_launcher
 terminal_utility_setup
+script_setup
 notes
 termux-wake-unlock
 }
