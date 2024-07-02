@@ -814,7 +814,7 @@ function setup_termux_x11() {
         echo
         package_install_and_check "termux-x11-nightly"
 		sed -i '12s/^#//' $HOME/.termux/termux.properties
-		cat <<EOF > "$PREFIX/bin/tx11start"
+cat <<EOF > "$PREFIX/bin/tx11start"
 #!/data/data/com.termux/files/usr/bin/bash
 
 case \$1 in
@@ -823,20 +823,20 @@ XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :1.0 &
 sleep 1
 am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1
 sleep 1
-env DISPLAY=:1.0 dbus-launch --exit-with-session xfce4-session > /dev/null 2>&1 &
+env DISPLAY=:1.0 dbus-launch --exit-with-session $de_startup > /dev/null 2>&1 &
 ;;
 --help|-h)
 echo -e "${G}Type ${C}tx11start ${G}to start termux:x11 with gpu acceleration"${W}
 echo -e "${G}Type ${C}tx11start ---no-gpu ${G}to start termux:x11 without gpu acceleration"${W}
 ;;
 *)
-MESA_NO_ERROR=1 MESA_GL_VERSION_OVERRIDE=4.3COMPAT MESA_GLES_VERSION_OVERRIDE=3.2 GALLIUM_DRIVER=zink ZINK_DESCRIPTORS=lazy virgl_test_server --use-egl-surfaceless --use-gles &
+${initialize_server_method}
 sleep 1
 XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :1.0 &
 sleep 1
 am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1 &
 sleep 1
-env DISPLAY=:1.0 GALLIUM_DRIVER=zink MESA_GL_VERSION_OVERRIDE=4.0 dbus-launch --exit-with-session xfce4-session > /dev/null 2>&1 &
+env DISPLAY=:1.0 GALLIUM_DRIVER=${selected_hw_method} MESA_GL_VERSION_OVERRIDE=4.0 dbus-launch --exit-with-session $de_startup > /dev/null 2>&1 &
 ;;
 esac
 EOF
@@ -856,8 +856,10 @@ termux_x11_pid=\$(pgrep -f "/system/bin/app_process / com.termux.x11.Loader :1.0
 de_pid=\$(pgrep -f "$de_startup")
 if [[ -n "\$termux_x11_pid" ]] || [[ -n "\$de_pid" ]]; then
 kill -9 "\$termux_x11_pid" "\$de_pid" > /dev/null 2>&1
+pkill -9 pulseaudio > /dev/null 2>&1
+killall virgl_test_server > /dev/null 2>&1
 pkill -f com.termux.x11 > /dev/null 2>&1
-echo "Termux:X11 Stopped Successfully"
+echo -e "\033[1;32m Termux:X11 Stopped Successfully \033[0m"
 fi
 exec 2>/dev/null
 EOF

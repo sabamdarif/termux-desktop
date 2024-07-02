@@ -210,7 +210,7 @@ device_arch=$(uname -m)
     esac
     version=$(get_latest_release "fastfetch-cli" "fastfetch")
     wget -O $distro_path/root/fastfetch.deb https://github.com/fastfetch-cli/fastfetch/releases/download/${version}/fastfetch-linux-${archtype}.deb
-    sudo dpkg -i fastfetch.deb
+    apt install ./fastfetch.deb
     rm fastfetch.deb
 mkdir -p /etc/apt/keyrings
 wget -qO- https://raw.githubusercontent.com/eza-community/eza/main/deb.asc | sudo gpg --dearmor -o /etc/apt/keyrings/gierens.gpg
@@ -507,7 +507,7 @@ cat <<EOF > "$PREFIX/bin/pdrun"
 #!/data/data/com.termux/files/usr/bin/bash
 
 bash ~/.${selected_distro}-sound-access
-xhost +
+xhost + > /dev/null 2>&1
 case \$1 in
 --no-gpu)
 proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:1.0 \$@
