@@ -205,11 +205,11 @@ function confirmation_y_or_n() {
         case $response in
             [yY]* )
                 echo "${R}[${W}-${R}]${G}Continuing with answer: $response"${W}
-				sleep 0.3
+				sleep 0.2
                 break;;
             [nN]* )
                 echo "${R}[${W}-${R}]${C}Skipping this setp"${W}
-				sleep 0.3
+				sleep 0.2
                 break;;
             * )
                	echo "${R}[${W}-${R}]${R}Invalid input. Please enter 'y' or 'n'."${W}
@@ -483,7 +483,9 @@ function distro_questions() {
 	echo "${Y}1. Debian"${W}
 	echo
 	echo "${Y}2. Ubuntu"${W}
-	echo 
+	echo
+	echo "${Y}3. Arch"${W}
+	echo
 	read -p "${Y}select an option (Default 1): "${W} distro_answer
 	distro_answer=${distro_answer:-1} 
 	echo
@@ -510,6 +512,7 @@ function distro_questions() {
 	echo "pd_pass_type=\"$pd_pass_type\"" >> $config_file
 	echo
 	echo "${R}[${W}-${R}]${G}Continuing with answer: $pd_pass_type"${W}
+	sleep 0.2
 	if [[ "$pd_pass_type" == "1" ]]; then
 	echo
     echo "${R}[${W}-${R}]${G}${BOLD} Create user account"${W}
@@ -525,7 +528,7 @@ function distro_questions() {
 	echo
 	echo "${R}[${W}-${R}]${G}Continuing with answer: $choice"${W}
 	echo ""
-	sleep 0.3
+	sleep 0.2
     case $choice in
         [yY]* )
             echo "${R}[${W}-${R}]${G}Continuing with username ${C}$user_name ${G}and password ${C}$pass"${W}
@@ -550,7 +553,7 @@ while true; do
 	choice="${choice:-y}"
 	echo
 	echo "${R}[${W}-${R}]${G}Continuing with answer: $choice"${W}
-	sleep 0.3
+	sleep 0.2
     case $choice in
         [yY]* )
             echo "${R}[${W}-${R}]${G}Continuing with username ${C}$user_name "${W}

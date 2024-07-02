@@ -35,12 +35,13 @@ IFS=" " read USED AVAIL TOTAL <<<$(free -htm | grep "Mem" | awk {'print $3,$7,$2
 printf "      %+25s ${G}${LOGO}${W}"
 echo -e "
 ${W}${BOLD}System Info:
-$C Distro     : $W$DISTRO
-$C Host       : $W$MODEL
-$C Kernel     : $W$(uname -sr)
-$C CPU        : $W$PROCESSOR_NAME ($G$PROCESSOR_COUNT$W vCPU)
-$C Memory     : $G$USED$W used, $G$AVAIL$W avail, $G$TOTAL$W total$W
-$C Temperature: $G${TEMP}°c$W"
+$C Distro          : $W$DISTRO
+$C Host            : $W$MODEL
+$C Kernel          : $W$(uname -sr)
+$C CPU             : $W$PROCESSOR_NAME ($G$PROCESSOR_COUNT$W vCPU)
+$C Termux Version  : $G${TERMUX_VERSION-Unknown}$W
+$C Memory          : $G$USED$W used, $G$TOTAL$W total$W
+$C Temperature     : $G${TEMP}°c$W"
 
 max_usage=95
 bar_width=45
