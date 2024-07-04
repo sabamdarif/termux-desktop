@@ -66,12 +66,12 @@ function package_install_and_check() {
 	packs_list=($@)
 for package_name in "${packs_list[@]}"; do
     echo "${R}[${W}-${R}]${G}${BOLD} Installing package: ${C}$package_name ${W}"
-    apt install "$package_name" -y
+    pkg install "$package_name" -y
     if [ $? -ne 0 ]; then
         echo "${R}[${W}-${R}]${G}${BOLD} Error detected during installation of: ${C}$package_name ${W}"
-        apt --fix-broken install -y
+        pkg --fix-broken install -y
         dpkg --configure -a
-        apt install "$package_name" -y
+        pkg install "$package_name" -y
     fi
     if dpkg -s "$package_name" >/dev/null 2>&1; then
         echo "${R}[${W}-${R}]${G} $package_name installed successfully ${W}"
@@ -316,6 +316,8 @@ function questions() {
 	echo "de_name=\"$de_name\"" >> $config_file
 	banner
 	questions_theme_select
+	echo "${R}[${W}-${R}]${G}Continuing with answer: ${style_answer}.$style_name"${W}
+	sleep 0.2
 	banner
 	echo "${R}[${W}-${R}]${G}${BOLD}Select browser you want to install"${W}
 	echo
@@ -512,6 +514,7 @@ function distro_questions() {
 	echo "pd_pass_type=\"$pd_pass_type\"" >> $config_file
 	echo
 	echo "${R}[${W}-${R}]${G}Continuing with answer: $pd_pass_type"${W}
+	echo
 	sleep 0.2
 	if [[ "$pd_pass_type" == "1" ]]; then
 	echo
@@ -816,6 +819,16 @@ function setup_termux_x11() {
         echo "${R}[${W}-${R}]${G}${BOLD} Configuring Termux:X11 "${W}
         echo
         package_install_and_check "termux-x11-nightly"
+		local repo_owner="termux"
+		local repo_name="termux-x11"
+		local latest_tag
+		latest_tag=$(get_latest_release "$repo_owner" "$repo_name")
+		local termux_x11_url="https://github.com/$repo_owner/$repo_name/releases/download/$latest_tag/"
+		local assets
+		assets=$(curl -s "https://api.github.com/repos/$repo_owner/$repo_name/releases/latest" | grep -oP '(?<="name": ")[^"]*')
+		deb_assets=$(echo "$assets" | grep termux-x11.*all.deb)
+		wget -O $current_path/termux-x11.deb $termux_x11_url/$deb_assets
+		apt install $current_path/termux-x11.deb -y
 		sed -i '12s/^#//' $HOME/.termux/termux.properties
 cat <<EOF > "$PREFIX/bin/tx11start"
 #!/data/data/com.termux/files/usr/bin/bash
@@ -1341,7 +1354,8 @@ function remove_termux_desktop() {
 	check_and_restore "$PREFIX/etc/motd"
 	check_and_restore "$PREFIX/etc/motd-playstore"
 	check_and_restore "$PREFIX/etc/motd.sh"
-	check_and_delete "$PREFIX/etc/motd.sh $PREFIX/etc/termux-login.sh $HOME/.termux $HOME/.fonts/font.ttf"
+	check_and_restore "$HOME/.termux/colors.properties"
+	check_and_delete "$PREFIX/etc/motd.sh $PREFIX/etc/termux-login.sh $HOME/.termux $HOME/.fonts/font.ttf $HOME/.termux/colors.properties"
 	package_check_and_remove "nerdfix fontconfig-utils nala bat eza"
 	fi
 	#remove browser

@@ -44,86 +44,96 @@ EOF
 
 function pd_package_install_and_check() {
 	packs_list=($@)
+#get distro id
     if [ -f /etc/os-release ]; then
     . /etc/os-release
     fi
+#instll package
 for package_name in "${packs_list[@]}"; do
     echo "${R}[${W}-${R}]${G}${BOLD} Installing package: ${C}$package_name ${W}"
     if [[ "$ID" == "debian" ]] || [[ "$ID" == "ubuntu" ]]; then
-    sudo apt install "$package_name" -y
+        sudo apt install "$package_name" -y
     elif [[ "$ID" == "archlinux" ]]; then
-    sudo pacman -S --noconfirm "$package_name"
+        sudo pacman -S --noconfirm "$package_name"
     fi
+#handel error in installation
     if [ $? -ne 0 ]; then
         echo "${R}[${W}-${R}]${G}${BOLD} Error detected during installation of: ${C}$package_name ${W}"
         if [[ "$ID" == "debian" ]] || [[ "$ID" == "ubuntu" ]]; then
-        sudo apt --fix-broken install -y
-        sudo dpkg --configure -a
-        sudo apt install "$package_name" -y
+            sudo apt --fix-broken install -y
+            sudo dpkg --configure -a
+            sudo apt install "$package_name" -y
         elif [[ "$ID" == "archlinux" ]]; then
-        sudo pacman -Syu --noconfirm
-        sudo pacman -S --noconfirm "$package_name"
+            sudo pacman -Syu --noconfirm
+            sudo pacman -S --noconfirm "$package_name"
         fi
     fi
-    if [[ "$ID" == "debian" ]] || [[ "$ID" == "ubuntu" ]]; then
+#check installation
+if [[ "$ID" == "debian" ]] || [[ "$ID" == "ubuntu" ]]; then
     if dpkg -s "$package_name" >/dev/null 2>&1; then
         echo "${R}[${W}-${R}]${G} $package_name installed successfully ${W}"
     else
         if type -p "$package_name" &>/dev/null || [ -e "$PREFIX/bin/$package_name"* ] || [ -e "$PREFIX/bin/"*"$package_name" ]; then
             echo "${R}[${W}-${R}]${C} $package_name ${G}installed successfully ${W}"
         fi
-    elif [[ "$ID" == "archlinux" ]]; then
-        if pacman -Qi "$package_name" >/dev/null 2>&1; then
+    fi
+elif [[ "$ID" == arch* ]]; then
+    if pacman -Qi "$package_name" >/dev/null 2>&1; then
         echo "${R}[${W}-${R}]${G} $package_name installed successfully ${W}"
-        else
+    else
         if type -p "$package_name" &>/dev/null || [ -e "$PREFIX/bin/$package_name"* ] || [ -e "$PREFIX/bin/"*"$package_name" ]; then
         echo "${R}[${W}-${R}]${C} $package_name ${G}installed successfully ${W}"
         fi
     fi
-    fi
+fi
 done
 echo ""
 }
 
 function pd_root_package_install_and_check() {
 	packs_list=($@)
+#get distro id
     if [ -f /etc/os-release ]; then
     . /etc/os-release
     fi
+#instll package
 for package_name in "${packs_list[@]}"; do
     echo "${R}[${W}-${R}]${G}${BOLD} Installing package: ${C}$package_name ${W}"
     if [[ "$ID" == "debian" ]] || [[ "$ID" == "ubuntu" ]]; then
-    apt install "$package_name" -y
+        apt install "$package_name" -y
     elif [[ "$ID" == "archlinux" ]]; then
-    pacman -S --noconfirm "$package_name"
+        pacman -S --noconfirm "$package_name"
     fi
-    if [ $? -ne 0 ]; then
-        echo "${R}[${W}-${R}]${G}${BOLD} Error detected during installation of: ${C}$package_name ${W}"
-        if [[ "$ID" == "debian" ]] || [[ "$ID" == "ubuntu" ]]; then
+#handel error in installation
+if [ $? -ne 0 ]; then
+    echo "${R}[${W}-${R}]${G}${BOLD} Error detected during installation of: ${C}$package_name ${W}"
+    if [[ "$ID" == "debian" ]] || [[ "$ID" == "ubuntu" ]]; then
         apt --fix-broken install -y
         dpkg --configure -a
         apt install "$package_name" -y
-        elif [[ "$ID" == "archlinux" ]]; then
+    elif [[ "$ID" == "archlinux" ]]; then
         pacman -Syu --noconfirm
         pacman -S --noconfirm "$package_name"
-        fi
     fi
-    if [[ "$ID" == "debian" ]] || [[ "$ID" == "ubuntu" ]]; then
+fi
+#check installation
+if [[ "$ID" == "debian" ]] || [[ "$ID" == "ubuntu" ]]; then
     if dpkg -s "$package_name" >/dev/null 2>&1; then
         echo "${R}[${W}-${R}]${G} $package_name installed successfully ${W}"
     else
         if type -p "$package_name" &>/dev/null || [ -e "$PREFIX/bin/$package_name"* ] || [ -e "$PREFIX/bin/"*"$package_name" ]; then
             echo "${R}[${W}-${R}]${C} $package_name ${G}installed successfully ${W}"
         fi
-    elif [[ "$ID" == "archlinux" ]]; then
-        if pacman -Qi "$package_name" >/dev/null 2>&1; then
+    fi
+elif [[ "$ID" == arch* ]]; then
+    if pacman -Qi "$package_name" >/dev/null 2>&1; then
         echo "${R}[${W}-${R}]${G} $package_name installed successfully ${W}"
-        else
+    else
         if type -p "$package_name" &>/dev/null || [ -e "$PREFIX/bin/$package_name"* ] || [ -e "$PREFIX/bin/"*"$package_name" ]; then
         echo "${R}[${W}-${R}]${C} $package_name ${G}installed successfully ${W}"
         fi
     fi
-    fi
+fi
 done
 echo ""
 }
@@ -132,7 +142,11 @@ function distro_basic_task() {
     banner
     echo "${R}[${W}-${R}]${G}${BOLD}Updating ${C}$selected_distro ${G}And Install Required Packages"${W}
     echo
+    if [[ "$selected_distro" == "debian" ]] || [[ "$selected_distro" == "debian" ]]; then
     proot-distro login $selected_distro --shared-tmp -- env DISPLAY=:1.0 apt update
+    elif [[ "$selected_distro" == "archlinux" ]]; then
+    proot-distro login $selected_distro --shared-tmp -- env DISPLAY=:1.0 pacman -Syu --noconfirm
+    fi
     if [[ "$pd_audio_config_answer" == "y" ]]; then
     distro_packs="sudo pulseaudio"
     distro_fix_sound_issue
@@ -436,8 +450,8 @@ else
         desktop_files_with_ext=\$(basename "\$desktop_files_name")
         desktop_files_without_ext="\${desktop_files_with_ext%.desktop}"
         echo "${R}[${W}-${R}]${G} Adding ${C}\${desktop_files_without_ext} ${G}To Termux Menu"
-        sudo cp "/usr/share/applications/\${desktop_files_with_ext}" "/data/data/com.termux/files/usr/share/applications/pd_added/"
-        sudo sed -i 's/Exec=/Exec=pdrun /g' "/data/data/com.termux/files/usr/share/applications/pd_added/\${desktop_files_with_ext}"
+        cp "/usr/share/applications/\${desktop_files_with_ext}" "/data/data/com.termux/files/usr/share/applications/pd_added/"
+        sed -i 's/Exec=/Exec=pdrun /g' "/data/data/com.termux/files/usr/share/applications/pd_added/\${desktop_files_with_ext}"
     done
 fi
 done
@@ -460,7 +474,7 @@ else
         desktop_files_with_ext=\$(basename "\$desktop_files_name")
         desktop_files_without_ext="\${desktop_files_with_ext%.desktop}"
         echo "${R}[${W}-${R}]${G} Removing ${C}\${desktop_files_without_ext} ${G}From Termux Menu" 
-        sudo rm /data/data/com.termux/files/usr/share/applications/pd_added/\${desktop_files_with_ext}
+        rm /data/data/com.termux/files/usr/share/applications/pd_added/\${desktop_files_with_ext}
     done
 fi
 done
@@ -506,8 +520,8 @@ else
         desktop_files_with_ext=\$(basename "\$desktop_files_name")
         desktop_files_without_ext="\${desktop_files_with_ext%.desktop}"
         echo "${R}[${W}-${R}]${G} Adding ${C}\${desktop_files_without_ext} ${G}To Termux Menu"
-        sudo cp "/usr/share/applications/\${desktop_files_with_ext}" "/data/data/com.termux/files/usr/share/applications/pd_added/"
-        sudo sed -i 's/Exec=/Exec=pdrun /g' "/data/data/com.termux/files/usr/share/applications/pd_added/\${desktop_files_with_ext}"
+        cp "/usr/share/applications/\${desktop_files_with_ext}" "/data/data/com.termux/files/usr/share/applications/pd_added/"
+        sed -i 's/Exec=/Exec=pdrun /g' "/data/data/com.termux/files/usr/share/applications/pd_added/\${desktop_files_with_ext}"
     done
 fi
 done
@@ -530,7 +544,7 @@ else
         desktop_files_with_ext=\$(basename "\$desktop_files_name")
         desktop_files_without_ext="\${desktop_files_with_ext%.desktop}"
         echo "${R}[${W}-${R}]${G} Removing ${C}\${desktop_files_without_ext} ${G}From Termux Menu"
-        sudo rm /data/data/com.termux/files/usr/share/applications/pd_added/\${desktop_files_with_ext}
+        rm /data/data/com.termux/files/usr/share/applications/pd_added/\${desktop_files_with_ext}
     done
 fi
 done

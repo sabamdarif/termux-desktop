@@ -59,7 +59,7 @@
 <center><img src="images/xfce/look_1/look.png"></center>
 <br>
 
-# See Other Styles: [Here](xfce_styles.md)
+## See Other Styles: [XFCE](xfce_styles.md),[LXQT](lxqt_styles.md)
 
 ## Screenshots:
 > All gui apps screenshot
@@ -112,16 +112,6 @@
 
 >NOTE: A Fresh Install Is Always Recommended / Best 
 
-```
-curl -Lf https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop -o setup-termux-desktop
-```
-```
-chmod +x setup-termux-desktop
-```
-```
-./setup-termux-desktop
-```
-## One Line Install:
 
 ```
 curl -Lf https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop -o setup-termux-desktop ; chmod +x setup-termux-desktop ; ./setup-termux-desktop
