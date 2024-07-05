@@ -779,12 +779,12 @@ cat <<EOF > "$PREFIX/bin/vncstart"
 #!/data/data/com.termux/files/usr/bin/bash
 
 case \$1 in
---no-gpu)
+--nogpu)
 vncserver
 ;;
 --help|-h)
 echo "${G}Type ${C}vncstart ${G}to start vncserver with gpu acceleration"${W}
-echo "${G}Type ${C}vncstart ---no-gpu ${G}to start vncserver without gpu acceleration"${W}
+echo "${G}Type ${C}vncstart ---nogpu ${G}to start vncserver without gpu acceleration"${W}
 ;;
 *)
 ${initialize_server_method}
@@ -834,7 +834,7 @@ cat <<EOF > "$PREFIX/bin/tx11start"
 #!/data/data/com.termux/files/usr/bin/bash
 
 case \$1 in
---no-gpu)
+--nogpu)
 XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :1.0 &
 sleep 1
 am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1
@@ -843,7 +843,7 @@ env DISPLAY=:1.0 dbus-launch --exit-with-session $de_startup > /dev/null 2>&1 &
 ;;
 --help|-h)
 echo -e "${G}Type ${C}tx11start ${G}to start termux:x11 with gpu acceleration"${W}
-echo -e "${G}Type ${C}tx11start ---no-gpu ${G}to start termux:x11 without gpu acceleration"${W}
+echo -e "${G}Type ${C}tx11start ---nogpu ${G}to start termux:x11 without gpu acceleration"${W}
 ;;
 *)
 ${initialize_server_method}

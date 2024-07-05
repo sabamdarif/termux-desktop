@@ -39,7 +39,7 @@ $C Distro          : $W$DISTRO
 $C Host            : $W$MODEL
 $C Kernel          : $W$(uname -sr)
 $C CPU             : $W$PROCESSOR_NAME ($G$PROCESSOR_COUNT$W vCPU)
-$C Termux Version  : $G${TERMUX_VERSION-Unknown}$W
+$C Termux Version  : $G${TERMUX_VERSION}-{$TERMUX_APK_RELEASE}$W
 $C Memory          : $G$USED$W used, $G$TOTAL$W total$W
 $C Temperature     : $G${TEMP}°c$W"
 
