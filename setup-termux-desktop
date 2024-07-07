@@ -102,37 +102,28 @@ function get_file_name_number() {
 }
 
 function extract_archive() {
-	set -e
-	local archive="$1"
-	total_size=$(stat -c '%s' "$archive")
-	case "$archive" in
-    *.tar.gz)
-	if [[ -f "$archive" ]]; then
-        pv -s $total_size -p -r "$archive" | tar xzf -
-	else
-	echo "${R} $archive doesn't exist"${W}
-	fi
-        ;;
-    *.tar.xz)
-	if [[ -f "$archive" ]]; then
-        pv -s $total_size -p -r "$archive" | tar xJf -
-	else
-	echo "${R} $archive doesn't exist"${W}
-	fi
-        ;;
-    *.tar)
-	if [[ -f "$archive" ]]; then
-        pv -s $total_size -p -r "$archive" | tar xf -
-	else
-	echo "${R} $archive doesn't exist"${W}
-	fi
-        ;;
-    *)
-        echo "${R}Unsupported archive format: ${C}$archive"${W}
-        exit 1
-        ;;
-esac
+    local archive="$1"
+    if [[ ! -f "$archive" ]]; then
+        echo "${R}$archive doesn't exist"${W}
+        return
+    fi
 
+    total_size=$(stat -c '%s' "$archive")
+    case "$archive" in
+        *.tar.gz)
+            pv -s "$total_size" -p -r "$archive" | tar xzf - || { echo "${R}Failed to extract ${C}$archive${W}"; return; }
+            ;;
+        *.tar.xz)
+            pv -s "$total_size" -p -r "$archive" | tar xJf - || { echo "${R}Failed to extract ${C}$archive${W}"; return; }
+            ;;
+        *.tar)
+            pv -s "$total_size" -p -r "$archive" | tar xf - || { echo "${R}Failed to extract ${C}$archive${W}"; return; }
+            ;;
+        *)
+            echo "${R}Unsupported archive format: ${C}$archive${W}"
+            return 1
+            ;;
+    esac
 }
 
 function download_and_extract() {
@@ -140,7 +131,7 @@ function download_and_extract() {
     local target_dir="$2"
     local filename="${url##*/}"
 
-    echo "${C}${BOLD}Downloading ${G}${filename}..."${W}
+    echo "${C}${BOLD}Downloading ${G}${filename}...${W}"
     sleep 1.5
 
     cd "$target_dir" || return 1
@@ -149,43 +140,28 @@ function download_and_extract() {
     local success=false
 
     while [[ $attempt -le 3 ]]; do
-        if [[ $filename == *.tar.gz ]]; then
-            if curl -# -L "$url" -o "$filename"; then
-			echo ""
-			    extract_archive "$filename"
-                rm "$filename"
-                success=true
-                break
-            fi
-        elif [[ $filename == *.tar ]]; then
-            if curl -# -L "$url" -o "$filename"; then
-			echo ""
-                extract_archive "$filename"
-                rm "$filename"
-                success=true
-                break
-            fi
-        elif [[ $filename == *.tar.xz ]]; then
-            if curl -# -L "$url" -o "$filename"; then
-			echo ""
-                extract_archive "$filename"
-                rm "$filename"
-                success=true
-                break
-            fi
+        if curl -# -L "$url" -o "$filename"; then
+            success=true
+            break
+        else
+            echo "${R}Failed to download ${C}${filename}${W}"
+            echo "${G}Retrying... Attempt ${C}$attempt${W}"
+            ((attempt++))
+            sleep 1
         fi
-
-        echo "Failed to download ${filename}"
-        echo "Retrying... Attempt $attempt"
-        ((attempt++))
-        sleep 1
     done
 
-    if [[ "$success" = false ]]; then
+    if [[ "$success" = true ]]; then
+	    if [[ -f "$filename" ]]; then
+		    extract_archive "$filename"
+			rm "$filename"
+	    fi
+    else
         echo "${R}Failed to download ${C}${filename}${W}"
         echo "${C}Please check your internet connection${W}"
     fi
 }
+
 
 function count_subfolders() {
     local owner="$1"
@@ -487,6 +463,8 @@ function distro_questions() {
 	echo "${Y}2. Ubuntu"${W}
 	echo
 	echo "${Y}3. Arch"${W}
+	echo
+	echo "${Y}4. Apline"${W}
 	echo
 	read -p "${Y}select an option (Default 1): "${W} distro_answer
 	distro_answer=${distro_answer:-1} 
@@ -829,6 +807,7 @@ function setup_termux_x11() {
 		deb_assets=$(echo "$assets" | grep termux-x11.*all.deb)
 		wget -O $current_path/termux-x11.deb $termux_x11_url/$deb_assets
 		apt install $current_path/termux-x11.deb -y
+		rm $current_path/termux-x11.deb
 		sed -i '12s/^#//' $HOME/.termux/termux.properties
 cat <<EOF > "$PREFIX/bin/tx11start"
 #!/data/data/com.termux/files/usr/bin/bash

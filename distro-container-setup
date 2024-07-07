@@ -7,6 +7,8 @@ function setup_distro() {
     selected_distro="ubuntu"
     elif [[ "$distro_answer" == "3" ]]; then
     selected_distro="archlinux"
+    elif [[ "$distro_answer" == "4" ]]; then
+    selected_distro="alpine"
     else
     selected_distro="debian"
     fi
@@ -54,7 +56,9 @@ for package_name in "${packs_list[@]}"; do
     if [[ "$ID" == "debian" ]] || [[ "$ID" == "ubuntu" ]]; then
         sudo apt install "$package_name" -y
     elif [[ "$ID" == arch* ]]; then
-        sudo pacman -S --noconfirm "$package_name"
+        sudo pacman -Sy --noconfirm "$package_name"
+    elif [[ "$ID" == "alpine" ]]; then
+        sudo apk add "$package_name"
     fi
 #handel error in installation
     if [ $? -ne 0 ]; then
@@ -65,9 +69,26 @@ for package_name in "${packs_list[@]}"; do
             sudo apt install "$package_name" -y
         elif [[ "$ID" == arch* ]]; then
             sudo pacman -Syu --noconfirm
-            sudo pacman -S --noconfirm "$package_name"
+            sudo pacman -Sy --noconfirm "$package_name"
+        elif [[ "$ID" == "alpine" ]]; then
+            sudo apk fix
+            sudo apk add "$package_name"
         fi
     fi
+#reinstall
+if [[ "$ID" == "debian" ]] || [[ "$ID" == "ubuntu" ]]; then
+    if ! dpkg -s "$package_name" >/dev/null 2>&1; then
+    sudo apt install "$package_name" -y
+    fi
+elif [[ "$ID" == arch* ]]; then
+    if ! pacman -Qi "$package_name" >/dev/null 2>&1; then
+    sudo pacman -Sy --noconfirm "$package_name"
+    fi
+elif [[ "$ID" == "alpine" ]]; then
+    if ! apk info -e "$package_name"; then
+    sudo apk add "$package_name"
+    fi
+fi
 #check installation
 if [[ "$ID" == "debian" ]] || [[ "$ID" == "ubuntu" ]]; then
     if dpkg -s "$package_name" >/dev/null 2>&1; then
@@ -84,6 +105,14 @@ elif [[ "$ID" == arch* ]]; then
         if type -p "$package_name" &>/dev/null || [ -e "$PREFIX/bin/$package_name"* ] || [ -e "$PREFIX/bin/"*"$package_name" ]; then
         echo "${R}[${W}-${R}]${C} $package_name ${G}installed successfully ${W}"
         fi
+    fi
+elif [[ "$ID" == "alpine" ]]; then
+    if apk info -e "$package_name"; then
+            echo "${R}[${W}-${R}]${G} $package_name installed successfully ${W}"
+        else
+            if type -p "$package_name" &>/dev/null || [ -e "$PREFIX/bin/$package_name"* ] || [ -e "$PREFIX/bin/"*"$package_name" ]; then
+                echo "${R}[${W}-${R}]${C} $package_name ${G}installed successfully ${W}"
+            fi
     fi
 fi
 done
@@ -102,18 +131,37 @@ for package_name in "${packs_list[@]}"; do
     if [[ "$ID" == "debian" ]] || [[ "$ID" == "ubuntu" ]]; then
         apt install "$package_name" -y
     elif [[ "$ID" == arch* ]]; then
-        pacman -S --noconfirm "$package_name"
+        pacman -Sy --noconfirm "$package_name"
+    elif [[ "$ID" == "alpine" ]]; then
+        apk add "$package_name"
     fi
 #handel error in installation
-if [ $? -ne 0 ]; then
-    echo "${R}[${W}-${R}]${G}${BOLD} Error detected during installation of: ${C}$package_name ${W}"
-    if [[ "$ID" == "debian" ]] || [[ "$ID" == "ubuntu" ]]; then
-        apt --fix-broken install -y
-        dpkg --configure -a
-        apt install "$package_name" -y
-    elif [[ "$ID" == arch* ]]; then
-        pacman -Syu --noconfirm
-        pacman -S --noconfirm "$package_name"
+    if [ $? -ne 0 ]; then
+        echo "${R}[${W}-${R}]${G}${BOLD} Error detected during installation of: ${C}$package_name ${W}"
+        if [[ "$ID" == "debian" ]] || [[ "$ID" == "ubuntu" ]]; then
+            apt --fix-broken install -y
+            dpkg --configure -a
+            apt install "$package_name" -y
+        elif [[ "$ID" == arch* ]]; then
+            pacman -Syu --noconfirm
+            pacman -Sy --noconfirm "$package_name"
+        elif [[ "$ID" == "alpine" ]]; then
+            apk fix
+            apk add "$package_name"
+        fi
+    fi
+#reinstall
+if [[ "$ID" == "debian" ]] || [[ "$ID" == "ubuntu" ]]; then
+    if ! dpkg -s "$package_name" >/dev/null 2>&1; then
+    apt install "$package_name" -y
+    fi
+elif [[ "$ID" == arch* ]]; then
+    if ! pacman -Qi "$package_name" >/dev/null 2>&1; then
+    pacman -Sy --noconfirm "$package_name"
+    fi
+elif [[ "$ID" == "alpine" ]]; then
+    if ! apk info -e "$package_name"; then
+    apk add "$package_name"
     fi
 fi
 #check installation
@@ -133,6 +181,14 @@ elif [[ "$ID" == arch* ]]; then
         echo "${R}[${W}-${R}]${C} $package_name ${G}installed successfully ${W}"
         fi
     fi
+elif [[ "$ID" == "alpine" ]]; then
+    if apk info -e "$package_name"; then
+            echo "${R}[${W}-${R}]${G} $package_name installed successfully ${W}"
+        else
+            if type -p "$package_name" &>/dev/null || [ -e "$PREFIX/bin/$package_name"* ] || [ -e "$PREFIX/bin/"*"$package_name" ]; then
+                echo "${R}[${W}-${R}]${C} $package_name ${G}installed successfully ${W}"
+            fi
+    fi
 fi
 done
 echo ""
@@ -142,10 +198,13 @@ function distro_basic_task() {
     banner
     echo "${R}[${W}-${R}]${G}${BOLD}Updating ${C}$selected_distro ${G}And Install Required Packages"${W}
     echo
-    if [[ "$selected_distro" == "debian" ]] || [[ "$selected_distro" == "debian" ]]; then
+    if [[ "$selected_distro" == "debian" ]] || [[ "$selected_distro" == "ubuntu" ]]; then
     proot-distro login $selected_distro --shared-tmp -- env DISPLAY=:1.0 apt update
     elif [[ "$selected_distro" == "archlinux" ]]; then
     proot-distro login $selected_distro --shared-tmp -- env DISPLAY=:1.0 pacman -Syu --noconfirm
+    elif [[ "$selected_distro" == "alpine" ]]; then
+    proot-distro login $selected_distro --shared-tmp -- env DISPLAY=:1.0 apk update
+    proot-distro login $selected_distro --shared-tmp -- env DISPLAY=:1.0 apk upgrade
     fi
     if [[ "$pd_audio_config_answer" == "y" ]]; then
     distro_packs="sudo pulseaudio"
@@ -178,8 +237,25 @@ proot-distro login $selected_distro -- /bin/bash -c 'bash pd_basic_setup.sh'
     final_user_name="${user_name}"
     fi
 if [[ "$pd_pass_type" == "1" ]];then
+if [[ "$selected_distro" == "alpine" ]]; then
 cat <<EOF > $distro_path/root/useradd.sh
 #!/bin/bash
+
+groupadd storage
+groupadd wheel
+mkdir -p /home/$final_user_name
+adduser -h /home/$final_user_name -s \$(which bash) -G users -D $final_user_name
+chown ${final_user_name}:users /home/$final_user_name
+echo "${final_user_name}:${pass}" | chpasswd
+chmod u+rw /etc/sudoers
+echo "$final_user_name ALL=(ALL:ALL) ALL" | tee -a /etc/sudoers
+chmod u-w /etc/sudoers
+rm useradd.sh
+EOF
+else
+cat <<EOF > $distro_path/root/useradd.sh
+#!/bin/bash
+
 groupadd storage
 groupadd wheel
 useradd -m -g users -s \$(which bash) ${final_user_name}
@@ -190,9 +266,26 @@ echo "$final_user_name ALL=(ALL:ALL) ALL" | tee -a /etc/sudoers
 chmod u-w /etc/sudoers
 rm useradd.sh
 EOF
+fi
 elif [[ "$pd_pass_type" == "2" ]];then
+if [[ "$selected_distro" == "alpine" ]]; then
 cat <<EOF > $distro_path/root/useradd.sh
 #!/bin/bash
+
+groupadd storage
+groupadd wheel
+mkdir -p /home/$final_user_name
+adduser -h /home/$final_user_name -s \$(which bash) -G users -D $final_user_name
+chown ${final_user_name}:users /home/$final_user_name
+chmod u+rw /etc/sudoers
+echo "$final_user_name ALL=(ALL) NOPASSWD:ALL" | tee -a /etc/sudoers
+chmod u-w /etc/sudoers
+rm useradd.sh
+EOF
+else
+cat <<EOF > $distro_path/root/useradd.sh
+#!/bin/bash
+
 groupadd storage
 groupadd wheel
 useradd -m -g users -s \$(which bash) ${final_user_name}
@@ -202,6 +295,7 @@ echo "$final_user_name ALL=(ALL) NOPASSWD:ALL" | tee -a /etc/sudoers
 chmod u-w /etc/sudoers
 rm useradd.sh
 EOF
+fi
 fi
 proot-distro login $selected_distro -- /bin/sh -c 'bash useradd.sh'
 }
@@ -550,7 +644,7 @@ packages=("\${@:2}")
 EOF
 cat <<'EOF' >> "$save_root_path/packremove.sh"
 for package_name in "\${packages[@]}"; do
-desktop_files=\$(pacman -Ql \$package_name | grep "/usr/share/applications/.*\.desktop$")
+desktop_files=\$(pacman -Ql \$package_name | grep -oP "/usr/share/applications/.*\.desktop$")
 if [ -z "\$desktop_files" ]; then
     echo "${R}[${W}-${R}]${G} No .desktop files found for package ${C}'\$package_name' ${G}in /usr/share/applications."
 else
@@ -575,6 +669,67 @@ fi
 TOP_EOF
 }
 
+function handel_alpine_based_app_installer() {
+cat <<TOP_EOF > "$PREFIX/bin/$selected_distro"
+#!/data/data/com.termux/files/usr/bin/bash
+    if [[ "\$#" -eq 0 ]]; then
+    proot-distro login --user $final_user_name $selected_distro --shared-tmp
+elif [[ "\$1" = "install" ]]; then
+if [[ ! -d "/data/data/com.termux/files/usr/share/applications/pd_added" ]]; then
+        mkdir -p "/data/data/com.termux/files/usr/share/applications/pd_added"
+        fi
+proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:1.0 sudo apk add "\${@:2}"
+cat <<EOF > "$save_root_path/packinstall.sh"
+packages=("\${@:2}")
+EOF
+cat <<'EOF' >> "$save_root_path/packinstall.sh"
+for package_name in "\${packages[@]}"; do
+desktop_files=\$(ls /usr/share/applications/ | grep "\$package_name.*\.desktop$")
+if [ -z "\$desktop_files" ]; then
+    echo "${R}[${W}-${R}]${G} No .desktop files found for package ${C}'\$package_name' ${G}in /usr/share/applications."
+else
+    for desktop_files_name in \$desktop_files; do
+        desktop_files_without_ext="\${desktop_files_with_ext%.desktop}"
+        echo "${R}[${W}-${R}]${G} Adding ${C}\${desktop_files_without_ext} ${G}To Termux Menu"
+        sudo cp "/usr/share/applications/\${desktop_files_name}" "/data/data/com.termux/files/usr/share/applications/pd_added/"
+        sudo sed -i 's/Exec=/Exec=pdrun /g' "/data/data/com.termux/files/usr/share/applications/pd_added/\${desktop_files_name}"
+    done
+fi
+done
+rm packinstall.sh
+EOF
+proot-distro login $selected_distro -- /bin/bash -c 'bash packinstall.sh'
+
+elif [[ "\$1" = "remove" ]] || [[ "\$1" = "remove" ]]; then
+proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:1.0 sudo apk del "\${@:2}"
+cat <<EOF > "$save_root_path/packremove.sh"
+packages=("\${@:2}")
+EOF
+cat <<'EOF' >> "$save_root_path/packremove.sh"
+for package_name in "\${packages[@]}"; do
+desktop_files=\$(ls /usr/share/applications/ | grep "\$package_name.*\.desktop$")
+if [ -z "\$desktop_files" ]; then
+    echo "${R}[${W}-${R}]${G} No .desktop files found for package ${C}'\$package_name' ${G}in /usr/share/applications."
+else
+    for desktop_files_name in \$desktop_files; do
+        desktop_files_without_ext="\${desktop_files_with_ext%.desktop}"
+        echo "${R}[${W}-${R}]${G} Removing ${C}\${desktop_files_without_ext} ${G}From Termux Menu"
+        sudo rm /data/data/com.termux/files/usr/share/applications/pd_added/\${desktop_files_name}
+    done
+fi
+done
+rm packremove.sh
+EOF
+proot-distro login $selected_distro -- /bin/bash -c 'bash packremove.sh'
+else
+echo "sudo apk \${@}
+rm else.sh
+" > $save_root_path/else.sh
+proot-distro login $selected_distro -- /bin/sh -c 'bash else.sh'
+fi
+TOP_EOF
+}
+
 function distro_create_app_installer() {
     banner
     echo "${R}[${W}-${R}]${G}${BOLD}Creating App Launcher"${W}
@@ -588,6 +743,8 @@ if [[ "$selected_distro" == "debian" ]] || [[ "$selected_distro" == "ubuntu" ]];
 handel_debian_based_app_installer
 elif [[ "$selected_distro" == "archlinux" ]]; then
 handel_arch_based_app_installer
+elif [[ "$selected_distro" == "alpine" ]]; then
+handel_alpine_based_app_installer
 fi
 
 chmod +x "$PREFIX/bin/$selected_distro"
@@ -677,7 +834,7 @@ cat <<EOF > "$PREFIX/share/applications/add2menu.desktop"
 Version=1.0
 Type=Application
 Name=Add To Menu
-Comment=
+Comment=Add proot-distro's apps to termux menu
 Exec=add2menu
 Icon=edit-move
 Categories=System;
@@ -716,7 +873,7 @@ chmod +x "$PREFIX/bin/pdrun"
 }
 
 #########################################################################
-############### Distro Directory , Theme And Icon Link ##################
+############### Distro Folders , Theme And Icon Link ##################
 #########################################################################
 
 function distro_folders_link() {
@@ -736,6 +893,7 @@ proot-distro login --user $final_user_name $selected_distro -- /bin/sh -c 'bash 
     ln -s /data/data/com.termux/files/home/.icons $save_path
     check_and_create_directory "$HOME/.themes"
     ln -s /data/data/com.termux/files/home/.themes $save_path
+    ln -s /data/data/com.termux/files/home/.fonts $save_path
 
 }
 

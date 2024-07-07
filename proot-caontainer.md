@@ -36,14 +36,10 @@
 
 ### Another Shortcut Way To Install And Add Them At Once :
 
-- <b>Type `Distro-Name update or upgrade` To Update or Upgrade The Distro</b>
-
-    >Like: type debian update to debian directly from termux terminal
-
 - <b>Type `Distro-Name install package name` To Install And Add Them Automaticly In Termux Menu</b>
    > LIke: debian install libreoffice
 
-   > If This Automatic Method Didn't Work Then Please Add Them Manually using "Add To Menu"
+   > If In Any Case This Automatic Method Don't Work Then So Add Them Manually using "Add To Menu"
    <center><img src="images/apps/container-install-libreoffice.png"></center>
 
 ### How To Login Into Your Installed Distro:

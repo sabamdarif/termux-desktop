@@ -56,6 +56,17 @@ pdrun --no--gpu program
 
 # Performance results:
 
+#### If you want to use TURNIP you have to install the drivers for it in the proot-distro you installed
+
+- <b>You will get the driver here:- [Reddit Post](https://www.reddit.com/r/termux/comments/19dpqas/proot_linux_only_dri3_patch_mesa_turnip_driver/)
+
+- <b>The direct download link (arm64 DEB):- [Here](https://drive.google.com/file/d/1f4pLvjDFcBPhViXGIFoRE3Xc8HWoiqG-/view)
+- ubuntu ppa :- [Here](https://github.com/MastaG/mesa-turnip-ppa)
+
+https://github.com/Herick75/Pre-Compiled-Mesa-Turnip-Zink/releases/tag/Turnip-zink-stable
+
+https://github.com/xDoge26/proot-setup/tree/main/Packages
+
 ### This Test Was Made By [DroidMaster](https://github.com/LinuxDroidMaster)
 
 > Device used: Lenovo Legion Y700 2022 model (Snapdragon 870 - Adreno 650)
