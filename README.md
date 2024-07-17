@@ -108,7 +108,7 @@
 
 # Installation:
 
->NOTE: This only works on Termux
+>NOTE: This Only Works On Termux From Github Or Fdroid
 
 >NOTE: A Fresh Install Is Always Recommended / Best 
 
@@ -139,6 +139,8 @@ curl -Lf https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-
 
 - **Type `gui -kill` to kill both vncserver and Termux:x11 At Once**
 - **Type `./setup-termux-desktop --change style` To Change Desktop Style**
+- **Type `./setup-termux-desktop --change hw` To Change Hardware Acceleration Method**
+- **Type `./setup-termux-desktop --change pd` To Change Installed Proot-Distro**
 - **Type `./setup-termux-desktop -r` To Remove Termux Desktop**
 
 ## If you like my work then don't forget to give a Star :blush:

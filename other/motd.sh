@@ -10,6 +10,7 @@ if [[ -d /system/app/ && -d /system/priv-app ]]; then
     DISTRO="Android $(getprop ro.build.version.release)"
     MODEL="$(getprop ro.product.brand) $(getprop ro.product.model)"
 fi
+termux_build=$(echo "$TERMUX_APK_RELEASE" | awk '{print tolower($0)}' | awk '{for(i=1;i<=NF;i++) $i=toupper(substr($i,1,1)) substr($i,2)} 1')
 cpu=$(</sys/class/thermal/thermal_zone0/temp)
 TEMP=$(echo $cpu | cut -c 1-2)
 PROCESSOR_NAME=$(cat /proc/cpuinfo | grep Hardware | cut -d ' ' -f 2)
@@ -39,7 +40,7 @@ $C Distro          : $W$DISTRO
 $C Host            : $W$MODEL
 $C Kernel          : $W$(uname -sr)
 $C CPU             : $W$PROCESSOR_NAME ($G$PROCESSOR_COUNT$W vCPU)
-$C Termux Version  : $G${TERMUX_VERSION}-{$TERMUX_APK_RELEASE}$W
+$C Termux Version  : $G${TERMUX_VERSION}-${termux_build}$W
 $C Memory          : $G$USED$W used, $G$TOTAL$W total$W
 $C Temperature     : $G${TEMP}°c$W"
 

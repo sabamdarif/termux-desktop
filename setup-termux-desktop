@@ -225,7 +225,7 @@ function questions_theme_select() {
     local main_folder="patch/$de_name"
     local subfolder_count_value=$(count_subfolders "$owner" "$repo" "$main_folder")
 	cd $HOME
-    wget -O ${current_path}/styles.md https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/${de_name}_styles.md
+    wget -qO ${current_path}/styles.md https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/${de_name}_styles.md
 	banner
     if [[ -n "$subfolder_count_value" ]]; then
         echo "${R}[${W}-${R}]${G}Check the $de_name styles section in github"${W}
@@ -392,13 +392,16 @@ function questions() {
 	echo "${R}[${W}-${R}]${C}You can launch those installed apps from termux like other apps"${W}
 	echo
 	confirmation_y_or_n "Do you want to continue" distro_add_answer
+	echo "distro_add_answer=\"$distro_add_answer\"" >> $config_file
 	if [[ "$distro_add_answer" == "y" ]] && [[ "$zsh_answer" == "y" ]]; then
 	banner
 	confirmation_y_or_n "Do you want to Configuring Zsh also for distro container" distro_zsh_answer
+	echo "distro_zsh_answer=\"$distro_zsh_answer\"" >> $config_file
 	fi
 	if [[ "$distro_add_answer" == "y" ]] && [[ "$terminal_utility_setup_answer" == "y" ]]; then
 	banner
 	confirmation_y_or_n "Do you want install the terminal utility also for distro container" distro_terminal_utility_setup_answer
+	echo "distro_terminal_utility_setup_answer=\"$distro_terminal_utility_setup_answer\"" >> $config_file
 	fi
 	banner
 	echo "${R}[${W}-${R}]${G}${BOLD}Select Gui Mode"${W}
@@ -413,25 +416,7 @@ function questions() {
 	gui_mode=${gui_mode:-1} 
 }
 
-function hw_questions() {
-    banner
-    echo "${R}[${W}-${R}]${G}${BOLD}First Read This"${W}
-    echo
-    echo "${R}[${W}-${R}]${B}This:- https://github.com/sabamdarif/termux-desktop/blob/main/hw-acceleration.md"${W}
-    echo
-    echo "${R}[${W}-${R}]${G}${BOLD}Select Hardware Acceleration Method Which Support Best Fot Your Device"${W}
-    echo
-	echo "${Y}1. ZINK"${W}
-	echo
-    echo "${Y}2. VIRGL"${W}
-	echo
-	echo "${Y}3. VIRGL ZINK"${W}
-	echo
-	read -p "${Y}select an option : "${W} termux_hw_answer
-	termux_hw_answer=${termux_hw_answer:-1} 
-	echo
-	echo "${R}[${W}-${R}]${G}Continuing with answer: $termux_hw_answer"${W}
-	sleep 0.2
+function distro_hw_questions() {
 	if [[ "$distro_add_answer" == "y" ]]; then
     echo
     echo "${R}[${W}-${R}]${G}${BOLD}Select Hardware Acceleration Method Distro Container"${W}
@@ -451,12 +436,34 @@ function hw_questions() {
 	echo
 	echo "${R}[${W}-${R}]${G}Continuing with answer: $pd_hw_answer"${W}
 	sleep 0.2
+	echo "pd_hw_answer=\"$pd_hw_answer\"" >> $config_file
     fi
 }
 
-function distro_questions() {
-    banner
-    echo "${R}[${W}-${R}]${G}${BOLD}Select Distro You Want To Add"${W}
+function hw_questions() {
+    echo "${R}[${W}-${R}]${G}${BOLD}First Read This"${W}
+    echo
+    echo "${R}[${W}-${R}]${B}This:- https://github.com/sabamdarif/termux-desktop/blob/main/hw-acceleration.md"${W}
+    echo
+    echo "${R}[${W}-${R}]${G}${BOLD}Select Hardware Acceleration Method Which Support Best Fot Your Device"${W}
+    echo
+	echo "${Y}1. ZINK"${W}
+	echo
+    echo "${Y}2. VIRGL"${W}
+	echo
+	echo "${Y}3. VIRGL ZINK"${W}
+	echo
+	read -p "${Y}select an option : "${W} termux_hw_answer
+	termux_hw_answer=${termux_hw_answer:-1} 
+	echo
+	echo "${R}[${W}-${R}]${G}Continuing with answer: $termux_hw_answer"${W}
+	echo "termux_hw_answer=\"$termux_hw_answer\"" >> $config_file
+	sleep 0.2
+	distro_hw_questions
+}
+
+function choose_distro() {
+	echo "${R}[${W}-${R}]${G}${BOLD}Select Distro You Want To Add"${W}
     echo
 	echo "${Y}1. Debian"${W}
 	echo
@@ -467,10 +474,16 @@ function distro_questions() {
 	echo "${Y}4. Apline"${W}
 	echo
 	read -p "${Y}select an option (Default 1): "${W} distro_answer
-	distro_answer=${distro_answer:-1} 
+	distro_answer=${distro_answer:-1}
+	echo "distro_answer=\"$distro_answer\"" >> $config_file
 	echo
 	echo "${R}[${W}-${R}]${G}Continuing with answer: $distro_answer"${W}
 	sleep 0.2
+}
+
+function distro_questions() {
+	banner
+	choose_distro
 	banner
 	confirmation_y_or_n "Do you want to configure audio support for distro container" pd_audio_config_answer
     banner
@@ -478,7 +491,6 @@ function distro_questions() {
 	echo "pd_useradd_answer=\"$pd_useradd_answer\"" >> $config_file
 	echo
     if [[ "$pd_useradd_answer" == "n" ]]; then
-    banner
     echo "${R}[${W}-${R}]${G}Skiping User Account Setup"${W}
     else
 	echo "${R}[${W}-${R}]${G}${BOLD} Select user account type"${W}
@@ -584,7 +596,6 @@ function install_desktop() {
 	echo
 	package_install_and_check "lxqt xorg-xsetroot xwayland kvantum"
 	fi
-	echo "de=\"$de_name\"" >> $config_file
 }
 
 #########################################################################
@@ -734,7 +745,6 @@ function distro_container_setup() {
 	wget -O ${current_path}/distro-container-setup https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/distro-container-setup ; chmod +x ${current_path}/distro-container-setup ; . ${current_path}/distro-container-setup
 	rm ${current_path}/distro-container-setup
 	fi
-	echo "setup_distro_container=\"$distro_add_answer\"" >> $config_file
 }
 
 #########################################################################
@@ -756,6 +766,8 @@ EOF
 cat <<EOF > "$PREFIX/bin/vncstart"
 #!/data/data/com.termux/files/usr/bin/bash
 
+selected_initialize_server_method="${initialize_server_method}"
+selected_hw_method="${hw_method}"
 case \$1 in
 --nogpu)
 vncserver
@@ -765,8 +777,8 @@ echo "${G}Type ${C}vncstart ${G}to start vncserver with gpu acceleration"${W}
 echo "${G}Type ${C}vncstart ---nogpu ${G}to start vncserver without gpu acceleration"${W}
 ;;
 *)
-${initialize_server_method}
-$selected_hw_method vncserver
+eval "\${selected_initialize_server_method} &"
+eval "\$selected_hw_method vncserver"
 ;;
 esac
 EOF
@@ -812,6 +824,8 @@ function setup_termux_x11() {
 cat <<EOF > "$PREFIX/bin/tx11start"
 #!/data/data/com.termux/files/usr/bin/bash
 
+selected_initialize_server_method="${initialize_server_method}"
+selected_hw_method="${hw_method}"
 case \$1 in
 --nogpu)
 XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :1.0 &
@@ -825,13 +839,13 @@ echo -e "${G}Type ${C}tx11start ${G}to start termux:x11 with gpu acceleration"${
 echo -e "${G}Type ${C}tx11start ---nogpu ${G}to start termux:x11 without gpu acceleration"${W}
 ;;
 *)
-${initialize_server_method}
+eval "\${selected_initialize_server_method} &"
 sleep 1
 XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :1.0 &
 sleep 1
 am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1 &
 sleep 1
-env DISPLAY=:1.0 \${selected_hw_method} dbus-launch --exit-with-session $de_startup > /dev/null 2>&1 &
+eval "env DISPLAY=:1.0 \${selected_hw_method} dbus-launch --exit-with-session $de_startup > /dev/null 2>&1 &"
 ;;
 esac
 EOF
@@ -847,6 +861,7 @@ chmod +x $PREFIX/bin/tx11start
 
 cat <<EOF > "$PREFIX/bin/tx11stop"
 #!/data/data/com.termux/files/usr/bin/bash
+
 termux_x11_pid=\$(pgrep -f "/system/bin/app_process / com.termux.x11.Loader :1.0")
 de_pid=\$(pgrep -f "$de_startup")
 if [[ -n "\$termux_x11_pid" ]] || [[ -n "\$de_pid" ]]; then
@@ -854,7 +869,7 @@ kill -9 "\$termux_x11_pid" "\$de_pid" > /dev/null 2>&1
 pkill -9 pulseaudio > /dev/null 2>&1
 killall virgl_test_server > /dev/null 2>&1
 pkill -f com.termux.x11 > /dev/null 2>&1
-echo -e "\033[1;32m Termux:X11 Stopped Successfully \033[0m"
+echo -e "${G}Termux:X11 Stopped Successfully ${W}"
 fi
 exec 2>/dev/null
 EOF
@@ -920,6 +935,11 @@ case \$1 in
                 ;;
         esac
         ;;
+	--kill|-k)
+	vncstop -f > /dev/null 2>&1
+	tx11stop > /dev/null 2>&1
+	echo -e "${G}Gui services killed successfully ${W}"
+	;;
     --stop|-s)
         case \$2 in
             tx11)
@@ -950,20 +970,20 @@ function gui_launcher() {
 	package_install_and_check "xorg-xhost"
 	if [[ "$gui_mode" == "1" ]]; then
 	setup_termux_x11
-	echo "selected_gui_mode=\"termux_x11\"" >> $config_file
+	echo "gui_mode=\"termux_x11\"" >> $config_file
 	gui_termux_x11
 	elif [[ "$gui_mode" == "2" ]]; then
 	setup_vnc
-	echo "selected_gui_mode=\"vnc\"" >> $config_file
+	echo "gui_mode=\"vnc\"" >> $config_file
 	gui_vnc
 	elif [[ "$gui_mode" == "3" ]]; then
 	setup_termux_x11
 	setup_vnc
-	echo "selected_gui_mode=\"both\"" >> $config_file
+	echo "gui_mode=\"both\"" >> $config_file
 	gui_both
 	else
 	setup_termux_x11
-	echo "selected_gui_mode=\"termux_x11\"" >> $config_file
+	echo "gui_mode=\"termux_x11\"" >> $config_file
 	gui_termux_x11
 	fi
 chmod +x "$PREFIX/bin/gui"
@@ -1110,7 +1130,7 @@ function setup_zsh() {
 	package_install_and_check "zsh git"
 	wget https://raw.githubusercontent.com/sabamdarif/short-linux-scripts/main/install-zsh.sh && bash install-zsh.sh
 fi
-echo "setup_zsh=\"$zsh_answer\"" >> $config_file
+echo "zsh_answer=\"$zsh_answer\"" >> $config_file
 }
 
 function terminal_utility_setup() {
@@ -1225,7 +1245,7 @@ EOF
 termux-reload-settings
 sleep 2
 	fi
-echo "terminal_utility_setup=\"$terminal_utility_setup_answer\"" >> $config_file
+echo "terminal_utility_setup_answer=\"$terminal_utility_setup_answer\"" >> $config_file
 }
 
 #########################################################################
@@ -1409,13 +1429,13 @@ function remove_termux_desktop() {
 	fi
 	#remove vnc and termux x11
 	check_and_delete "$PREFIX/bin/gui"
-	if [[ "$selected_gui_mode" == "termux_x11" ]]; then
+	if [[ "$gui_mode" == "termux_x11" ]]; then
 	package_check_and_remove "termux-x11-nightly xorg-xhost"
 	check_and_delete "$PREFIX/bin/tx11start $PREFIX/bin/tx11stop"
-	elif [[ "$selected_gui_mode" == "vnc" ]]; then
+	elif [[ "$gui_mode" == "vnc" ]]; then
 	package_check_and_remove "tigervnc xorg-xhost"
 	check_and_delete "$HOME/.vnc/xstartup $PREFIX/bin/vncstart $PREFIX/bin/vncstop $PREFIX/bin/gui $PREFIX/bin/tx11start $PREFIX/bin/tx11stop"
-	elif [[ "$selected_gui_mode" == "both" ]]; then
+	elif [[ "$gui_mode" == "both" ]]; then
 	package_check_and_remove "termux-x11-nightly tigervnc xorg-xhost"
 	check_and_delete "$PREFIX/bin/tx11start $PREFIX/bin/tx11stop $HOME/.vnc/xstartup $PREFIX/bin/vncstart $PREFIX/bin/vncstop $PREFIX/bin/gui $PREFIX/bin/tx11start $PREFIX/bin/tx11stop"
 	fi
@@ -1454,6 +1474,120 @@ function change_style() {
 }
 
 #########################################################################
+################### Change Hardware Acceleration ########################
+#########################################################################
+
+function change_hw() {
+	if [[ ! -e "$config_file" ]]; then
+	echo -e "${C} It look like you haven't install the desktop yet\n Please install the desktop first"${W}
+	exit 0
+	else
+	. $config_file
+	banner
+	echo "${R}[${W}-${R}]${G}Your current hardware acceleration method for termux is :${C}${BOLD}${termux_hw_answer}${W}"
+	echo
+	    if [[ "$distro_add_answer" == "y" ]]; then
+	        echo "${R}[${W}-${R}]${G}Your current hardware acceleration method for $selected_distro is :${C}${BOLD}${pd_hw_answer}${W}"
+	        echo
+		fi
+	        echo "${R}[${W}-${R}]${G}${BOLD}Make your new choise${W}"
+	        echo " "
+			hw_questions
+			hw_config
+		if [[ "$gui_mode" == "termux_x11" ]]; then
+		    sed -i "s|selected_initialize_server_method=\"[^\"]*\"|selected_initialize_server_method=\"$initialize_server_method\"|" "$PREFIX/bin/tx11start"
+			sed -i "s|selected_hw_method=\"[^\"]*\"|selected_hw_method=\"$hw_method\"|" "$PREFIX/bin/tx11start"
+			elif [[ "$gui_mode" == "vnc" ]]; then
+		    sed -i "s|selected_initialize_server_method=\"[^\"]*\"|selected_initialize_server_method=\"$initialize_server_method\"|" "$PREFIX/bin/vncstart"
+			sed -i "s|selected_hw_method=\"[^\"]*\"|selected_hw_method=\"$hw_method\"|" "$PREFIX/bin/vncstart"
+			elif [[ "$gui_mode" == "both" ]]; then
+		    sed -i "s|selected_initialize_server_method=\"[^\"]*\"|selected_initialize_server_method=\"$initialize_server_method\"|" "$PREFIX/bin/tx11start"
+			sed -i "s|selected_hw_method=\"[^\"]*\"|selected_hw_method=\"$hw_method\"|" "$PREFIX/bin/tx11start"
+			sed -i "s|selected_initialize_server_method=\"[^\"]*\"|selected_initialize_server_method=\"$initialize_server_method\"|" "$PREFIX/bin/vncstart"
+			sed -i "s|selected_hw_method=\"[^\"]*\"|selected_hw_method=\"$hw_method\"|" "$PREFIX/bin/vncstart"
+		fi
+		if [[ "$distro_add_answer" == "y" ]]; then
+		sed -i "s|selected_pd_hw_method=\"[^\"]*\"|selected_pd_hw_method=\"$pd_hw_method\"|" "$PREFIX/bin/pdrun"
+		fi
+		clear
+		echo "${G}${BOLD}Hardware acceleration method changed successfully ${W}"
+
+	fi
+}
+
+#########################################################################
+########################### Change Distro ###############################
+#########################################################################
+
+function change_distro() {
+	if [[ ! -e "$config_file" ]]; then
+	echo -e "${C} It look like you haven't install the desktop yet\n Please install the desktop first"${W}
+	exit 0
+	else
+	. $config_file
+	banner
+	if [[ "$distro_add_answer" == "y" ]]; then
+	    if [[ -d "$PREFIX/var/lib/proot-distro/installed-rootfs/$selected_distro" ]] ;then
+		echo "${R}[${W}-${R}]${G}Your currently installed distro is is :${C}${BOLD}${selected_distro}${W}"
+		echo
+		echo "${R}[${W}-${R}]${R}Changing distro will delete all the data from your previous distro"${W}
+		echo
+		confirmation_y_or_n "Do you want to continue" distro_change_confirmation
+		    if [[ "$distro_change_confirmation" == "y" ]]; then
+			choose_distro
+			echo "${R}[${W}-${R}]${G}Removing $selected_distro and it's data"${W}
+			pd remove $selected_distro
+			rm -rf $PREFIX/share/applications/pd_added
+			rm $PREFIX/bin/$selected_distro
+			rm $HOME/.${selected_distro}-sound-access
+			distro_container_setup
+			if [[ -d "$PREFIX/bin/$selected_distro" ]] && [[ -d "$PREFIX/var/lib/proot-distro/installed-rootfs/$selected_distro" ]]; then
+			echo
+			echo "${R}[${W}-${R}]${G}${BOLD}Distro container changed successfully"${W}
+			else
+			echo "${R}[${W}-${R}]${R}Some problem occurrs ${W}"
+			fi
+			else
+			echo "${R}[${W}-${R}]${C}Canceling distro change process..."${W}
+			sleep 2
+			exit 0
+			fi
+		fi
+	else
+		echo "${R}[${W}-${R}]${G}It look like you haven't install any distro yet"${W}
+		echo
+		echo "${R}[${W}-${R}]${Y}${BOLD}Do you want to add a distro container (proot distro)"${W}
+		echo
+		echo "${R}[${W}-${R}]${G} It will help you to install those app which are not avilable in termux"${W}
+		echo
+		echo "${R}[${W}-${R}]${C}You can launch those installed apps from termux like other apps"${W}
+		echo
+		confirmation_y_or_n "Do you want to continue" distro_add_answer
+		echo "distro_add_answer=\"$distro_add_answer\"" >> $config_file
+		    if [[ "$distro_add_answer" == "y" ]] && [[ "$zsh_answer" == "y" ]]; then
+			confirmation_y_or_n "Do you want to Configuring Zsh also for distro container" distro_zsh_answer
+			echo "distro_zsh_answer=\"$distro_zsh_answer\"" >> $config_file
+			fi
+			if [[ "$distro_add_answer" == "y" ]] && [[ "$terminal_utility_setup_answer" == "y" ]]; then
+			confirmation_y_or_n "Do you want install the terminal utility also for distro container" distro_terminal_utility_setup_answer
+			echo "distro_terminal_utility_setup_answer=\"$distro_terminal_utility_setup_answer\"" >> $config_file
+			fi
+			distro_questions
+			distro_hw_questions
+			hw_config
+			distro_container_setup
+			if [[ -d "$PREFIX/bin/$selected_distro" ]] && [[ -d "$PREFIX/var/lib/proot-distro/installed-rootfs/$selected_distro" ]]; then
+			echo
+			echo "${R}[${W}-${R}]${G}${BOLD}Distro container created successfully"${W}
+			else
+			echo "${R}[${W}-${R}]${R}Some problem occurrs ${W}"
+			fi
+	fi
+	fi
+}
+
+
+#########################################################################
 ######################### Call Functions ################################
 #########################################################################
 cd $HOME
@@ -1471,6 +1605,7 @@ questions
 if [[ "$distro_add_answer" == "y" ]]; then
 distro_questions
 fi
+banner
 hw_questions
 setup_folder
 setup_zsh
@@ -1491,6 +1626,7 @@ else
 setup_config
 fi
 hw_config
+banner
 distro_container_setup
 gui_launcher
 terminal_utility_setup
@@ -1498,11 +1634,12 @@ notes
 termux-wake-unlock
 }
 
-function uses() {
+function show_help() {
 	echo "${R}[${W}-${R}]${G}${BOLD} Use ${C}./setup-termux-desktop --help or -h ${G}to show help"${W}
 	echo "${R}[${W}-${R}]${G}${BOLD} Use ${C}./setup-termux-desktop --remove or -r ${G}to remove Termux desktop"${W}
 	echo "${R}[${W}-${R}]${G}${BOLD} Use ${C} ./setup-termux-desktop --install or -i ${G}to start install"${W}
 	echo "${R}[${W}-${R}]${G}${BOLD} Or, Use ${C} ./setup-termux-desktop ${G}to start install"${W}
+	echo "${R}[${W}-${R}]${G}${BOLD} Use ${C} ./setup-termux-desktop --change or -c ${G}to chage different previous configuration"${W}
 }
 
 case $1 in
@@ -1517,13 +1654,24 @@ case $1 in
             style)
                 change_style
                 ;;
+			distro|pd)
+                change_distro
+                ;;
+			hw|hwa)
+                change_hw
+                ;;
+			h|help)
+                echo "${R}[${W}-${R}]${G}${BOLD} Use ${C}--change style ${G}to installed style"${W}
+				echo "${R}[${W}-${R}]${G}${BOLD} Use ${C}--change pd/distro ${G}to installed distro container"${W}
+				echo "${R}[${W}-${R}]${G}${BOLD} Use ${C}--change hw/hwa ${G}to hardware acceleration method"${W}
+                ;;
             *)
                 echo "${R}[${W}-${R}]${G}${BOLD} Please slect what you want to change"${W}
                 ;;
         esac
         ;;
     --help|-h)
-        uses
+        show_help
         ;;
     *)
         install_termux_desktop

@@ -12,6 +12,7 @@ function setup_distro() {
     else
     selected_distro="debian"
     fi
+    echo "selected_distro=\"$selected_distro\"" >> $config_file
     banner
     echo "${R}[${W}-${R}]${G}${BOLD}Installing ${C}proot-distro"${W}
     echo
@@ -379,7 +380,7 @@ pd_package_install_and_check "nala zoxide bat wget gpg"
 device_arch=$(uname -m)
     case "$device_arch" in
         aarch64)
-            archtype="arm64"
+            archtype="aarch64"
             ;;
         arm)
             archtype="armhf"
@@ -854,6 +855,7 @@ function distro_app_launch_setup() {
 cat <<EOF > "$PREFIX/bin/pdrun"
 #!/data/data/com.termux/files/usr/bin/bash
 
+selected_pd_hw_method="$pd_hw_method"
 bash ~/.${selected_distro}-sound-access
 xhost + > /dev/null 2>&1
 case \$1 in
@@ -865,7 +867,7 @@ echo "${G}Type ${C}pdrun COMMAND_TO_RUN${G}to start with gpu acceleration"${W}
 echo "${G}Type ${C}pdrun ---nogpu COMMAND_TO_RUN${G}to start without gpu acceleration"${W}
 ;;
 *)
-proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:1.0 $selected_pd_hw_method \$@
+proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:1.0 \$selected_pd_hw_method \$@
 ;;
 esac
 EOF
