@@ -618,6 +618,13 @@ function theme_installer() {
     banner
 	check_and_create_directory "$icon_folder"
 	download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/${de_name}/look_${style_answer}/icon.tar.gz" "$icon_folder"
+	local icons_themes_names=$(ls $icon_folder)
+	for icons_theme in icons_themes_names; do
+	if [[ -d $icon_folder/$icons_theme ]]; then
+	echo "${R}[${W}-${R}]${G}Creating icon cache..."${W}
+	gtk-update-icon-cache -f -t $icon_folder/$icons_theme
+	fi
+	done
 	echo "${R}[${W}-${R}]${G}${BOLD} Installing Theme..."${W}
 	echo
 	check_and_create_directory "$theme_folder"
