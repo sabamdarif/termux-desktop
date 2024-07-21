@@ -29,38 +29,64 @@ function check_and_create_directory() {
 }
 
 function check_and_delete() {
-	 local list=("$@")
+    local list=("$@")
+	local file
     for file in "${list[@]}"; do
         if [[ -e "$file" ]]; then
             if [[ -d "$file" ]]; then
-                rm -rf "$file"
+                echo "${G}Deleting directory: ${C}$file"${W}
+                rm -rf "$file" >/dev/null 2>&1
+            elif [[ -f "$file" ]]; then
+                echo "${G}Deleting file: ${C}$file"${W}
+                rm "$file" >/dev/null 2>&1
             else
-                rm "$file"
+                echo "${R}$file is not a regular file or directory"${W}
             fi
+        else
+            echo "${R}$file does not exist"${W}
         fi
     done
 }
 
 function check_and_backup() {
-	if [[ -e "$1" ]]; then
-        local backup="${1}.bak"
+	local list=("$@")
+	local file
+	for file in "${list[@]}"; do
+    if [[ -e "$file" ]]; then
+        local date_str=$(date +"%d-%m-%Y")
+        local backup="${file}-${date_str}.bak"
         if [[ -e "$backup" ]]; then
-            echo "${G}Backup file ${C}${backup} ${G}already exists."${W}
-            return 1
+            echo "${G}Backup file ${C}${backup} ${G}already exists"${W}
+            echo
         fi
+		echo "${G}backing up file ${C}$file"${W}
         mv "$1" "$backup"
+    else
+        echo "${C}File or directory $file does not exist"${W}
     fi
+	done
 }
 
-function check_and_restore() {
-        local backup="${1}.bak"
+function restore_backup() {
+    for backup in "$@"; do
         if [[ -e "$backup" ]]; then
-            mv "$backup" "$1"
-		else
-		echo "${G}Backup file ${C}${backup} ${G}does not exists."${W}
+            if [[ "$backup" =~ ^(.+)-[0-9]{4}-[0-9]{2}-[0-9]{2}\.bak$ ]]; then
+                local original_name="${BASH_REMATCH[1]}"
+                if [[ -e "$original_name" ]]; then
+                    echo "${C}Original file or directory ${original_name} already exists."${W}
+                else
+                    mv "$backup" "$original_name"
+                    echo "${G}Restored ${backup} to ${original_name}."${W}
+                fi
+            else
+                echo "${R}Backup file ${backup} does not match the expected pattern."${W}
+            fi
+        else
+            echo "${R}Backup file ${backup} does not exist."${W}
         fi
-        
+    done
 }
+
 
 function package_install_and_check() {
 	packs_list=($@)
@@ -226,7 +252,6 @@ function questions_theme_select() {
     local subfolder_count_value=$(count_subfolders "$owner" "$repo" "$main_folder")
 	cd $HOME
     wget -qO ${current_path}/styles.md https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/${de_name}_styles.md
-	banner
     if [[ -n "$subfolder_count_value" ]]; then
         echo "${R}[${W}-${R}]${G}Check the $de_name styles section in github"${W}
 		echo
@@ -290,6 +315,8 @@ function questions() {
 	fi
 	echo "de_startup=\"$de_startup\"" >> $config_file
 	echo "de_name=\"$de_name\"" >> $config_file
+	echo "theme_folder=\"$theme_folder\"" >> $config_file
+	echo "icon_folder=\"$icon_folder\"" >> $config_file
 	banner
 	questions_theme_select
 	echo "${R}[${W}-${R}]${G}Continuing with answer: ${style_answer}.$style_name"${W}
@@ -641,7 +668,7 @@ function theme_installer() {
 		check_and_delete "$HOME/.config/$the_config_dir"
         done
 	download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/${de_name}/look_${style_answer}/config.tar.gz" "$HOME/.config/"
-	echo "current_style=\"$style_name\"" >> $config_file
+	echo "current_style=\"$current_style\"" >> $config_file
 }
 
 #########################################################################
@@ -680,7 +707,7 @@ function setup_config() {
 	cd ~
 	if [[ ${style_answer} =~ ^[1-9][0-9]*$ ]]; then
 	banner
-	echo "${R}[${W}-${R}]${G}${BOLD} Configuring $de_name Style: ${C}${style_answer}"${W}
+	echo "${R}[${W}-${R}]${G}${BOLD} Installing $de_name Style: ${C}${style_answer}"${W}
 	theme_installer
 	additional_required_package_installler
 	fi
@@ -688,12 +715,10 @@ function setup_config() {
 	echo "${R}[${W}-${R}]${C} Skipping Extra Wallpapers Setup..."${W}
 	echo
 	elif [[ "$ext_wall_answer" == "y" ]]; then
-	echo "${R}[${W}-${R}]${G}${BOLD} Configuring Some Extra Wallpapers..."${W}
+	echo "${R}[${W}-${R}]${G}${BOLD} Installing Some Extra Wallpapers..."${W}
 	echo
 	check_and_create_directory "$PREFIX/share/backgrounds"
 	download_and_extract "https://archive.org/download/wallpaper-extra.tar/wallpaper-extra.tar.gz" "$PREFIX/share/backgrounds/"
-	else
-	echo "${R} Unknown selection"${W}
 	fi
 }
 
@@ -1415,8 +1440,8 @@ function remove_termux_desktop() {
 	elif [[ "$current_style" == "Windows10 Style" ]]; then
 	package_check_and_remove "gtk2-engines-murrine"
 	fi
-	#Remove folders
-	check_and_delete "$PREFIX/share/backgrounds $HOME/.themes $HOME/.icons $PREFIX/bin/change-td-style"
+	#Remove folders and other files
+	check_and_delete "$PREFIX/share/backgrounds $HOME/.themes $HOME/.icons $PREFIX/etc/termux-desktop "
 	check_and_delete "$HOME/.config/$the_config_dir"
 	#remove hw packages
 	if [[ "$distro_answer" == "3" ]]; then
@@ -1459,7 +1484,7 @@ function gui_check_up() {
 termux_x11_pid=$(pgrep -f /system/bin/app_process.*com.termux.x11.Loader)
 de_pid=$(pgrep -f "$de_startup")
 if [ -n "$termux_x11_pid" ] || [ -n "$de_pid" ]; then
-echo "${G}Please Stop The Gui First"${W}
+echo "${G}Please Stop The Gui Desktop Server First"${W}
 exit 0
 fi
 }
@@ -1471,12 +1496,18 @@ function change_style() {
 	else
 	gui_check_up
 	. $config_file
-	echo "${R}[${W}-${R}]${G} Your currently installed style is ${BOLD}$current_style "${W}
+	banner
+	echo "${R}[${W}-${R}]${G} Your currently installed style is ${C}${BOLD}$current_style "${W}
 	echo
-	sleep 3
+	sleep 2
 	questions_theme_select
-	rm ~/.cache/sessions/x*
+	rm -rf ~/.cache/sessions/x*
 	setup_config
+	banner
+	echo "${R}[${W}-${R}]${G} Style changed successfully"${W}
+	echo
+	. $config_file
+	echo "${R}[${W}-${R}]${G} Your currently installed style is ${C}${BOLD}$current_style "${W}
 	fi
 }
 

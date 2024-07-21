@@ -141,6 +141,6 @@ curl -Lf https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-
 - **Type `./setup-termux-desktop --change style` To Change Desktop Style**
 - **Type `./setup-termux-desktop --change hw` To Change Hardware Acceleration Method**
 - **Type `./setup-termux-desktop --change pd` To Change Installed Proot-Distro**
-- **Type `./setup-termux-desktop -r` To Remove Termux Desktop**
+- **Type `./setup-termux-desktop --remove / -r` To Remove Termux Desktop**
 
 ## If you like my work then don't forget to give a Star :blush:
