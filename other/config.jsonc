@@ -1,0 +1,82 @@
+// ~/.config/fastfetch/config.jsonc
+// See https://github.com/fastfetch-cli/fastfetch/wiki/Configuration for more details
+// See *.jsonc in https://github.com/fastfetch-cli/fastfetch/tree/dev/presets/examples for more examples
+{
+  "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/dev/doc/json_schema.json",
+  "display": {
+    "separator": "    "
+  },
+  "modules": [
+    {
+      "type": "custom",
+      "format": "┏━━━━━━━━━━━━━━ Software Information ━━━━━━━━━━━━━━┓"
+    },
+    "break",
+    {
+      "type": "os",
+      "key": "  ",
+      "keyColor": "blue"
+    },
+    {
+      "type": "kernel",
+      "key": "  ",
+      "keyColor": "white"
+    },
+    {
+      "type": "packages",
+      "key": "  󰮯",
+      "keyColor": "yellow"
+    },
+    {
+      "type": "wm",
+      "key": "  󰨇",
+      "keyColor": "blue"
+    },
+    {
+      "type": "terminal",
+      "key": "  ",
+      "keyColor": "magenta"
+    },
+    {
+      "type": "shell",
+      "key": "  ",
+      "keyColor": "yellow"
+    },
+    "break",
+    {
+      "type": "custom",
+      "format": "┣━━━━━━━━━━━━━━━━━━━━━━━  ━━━━━━━━━━━━━━━━━━━━━━━━┫"
+    },
+    "break",
+    {
+      "type": "host",
+      "key": "  ",
+      "keyColor": "bright_blue"
+    },
+    {
+      "type": "cpu",
+      "key": "  ",
+      "keyColor": "bright_green"
+    },
+    {
+      "type": "gpu",
+      "key": "  󱤓",
+      "keyColor": "red"
+    },
+    {
+      "type": "memory",
+      "key": "  󰍛",
+      "keyColor": "bright_yellow"
+    },
+    {
+      "type": "disk",
+      "key": "  ",
+      "keyColor": "bright_cyan"
+    },
+    "break",
+    {
+      "type": "custom",
+      "format": "┗━━━━━━━━━━━━━━ Hardware Information ━━━━━━━━━━━━━━┛"
+    }
+  ]
+}

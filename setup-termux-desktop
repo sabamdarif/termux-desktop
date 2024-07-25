@@ -92,7 +92,11 @@ function package_install_and_check() {
 	packs_list=($@)
 for package_name in "${packs_list[@]}"; do
     echo "${R}[${W}-${R}]${G}${BOLD} Installing package: ${C}$package_name ${W}"
-    pkg install "$package_name" -y
+	if dpkg -s "$package_name" >/dev/null 2>&1; then
+	    pkg reinstall "$package_name" -y
+	else
+	    pkg install "$package_name" -y
+	fi
     if [ $? -ne 0 ]; then
         echo "${R}[${W}-${R}]${G}${BOLD} Error detected during installation of: ${C}$package_name ${W}"
         pkg --fix-broken install -y
@@ -304,22 +308,24 @@ function questions() {
 	desktop_answer=${desktop_answer:-1}
 	if [[ "$desktop_answer" == "1" ]]; then
 	de_name="xfce"
-	theme_folder="$HOME/.themes/"
-	icon_folder="$HOME/.icons/"
+	themes_folder="$HOME/.themes"
+	icons_folder="$HOME/.icons"
 	de_startup="xfce4-session"
 	elif [[ "$desktop_answer" == "2" ]]; then
 	de_name="lxqt"
-	theme_folder="$PREFIX/share/themes/"
-	icon_folder="$PREFIX/share/icons/"
+	themes_folder="$PREFIX/share/themes"
+	icons_folder="$PREFIX/share/icons"
 	de_startup="startlxqt"
 	fi
 	echo "de_startup=\"$de_startup\"" >> $config_file
 	echo "de_name=\"$de_name\"" >> $config_file
-	echo "theme_folder=\"$theme_folder\"" >> $config_file
-	echo "icon_folder=\"$icon_folder\"" >> $config_file
+	echo "themes_folder=\"$themes_folder\"" >> $config_file
+	echo "icons_folder=\"$icons_folder\"" >> $config_file
 	banner
 	questions_theme_select
 	echo "${R}[${W}-${R}]${G}Continuing with answer: ${style_answer}.$style_name"${W}
+	echo "style_answer=\"$style_answer\"" >> $config_file
+	echo "style_name=\"$style_name\"" >> $config_file
 	sleep 0.2
 	banner
 	echo "${R}[${W}-${R}]${G}${BOLD}Select browser you want to install"${W}
@@ -621,7 +627,7 @@ function install_desktop() {
 	elif [[ "$desktop_answer" == "2" ]]; then
 	echo "${R}[${W}-${R}]${G}${BOLD} Installing Lxqt Desktop"${W}
 	echo
-	package_install_and_check "lxqt xorg-xsetroot xwayland kvantum"
+	package_install_and_check "lxqt papirus-icon-theme xorg-xsetroot xwayland kvantum"
 	fi
 }
 
@@ -643,19 +649,20 @@ function theme_installer() {
 	check_and_create_directory "$PREFIX/share/backgrounds"
 	download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/${de_name}/look_${style_answer}/wallpaper.tar.gz" "$PREFIX/share/backgrounds/"
     banner
-	check_and_create_directory "$icon_folder"
-	download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/${de_name}/look_${style_answer}/icon.tar.gz" "$icon_folder"
-	local icons_themes_names=$(ls $icon_folder)
-	for icons_theme in icons_themes_names; do
-	if [[ -d $icon_folder/$icons_theme ]]; then
+	check_and_create_directory "$icons_folder"
+	download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/${de_name}/look_${style_answer}/icon.tar.gz" "$icons_folder"
+	local icons_themes_names=$(ls $icons_folder)
+	local icons_theme
+	for icons_theme in $icons_themes_names; do
+	if [[ -d "$icons_folder/$icons_theme" ]]; then
 	echo "${R}[${W}-${R}]${G}Creating icon cache..."${W}
-	gtk-update-icon-cache -f -t $icon_folder/$icons_theme
+	gtk-update-icon-cache -f -t $icons_folder/$icons_theme
 	fi
 	done
 	echo "${R}[${W}-${R}]${G}${BOLD} Installing Theme..."${W}
 	echo
-	check_and_create_directory "$theme_folder"
-	download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/${de_name}/look_${style_answer}/theme.tar.gz" "$theme_folder"
+	check_and_create_directory "$themes_folder"
+	download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/${de_name}/look_${style_answer}/theme.tar.gz" "$themes_folder"
 	echo "${R}[${W}-${R}]${G} Making Additional Configuration..."${W}
 	echo
 	check_and_create_directory "$HOME/.config"
@@ -668,7 +675,6 @@ function theme_installer() {
 		check_and_delete "$HOME/.config/$the_config_dir"
         done
 	download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/${de_name}/look_${style_answer}/config.tar.gz" "$HOME/.config/"
-	echo "current_style=\"$current_style\"" >> $config_file
 }
 
 #########################################################################
@@ -1292,9 +1298,14 @@ function setup_fonts() {
 	check_and_create_directory "$HOME/.termux"
 	check_and_create_directory "$HOME/.fonts"
 	check_and_backup "$HOME/.termux/font.ttf"
-	wget -O $HOME/.termux/font.ttf https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/other/font.ttf
-	cp $HOME/.termux/font.ttf $HOME/.fonts/
+	wget -O $HOME/font.zip https://github.com/ryanoasis/nerd-fonts/releases/download/v3.2.1/0xProto.zip
+	unzip "$HOME/font.zip" -d "$HOME/.fonts"
+	check_and_delete "README.md LICENSE"
+	rm $HOME/font.zip
+	cp $HOME/.fonts/0xProtoNerdFont-Regular.ttf $HOME/.termux/font.ttf
 	fc-cache -f
+	check_and_create_directory "$HOME/.config/fastfetch"
+	wget -O $HOME/.config/fastfetch/config.jsonc https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/other/config.jsonc 
 	fi
 }
 
@@ -1302,27 +1313,116 @@ function setup_fonts() {
 ############################ Install Wine ###############################
 #########################################################################
 
+function wine_shortcut() {
+cat << EOF > $PREFIX/share/applications/wine-explorer.desktop
+[Desktop Entry]
+Name=Wine File
+Comment=Wine File Browser
+Name[ar]=مدير ملفات واين
+Comment[ar]=إدارة الملفات بطريقة واين
+Exec=wine explorer
+Icon=winefile
+Terminal=false
+Type=Application
+Categories=X-Wine;
+X-Desktop-File-Install-Version=0.26
+EOF
+    chmod +x $PREFIX/share/applications/wine-explorer.desktop
+cat << EOF > $PREFIX/share/applications/wine-winecfg.desktop
+[Desktop Entry]
+Name=Wine Configuration
+Comment=Interface to set wine parameters
+Name[ar]=إعدادات واين
+Comment[ar]=لوحة تحكم بمنظومة واين
+Exec=wine winecfg
+Icon=winecfg
+Terminal=false
+Type=Application
+StartupNotify=true
+StartupWMClass=winecfg.exe
+Categories=X-Wine;
+X-Desktop-File-Install-Version=0.26
+EOF
+    chmod +x $PREFIX/share/applications/wine-winecfg.desktop
+cat << EOF > $PREFIX/share/applications/wine-uninstaller.desktop
+[Desktop Entry]
+Name=Wine Software Uninstaller
+Comment=Interface to uninstall software
+Name[ar]=مزيل التطبيقات من واين
+Comment[ar]=واجهة إزالة التّطبيقات من واين
+Exec=wine uninstaller
+Icon=msiexec
+Terminal=false
+Type=Application
+StartupNotify=true
+StartupWMClass=uninstaller.exe
+Categories=X-Wine;
+X-Desktop-File-Install-Version=0.26
+EOF
+    chmod +x $PREFIX/share/applications/wine-uninstaller.desktop
+cat << EOF > $PREFIX/share/applications/wine-regedit.desktop
+[Desktop Entry]
+Name=Regedit
+Comment=Wine registry editor
+Name[ar]=محرر السّجل
+Comment[ar]=محرر لسجلات واين
+Exec=wine regedit
+Icon=regedit
+Terminal=false
+Type=Application
+StartupNotify=true
+StartupWMClass=regedit.exe
+Categories=X-Wine;
+X-Desktop-File-Install-Version=0.26
+EOF
+    chmod +x $PREFIX/share/applications/wine-regedit.desktop
+cat << EOF > $PREFIX/share/applications/wine-wineboot.desktop
+[Desktop Entry]
+Name=Wine Boot
+Comment=Simulate restart
+Name[ar]=إقلاع واين
+Comment[ar]=محاكاة إعادة التشغيل لواين
+Exec=wine wineboot
+Icon=wine
+Terminal=false
+Type=Application
+Categories=X-Wine;
+X-Desktop-File-Install-Version=0.26
+EOF
+    chmod +x $PREFIX/share/applications/wine-wineboot.desktop
+}
+
 function setup_wine() {
 	banner
     if [[ "$wine_answer" == "1" ]]; then
 	echo "${R}[${W}-${R}]${G}${BOLD} Installing Wine Natively In Termux"${W}
 	echo
 		package_install_and_check "wine-stable winetricks"
+		wine_shortcut
 		echo "setup_wine=\"default-wine\"" >> $config_file
 	elif [[ "$wine_answer" == "2" ]]; then
-	echo "${R}[${W}-${R}]${G}${BOLD} Use Mobox Installer To Install Wine In Termux"${W}
+	echo "${R}[${W}-${R}]${G}${BOLD} Addind Mobox Launch Option To Termux"${W}
 	echo
-	curl -s -o ~/x https://raw.githubusercontent.com/olegos2/mobox/main/install && . ~/x
+	echo "${R}[${W}-${R}]${C}${BOLD}After the installation finishes, make sure to install Mobox using their official instructions"${W}
+	echo
+	echo "${R}[${W}-${R}]${G}${BOLD} Mobox:- ${C}https://github.com/olegos2/mobox"${W}
+	echo
+	sleep 4
+	wget -O $PREFIX/bin/wine https://raw.githubusercontent.com/LinuxDroidMaster/Termux-Desktops/main/scripts/termux_native/mobox_run.sh
+	chmod +x $PREFIX/bin/wine
+	wine_shortcut
+	cp $PREFIX/share/applications/wine-explorer.desktop $HOME/Desktop/MoboxExplorer.desktop
 	echo "setup_wine=\"mobox\"" >> $config_file
 	elif [[ "$wine_answer" == "3" ]]; then
 	echo "${R}[${W}-${R}]${C} Skipping wine Installation..."${W}
 	echo "setup_wine=\"skip\"" >> $config_file
-else
+	else
     echo "${R}[${W}-${R}]${G}Installing Wine Natively In Termux"${W}
 	echo
 		package_install_and_check "wine-stable winetricks"
+		wine_shortcut
 		echo "setup_wine=\"default-wine\"" >> $config_file
-fi
+	fi
 }
 
 #########################################################################
@@ -1373,7 +1473,7 @@ function remove_termux_desktop() {
 	if [[ "$de_name" == "xfce" ]]; then
 	package_check_and_remove "xfce4 xfce4-goodies xwayland kvantum"
 	elif [[ "$de_name" == "lxqt" ]]; then
-	package_check_and_remove "lxqt xorg-xsetroot xwayland kvantum"
+	package_check_and_remove "lxqt xorg-xsetroot papirus-icon-theme xwayland kvantum"
 	fi
 	#remove zsh
 	if [[ "$setup_zsh" == "y" ]]; then
@@ -1428,16 +1528,19 @@ function remove_termux_desktop() {
 	#remove wine
 	if [[ "$setup_wine" == "default-wine" ]]; then
 	package_check_and_remove "wine winetricks"
-	# elif [[ "$setup_wine" == "mobox" ]]; then
+	elif [[ "$setup_wine" == "mobox" ]]; then
+	echo "${R}[${W}-${R}]${C}${BOLD} Make Sure To Uninstall Mobox Using Their Instruction"${W}
+	check_and_delete "$PREFIX/bin/wine"
+	sleep 4
 	fi
 	#remove styles
-	if [[ "$current_style" == "Modern Style" ]] || [[ "$current_style" == "MacOS Inspired-1 Style" ]] || [[ "$current_style" == "MacOS Inspired-2 Style" ]]; then
+	if [[ "$style_name" == "Modern Style" ]] || [[ "$style_name" == "MacOS Inspired-1 Style" ]] || [[ "$style_name" == "MacOS Inspired-2 Style" ]]; then
 	package_check_and_remove "cairo-dock-core"
-	elif [[ "$current_style" == "Modern Style" ]] || [[ "$current_style" == "MacOS Inspired-2 Style" ]]; then
+	elif [[ "$style_name" == "Modern Style" ]] || [[ "$style_name" == "MacOS Inspired-2 Style" ]]; then
 	package_check_and_remove "rofi"
-	elif [[ "$current_style" == "Modern Style" ]]; then
+	elif [[ "$style_name" == "Modern Style" ]]; then
 	package_check_and_remove "fluent-icon-theme vala-panel-appmenu"
-	elif [[ "$current_style" == "Windows10 Style" ]]; then
+	elif [[ "$style_name" == "Windows10 Style" ]]; then
 	package_check_and_remove "gtk2-engines-murrine"
 	fi
 	#Remove folders and other files
@@ -1497,7 +1600,7 @@ function change_style() {
 	gui_check_up
 	. $config_file
 	banner
-	echo "${R}[${W}-${R}]${G} Your currently installed style is ${C}${BOLD}$current_style "${W}
+	echo "${R}[${W}-${R}]${G} Your currently installed style is ${C}${BOLD}$style_name "${W}
 	echo
 	sleep 2
 	questions_theme_select
@@ -1507,7 +1610,7 @@ function change_style() {
 	echo "${R}[${W}-${R}]${G} Style changed successfully"${W}
 	echo
 	. $config_file
-	echo "${R}[${W}-${R}]${G} Your currently installed style is ${C}${BOLD}$current_style "${W}
+	echo "${R}[${W}-${R}]${G} Your currently installed style is ${C}${BOLD}$style_name "${W}
 	fi
 }
 
@@ -1624,6 +1727,68 @@ function change_distro() {
 	fi
 }
 
+#########################################################################
+######################### Reinstall themes ##############################
+#########################################################################
+
+function reinstall_themes() {
+	gui_check_up
+	tmp_themes_folder="$PREFIX/tmp/themes"
+	check_and_create_directory "$tmp_themes_folder"
+	. $config_file
+	echo "${R}[${W}-${R}]${G} Reinstalling Themes..."${W}
+	download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/${de_name}/look_${style_answer}/theme.tar.gz" "$tmp_themes_folder"
+	local theme_names=$(ls $tmp_themes_folder)
+	local themes_theme
+	for theme_name in $theme_names; do
+	check_and_delete "$themes_folder/$theme_name"
+	mv $tmp_themes_folder/$theme_name $themes_folder/
+	done
+}
+
+#########################################################################
+########################## Reinstall icons ##############################
+#########################################################################
+
+function reinstall_icons() {
+	gui_check_up
+	tmp_icons_folder="$PREFIX/tmp/icons"
+	check_and_create_directory "$tmp_icons_folder"
+	. $config_file
+	if [[ "$style_answer" == "2" ]]; then
+	package_install_and_check "fluent-icon-theme"
+	else
+	echo "${R}[${W}-${R}]${G} Reinstalling Icons..."${W}
+	download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/${de_name}/look_${style_answer}/icon.tar.gz" "$tmp_icons_folder"
+	local icon_themes_names=$(ls $tmp_icons_folder)
+	local icon_theme
+	for icon_theme in $icon_themes_names; do
+	check_and_delete "$icons_folder/$icon_theme"
+	mv $tmp_icons_folder/$icon_theme $icons_folder/
+	echo "${R}[${W}-${R}]${G}Creating icon cache..."${W}
+	gtk-update-icon-cache -f -t $icon_folder/$icons_theme
+	done
+	fi
+}
+
+#########################################################################
+######################### Reinstall config ##############################
+#########################################################################
+
+function reinstall_config() {
+	gui_check_up
+	tmp_config_folder="$PREFIX/tmp/config"
+	check_and_create_directory "$tmp_config_folder"
+	. $config_file
+	echo "${R}[${W}-${R}]${G} Reinstalling Config..."${W}
+	download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/${de_name}/look_${style_answer}/config.tar.gz" "$tmp_config_folder"
+	local config_file_names=$(ls $tmp_config_folder)
+	local config_file
+	for config_file in $config_file_names; do
+	check_and_delete "$HOME/.config/$config_file"
+	mv $tmp_config_folder/$config_file $HOME/.config/
+	done
+}
 
 #########################################################################
 ######################### Call Functions ################################
@@ -1659,7 +1824,7 @@ if [[ "$style_answer" == "0" ]]; then
     banner
 	echo "${R}[${W}-${R}]${G}${BOLD} Configuring Stock $de_name Style..."${W}
 	echo
-	echo "current_style=\"Stock\"" >> $config_file
+	echo "style_name=\"Stock\"" >> $config_file
 else
 setup_config
 fi
@@ -1699,14 +1864,40 @@ case $1 in
                 change_hw
                 ;;
 			h|help)
-                echo "${R}[${W}-${R}]${G}${BOLD} Use ${C}--change style ${G}to installed style"${W}
-				echo "${R}[${W}-${R}]${G}${BOLD} Use ${C}--change pd/distro ${G}to installed distro container"${W}
-				echo "${R}[${W}-${R}]${G}${BOLD} Use ${C}--change hw/hwa ${G}to hardware acceleration method"${W}
+                echo "${R}[${W}-${R}]${G}${BOLD} Use ${C}--change style ${G}to change installed style"${W}
+				echo "${R}[${W}-${R}]${G}${BOLD} Use ${C}--change pd/distro ${G}to change installed distro container"${W}
+				echo "${R}[${W}-${R}]${G}${BOLD} Use ${C}--change hw/hwa ${G}to change hardware acceleration method"${W}
                 ;;
             *)
-                echo "${R}[${W}-${R}]${G}${BOLD} Please slect what you want to change"${W}
+                echo "${R}[${W}-${R}]${R}${BOLD} Invalid option: ${C}$2"${W}
                 ;;
         esac
+        ;;
+		--reinstall|-ri)
+        IFS=',' read -ra OPTIONS <<< "$2"
+        for option in "${OPTIONS[@]}"; do
+            case $option in
+                icons)
+                    reinstall_icons
+                    ;;
+                themes)
+                    reinstall_themes
+                    ;;
+                config)
+                    reinstall_config
+                    ;;
+                h|help)
+                    echo "${R}[${W}-${R}]${G}${BOLD} Use ${C}--reinstall icons ${G}to reinstall icons"${W}
+                    echo "${R}[${W}-${R}]${G}${BOLD} Use ${C}--reinstall themes ${G}to reinstall themes"${W}
+                    echo "${R}[${W}-${R}]${G}${BOLD} Use ${C}--reinstall config ${G}to reinstall config"${W}
+					echo "${R}[${W}-${R}]${G}${BOLD} Use ${C}--reinstall config,themes,...etc ${G}to reinstall both"${W}
+                    return
+                    ;;
+                *)
+                    echo "${R}[${W}-${R}]${R}${BOLD} Invalid option: ${C}$option"${W}
+                    ;;
+            esac
+        done
         ;;
     --help|-h)
         show_help
