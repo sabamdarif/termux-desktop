@@ -61,8 +61,6 @@ function check_and_backup() {
         fi
 		echo "${G}backing up file ${C}$file"${W}
         mv "$1" "$backup"
-    else
-        echo "${C}File or directory $file does not exist"${W}
     fi
 	done
 }
@@ -92,17 +90,35 @@ function package_install_and_check() {
 	packs_list=($@)
 for package_name in "${packs_list[@]}"; do
     echo "${R}[${W}-${R}]${G}${BOLD} Installing package: ${C}$package_name ${W}"
-	if dpkg -s "$package_name" >/dev/null 2>&1; then
-	    pkg reinstall "$package_name" -y
+	if type -p pacman >/dev/null 2>&1; then
+	    pacman -Sy --noconfirm "$package_name"
 	else
+	   if dpkg -s "$package_name" >/dev/null 2>&1; then
+		pkg reinstall "$package_name" -y
+	   else
 	    pkg install "$package_name" -y
+	   fi
 	fi
     if [ $? -ne 0 ]; then
         echo "${R}[${W}-${R}]${G}${BOLD} Error detected during installation of: ${C}$package_name ${W}"
+	  if type -p pacman >/dev/null 2>&1; then
+	    pacman -Sy --overwrite '*' $package_name
+	    pacman -Sy --noconfirm $package_name
+	  else
         pkg --fix-broken install -y
         dpkg --configure -a
+	  fi
         pkg install "$package_name" -y
     fi
+   if type -p pacman >/dev/null 2>&1; then
+     if pacman -Qi "$package_name" >/dev/null 2>&1; then
+        echo "${R}[${W}-${R}]${G} $package_name installed successfully ${W}"
+    else
+        if type -p "$package_name" &>/dev/null || [ -e "$PREFIX/bin/$package_name"* ] || [ -e "$PREFIX/bin/"*"$package_name" ]; then
+            echo "${R}[${W}-${R}]${C} $package_name ${G}installed successfully ${W}"
+        fi
+    fi
+   else
     if dpkg -s "$package_name" >/dev/null 2>&1; then
         echo "${R}[${W}-${R}]${G} $package_name installed successfully ${W}"
     else
@@ -110,6 +126,7 @@ for package_name in "${packs_list[@]}"; do
             echo "${R}[${W}-${R}]${C} $package_name ${G}installed successfully ${W}"
         fi
     fi
+   fi
 done
 echo ""
 }
@@ -1188,10 +1205,16 @@ function terminal_utility_setup() {
 	check_and_create_directory "$HOME/.termux"
 	check_and_backup "$HOME/.termux/colors.properties"
 	wget -O $HOME/.termux/colors.properties https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/other/colors.properties
+	if type -p pacman >/dev/null 2>&1; then
+	package_install_and_check "bat eza zoxide fastfetch"
+	else
 	package_install_and_check "nala bat eza zoxide fastfetch"
-	cat <<'EOF' >> "$HOME/.${shell_name}rc"
+cat <<'EOF' >> "$HOME/.${shell_name}rc"
 alias apt='nala $@'
 alias pkg='nala $@'
+EOF
+	fi
+cat <<'EOF' >> "$HOME/.${shell_name}rc"
 alias cat='bat $@'
 alias ls='eza --icons $@'
 alias mkdir='mkdir -p'

@@ -859,11 +859,21 @@ cp $PREFIX/share/applications/add2menu.desktop $HOME/Desktop/
 #########################################################################
 
 function distro_app_launch_setup() {
+    if [[ "$pd_audio_config_answer" == "n" ]];then
+cat <<EOF > "$PREFIX/bin/pdrun"
+#!/data/data/com.termux/files/usr/bin/bash
+
+selected_pd_hw_method="$pd_hw_method"
+EOF
+    else
 cat <<EOF > "$PREFIX/bin/pdrun"
 #!/data/data/com.termux/files/usr/bin/bash
 
 selected_pd_hw_method="$pd_hw_method"
 bash ~/.${selected_distro}-sound-access
+EOF
+    fi
+cat <<EOF >> "$PREFIX/bin/pdrun"
 xhost + > /dev/null 2>&1
 case \$1 in
 --nogpu)
