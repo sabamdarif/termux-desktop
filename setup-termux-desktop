@@ -1866,6 +1866,7 @@ function show_help() {
 	echo "${R}[${W}-${R}]${G}${BOLD} Use ${C} ./setup-termux-desktop --install or -i ${G}to start install"${W}
 	echo "${R}[${W}-${R}]${G}${BOLD} Or, Use ${C} ./setup-termux-desktop ${G}to start install"${W}
 	echo "${R}[${W}-${R}]${G}${BOLD} Use ${C} ./setup-termux-desktop --change or -c ${G}to chage different previous configuration"${W}
+	echo "${R}[${W}-${R}]${G}${BOLD} Use ${C} ./setup-termux-desktop --reinstall or -ri ${G}to reinstall some stuff"${W}
 }
 
 case $1 in
@@ -1913,7 +1914,7 @@ case $1 in
                     echo "${R}[${W}-${R}]${G}${BOLD} Use ${C}--reinstall icons ${G}to reinstall icons"${W}
                     echo "${R}[${W}-${R}]${G}${BOLD} Use ${C}--reinstall themes ${G}to reinstall themes"${W}
                     echo "${R}[${W}-${R}]${G}${BOLD} Use ${C}--reinstall config ${G}to reinstall config"${W}
-					echo "${R}[${W}-${R}]${G}${BOLD} Use ${C}--reinstall config,themes,...etc ${G}to reinstall both"${W}
+					echo "${R}[${W}-${R}]${G}${BOLD} Use ${C}--reinstall config,themes,...etc ${G}to reinstall them all at once"${W}
                     return
                     ;;
                 *)

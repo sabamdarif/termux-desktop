@@ -54,7 +54,7 @@
 
 <br>
 
-## Default Look(XFCE):
+## Default Look (XFCE):
 
 <center><img src="images/xfce/look_1/look.png"></center>
 <br>
@@ -138,9 +138,17 @@ curl -Lf https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-
 - **Type `gui --stop tx11/vnc or gui -s tx11/vnc` to stop Termux:X11 or VNC**
 
 - **Type `gui -kill` to kill both vncserver and Termux:x11 At Once**
+<br>
+
 - **Type `./setup-termux-desktop --change style` To Change Desktop Style**
 - **Type `./setup-termux-desktop --change hw` To Change Hardware Acceleration Method**
 - **Type `./setup-termux-desktop --change pd` To Change Installed Proot-Distro**
+<br>
+
+- **Type `./setup-termux-desktop --reinstall icons / themes /config` To Reinstall Icons / Themes / Config**
+- **Type `./setup-termux-desktop --reinstall icons,themes,..etc` To Reinstall Them All At Once**
+<br>
+
 - **Type `./setup-termux-desktop --remove / -r` To Remove Termux Desktop**
 
 ## If you like my work then don't forget to give a Star :blush:
