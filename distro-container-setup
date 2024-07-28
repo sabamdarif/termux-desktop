@@ -599,7 +599,7 @@ fi
 
 if [[ \$1 = "install" ]] || [[ \$1 = "remove" ]] || [[ \$1 = "autoremove" ]]; then
 gtk-update-icon-cache
-xfce4-panel -r >/dev/null 2>&1
+exec update-desktop-database -q "$PREFIX/share/applications/pd_added"
 fi
 
 TOP_EOF
@@ -667,6 +667,11 @@ rm else.sh
 proot-distro login $selected_distro -- /bin/sh -c 'bash else.sh'
 fi
 
+if [[ \$1 = "install" ]] || [[ \$1 = "remove" ]]; then
+gtk-update-icon-cache
+exec update-desktop-database -q "$PREFIX/share/applications/pd_added"
+fi
+
 TOP_EOF
 }
 
@@ -728,6 +733,12 @@ rm else.sh
 " > $save_root_path/else.sh
 proot-distro login $selected_distro -- /bin/sh -c 'bash else.sh'
 fi
+
+if [[ \$1 = "install" ]] || [[ \$1 = "remove" ]]; then
+gtk-update-icon-cache
+exec update-desktop-database -q "$PREFIX/share/applications/pd_added"
+fi
+
 TOP_EOF
 }
 
@@ -794,9 +805,7 @@ if [[ $action == *"Add Application To Termux Menu"* ]]; then
 
     cp "$selected_file" "$PREFIX/share/applications/pd_added/"
     sed -i 's/Exec=/Exec=pdrun /g' "$PREFIX/share/applications/pd_added/${selected_file##*/}"
-    gtk-update-icon-cache
-    xfce4-panel -r >/dev/null 2>&1
-
+    exec update-desktop-database -q "$PREFIX/share/applications/pd_added"
     zenity --info --text="File '$selected_name' added successfully!" --title="Success"
   done
 fi
@@ -819,9 +828,7 @@ if [[ $action == *"Remove Application From Termux Menu"* ]]; then
     selected_file=$(find "$PREFIX/share/applications/pd_added/" -name "*.desktop" -type f -exec awk -F '=' -v name="$selected_name" '$0 ~ "Name=" name {print FILENAME}' {} \;)
 
     rm "$selected_file"
-    gtk-update-icon-cache
-    xfce4-panel -r >/dev/null 2>&1
-
+    exec update-desktop-database -q "$PREFIX/share/applications/pd_added"
     zenity --info --text="File '$selected_name' has been removed successfully!" --title="Success"
   done
 fi
@@ -852,11 +859,21 @@ cp $PREFIX/share/applications/add2menu.desktop $HOME/Desktop/
 #########################################################################
 
 function distro_app_launch_setup() {
+    if [[ "$pd_audio_config_answer" == "n" ]];then
+cat <<EOF > "$PREFIX/bin/pdrun"
+#!/data/data/com.termux/files/usr/bin/bash
+
+selected_pd_hw_method="$pd_hw_method"
+EOF
+    else
 cat <<EOF > "$PREFIX/bin/pdrun"
 #!/data/data/com.termux/files/usr/bin/bash
 
 selected_pd_hw_method="$pd_hw_method"
 bash ~/.${selected_distro}-sound-access
+EOF
+    fi
+cat <<EOF >> "$PREFIX/bin/pdrun"
 xhost + > /dev/null 2>&1
 case \$1 in
 --nogpu)

@@ -54,7 +54,7 @@
 
 <br>
 
-## Default Look:
+## Default Look(XFCE):
 
 <center><img src="images/xfce/look_1/look.png"></center>
 <br>
