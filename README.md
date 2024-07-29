@@ -136,7 +136,6 @@ curl -Lf https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-
 ### If you select both for gui access
 - **Type `gui --start tx11/vnc or gui -l tx11/vnc` to start Termux:X11 or VNC**
 - **Type `gui --stop tx11/vnc or gui -s tx11/vnc` to stop Termux:X11 or VNC**
-
 - **Type `gui -kill` to kill both vncserver and Termux:x11 At Once**
 <br>
 

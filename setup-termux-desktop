@@ -43,7 +43,7 @@ function check_and_delete() {
                 echo "${R}$file is not a regular file or directory"${W}
             fi
         else
-            echo "${R}$file does not exist"${W}
+            echo "${C}$file does not exist"${W}
         fi
     done
 }
@@ -80,7 +80,7 @@ function restore_backup() {
                 echo "${R}Backup file ${backup} does not match the expected pattern."${W}
             fi
         else
-            echo "${R}Backup file ${backup} does not exist."${W}
+            echo "${C}Backup file ${backup} does not exist."${W}
         fi
     done
 }
@@ -91,7 +91,7 @@ function package_install_and_check() {
 for package_name in "${packs_list[@]}"; do
     echo "${R}[${W}-${R}]${G}${BOLD} Installing package: ${C}$package_name ${W}"
 	if type -p pacman >/dev/null 2>&1; then
-	    pacman -Sy --noconfirm "$package_name"
+	    pacman -Sy --noconfirm --overwrite '*' "$package_name"
 	else
 	   if dpkg -s "$package_name" >/dev/null 2>&1; then
 		pkg reinstall "$package_name" -y
@@ -623,15 +623,23 @@ function update_sys() {
 	banner
     echo "${R}[${W}-${R}]${G}${BOLD} Updating System...."${W}
 	echo
+	if type -p pacman >/dev/null 2>&1; then
+	pacman -Syu --noconfirm
+	else
     pkg update -y -o Dpkg::Options::="--force-confold"
 	pkg upgrade -y -o Dpkg::Options::="--force-confold"
+	fi
 }
 
 function install_required_packages() {
 	banner
     echo "${R}[${W}-${R}]${Y}${BOLD} Installling required packages..."${W}
 	echo
+	if type -p pacman >/dev/null 2>&1; then
+	package_install_and_check "wget pv jq curl pulseaudio termux-am"
+	else
 	package_install_and_check "wget pv jq curl pulseaudio termux-am x11-repo tur-repo"
+	fi
 	update_sys
 }
 
