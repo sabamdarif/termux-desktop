@@ -323,6 +323,7 @@ function questions() {
 	echo "${R}[${W}-${R}]${G}Continuing with answer: $desktop_answer"${W}
 	sleep 0.2
 	desktop_answer=${desktop_answer:-1}
+	sys_icons_folder="$PREFIX/share/icons"
 	if [[ "$desktop_answer" == "1" ]]; then
 	de_name="xfce"
 	themes_folder="$HOME/.themes"
@@ -331,7 +332,7 @@ function questions() {
 	elif [[ "$desktop_answer" == "2" ]]; then
 	de_name="lxqt"
 	themes_folder="$PREFIX/share/themes"
-	icons_folder="$PREFIX/share/icons"
+	icons_folder="$sys_icons_folder"
 	de_startup="startlxqt"
 	fi
 	echo "de_startup=\"$de_startup\"" >> $config_file
@@ -676,12 +677,22 @@ function theme_installer() {
     banner
 	check_and_create_directory "$icons_folder"
 	download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/${de_name}/look_${style_answer}/icon.tar.gz" "$icons_folder"
+	if [[ "$de_name" == "xfce" ]]; then
 	local icons_themes_names=$(ls $icons_folder)
 	local icons_theme
 	for icons_theme in $icons_themes_names; do
 	if [[ -d "$icons_folder/$icons_theme" ]]; then
 	echo "${R}[${W}-${R}]${G}Creating icon cache..."${W}
 	gtk-update-icon-cache -f -t $icons_folder/$icons_theme
+	fi
+	done
+	fi
+	local sys_icons_themes_names=$(ls $sys_icons_folder)
+	local sys_icons_theme
+	for sys_icons_theme in $sys_icons_themes_names; do
+	if [[ -d "$sys_icons_folder/$sys_icons_theme" ]]; then
+	echo "${R}[${W}-${R}]${G}Creating icon cache..."${W}
+	gtk-update-icon-cache -f -t $sys_icons_folder/$sys_icons_theme
 	fi
 	done
 	echo "${R}[${W}-${R}]${G}${BOLD} Installing Theme..."${W}
