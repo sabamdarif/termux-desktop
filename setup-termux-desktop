@@ -1220,7 +1220,11 @@ function terminal_utility_setup() {
 	check_and_backup "$PREFIX/etc/motd-playstore"
     check_and_backup "$PREFIX/etc/motd.sh"
 	wget -O $PREFIX/etc/motd.sh https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/other/motd.sh
-	echo "bash $PREFIX/etc/motd.sh" > $PREFIX/etc/termux-login.sh
+	if grep -q "motd.sh$" "$PREFIX/etc/termux-login.sh"; then
+        sed -i "s|.*motd\.sh$|bash $PREFIX/etc/motd.sh|" "$PREFIX/etc/termux-login.sh"
+    else
+        echo "bash $PREFIX/etc/motd.sh" >> "$PREFIX/etc/termux-login.sh"
+    fi
 	check_and_create_directory "$HOME/.termux"
 	check_and_backup "$HOME/.termux/colors.properties"
 	wget -O $HOME/.termux/colors.properties https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/other/colors.properties
@@ -1616,7 +1620,9 @@ function remove_termux_desktop() {
 	package_check_and_remove "termux-x11-nightly tigervnc xorg-xhost"
 	check_and_delete "$PREFIX/bin/tx11start $PREFIX/bin/tx11stop $HOME/.vnc/xstartup $PREFIX/bin/vncstart $PREFIX/bin/vncstop $PREFIX/bin/gui $PREFIX/bin/tx11start $PREFIX/bin/tx11stop"
 	fi
-	check_and_delete "$PREFIX/etc/termux-desktop"
+	check_and_delete "$PREFIX/etc/termux-desktop $PREFIX/bin/setup-termux-desktop"
+	clear
+	echo "${R}[${W}-${R}]${G}${BOLD}Everything remove successfully"${W}
 	fi
 	fi
 }
@@ -1835,8 +1841,16 @@ function reinstall_config() {
 #########################################################################
 ######################### Call Functions ################################
 #########################################################################
+
+function add_shortcut() {
+if [[ ! -e "$PREFIX/bin/setup-termux-desktop" ]]; then
+curl -Lsf https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop -o $PREFIX/bin/setup-termux-desktop ; chmod +x $PREFIX/bin/setup-termux-desktop
+fi
+}
+
 cd $HOME
 current_path=$(pwd)
+
 function install_termux_desktop() {
 update_sys
 sleep 2
@@ -1877,15 +1891,40 @@ gui_launcher
 terminal_utility_setup
 notes
 termux-wake-unlock
+add_shortcut
 }
 
 function show_help() {
-	echo "${R}[${W}-${R}]${G}${BOLD} Use ${C}./setup-termux-desktop --help or -h ${G}to show help"${W}
-	echo "${R}[${W}-${R}]${G}${BOLD} Use ${C}./setup-termux-desktop --remove or -r ${G}to remove Termux desktop"${W}
-	echo "${R}[${W}-${R}]${G}${BOLD} Use ${C} ./setup-termux-desktop --install or -i ${G}to start install"${W}
-	echo "${R}[${W}-${R}]${G}${BOLD} Or, Use ${C} ./setup-termux-desktop ${G}to start install"${W}
-	echo "${R}[${W}-${R}]${G}${BOLD} Use ${C} ./setup-termux-desktop --change or -c ${G}to chage different previous configuration"${W}
-	echo "${R}[${W}-${R}]${G}${BOLD} Use ${C} ./setup-termux-desktop --reinstall or -ri ${G}to reinstall some stuff"${W}
+	echo -e "
+	-i,--install      to start installation
+	-r,--remove       to remove termux desktop
+	-c,--change       to change some previously made configuration
+	-ri,--reinstall   to reinstall some previously install stuff
+	-h,--help         to show help
+	"
+}
+
+function show_change_help() {
+	echo "options you can use with --change"
+	echo -e "
+	style      to change installed style
+	pd,distro  to change installed distro container
+	hw,hwa     to change hardware acceleration method
+	h,help     to show help
+	"
+	echo "example uses : --change style"
+}
+
+function show_reinstall_help() {
+	echo "options you can use with --reinstall"
+	echo -e "
+	icons      to reinstall icons pack
+	themes     to reinstall themes pack
+	config     to reinstall config
+	h,help     to show help
+	"
+	echo "example uses : --reinstall icons"
+	echo "example uses : --reinstall icons,themes...etc to reinstall them at once"
 }
 
 case $1 in
@@ -1907,9 +1946,7 @@ case $1 in
                 change_hw
                 ;;
 			h|help)
-                echo "${R}[${W}-${R}]${G}${BOLD} Use ${C}--change style ${G}to change installed style"${W}
-				echo "${R}[${W}-${R}]${G}${BOLD} Use ${C}--change pd/distro ${G}to change installed distro container"${W}
-				echo "${R}[${W}-${R}]${G}${BOLD} Use ${C}--change hw/hwa ${G}to change hardware acceleration method"${W}
+			    show_change_help
                 ;;
             *)
                 echo "${R}[${W}-${R}]${R}${BOLD} Invalid option: ${C}$2"${W}
@@ -1930,11 +1967,8 @@ case $1 in
                     reinstall_config
                     ;;
                 h|help)
-                    echo "${R}[${W}-${R}]${G}${BOLD} Use ${C}--reinstall icons ${G}to reinstall icons"${W}
-                    echo "${R}[${W}-${R}]${G}${BOLD} Use ${C}--reinstall themes ${G}to reinstall themes"${W}
-                    echo "${R}[${W}-${R}]${G}${BOLD} Use ${C}--reinstall config ${G}to reinstall config"${W}
-					echo "${R}[${W}-${R}]${G}${BOLD} Use ${C}--reinstall config,themes,...etc ${G}to reinstall them all at once"${W}
-                    return
+				    show_reinstall_help
+                    exit
                     ;;
                 *)
                     echo "${R}[${W}-${R}]${R}${BOLD} Invalid option: ${C}$option"${W}
