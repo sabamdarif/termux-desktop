@@ -2,8 +2,7 @@
 <br>
 <center><img src="images/xfce/look_1/desktop.png"></center>
 <br>
-<p align="center"><b>Easily Install Termux Gui Desktop </b></p>
-<p align="center"><b>With Some Popular Gui Apps Directly In Termux</b></p>
+<p align="center"><b style ="font-size: x-large">Easily Install Termux Gui Desktop </b></p>
 
 <div align="center">
 
@@ -113,7 +112,7 @@
 >NOTE: A Fresh Install Is Always Recommended / Best 
 
 
-```
+```bash
 curl -Lf https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop -o setup-termux-desktop ; chmod +x setup-termux-desktop ; setup-termux-desktop
 ```
 

@@ -39,11 +39,7 @@ function check_and_delete() {
             elif [[ -f "$file" ]]; then
                 echo "${G}Deleting file: ${C}$file"${W}
                 rm "$file" >/dev/null 2>&1
-            else
-                echo "${R}$file is not a regular file or directory"${W}
             fi
-        else
-            echo "${C}$file does not exist"${W}
         fi
     done
 }
@@ -424,8 +420,15 @@ function questions() {
 	echo
 	echo "${R}[${W}-${R}]${B} Know More About Mobox:- https://github.com/olegos2/mobox/"${W}
 	echo
+	if type -p pacman >/dev/null 2>&1; then
+	echo "${Y}3. Wine Hangover"${W}
+	echo
+	echo "${Y}4. Skip"${W}
+	echo
+	else
 	echo "${Y}3. Skip"${W}
 	echo
+	fi
 	read -p "${R}[${W}-${R}]${Y}Select Wine Installation Method: "${W} wine_answer
 	wine_answer=${wine_answer:-1} 
 	echo
@@ -1060,7 +1063,7 @@ function gui_launcher() {
 	echo "gui_mode=\"termux_x11\"" >> $config_file
 	gui_termux_x11
 	fi
-chmod +x "$PREFIX/bin/gui"
+	chmod +x "$PREFIX/bin/gui"
 }
 
 #########################################################################
@@ -1460,8 +1463,17 @@ function setup_wine() {
 	cp $PREFIX/share/applications/wine-explorer.desktop $HOME/Desktop/MoboxExplorer.desktop
 	echo "setup_wine=\"mobox\"" >> $config_file
 	elif [[ "$wine_answer" == "3" ]]; then
+	if type -p pacman >/dev/null 2>&1; then
+	package_install_and_check "hangover-wine winetricks"
+	echo "setup_wine=\"hangover-wine\"" >> $config_file
+	else
 	echo "${R}[${W}-${R}]${C} Skipping wine Installation..."${W}
 	echo "setup_wine=\"skip\"" >> $config_file
+	fi
+	if type -p pacman &>/dev/null && [[ "$wine_answer" == "4" ]]; then
+	   echo "${R}[${W}-${R}]${C} Skipping wine Installation..."${W}
+	   echo "setup_wine=\"skip\"" >> $config_file
+	fi
 	else
     echo "${R}[${W}-${R}]${G}Installing Wine Natively In Termux"${W}
 	echo
@@ -1576,9 +1588,12 @@ function remove_termux_desktop() {
 	package_check_and_remove "wine winetricks"
 	elif [[ "$setup_wine" == "mobox" ]]; then
 	echo "${R}[${W}-${R}]${C}${BOLD} Make Sure To Uninstall Mobox Using Their Instruction"${W}
-	check_and_delete "$PREFIX/bin/wine"
+	check_and_delete "$HOME/Desktop/MoboxExplorer.desktop"
 	sleep 4
+	elif [[ "$setup_wine" == "hangover-wine" ]]; then
+	package_check_and_remove "hangover-wine winetricks"
 	fi
+	check_and_delete "$PREFIX/bin/wine $PREFIX/share/applications/wine-*"
 	#remove styles
 	if [[ "$style_name" == "Modern Style" ]] || [[ "$style_name" == "MacOS Inspired-1 Style" ]] || [[ "$style_name" == "MacOS Inspired-2 Style" ]]; then
 	package_check_and_remove "cairo-dock-core"
