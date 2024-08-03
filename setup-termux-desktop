@@ -630,6 +630,10 @@ function update_sys() {
 	if type -p pacman >/dev/null 2>&1; then
 	pacman -Syu --noconfirm
 	else
+	echo "${G}${BOLD}Selecting best termux packages mirror please wait"${W}
+	unlink "$PREFIX/etc/termux/chosen_mirrors" &>/dev/null
+	ln -s "$PREFIX/etc/termux/mirrors/all" "$PREFIX/etc/termux/chosen_mirrors" &>/dev/null
+	pkg --check-mirror update
     pkg update -y -o Dpkg::Options::="--force-confold"
 	pkg upgrade -y -o Dpkg::Options::="--force-confold"
 	fi
@@ -865,7 +869,7 @@ cat <<'EOF' > "$PREFIX/bin/vncstop"
 #!/data/data/com.termux/files/usr/bin/bash
 
 if [[ "$1" == "-f" ]]; then
-pkill Xtigervnc
+pkill -9 Xtigervnc > /dev/null 2>&1
 else
 display_numbers=$(vncserver -list | awk '/^:[0-9]+/ {print $1}')
 
@@ -936,20 +940,41 @@ EOF
 fi
 chmod +x $PREFIX/bin/tx11start
 
-cat <<EOF > "$PREFIX/bin/tx11stop"
+if [[ "$de_name" == "xfce" ]]; then
+cat <<EOF >> "$PREFIX/bin/tx11stop"
 #!/data/data/com.termux/files/usr/bin/bash
 
 termux_x11_pid=\$(pgrep -f "/system/bin/app_process / com.termux.x11.Loader :1.0")
 de_pid=\$(pgrep -f "$de_startup")
 if [[ -n "\$termux_x11_pid" ]] || [[ -n "\$de_pid" ]]; then
-kill -9 "\$termux_x11_pid" "\$de_pid" > /dev/null 2>&1
+kill -9 "\$termux_x11_pid" > /dev/null 2>&1
 pkill -9 pulseaudio > /dev/null 2>&1
 killall virgl_test_server > /dev/null 2>&1
+pkill -9 xfce-* > /dev/null 2>&1
+pkill -9 dbus-* > /dev/null 2>&1
 pkill -f com.termux.x11 > /dev/null 2>&1
 echo -e "${G}Termux:X11 Stopped Successfully ${W}"
 fi
 exec 2>/dev/null
 EOF
+elif [[ "$de_name" == "lxqt" ]]; then
+cat <<EOF >> "$PREFIX/bin/tx11stop"
+#!/data/data/com.termux/files/usr/bin/bash
+
+termux_x11_pid=\$(pgrep -f "/system/bin/app_process / com.termux.x11.Loader :1.0")
+de_pid=\$(pgrep -f "$de_startup")
+if [[ -n "\$termux_x11_pid" ]] || [[ -n "\$de_pid" ]]; then
+kill -9 "\$termux_x11_pid" > /dev/null 2>&1
+pkill -9 pulseaudio > /dev/null 2>&1
+killall virgl_test_server > /dev/null 2>&1
+pkill -9 lxqt-* > /dev/null 2>&1
+pkill -9 dbus-* > /dev/null 2>&1
+pkill -f com.termux.x11 > /dev/null 2>&1
+echo -e "${G}Termux:X11 Stopped Successfully ${W}"
+fi
+exec 2>/dev/null
+EOF
+fi
 chmod +x $PREFIX/bin/tx11stop
 }
 
