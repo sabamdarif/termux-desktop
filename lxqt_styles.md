@@ -21,6 +21,7 @@ Theme Used:
 
 - GTK Theme:- [Nordic-darker](https://www.gnome-look.org/p/1267246)
 - Openbox Theme:- [Nord-Openbox](https://gitlab.com/the-zero885/nord-openbox-theme)
+- Kvantum:- [Nord-Kvantum](https://store.kde.org/p/1533594)
 
 Icon Used:
 <br>
@@ -40,6 +41,40 @@ Icon Used:
 |Apps|Start Menu|
 |--|--|
 |![img](images/lxqt/look_1/apps.png)|![img](images/lxqt/look_1/start-menu.png)|
+
+</details>
+
+<br>
+
+## 2. Windows Like
+
+<details>
+<summary><b style ="font-size: small">Style Details: </summary>
+Theme Used: 
+<br>
+
+- GTK Theme:- [Redstone](https://www.gnome-look.org/p/1013482)
+- Openbox Theme:- [Win10](https://www.box-look.org/p/1319225)
+- Kvantum:- [Win10OS-kde](https://github.com/yeyushengfan258/Win10OS-kde)
+
+Icon Used:
+<br>
+
+- Icons:- [Reversal](https://www.gnome-look.org/p/1340791)
+- Cursor Theme:- [Vimix](https://www.gnome-look.org/p/1358330)
+
+</b>
+</details>
+<br>
+
+<center><img src="images/lxqt/look_2/desktop.png"></center>
+
+<details style ="font-size: larger">
+<summary><b style ="font-size: larger">Screenshots: </b></summary>
+
+|Apps|Start Menu|
+|--|--|
+|![img](images/lxqt/look_2/apps.png)|![img](images/lxqt/look_2/start-menu.png)|
 
 </details>
 

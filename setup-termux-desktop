@@ -1883,9 +1883,11 @@ function reinstall_config() {
 #########################################################################
 
 function add_shortcut() {
-if [[ ! -e "$PREFIX/bin/setup-termux-desktop" ]]; then
-curl -Lsf https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop -o $PREFIX/bin/setup-termux-desktop ; chmod +x $PREFIX/bin/setup-termux-desktop
+if [[ -e "$PREFIX/bin/setup-termux-desktop" ]]; then
+mv $PREFIX/bin/setup-termux-desktop $PREFIX/etc/termux-desktop
+check_and_backup "$PREFIX/etc/termux-desktop/setup-termux-desktop"
 fi
+curl -Lsf https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop -o $PREFIX/bin/setup-termux-desktop ; chmod +x $PREFIX/bin/setup-termux-desktop
 }
 
 cd $HOME
@@ -1929,9 +1931,9 @@ banner
 distro_container_setup
 gui_launcher
 terminal_utility_setup
+add_shortcut
 notes
 termux-wake-unlock
-add_shortcut
 }
 
 function show_help() {

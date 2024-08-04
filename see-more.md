@@ -8,7 +8,7 @@
 - **[zoxide](https://github.com/ajeetdsouza/zoxide):** A smarter cd command
 
 #### How to use them ?
-- ***cd*** is replaced with ***zoxide*** (*use the cd command as normal it will use zoxide to change directories*)
+- ***cd*** is replaced with ***zoxide*** (*use the cd command it will use zoxide*)
 - use ***pkg*** or ***apt*** command it will automatically use ***nala*** to install packages
 - use ***ls*** command it will use ***eza*** for that
 - use ***neofetch*** command it will use ***fastfetch*** for that
