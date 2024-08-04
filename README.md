@@ -126,7 +126,7 @@ curl -Lf https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-
 ### Command:- `vncstart`
 - `vncstart` *to start vncserver*
 - `vncstart ---nogpu` *to start vncserver without gpu acceleration*
-### Command:- `vncstart`
+### Command:- `vncstop`
 - `vncstop` *to stop vncserver*
 - `vncstop -f` *to kill vncserver*
 
@@ -136,11 +136,11 @@ curl -Lf https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-
 - `gui --stop / gui -s` *to stop gui*
 
 #### If you select both for gui access
-- `gui --start/l vnc` *to start VNC*
-- `gui --start/l tx11` *to start Termux:X11*
-- `gui --stop/s vnc` *to stop VNC*
-- `gui --stop/s tx11` *to stop Termux:X11*
-- `gui -kill` *to kill both vncserver and Termux:x11 At Once*
+- `gui -l / --start` `vnc` *to start VNC*
+- `gui -l / --start` `tx11` *to start Termux:X11*
+- `gui -s / --stop` `vnc` *to stop VNC*
+- `gui -s / --stop` `tx11` *to stop Termux:X11*
+- `gui -k / --kill / -kill` *to kill both vncserver and Termux:x11 At Once*
 <br>
 
 ### Command:- `setup-termux-desktop`

@@ -1037,7 +1037,7 @@ case \$1 in
                 ;;
         esac
         ;;
-	--kill|-k)
+	--kill|-k|-kill)
 	vncstop -f > /dev/null 2>&1
 	tx11stop > /dev/null 2>&1
 	echo -e "${G}Gui services killed successfully ${W}"
