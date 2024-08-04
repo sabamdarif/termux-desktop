@@ -1225,13 +1225,15 @@ function setup_zsh() {
 	echo "${R}[${W}-${R}]${C} Canceling Zsh Setup..."${W}
     sleep 1.5
 	shell_name="bash"
+	shell_rc_file="/data/data/com.termux/files/usr/etc/bash.bashrc"
 	else
 	shell_name="zsh"
+	shell_rc_file="$HOME/.zshrc"
 	echo "${R}[${W}-${R}]${G}${BOLD} Configuring Zsh.."${W}
 	echo
 	package_install_and_check "zsh git"
 	wget https://raw.githubusercontent.com/sabamdarif/short-linux-scripts/main/install-zsh.sh && bash install-zsh.sh
-fi
+	fi
 echo "zsh_answer=\"$zsh_answer\"" >> $config_file
 }
 
@@ -1260,12 +1262,12 @@ function terminal_utility_setup() {
 	package_install_and_check "bat eza zoxide fastfetch"
 	else
 	package_install_and_check "nala bat eza zoxide fastfetch"
-cat <<'EOF' >> "$HOME/.${shell_name}rc"
+cat <<'EOF' >> "$shell_rc_file"
 alias apt='nala $@'
 alias pkg='nala $@'
 EOF
 	fi
-cat <<'EOF' >> "$HOME/.${shell_name}rc"
+cat <<'EOF' >> "$shell_rc_file"
 alias cat='bat $@'
 alias ls='eza --icons $@'
 alias mkdir='mkdir -p'
@@ -1884,10 +1886,25 @@ function reinstall_config() {
 
 function add_shortcut() {
 if [[ -e "$PREFIX/bin/setup-termux-desktop" ]]; then
+local current_script_hash=$(curl -sL https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop | sha256sum | cut -d ' ' -f 1)
+local local_script_hash=$(basename $(sha256sum $PREFIX/bin/setup-termux-desktop))
+if [[ "$local_script_hash" != "$current_script_hash" ]]; then
 mv $PREFIX/bin/setup-termux-desktop $PREFIX/etc/termux-desktop
 check_and_backup "$PREFIX/etc/termux-desktop/setup-termux-desktop"
+curl -Lsf https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop -o $PREFIX/bin/setup-termux-desktop
+chmod +x $PREFIX/bin/setup-termux-desktop
 fi
-curl -Lsf https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop -o $PREFIX/bin/setup-termux-desktop ; chmod +x $PREFIX/bin/setup-termux-desktop
+else
+curl -Lsf https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop -o $PREFIX/bin/setup-termux-desktop
+chmod +x $PREFIX/bin/setup-termux-desktop
+fi
+}
+
+function some_fixes() {
+	local device_brand_name=$(getprop ro.product.brand | cut -d ' ' -f 1)
+	if [[ $device_brand_name == samsung* ]]; then
+	echo "LD_PRELOAD=/system/lib64/libskcodec.so" >> $shell_rc_file
+	fi
 }
 
 cd $HOME
@@ -1931,6 +1948,7 @@ banner
 distro_container_setup
 gui_launcher
 terminal_utility_setup
+some_fixes
 add_shortcut
 notes
 termux-wake-unlock
