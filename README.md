@@ -113,7 +113,7 @@
 
 
 ```bash
-curl -Lf https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop -o setup-termux-desktop ; chmod +x setup-termux-desktop ; setup-termux-desktop
+curl -Lf https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop -o setup-termux-desktop ; chmod +x setup-termux-desktop ; ./setup-termux-desktop
 ```
 
 <a name="uses"></a>

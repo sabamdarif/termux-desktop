@@ -447,16 +447,6 @@ function questions() {
 	echo
 	confirmation_y_or_n "Do you want to continue" distro_add_answer
 	echo "distro_add_answer=\"$distro_add_answer\"" >> $config_file
-	if [[ "$distro_add_answer" == "y" ]] && [[ "$zsh_answer" == "y" ]]; then
-	banner
-	confirmation_y_or_n "Do you want to Configuring Zsh also for distro container" distro_zsh_answer
-	echo "distro_zsh_answer=\"$distro_zsh_answer\"" >> $config_file
-	fi
-	if [[ "$distro_add_answer" == "y" ]] && [[ "$terminal_utility_setup_answer" == "y" ]]; then
-	banner
-	confirmation_y_or_n "Do you want install the terminal utility also for distro container" distro_terminal_utility_setup_answer
-	echo "distro_terminal_utility_setup_answer=\"$distro_terminal_utility_setup_answer\"" >> $config_file
-	fi
 	banner
 	echo "${R}[${W}-${R}]${G}${BOLD}Select Gui Mode"${W}
 	echo
@@ -540,6 +530,16 @@ function distro_questions() {
 	choose_distro
 	banner
 	confirmation_y_or_n "Do you want to configure audio support for distro container" pd_audio_config_answer
+	if [[ "$distro_add_answer" == "y" ]] && [[ "$zsh_answer" == "y" ]]; then
+	banner
+	confirmation_y_or_n "Do you want to Configuring Zsh also for distro container" distro_zsh_answer
+	echo "distro_zsh_answer=\"$distro_zsh_answer\"" >> $config_file
+	fi
+	if [[ "$distro_add_answer" == "y" ]] && [[ "$terminal_utility_setup_answer" == "y" ]]; then
+	banner
+	confirmation_y_or_n "Do you want install the terminal utility also for distro container" distro_terminal_utility_setup_answer
+	echo "distro_terminal_utility_setup_answer=\"$distro_terminal_utility_setup_answer\"" >> $config_file
+	fi
     banner
 	confirmation_y_or_n "Do you want to create a normal user account ${C}(Recomended)" pd_useradd_answer
 	echo "pd_useradd_answer=\"$pd_useradd_answer\"" >> $config_file

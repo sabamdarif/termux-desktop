@@ -63,9 +63,10 @@ pdrun --no--gpu program
 - <b>The direct download link (arm64 DEB):- [Here](https://drive.google.com/file/d/1f4pLvjDFcBPhViXGIFoRE3Xc8HWoiqG-/view)
 - ubuntu ppa :- [Here](https://github.com/MastaG/mesa-turnip-ppa)
 
-https://github.com/Herick75/Pre-Compiled-Mesa-Turnip-Zink/releases/tag/Turnip-zink-stable
-
-https://github.com/xDoge26/proot-setup/tree/main/Packages
+- Latest Drivers:- https://github.com/K11MCH1/AdrenoToolsDrivers/releases
+- Some More Links:-
+  - https://github.com/Herick75/Pre-Compiled-Mesa-Turnip-Zink/releases/tag/Turnip-zink-stable
+  - https://github.com/xDoge26/proot-setup/tree/main/Packages
 
 ### This Test Was Made By [DroidMaster](https://github.com/LinuxDroidMaster)
 
