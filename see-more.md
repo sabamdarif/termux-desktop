@@ -28,4 +28,5 @@
 
  - **Native:-** it can run apps based on your cpu architecture, like in arm based cpu you can only install windows [arm apps](https://armrepo.ver.lt/)
  - **Mobox:-** it can run X86_64 windows apps in aarch64 device
+ > ***You have to setup mobox after the termux-desktop install finishes [From Here](https://github.com/olegos2/mobox)***
  - **Hangover-wine:-** (can only be install using [pacman package manager](https://wiki.termux.com/wiki/Switching_package_manager)), do the same thing like mobox

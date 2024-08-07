@@ -29,58 +29,62 @@ function check_and_create_directory() {
 }
 
 function check_and_delete() {
-    local list=("$@")
-	local file
-    for file in "${list[@]}"; do
-        if [[ -e "$file" ]]; then
-            if [[ -d "$file" ]]; then
-                echo "${G}Deleting directory: ${C}$file"${W}
-                rm -rf "$file" >/dev/null 2>&1
-            elif [[ -f "$file" ]]; then
-                echo "${G}Deleting file: ${C}$file"${W}
-                rm "$file" >/dev/null 2>&1
+    local file
+    for files_folders in "$@"; do
+        for file in $files_folders; do
+            if [[ -e "$file" ]]; then
+                if [[ -d "$file" ]]; then
+                    rm -rf "$file" >/dev/null 2>&1
+                elif [[ -f "$file" ]]; then
+                    rm "$file" >/dev/null 2>&1
+                fi
             fi
-        fi
+        done
     done
 }
 
 function check_and_backup() {
-	local list=("$@")
 	local file
-	for file in "${list[@]}"; do
-    if [[ -e "$file" ]]; then
-        local date_str=$(date +"%d-%m-%Y")
-        local backup="${file}-${date_str}.bak"
-        if [[ -e "$backup" ]]; then
-            echo "${G}Backup file ${C}${backup} ${G}already exists"${W}
-            echo
-        fi
-		echo "${G}backing up file ${C}$file"${W}
-        mv "$1" "$backup"
-    fi
-	done
-}
-
-function restore_backup() {
-    for backup in "$@"; do
-        if [[ -e "$backup" ]]; then
-            if [[ "$backup" =~ ^(.+)-[0-9]{4}-[0-9]{2}-[0-9]{2}\.bak$ ]]; then
-                local original_name="${BASH_REMATCH[1]}"
-                if [[ -e "$original_name" ]]; then
-                    echo "${C}Original file or directory ${original_name} already exists."${W}
-                else
-                    mv "$backup" "$original_name"
-                    echo "${G}Restored ${backup} to ${original_name}."${W}
-                fi
-            else
-                echo "${R}Backup file ${backup} does not match the expected pattern."${W}
+	local files_folders
+    for files_folders in "$@"; do
+        for file in $files_folders; do
+            if [[ -e "$file" ]]; then
+            local date_str=$(date +"%d-%m-%Y")
+			local backup="${file}-${date_str}.bak"
+			    if [[ -e "$backup" ]]; then
+				echo "${G}Backup file ${C}${backup} ${G}already exists"${W}
+				echo
+				fi
+		    echo "${G}backing up file ${C}$file"${W}
+			mv "$1" "$backup"
             fi
-        else
-            echo "${C}Backup file ${backup} does not exist."${W}
-        fi
+        done
     done
 }
 
+function check_and_restore() {
+    local target_path="$1"
+    local dir
+    local base_name
+
+    dir=$(dirname "$target_path")
+    base_name=$(basename "$target_path")
+
+    local latest_backup
+    latest_backup=$(ls -1 "$dir/$base_name"-[0-9][0-9]-[0-9][0-9]-[0-9][0-9][0-9][0-9].bak 2>/dev/null | sort | tail -n 1)
+
+    if [[ -z "$latest_backup" ]]; then
+        echo "${C}No backup file found for ${target_path}.${W}"
+        return 1
+    fi
+
+    if [[ -e "$target_path" ]]; then
+        echo "${C}Original file or directory ${target_path} already exists.${W}"
+    else
+        mv "$latest_backup" "$target_path"
+        echo "${G}Restored ${latest_backup} to ${target_path}.${W}"
+    fi
+}
 
 function package_install_and_check() {
 	packs_list=($@)
@@ -467,14 +471,27 @@ function distro_hw_questions() {
     echo
     echo "${R}[${W}-${R}]${G}If You Are Not Sure So Skip It It Will Use The Previous One"${W}
     echo
-    echo "${Y}1. ZINK"${W}
-	echo
-    echo "${Y}2. VIRGL ZINK"${W}
-	echo
-	echo "${Y}3. Turnip (Adreno GPU Only)"${W}
-	echo
-	echo "${Y}4. Skip"${W}
-	echo
+	   if [[ "$termux_hw_answer" == "2" ]]; then
+	   echo "${Y}1. ZINK"${W}
+	   echo
+	   echo "${Y}2. VIRGL"${W}
+	   echo
+	   echo "${Y}3. VIRGL ZINK"${W}
+	   echo
+	   echo "${Y}4. Turnip (Adreno GPU Only)"${W}
+	   echo
+	   echo "${Y}5. Skip"${W}
+	   echo
+	   else
+	   echo "${Y}1. ZINK"${W}
+	   echo
+	   echo "${Y}2. VIRGL ZINK"${W}
+	   echo
+	   echo "${Y}3. Turnip (Adreno GPU Only)"${W}
+	   echo
+	   echo "${Y}4. Skip"${W}
+	   echo
+	   fi
 	read -p "${Y}select an option : "${W} pd_hw_answer
 	pd_hw_answer=${pd_hw_answer:-1} 
 	echo
@@ -496,6 +513,8 @@ function hw_questions() {
     echo "${Y}2. VIRGL"${W}
 	echo
 	echo "${Y}3. VIRGL ZINK"${W}
+	echo
+	echo "${Y}4. Turnip (Adreno GPU Only , Adreno 610 And Above)"${W}
 	echo
 	read -p "${Y}select an option : "${W} termux_hw_answer
 	termux_hw_answer=${termux_hw_answer:-1} 
@@ -549,9 +568,9 @@ function distro_questions() {
     else
 	echo "${R}[${W}-${R}]${G}${BOLD} Select user account type"${W}
     echo
-	echo "${Y}1. User with password confirmation"${W}
+	echo "${Y}1. User with no password confirmation"${W}
 	echo
-	echo "${Y}2. User with no password confirmation"${W}
+	echo "${Y}2. User with password confirmation"${W}
 	echo 
 	read -p "${Y}select an option (Default 1): "${W} pd_pass_type
 	pd_pass_type=${pd_pass_type:-1}
@@ -560,8 +579,32 @@ function distro_questions() {
 	echo "${R}[${W}-${R}]${G}Continuing with answer: $pd_pass_type"${W}
 	echo
 	sleep 0.2
-	if [[ "$pd_pass_type" == "1" ]]; then
+if [[ "$pd_pass_type" == "1" ]]; then
+	while true; do
+    read -p "${R}[${W}-${R}]${G}Input username [Lowercase]: "${W} user_name
+    echo
+    read -p "${R}[${W}-${R}]${Y}Do you want to continue with username ${C}$user_name ${Y}? (y/n) : "${W} choice
 	echo
+	choice="${choice:-y}"
+	echo
+	echo "${R}[${W}-${R}]${G}Continuing with answer: $choice"${W}
+	sleep 0.2
+    case $choice in
+        [yY]* )
+            echo "${R}[${W}-${R}]${G}Continuing with username ${C}$user_name "${W}
+            break;;
+        [nN]* )
+             echo "${G}Please provide username again."${W}
+            echo
+            ;;
+        * )
+            echo "${R}Invalid input. Please enter 'y' or 'n'."${W}
+            ;;
+    esac
+done
+echo "user_name=\"$user_name\"" >> $config_file
+elif [[ "$pd_pass_type" == "2" ]]; then
+    echo
     echo "${R}[${W}-${R}]${G}${BOLD} Create user account"${W}
     echo
     while true; do
@@ -591,30 +634,6 @@ function distro_questions() {
 done
 echo "user_name=\"$user_name\"" >> $config_file
 echo "pass=\"$pass\"" >> $config_file
-elif [[ "$pd_pass_type" == "2" ]]; then
-while true; do
-    read -p "${R}[${W}-${R}]${G}Input username [Lowercase]: "${W} user_name
-    echo
-    read -p "${R}[${W}-${R}]${Y}Do you want to continue with username ${C}$user_name ${Y}? (y/n) : "${W} choice
-	echo
-	choice="${choice:-y}"
-	echo
-	echo "${R}[${W}-${R}]${G}Continuing with answer: $choice"${W}
-	sleep 0.2
-    case $choice in
-        [yY]* )
-            echo "${R}[${W}-${R}]${G}Continuing with username ${C}$user_name "${W}
-            break;;
-        [nN]* )
-             echo "${G}Please provide username again."${W}
-            echo
-            ;;
-        * )
-            echo "${R}Invalid input. Please enter 'y' or 'n'."${W}
-            ;;
-    esac
-done
-echo "user_name=\"$user_name\"" >> $config_file
 fi
     fi
 }
@@ -1561,17 +1580,20 @@ function remove_termux_desktop() {
 	package_check_and_remove "lxqt xorg-xsetroot papirus-icon-theme xwayland kvantum"
 	fi
 	#remove zsh
-	if [[ "$setup_zsh" == "y" ]]; then
+	if [[ "$zsh_answer" == "y" ]]; then
 	package_check_and_remove "zsh"
 	check_and_delete ".oh-my-zsh .zsh_history .zshrc"
 	fi
 	#remove terminal utility
-	if [[ "$terminal_utility_setup" == "y" ]]; then
+	if [[ "$terminal_utility_setup_answer" == "y" ]]; then
 	check_and_restore "$PREFIX/etc/motd"
 	check_and_restore "$PREFIX/etc/motd-playstore"
 	check_and_restore "$PREFIX/etc/motd.sh"
 	check_and_restore "$HOME/.termux/colors.properties"
-	check_and_delete "$PREFIX/etc/motd.sh $PREFIX/etc/termux-login.sh $HOME/.termux $HOME/.fonts/font.ttf $HOME/.termux/colors.properties"
+	check_and_delete "$PREFIX/etc/motd.sh $HOME/.termux $HOME/.fonts/font.ttf $HOME/.termux/colors.properties"
+	if grep -q "motd.sh$" "$PREFIX/etc/termux-login.sh"; then
+        sed -i "s|.*motd\.sh$|# |" "$PREFIX/etc/termux-login.sh"
+    fi
 	package_check_and_remove "nerdfix fontconfig-utils nala bat eza"
 	fi
 	#remove browser
@@ -1632,23 +1654,16 @@ function remove_termux_desktop() {
 	package_check_and_remove "gtk2-engines-murrine"
 	fi
 	#Remove folders and other files
-	check_and_delete "$PREFIX/share/backgrounds $HOME/.themes $HOME/.icons $PREFIX/etc/termux-desktop "
+	check_and_delete "$PREFIX/share/backgrounds $themes_folder $icons_folder $PREFIX/etc/termux-desktop "
 	check_and_delete "$HOME/.config/$the_config_dir"
 	#remove hw packages
-	if [[ "$distro_answer" == "3" ]]; then
-	package_check_and_remove "mesa-vulkan-icd-freedreno mesa-zink"
-	else
-	package_check_and_remove "mesa-zink virglrenderer-mesa-zink vulkan-loader-android angle-android virglrenderer-android"
-	fi
+	package_check_and_remove "mesa-zink virglrenderer-mesa-zink vulkan-loader-android angle-android virglrenderer-android mesa-vulkan-icd-freedreno mesa-zink"
 	#remove distro container
-	if [[ "$setup_distro_container" == "y" ]]; then
-	if [[ "$distro_answer" == "1" ]]; then
-	proot-distro remove debian
-	elif [[ "$distro_answer" == "2" ]]; then
-	proot-distro remove ubuntu
-	fi
+	if [[ "$distro_add_answer" == "y" ]]; then
+	proot-distro remove $selected_distro
 	proot-distro clear-cache
 	package_check_and_remove "proot-distro"
+	check_and_delete "$PREFIX/bin/$selected_distro $PREFIX/bin/pdrun"
 	fi
 	#remove vnc and termux x11
 	check_and_delete "$PREFIX/bin/gui"

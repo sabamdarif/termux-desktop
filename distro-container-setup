@@ -35,7 +35,7 @@ function distro_fix_sound_issue() {
     echo "${R}[${W}-${R}]${G}${BOLD}Fixing Proot Distro Sound Problem..."${W}
     echo
     echo "export PULSE_SERVER=127.0.0.1" >> "$distro_path/etc/profile"
-cat <<EOF > "$HOME/.${selected_distro}-sound-access"
+cat <<EOF > "$HOME/.pd-sound-service"
 pulseaudio --start --exit-idle-time=-1
 pacmd load-module module-native-protocol-tcp auth-ip-acl=127.0.0.1 auth-anonymous=1
 EOF
@@ -299,6 +299,7 @@ EOF
 fi
 fi
 proot-distro login $selected_distro -- /bin/sh -c 'bash useradd.sh'
+proot-distro login $selected_distro -- /bin/sh -c 'sudo -k'
 }
 
 #########################################################################
@@ -331,10 +332,10 @@ W="$(printf '\033[0m')"
 BOLD="$(printf '\033[1m')"
 
 EOF
-declare -f banner get_latest_release pd_package_install_and_check >> $save_path/pd_zsh_install.sh
+declare -f banner get_latest_release pd_root_package_install_and_check >> $save_path/pd_zsh_install.sh
 cat <<'EOF' >> $save_path/pd_zsh_install.sh
 banner
-pd_package_install_and_check "git zsh wget"
+pd_root_package_install_and_check "git zsh wget"
 wget https://raw.githubusercontent.com/sabamdarif/short-linux-scripts/main/install-zsh.sh && bash install-zsh.sh
 rm pd_zsh_setup.sh
 EOF
@@ -893,21 +894,21 @@ cat <<EOF > "$PREFIX/bin/pdrun"
 #!/data/data/com.termux/files/usr/bin/bash
 
 selected_pd_hw_method="$pd_hw_method"
-bash ~/.${selected_distro}-sound-access
+bash ~/.pd-sound-service
 EOF
     fi
 cat <<EOF >> "$PREFIX/bin/pdrun"
 xhost + > /dev/null 2>&1
 case \$1 in
 --nogpu)
-proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:1.0 \$@
+proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:1.0 \${@:2}
 ;;
 --help|-h)
 echo "${G}Type ${C}pdrun COMMAND_TO_RUN${G}to start with gpu acceleration"${W}
 echo "${G}Type ${C}pdrun ---nogpu COMMAND_TO_RUN${G}to start without gpu acceleration"${W}
 ;;
 *)
-proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:1.0 \$selected_pd_hw_method \$@
+proot-distro login --user $final_user_name $selected_distro --shared-tmp -- eval "env DISPLAY=:1.0 \$selected_pd_hw_method \$@"
 ;;
 esac
 EOF
