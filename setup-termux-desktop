@@ -91,9 +91,13 @@ function package_install_and_check() {
 for package_name in "${packs_list[@]}"; do
     echo "${R}[${W}-${R}]${G}${BOLD} Installing package: ${C}$package_name ${W}"
 	if type -p pacman >/dev/null 2>&1; then
-	    pacman -Sy --noconfirm --overwrite '*' "$package_name"
+	    if pacman -Qi "$package_name" >/dev/null 2>&1; then
+		echo "${package_name}=\"already_exist\"" >> $config_file
+		fi
+		pacman -Sy --noconfirm --overwrite '*' "$package_name"
 	else
 	   if dpkg -s "$package_name" >/dev/null 2>&1; then
+	    echo "${package_name}=\"already_exist\"" >> $config_file
 		pkg reinstall "$package_name" -y
 	   else
 	    pkg install "$package_name" -y
@@ -136,7 +140,9 @@ function package_check_and_remove() {
 	for package_name in "${packs_list[@]}"; do
 	if dpkg -s "$package_name" >/dev/null 2>&1; then
 	echo "${R}[${W}-${R}]${G}${BOLD} Removeing package: ${C}$package_name "${W}
-    apt autoremove "$package_name" -y
+	    if [[ "$package_name" != "already_exist" ]]; then
+		    apt autoremove "$package_name" -y
+		fi
     fi
 done
 
@@ -653,8 +659,8 @@ function update_sys() {
 	unlink "$PREFIX/etc/termux/chosen_mirrors" &>/dev/null
 	ln -s "$PREFIX/etc/termux/mirrors/all" "$PREFIX/etc/termux/chosen_mirrors" &>/dev/null
 	pkg --check-mirror update
-    pkg update -y -o Dpkg::Options::="--force-confold"
-	pkg upgrade -y -o Dpkg::Options::="--force-confold"
+	pkg update -y -o Dpkg::Options::="--force-confnew"
+	pkg upgrade -y -o Dpkg::Options::="--force-confnew"
 	fi
 }
 
@@ -686,6 +692,13 @@ function install_desktop() {
 #########################################################################
 ############################### Theme Installer #########################
 #########################################################################
+function set_config_dir() {
+	if [[ "$de_name" == "xfce" ]]; then
+	config_dirs=(autostart cairo-dock dconf gtk-3.0 Mousepad pulse Thunar menu ristretto rofi xfce4)
+	elif [[ "$de_name" == "lxqt" ]]; then
+	config_dirs=(fontconfig gtk-3.0 lxqt pcmanfm-qt QtProject.conf glib-2.0 Kvantum openbox qterminal.org)
+    fi
+}
 
 function theme_installer() {
     banner
@@ -728,11 +741,7 @@ function theme_installer() {
 	echo "${R}[${W}-${R}]${G} Making Additional Configuration..."${W}
 	echo
 	check_and_create_directory "$HOME/.config"
-	if [[ "$de_name" == "xfce" ]]; then
-	config_dirs=(autostart cairo-dock dconf gtk-3.0 Mousepad pulse Thunar menu ristretto rofi xfce4)
-	elif [[ "$de_name" == "lxqt" ]]; then
-	config_dirs=(fontconfig gtk-3.0 lxqt pcmanfm-qt QtProject.conf glib-2.0 Kvantum openbox qterminal.org)
-    fi
+	set_config_dir
         for the_config_dir in "${config_dirs[@]}"; do
 		check_and_delete "$HOME/.config/$the_config_dir"
         done
@@ -1238,21 +1247,28 @@ function setup_synaptic() {
 #################### Setup Zsh And Terminal Utility #####################
 #########################################################################
 
+function get_shellrc_path() {
+	if [[ "$shell_name" == "bash" ]]; then
+	shell_rc_file="/data/data/com.termux/files/usr/etc/bash.bashrc"
+	elif [[ "$shell_name" == "zsh" ]]; then
+	shell_rc_file="$HOME/.zshrc"
+	fi
+}
+
 function setup_zsh() {
 	banner
     if [[ "$zsh_answer" == "n" ]]; then
 	echo "${R}[${W}-${R}]${C} Canceling Zsh Setup..."${W}
     sleep 1.5
 	shell_name="bash"
-	shell_rc_file="/data/data/com.termux/files/usr/etc/bash.bashrc"
 	else
 	shell_name="zsh"
-	shell_rc_file="$HOME/.zshrc"
 	echo "${R}[${W}-${R}]${G}${BOLD} Configuring Zsh.."${W}
 	echo
 	package_install_and_check "zsh git"
 	wget https://raw.githubusercontent.com/sabamdarif/short-linux-scripts/main/install-zsh.sh && bash install-zsh.sh
 	fi
+	get_shellrc_path
 echo "zsh_answer=\"$zsh_answer\"" >> $config_file
 }
 
@@ -1281,6 +1297,7 @@ function terminal_utility_setup() {
 	package_install_and_check "bat eza zoxide fastfetch"
 	else
 	package_install_and_check "nala bat eza zoxide fastfetch"
+	check_and_backup "$shell_rc_file"
 cat <<'EOF' >> "$shell_rc_file"
 alias apt='nala $@'
 alias pkg='nala $@'
@@ -1572,6 +1589,7 @@ function remove_termux_desktop() {
 	sleep 3
 	. $config_file
 	#remove basic packages
+	echo "${package_name}=\"already_exist\"" >> $config_file
 	package_check_and_remove "pulseaudio x11-repo tur-repo"
 	#remove desktop related packages
 	if [[ "$de_name" == "xfce" ]]; then
@@ -1586,11 +1604,11 @@ function remove_termux_desktop() {
 	fi
 	#remove terminal utility
 	if [[ "$terminal_utility_setup_answer" == "y" ]]; then
+	check_and_delete "$PREFIX/etc/motd.sh $HOME/.termux $HOME/.fonts/font.ttf $HOME/.termux/colors.properties"
 	check_and_restore "$PREFIX/etc/motd"
 	check_and_restore "$PREFIX/etc/motd-playstore"
 	check_and_restore "$PREFIX/etc/motd.sh"
 	check_and_restore "$HOME/.termux/colors.properties"
-	check_and_delete "$PREFIX/etc/motd.sh $HOME/.termux $HOME/.fonts/font.ttf $HOME/.termux/colors.properties"
 	if grep -q "motd.sh$" "$PREFIX/etc/termux-login.sh"; then
         sed -i "s|.*motd\.sh$|# |" "$PREFIX/etc/termux-login.sh"
     fi
@@ -1654,8 +1672,9 @@ function remove_termux_desktop() {
 	package_check_and_remove "gtk2-engines-murrine"
 	fi
 	#Remove folders and other files
-	check_and_delete "$PREFIX/share/backgrounds $themes_folder $icons_folder $PREFIX/etc/termux-desktop "
+	check_and_delete "$PREFIX/share/backgrounds $themes_folder $icons_folder $PREFIX/etc/termux-desktop"
 	check_and_delete "$HOME/.config/$the_config_dir"
+	check_and_delete "$HOME/Desktop $HOME/Downloads $HOME/Videos $HOME/Pictures $HOME/Music"
 	#remove hw packages
 	package_check_and_remove "mesa-zink virglrenderer-mesa-zink vulkan-loader-android angle-android virglrenderer-android mesa-vulkan-icd-freedreno mesa-zink"
 	#remove distro container
@@ -1896,6 +1915,30 @@ function reinstall_config() {
 }
 
 #########################################################################
+########################### Reset Changes ###############################
+#########################################################################
+
+function reset_changes() {
+	if [[ ! -e "$config_file" ]]; then
+	echo -e "${C} It look like you haven't install the desktop yet\n Please install the desktop first"${W}
+	exit 0
+	else
+	. $config_file
+	banner
+	echo "${R}[${W}-${R}]${G} Removing $de_name Config..."${W}
+	set_config_dir
+	check_and_delete "$config_dirs"
+	shell_name="$SHELL"
+	    if [[ "$shell_name" == "zsh" ]]; then
+		chsh -s bash
+		fi
+		get_shellrc_path
+		check_and_delete "$shell_rc_file"
+		check_and_restore "$shell_rc_file"
+	fi
+}
+
+#########################################################################
 ######################### Call Functions ################################
 #########################################################################
 
@@ -1975,6 +2018,7 @@ function show_help() {
 	-r,--remove       to remove termux desktop
 	-c,--change       to change some previously made configuration
 	-ri,--reinstall   to reinstall some previously install stuff
+	--reset           to reset all changes made by this script without uninstalling any package
 	-h,--help         to show help
 	"
 }
@@ -2054,6 +2098,9 @@ case $1 in
     --help|-h)
         show_help
         ;;
+	--reset)
+	    reset_changes
+		;;
     *)
         install_termux_desktop
         ;;
