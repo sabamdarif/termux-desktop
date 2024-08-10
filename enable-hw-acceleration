@@ -33,7 +33,6 @@ elif [[ $termux_hw_answer == "4" ]]; then
     hw_method="MESA_LOADER_DRIVER_OVERRIDE=zink"
     pd_hw_method="MESA_LOADER_DRIVER_OVERRIDE=zink TU_DEBUG=noconform"
 else
-else
     initialize_server_method="MESA_NO_ERROR=1 MESA_GL_VERSION_OVERRIDE=4.3COMPAT MESA_GLES_VERSION_OVERRIDE=3.2 GALLIUM_DRIVER=zink ZINK_DESCRIPTORS=lazy virgl_test_server --use-egl-surfaceless --use-gles"
     hw_method="GALLIUM_DRIVER=virpipe MESA_GL_VERSION_OVERRIDE=4.0"
 fi

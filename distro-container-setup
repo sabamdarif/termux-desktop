@@ -321,7 +321,8 @@ function distro_zsh_answer() {
     pd_shell_name="zsh"
 	echo "${R}[${W}-${R}]${G}${BOLD} Configuring Zsh for ${selected_distro}${G}.."${W}
 	echo
-cat <<'EOF' > $save_path/pd_zsh_install.sh
+    
+cat <<'EOF' > $distro_path/root/pd_zsh_install.sh
 #!/bin/bash
 R="$(printf '\033[1;31m')"                           
 G="$(printf '\033[1;32m')"
@@ -332,14 +333,14 @@ W="$(printf '\033[0m')"
 BOLD="$(printf '\033[1m')"
 
 EOF
-declare -f banner get_latest_release pd_root_package_install_and_check >> $save_path/pd_zsh_install.sh
-cat <<'EOF' >> $save_path/pd_zsh_install.sh
+declare -f banner get_latest_release pd_root_package_install_and_check >> $distro_path/root/pd_zsh_install.sh
+cat <<'EOF' >> $distro_path/root/pd_zsh_install.sh
 banner
 pd_root_package_install_and_check "git zsh wget"
 wget https://raw.githubusercontent.com/sabamdarif/short-linux-scripts/main/install-zsh.sh && bash install-zsh.sh
-rm pd_zsh_setup.sh
+rm pd_zsh_install.sh
 EOF
-proot-distro login --user $final_user_name $selected_distro -- /bin/bash -c 'bash pd_zsh_install.sh'
+proot-distro login $selected_distro -- /bin/bash -c 'bash pd_zsh_install.sh'
 cat <<'EOF' > $save_path/pd_zsh_setup.sh
 #!/bin/bash
 R="$(printf '\033[1;31m')"                           
@@ -351,7 +352,6 @@ W="$(printf '\033[0m')"
 BOLD="$(printf '\033[1m')"
 
 EOF
-declare -f banner get_latest_release pd_package_install_and_check >> $save_path/pd_zsh_setup.sh
 cat <<'EOF' >> $save_path/pd_zsh_setup.sh
 wget https://raw.githubusercontent.com/sabamdarif/short-linux-scripts/main/install-zsh.sh && bash install-zsh.sh
 rm pd_zsh_setup.sh
