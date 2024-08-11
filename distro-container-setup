@@ -237,7 +237,7 @@ proot-distro login $selected_distro -- /bin/bash -c 'bash pd_basic_setup.sh'
     elif [[ "$pd_useradd_answer" == "y" ]]; then
     final_user_name="${user_name}"
     fi
-if [[ "$pd_pass_type" == "1" ]];then
+if [[ "$pd_pass_type" == "2" ]];then
 if [[ "$selected_distro" == "alpine" ]]; then
 cat <<EOF > $distro_path/root/useradd.sh
 #!/bin/bash
@@ -268,7 +268,7 @@ chmod u-w /etc/sudoers
 rm useradd.sh
 EOF
 fi
-elif [[ "$pd_pass_type" == "2" ]];then
+elif [[ "$pd_pass_type" == "1" ]];then
 if [[ "$selected_distro" == "alpine" ]]; then
 cat <<EOF > $distro_path/root/useradd.sh
 #!/bin/bash
@@ -358,6 +358,7 @@ rm pd_zsh_setup.sh
 EOF
     proot-distro login --user $final_user_name $selected_distro -- /bin/bash -c 'bash pd_zsh_setup.sh'
 fi
+echo "pd_shell_name=\"$pd_shell_name\"" >> $config_file
 }
 
 function distro_terminal_utility_setup() {
@@ -451,7 +452,9 @@ alias apt='sudo nala $@'
 alias apt-get='sudo nala $@'
 EOF
 fi
-
+cp $save_path/.${pd_shell_name}rc $save_path/.${pd_shell_name}rc-2
+check_and_backup "$save_path/.${pd_shell_name}rc"
+mv $save_path/.${pd_shell_name}rc-2 $save_path/.${pd_shell_name}rc
 cat <<'EOF' >> "$save_path/.${pd_shell_name}rc"
 alias cat='bat $@'
 alias ls='eza --icons $@'

@@ -1267,6 +1267,7 @@ function setup_zsh() {
 	echo
 	package_install_and_check "zsh git"
 	wget https://raw.githubusercontent.com/sabamdarif/short-linux-scripts/main/install-zsh.sh && bash install-zsh.sh
+	clear
 	fi
 	get_shellrc_path
 echo "zsh_answer=\"$zsh_answer\"" >> $config_file
@@ -1297,7 +1298,9 @@ function terminal_utility_setup() {
 	package_install_and_check "bat eza zoxide fastfetch"
 	else
 	package_install_and_check "nala bat eza zoxide fastfetch"
+	cp $shell_rc_file ${shell_rc_file}-2
 	check_and_backup "$shell_rc_file"
+	mv ${shell_rc_file}-2 ${shell_rc_file}
 cat <<'EOF' >> "$shell_rc_file"
 alias apt='nala $@'
 alias pkg='nala $@'
@@ -1928,13 +1931,33 @@ function reset_changes() {
 	echo "${R}[${W}-${R}]${G} Removing $de_name Config..."${W}
 	set_config_dir
 	check_and_delete "$config_dirs"
-	shell_name="$SHELL"
+	shell_name=$($basename "$SHELL")
 	    if [[ "$shell_name" == "zsh" ]]; then
 		chsh -s bash
 		fi
 		get_shellrc_path
 		check_and_delete "$shell_rc_file"
 		check_and_restore "$shell_rc_file"
+		check_and_backup "$config_file"
+		touch $config_file
+		chmod +x $config_file
+		    if [[ "$distro_add_answer" == "y" ]]; then
+			confirmation_y_or_n "Do you want to reset distro container as well" conf_distro_reset
+			    if [[ "$conf_distro_reset" ==  "y" ]]; then
+				check_and_restore "$save_path/.${pd_shell_name}rc"
+				fi
+			fi
+		if [[ "$terminal_utility_setup_answer" == "y" ]]; then
+		check_and_delete "$PREFIX/etc/motd.sh $HOME/.termux $HOME/.fonts/font.ttf $HOME/.termux/colors.properties"
+		check_and_restore "$PREFIX/etc/motd"
+		check_and_restore "$PREFIX/etc/motd-playstore"
+		check_and_restore "$PREFIX/etc/motd.sh"
+		check_and_restore "$HOME/.termux/colors.properties"
+		    if grep -q "motd.sh$" "$PREFIX/etc/termux-login.sh"; then
+			sed -i "s|.*motd\.sh$|# |" "$PREFIX/etc/termux-login.sh"
+			fi
+		fi
+	echo -e "${R}[${W}-${R}]${G}${BOLD} Reset successfull\n Now restart Termux"${W}
 	fi
 }
 
