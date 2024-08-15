@@ -449,15 +449,6 @@ function questions() {
 	banner
 	confirmation_y_or_n "Do you want install some terminal utility to make better terminal exprience" terminal_utility_setup_answer
 	banner
-	echo "${R}[${W}-${R}]${Y}${BOLD}Do you want to add a distro container (proot distro)"${W}
-	echo
-	echo "${R}[${W}-${R}]${G} It will help you to install those app which are not avilable in termux"${W}
-	echo
-	echo "${R}[${W}-${R}]${C}You can launch those installed apps from termux like other apps"${W}
-	echo
-	confirmation_y_or_n "Do you want to continue" distro_add_answer
-	echo "distro_add_answer=\"$distro_add_answer\"" >> $config_file
-	banner
 	echo "${R}[${W}-${R}]${G}${BOLD}Select Gui Mode"${W}
 	echo
 	echo "${Y}1. Termux:x11"${W}
@@ -467,7 +458,16 @@ function questions() {
 	echo "${Y}3. Both"${W}
 	echo
 	read -p "${Y}select an option (Default 1): "${W} gui_mode
-	gui_mode=${gui_mode:-1} 
+	gui_mode=${gui_mode:-1}
+	banner
+	echo "${R}[${W}-${R}]${Y}${BOLD}Do you want to add a distro container (proot distro)"${W}
+	echo
+	echo "${R}[${W}-${R}]${G} It will help you to install those app which are not avilable in termux"${W}
+	echo
+	echo "${R}[${W}-${R}]${C}You can launch those installed apps from termux like other apps"${W}
+	echo
+	confirmation_y_or_n "Do you want to continue" distro_add_answer
+	echo "distro_add_answer=\"$distro_add_answer\"" >> $config_file
 }
 
 function distro_hw_questions() {
@@ -673,6 +673,7 @@ function install_required_packages() {
 	else
 	package_install_and_check "wget pv jq curl pulseaudio termux-am x11-repo tur-repo"
 	fi
+	sed -i 's/termux-am="already_exist"/ /' $config_file
 	update_sys
 }
 
@@ -969,7 +970,7 @@ fi
 chmod +x $PREFIX/bin/tx11start
 
 if [[ "$de_name" == "xfce" ]]; then
-cat <<EOF >> "$PREFIX/bin/tx11stop"
+cat <<EOF > "$PREFIX/bin/tx11stop"
 #!/data/data/com.termux/files/usr/bin/bash
 
 termux_x11_pid=\$(pgrep -f "/system/bin/app_process / com.termux.x11.Loader :1.0")
@@ -986,7 +987,7 @@ fi
 exec 2>/dev/null
 EOF
 elif [[ "$de_name" == "lxqt" ]]; then
-cat <<EOF >> "$PREFIX/bin/tx11stop"
+cat <<EOF > "$PREFIX/bin/tx11stop"
 #!/data/data/com.termux/files/usr/bin/bash
 
 termux_x11_pid=\$(pgrep -f "/system/bin/app_process / com.termux.x11.Loader :1.0")
@@ -1713,7 +1714,7 @@ function remove_termux_desktop() {
 function gui_check_up() {
 termux_x11_pid=$(pgrep -f /system/bin/app_process.*com.termux.x11.Loader)
 de_pid=$(pgrep -f "$de_startup")
-if [ -n "$termux_x11_pid" ] || [ -n "$de_pid" ]; then
+if [ -n "$termux_x11_pid" ] || [ -n "$de_pid" ]  >/dev/null 2>&1; then
 echo "${G}Please Stop The Gui Desktop Server First"${W}
 exit 0
 fi
@@ -1871,6 +1872,7 @@ function reinstall_themes() {
 	check_and_delete "$themes_folder/$theme_name"
 	mv $tmp_themes_folder/$theme_name $themes_folder/
 	done
+	echo "${R}[${W}-${R}]${G}${BOLD} Themes reinstall successfully"${W}
 }
 
 #########################################################################
@@ -1893,8 +1895,12 @@ function reinstall_icons() {
 	check_and_delete "$icons_folder/$icon_theme"
 	mv $tmp_icons_folder/$icon_theme $icons_folder/
 	echo "${R}[${W}-${R}]${G}Creating icon cache..."${W}
-	gtk-update-icon-cache -f -t $icon_folder/$icons_theme
+	if [[ "$de_name" == "xfce" ]]; then
+	gtk-update-icon-cache -f -t $icons_folder/$icons_theme
+	fi
+	gtk-update-icon-cache -f -t $PREFIX/share/icons/$icons_theme
 	done
+	echo "${R}[${W}-${R}]${G}${BOLD} Icons reinstall successfully"${W}
 	fi
 }
 
@@ -1915,6 +1921,7 @@ function reinstall_config() {
 	check_and_delete "$HOME/.config/$config_file"
 	mv $tmp_config_folder/$config_file $HOME/.config/
 	done
+	echo "${R}[${W}-${R}]${G}${BOLD} Config reinstall successfully"${W}
 }
 
 #########################################################################

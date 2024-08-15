@@ -25,7 +25,6 @@ function setup_distro() {
 
     distro_path="$PREFIX/var/lib/proot-distro/installed-rootfs/$selected_distro"
 }
-
 #########################################################################
 ############################# Fix Sound Issue ###########################
 #########################################################################
@@ -338,6 +337,7 @@ cat <<'EOF' >> $distro_path/root/pd_zsh_install.sh
 banner
 pd_root_package_install_and_check "git zsh wget"
 wget https://raw.githubusercontent.com/sabamdarif/short-linux-scripts/main/install-zsh.sh && bash install-zsh.sh
+clear
 rm pd_zsh_install.sh
 EOF
 proot-distro login $selected_distro -- /bin/bash -c 'bash pd_zsh_install.sh'
@@ -354,6 +354,7 @@ BOLD="$(printf '\033[1m')"
 EOF
 cat <<'EOF' >> $save_path/pd_zsh_setup.sh
 wget https://raw.githubusercontent.com/sabamdarif/short-linux-scripts/main/install-zsh.sh && bash install-zsh.sh
+clear
 rm pd_zsh_setup.sh
 EOF
     proot-distro login --user $final_user_name $selected_distro -- /bin/bash -c 'bash pd_zsh_setup.sh'
@@ -366,7 +367,26 @@ function distro_terminal_utility_setup() {
     banner
 	echo "${R}[${W}-${R}]${C}Skipping Terminal Utility Setup For ${selected_distro}..."${W}
 	echo
-cat <<'EOF' >> "$save_path/.${pd_shell_name}rc"
+    if [[ "$pd_useradd_answer" == "y" ]]; then
+    cp $distro_path/home/$final_user_name/.${pd_shell_name}rc $distro_path/home/$final_user_name/.${pd_shell_name}rc-2
+    check_and_backup "$distro_path/home/$final_user_name/.${pd_shell_name}rc"
+    mv $distro_path/home/$final_user_name/.${pd_shell_name}rc-2 $distro_path/home/$final_user_name/.${pd_shell_name}rc
+cat <<'EOF' >> "$distro_path/home/$final_user_name/.${pd_shell_name}rc"
+case $1 in
+    tx11start|tx11stop|vncstart|vncstop)
+        case $2 in
+            --help|-h|--nogpu|-f) ;;
+        esac
+	echo "please run it from termux, not inside proot distro."
+    ;;
+esac
+
+EOF
+    fi
+    cp $distro_path/root/.${pd_shell_name}rc $distro_path/root/.${pd_shell_name}rc-2
+    check_and_backup "$distro_path/root/.${pd_shell_name}rc"
+    mv $distro_path/root/.${pd_shell_name}rc-2 $distro_path/root/.${pd_shell_name}rc
+cat <<'EOF' >> "$distro_path/root/.${pd_shell_name}rc"
 case $1 in
     tx11start|tx11stop|vncstart|vncstop)
         case $2 in
@@ -446,16 +466,7 @@ EOF
 fi
 proot-distro login $selected_distro -- /bin/bash -c 'bash pd_setup.sh'
 
-if [[ "$selected_distro" == "debian" ]] || [[ "$selected_distro" == "ubuntu" ]]; then
-cat <<'EOF' >> "$save_path/.${pd_shell_name}rc"
-alias apt='sudo nala $@'
-alias apt-get='sudo nala $@'
-EOF
-fi
-cp $save_path/.${pd_shell_name}rc $save_path/.${pd_shell_name}rc-2
-check_and_backup "$save_path/.${pd_shell_name}rc"
-mv $save_path/.${pd_shell_name}rc-2 $save_path/.${pd_shell_name}rc
-cat <<'EOF' >> "$save_path/.${pd_shell_name}rc"
+shell_rc_content=$(cat <<'EOF'
 alias cat='bat $@'
 alias ls='eza --icons $@'
 alias mkdir='mkdir -p'
@@ -465,7 +476,7 @@ case $1 in
         case $2 in
             --help|-h|--nogpu|-f) ;;
         esac
-	echo "please run it from termux, not inside proot distro."
+    echo "please run it from termux, not inside proot distro."
     ;;
 esac
 #######################################################
@@ -473,84 +484,111 @@ esac
 #######################################################
 # Extracts any archive(s) (if unp isn't installed)
 extract() {
-	for archive in "$@"; do
-		if [ -f "$archive" ]; then
-			case $archive in
-			*.tar.bz2) tar xvjf $archive ;;
+    for archive in "$@"; do
+        if [ -f "$archive" ]; then
+            case $archive in
+            *.tar.bz2) tar xvjf $archive ;;
             *.tar.xz) tar -xvf $archive ;;
             *.tar.gz) tar -xzvf $archive ;;
-			*.bz2) bunzip2 $archive ;;
-			*.rar) rar x $archive ;;
-			*.tar) tar xvf $archive ;;
-			*.tbz2) tar xvjf $archive ;;
-			*.tgz) tar xvzf $archive ;;
-			*.zip) unzip $archive ;;
-			*.Z) uncompress $archive ;;
-			*.7z) 7z x $archive ;;
-			*) echo "don't know how to extract '$archive'..." ;;
-			esac
-		else
-			echo "'$archive' is not a valid file!"
-		fi
-	done
+            *.bz2) bunzip2 $archive ;;
+            *.rar) rar x $archive ;;
+            *.tar) tar xvf $archive ;;
+            *.tbz2) tar xvjf $archive ;;
+            *.tgz) tar xvzf $archive ;;
+            *.zip) unzip $archive ;;
+            *.Z) uncompress $archive ;;
+            *.7z) 7z x $archive ;;
+            *) echo "don't know how to extract '$archive'..." ;;
+            esac
+        else
+            echo "'$archive' is not a valid file!"
+        fi
+    done
 }
 # Searches for text in all files in the current folder
 ftext() {
-	# -i case-insensitive
-	# -I ignore binary files
-	# -H causes filename to be printed
-	# -r recursive search
-	# -n causes line number to be printed
-	# optional: -F treat search term as a literal, not a regular expression
-	# optional: -l only print filenames and not the matching lines ex. grep -irl "$1" *
-	grep -iIHrn --color=always "$1" . | less -r
+    # -i case-insensitive
+    # -I ignore binary files
+    # -H causes filename to be printed
+    # -r recursive search
+    # -n causes line number to be printed
+    # optional: -F treat search term as a literal, not a regular expression
+    # optional: -l only print filenames and not the matching lines ex. grep -irl "$1" *
+    grep -iIHrn --color=always "$1" . | less -r
 }
 # Copy file with a progress bar
 cpp() {
-	set -e
-	strace -q -ewrite cp -- "${1}" "${2}" 2>&1 |
-		awk '{
-	count += $NF
-	if (count % 10 == 0) {
-		percent = count / total_size * 100
-		printf "%3d%% [", percent
-		for (i=0;i<=percent;i++)
-			printf "="
-			printf ">"
-			for (i=percent;i<100;i++)
-				printf " "
-				printf "]\r"
-			}
-		}
-	END { print "" }' total_size="$(stat -c '%s' "${1}")" count=0
+    set -e
+    strace -q -ewrite cp -- "${1}" "${2}" 2>&1 |
+        awk '{
+    count += $NF
+    if (count % 10 == 0) {
+        percent = count / total_size * 100
+        printf "%3d%% [", percent
+        for (i=0;i<=percent;i++)
+            printf "="
+            printf ">"
+            for (i=percent;i<100;i++)
+                printf " "
+                printf "]\r"
+            }
+        }
+    }
+    END { print "" }' total_size="$(stat -c '%s' "${1}")" count=0
 }
 # Copy and go to the directory
 cpg() {
-	if [ -d "$2" ]; then
-		cp "$1" "$2" && cd "$2"
-	else
-		cp "$1" "$2"
-	fi
+    if [ -d "$2" ]; then
+        cp "$1" "$2" && cd "$2"
+    else
+        cp "$1" "$2"
+    fi
 }
 # Move and go to the directory
 mvg() {
-	if [ -d "$2" ]; then
-		mv "$1" "$2" && cd "$2"
-	else
-		mv "$1" "$2"
-	fi
+    if [ -d "$2" ]; then
+        mv "$1" "$2" && cd "$2"
+    else
+        mv "$1" "$2"
+    fi
 }
 # Create and go to the directory
 mkdirg() {
-	mkdir -p "$1"
-	cd "$1"
+    mkdir -p "$1"
+    cd "$1"
 }
 EOF
-cat <<EOF >> "$save_path/.${pd_shell_name}rc"
+)
+fi
+    if [[ "$pd_useradd_answer" == "y" ]]; then
+    cp $distro_path/home/$final_user_name/.${pd_shell_name}rc $distro_path/home/$final_user_name/.${pd_shell_name}rc-2
+    check_and_backup "$distro_path/home/$final_user_name/.${pd_shell_name}rc"
+    mv $distro_path/home/$final_user_name/.${pd_shell_name}rc-2 $distro_path/home/$final_user_name/.${pd_shell_name}rc
+    echo "$shell_rc_content" >> "$distro_path/home/$final_user_name/.${pd_shell_name}rc"
+    fi
+    echo "$shell_rc_content" >> "$distro_path/root/.${pd_shell_name}rc"
+if [[ "$pd_useradd_answer" == "y" ]]; then
+cat <<EOF >> "$distro_path/home/$final_user_name/.${pd_shell_name}rc"
 #set zoxide as cd
 eval "\$(zoxide init --cmd cd ${pd_shell_name})"
 EOF
-	fi
+fi
+cat <<EOF >> "$distro_path/root/.${pd_shell_name}rc"
+#set zoxide as cd
+eval "\$(zoxide init --cmd cd ${pd_shell_name})"
+EOF
+    if [[ "$selected_distro" == "debian" ]] || [[ "$selected_distro" == "ubuntu" ]]; then
+    if [[ "$pd_useradd_answer" == "y" ]]; then
+cat <<'EOF' >> "$distro_path/home/$final_user_name/.${pd_shell_name}rc"
+alias apt='sudo nala $@'
+alias apt-get='sudo nala $@'
+EOF
+    fi
+cat <<'EOF' >> "$distro_path/root/.${pd_shell_name}rc"
+alias apt='sudo nala $@'
+alias apt-get='sudo nala $@'
+EOF
+fi
 }
 
 #########################################################################
