@@ -1399,6 +1399,7 @@ EOF
 termux-reload-settings
 sleep 2
 	fi
+echo "alias 'tdconfig'='cat $config_file'" $HOME/.${shell_name}rc
 echo "terminal_utility_setup_answer=\"$terminal_utility_setup_answer\"" >> $config_file
 }
 
@@ -1416,7 +1417,7 @@ function setup_fonts() {
 	check_and_backup "$HOME/.termux/font.ttf"
 	wget -O $HOME/font.zip https://github.com/ryanoasis/nerd-fonts/releases/download/v3.2.1/0xProto.zip
 	unzip "$HOME/font.zip" -d "$HOME/.fonts"
-	check_and_delete "README.md LICENSE"
+	check_and_delete "$HOME/.fonts/README.md $HOME/.fonts/LICENSE"
 	rm $HOME/font.zip
 	cp $HOME/.fonts/0xProtoNerdFont-Regular.ttf $HOME/.termux/font.ttf
 	fc-cache -f
@@ -1925,6 +1926,69 @@ function reinstall_config() {
 }
 
 #########################################################################
+#################### Some Fixes | Basic Task ############################
+#########################################################################
+
+function some_fixes() {
+	#samsung oneui-6 audio fixes
+	local device_brand_name=$(getprop ro.product.brand | cut -d ' ' -f 1)
+	if [[ $device_brand_name == samsung* && $android_version -ge 14 ]]; then
+    echo "LD_PRELOAD=/system/lib64/libskcodec.so" >> $shell_rc_file
+	fi
+}
+
+function print_basic_details() {
+	android_version=$(getprop ro.build.version.release)
+	local model="$(getprop ro.product.brand) $(getprop ro.product.model)"
+	local lotal_ram=$(free -htm | awk '/Mem:/ {print $2}')
+cat << EOF >> $config_file
+
+####################################
+########## Termux Desktop ##########
+####################################
+
+########################
+#  -:Device Details:-  #
+########################
+# Termux Version: "${TERMUX_VERSION}-${TERMUX_APK_RELEASE}"
+# Device Model: "$model"
+# Android Version: "$android_version"
+# Total Ram: "$lotal_ram"
+########################
+
+##### Please don't modify this file otherwise some functions won't work #####
+
+EOF
+}
+
+function update_or_add_shortcut() {
+if [[ -e "$PREFIX/bin/setup-termux-desktop" ]]; then
+local current_script_hash=$(curl -sL https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop | sha256sum | cut -d ' ' -f 1)
+local local_script_hash=$(basename $(sha256sum $PREFIX/bin/setup-termux-desktop))
+if [[ "$local_script_hash" != "$current_script_hash" ]]; then
+confirmation_y_or_n "You are using an old installer. Do you want to update it to the latest version" update_installer
+    if [[ "$update_installer" == "y" ]]; then
+	check_and_backup "$PREFIX/etc/termux-desktop/setup-termux-desktop"
+	mv $PREFIX/bin/setup-termux-desktop*.bak $PREFIX/etc/termux-desktop
+	curl -Lsf https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop -o $PREFIX/bin/setup-termux-desktop
+	chmod +x $PREFIX/bin/setup-termux-desktop
+	local local_script_hash=$(basename $(sha256sum $PREFIX/bin/setup-termux-desktop))
+	    if [[ -e "$PREFIX/bin/setup-termux-desktop" ]] && [[ "$local_script_hash" == "$current_script_hash" ]]; then
+		echo "${R}[${W}-${R}]${G}Installer updated successfully${W}"
+		else
+		echo "${R}[${W}-${R}]${G}Failed to update the installer${W}"
+		fi
+	else
+	echo "${R}[${W}-${R}]${G}Keeping the old installer"${W}
+	fi
+fi
+echo "${R}[${W}-${R}]${G} Adding setup-termux-desktop installer"${W}
+curl -Lsf https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop -o $PREFIX/bin/setup-termux-desktop
+chmod +x $PREFIX/bin/setup-termux-desktop
+fi
+}
+
+#########################################################################
 ########################### Reset Changes ###############################
 #########################################################################
 
@@ -1947,6 +2011,7 @@ function reset_changes() {
 		check_and_restore "$shell_rc_file"
 		check_and_backup "$config_file"
 		touch $config_file
+		print_basic_details
 		chmod +x $config_file
 		    if [[ "$distro_add_answer" == "y" ]]; then
 			confirmation_y_or_n "Do you want to reset distro container as well" conf_distro_reset
@@ -1972,32 +2037,9 @@ function reset_changes() {
 ######################### Call Functions ################################
 #########################################################################
 
-function add_shortcut() {
-if [[ -e "$PREFIX/bin/setup-termux-desktop" ]]; then
-local current_script_hash=$(curl -sL https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop | sha256sum | cut -d ' ' -f 1)
-local local_script_hash=$(basename $(sha256sum $PREFIX/bin/setup-termux-desktop))
-if [[ "$local_script_hash" != "$current_script_hash" ]]; then
-mv $PREFIX/bin/setup-termux-desktop $PREFIX/etc/termux-desktop
-check_and_backup "$PREFIX/etc/termux-desktop/setup-termux-desktop"
-curl -Lsf https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop -o $PREFIX/bin/setup-termux-desktop
-chmod +x $PREFIX/bin/setup-termux-desktop
-fi
-else
-curl -Lsf https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop -o $PREFIX/bin/setup-termux-desktop
-chmod +x $PREFIX/bin/setup-termux-desktop
-fi
-}
-
-function some_fixes() {
-	local device_brand_name=$(getprop ro.product.brand | cut -d ' ' -f 1)
-	if [[ $device_brand_name == samsung* ]]; then
-	echo "LD_PRELOAD=/system/lib64/libskcodec.so" >> $shell_rc_file
-	fi
-}
-
 cd $HOME
 current_path=$(pwd)
-
+update_or_add_shortcut
 function install_termux_desktop() {
 update_sys
 sleep 2
@@ -2006,6 +2048,7 @@ sleep 2
 check_and_create_directory "$PREFIX/etc/termux-desktop"
 touch $config_file
 chmod +x $config_file
+print_basic_details
 install_required_packages
 questions
 if [[ "$distro_add_answer" == "y" ]]; then
@@ -2037,7 +2080,6 @@ distro_container_setup
 gui_launcher
 terminal_utility_setup
 some_fixes
-add_shortcut
 notes
 termux-wake-unlock
 }

@@ -34,7 +34,7 @@
 ### 3. Check About Hardware Acceleration : [from here](https://github.com/sabamdarif/termux-desktop?tab=readme-ov-file#hardware-acceleration-in-distro-container-and-also-in-termux)
 ### 4. Check About Distro Container: [from here](https://github.com/sabamdarif/termux-desktop?tab=readme-ov-file#want-to-install-more-apps-like-libreoffice-which-are-not-avilable-in-termux)
 ### 5. Check Natively Supported Apps list: [from here](applist.md)
-### 6. Installation: [from here](#installation) [[Tutorial](https://youtu.be/4J9gkl7gIjA)]
+### 6. Installation: [from here](#installation) [[Tutorial](https://youtu.be/SlR9f9hl5CQ)]
 ### 7. Uses: [from here](#uses)
 ### 8. See More: [from here](see-more.md)
 

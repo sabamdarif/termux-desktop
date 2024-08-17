@@ -664,7 +664,7 @@ fi
 
 if [[ \$1 = "install" ]] || [[ \$1 = "remove" ]] || [[ \$1 = "autoremove" ]]; then
 gtk-update-icon-cache
-exec update-desktop-database -q "$PREFIX/share/applications/pd_added"
+update-desktop-database -q "$PREFIX/share/applications/pd_added"
 fi
 
 TOP_EOF
@@ -734,7 +734,7 @@ fi
 
 if [[ \$1 = "install" ]] || [[ \$1 = "remove" ]]; then
 gtk-update-icon-cache
-exec update-desktop-database -q "$PREFIX/share/applications/pd_added"
+update-desktop-database -q "$PREFIX/share/applications/pd_added"
 fi
 
 TOP_EOF
@@ -801,7 +801,7 @@ fi
 
 if [[ \$1 = "install" ]] || [[ \$1 = "remove" ]]; then
 gtk-update-icon-cache
-exec update-desktop-database -q "$PREFIX/share/applications/pd_added"
+update-desktop-database -q "$PREFIX/share/applications/pd_added"
 fi
 
 TOP_EOF
@@ -870,7 +870,7 @@ if [[ $action == *"Add Application To Termux Menu"* ]]; then
 
     cp "$selected_file" "$PREFIX/share/applications/pd_added/"
     sed -i 's/Exec=/Exec=pdrun /g' "$PREFIX/share/applications/pd_added/${selected_file##*/}"
-    exec update-desktop-database -q "$PREFIX/share/applications/pd_added"
+    update-desktop-database -q "$PREFIX/share/applications/pd_added"
     zenity --info --text="File '$selected_name' added successfully!" --title="Success"
   done
 fi
@@ -893,7 +893,7 @@ if [[ $action == *"Remove Application From Termux Menu"* ]]; then
     selected_file=$(find "$PREFIX/share/applications/pd_added/" -name "*.desktop" -type f -exec awk -F '=' -v name="$selected_name" '$0 ~ "Name=" name {print FILENAME}' {} \;)
 
     rm "$selected_file"
-    exec update-desktop-database -q "$PREFIX/share/applications/pd_added"
+    update-desktop-database -q "$PREFIX/share/applications/pd_added"
     zenity --info --text="File '$selected_name' has been removed successfully!" --title="Success"
   done
 fi
