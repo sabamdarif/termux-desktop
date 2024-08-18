@@ -1950,10 +1950,12 @@ cat << EOF >> $config_file
 ########################
 #  -:Device Details:-  #
 ########################
-# Termux Version: "${TERMUX_VERSION}-${TERMUX_APK_RELEASE}"
-# Device Model: "$model"
-# Android Version: "$android_version"
-# Total Ram: "$lotal_ram"
+#
+# Termux Version: ${TERMUX_VERSION}-${TERMUX_APK_RELEASE}
+# Device Model: $model
+# Android Version: $android_version
+# Total Ram: $lotal_ram
+#
 ########################
 
 ##### Please don't modify this file otherwise some functions won't work #####
