@@ -1,4 +1,4 @@
-# Hardware Acceleration in Termux
+# :mechanical_arm:Hardware Acceleration in Termux
 
 - <b>When You Run The Installer Script Just Chose The Hardware Acceleration Method</b>
 - <b>If You Type Yes For Distro Container Setup So You Need To Chose A Method For The Distro Too</b>
@@ -12,10 +12,10 @@
 
 ### How To use Hardware Acceleration in Termux ?
 
-- <b>Start Termux Desktop Using Vnc Or Termux:x11</b>(probably Best Way To Do That)
+- <b>Start Termux Desktop Using Vnc Or Termux:x11</b>(Best Way To Do That)
 - <b>Run Any Program</b>
 
-### How To use Hardware Acceleration in Proot Distro (Distro Container) ?
+### :nerd_face:How To use Hardware Acceleration in Proot Distro (Distro Container) ?
 
 #### 1st Method
 - <b>Launch Termux Desktop</b>
@@ -42,7 +42,7 @@ pdrun --no--gpu program
 
 <center><img src="images/termux-glmark2.png"></center>
 
-## How to Change Hardware Acceleration Method ?
+## :point_right:How to Change Hardware Acceleration Method ?
 
 - <b>Go To `$PREFIX/bin`</b>
 
@@ -54,7 +54,7 @@ pdrun --no--gpu program
 
 <br><br>
 
-# Performance results:
+# :anchor:Performance results:
 
 #### If you want to use TURNIP you have to install the drivers for it in the proot-distro you installed
 
