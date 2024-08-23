@@ -206,6 +206,8 @@ function download_and_extract() {
 
     if [[ "$success" = true ]]; then
 	    if [[ -f "$filename" ]]; then
+		echo
+		echo "${R}[${W}-${R}]${G}Extacting $filename" ${W}
 		    extract_archive "$filename"
 			rm "$filename"
 	    fi
@@ -541,6 +543,8 @@ function choose_distro() {
 	echo "${Y}3. Arch"${W}
 	echo
 	echo "${Y}4. Apline"${W}
+	echo
+	echo "${Y}5. Fedora"${W}
 	echo
 	read -p "${Y}select an option (Default 1): "${W} distro_answer
 	distro_answer=${distro_answer:-1}

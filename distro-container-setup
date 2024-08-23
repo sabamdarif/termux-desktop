@@ -9,6 +9,8 @@ function setup_distro() {
     selected_distro="archlinux"
     elif [[ "$distro_answer" == "4" ]]; then
     selected_distro="alpine"
+    elif [[ "$distro_answer" == "5" ]]; then
+    selected_distro="fedora"
     else
     selected_distro="debian"
     fi
@@ -59,6 +61,8 @@ for package_name in "${packs_list[@]}"; do
         sudo pacman -Sy --noconfirm "$package_name"
     elif [[ "$ID" == "alpine" ]]; then
         sudo apk add "$package_name"
+    elif [[ "$ID" == "fedora" ]]; then
+        sudo dnf install "$package_name" -y
     fi
 #handel error in installation
     if [ $? -ne 0 ]; then
@@ -73,6 +77,10 @@ for package_name in "${packs_list[@]}"; do
         elif [[ "$ID" == "alpine" ]]; then
             sudo apk fix
             sudo apk add "$package_name"
+        elif [[ "$ID" == "fedora" ]]; then
+        sudo dnf --refresh install -y
+        sudo rpm --rebuilddb
+        sudo dnf install "$package_name" -y
         fi
     fi
 #reinstall
@@ -87,6 +95,10 @@ elif [[ "$ID" == arch* ]]; then
 elif [[ "$ID" == "alpine" ]]; then
     if ! apk info -e "$package_name"; then
     sudo apk add "$package_name"
+    fi
+elif [[ "$ID" == "fedora" ]]; then
+    if ! rpm -q "$package_name" >/dev/null 2>&1; then
+    sudo dnf install "$package_name" -y
     fi
 fi
 #check installation
@@ -113,6 +125,14 @@ elif [[ "$ID" == "alpine" ]]; then
             if type -p "$package_name" &>/dev/null || [ -e "$PREFIX/bin/$package_name"* ] || [ -e "$PREFIX/bin/"*"$package_name" ]; then
                 echo "${R}[${W}-${R}]${C} $package_name ${G}installed successfully ${W}"
             fi
+    fi
+elif [[ "$ID" == "fedora" ]]; then
+    if rpm -q "$package_name" >/dev/null 2>&1; then
+    echo "${R}[${W}-${R}]${G} $package_name installed successfully ${W}"
+    else
+        if type -p "$package_name" &>/dev/null || [ -e "$PREFIX/bin/$package_name"* ] || [ -e "$PREFIX/bin/"*"$package_name" ]; then
+        echo "${R}[${W}-${R}]${C} $package_name ${G}installed successfully ${W}"
+        fi
     fi
 fi
 done
@@ -134,6 +154,8 @@ for package_name in "${packs_list[@]}"; do
         pacman -Sy --noconfirm "$package_name"
     elif [[ "$ID" == "alpine" ]]; then
         apk add "$package_name"
+    elif [[ "$ID" == "fedora" ]]; then
+        dnf install "$package_name" -y
     fi
 #handel error in installation
     if [ $? -ne 0 ]; then
@@ -148,6 +170,10 @@ for package_name in "${packs_list[@]}"; do
         elif [[ "$ID" == "alpine" ]]; then
             apk fix
             apk add "$package_name"
+        elif [[ "$ID" == "fedora" ]]; then
+        dnf --refresh install -y
+        rpm --rebuilddb
+        dnf install "$package_name" -y
         fi
     fi
 #reinstall
@@ -162,6 +188,10 @@ elif [[ "$ID" == arch* ]]; then
 elif [[ "$ID" == "alpine" ]]; then
     if ! apk info -e "$package_name"; then
     apk add "$package_name"
+    fi
+elif [[ "$ID" == "fedora" ]]; then
+    if ! rpm -q "$package_name" >/dev/null 2>&1; then
+    dnf install "$package_name" -y
     fi
 fi
 #check installation
@@ -189,6 +219,14 @@ elif [[ "$ID" == "alpine" ]]; then
                 echo "${R}[${W}-${R}]${C} $package_name ${G}installed successfully ${W}"
             fi
     fi
+elif [[ "$ID" == "fedora" ]]; then
+    if rpm -q "$package_name" >/dev/null 2>&1; then
+    echo "${R}[${W}-${R}]${G} $package_name installed successfully ${W}"
+    else
+        if type -p "$package_name" &>/dev/null || [ -e "$PREFIX/bin/$package_name"* ] || [ -e "$PREFIX/bin/"*"$package_name" ]; then
+        echo "${R}[${W}-${R}]${C} $package_name ${G}installed successfully ${W}"
+        fi
+    fi
 fi
 done
 echo ""
@@ -205,6 +243,9 @@ function distro_basic_task() {
     elif [[ "$selected_distro" == "alpine" ]]; then
     proot-distro login $selected_distro --shared-tmp -- env DISPLAY=:1.0 apk update
     proot-distro login $selected_distro --shared-tmp -- env DISPLAY=:1.0 apk upgrade
+    elif [[ "$selected_distro" == "fedora" ]]; then
+    proot-distro login $selected_distro --shared-tmp -- env DISPLAY=:1.0 dnf update -y
+    proot-distro login $selected_distro --shared-tmp -- env DISPLAY=:1.0 dnf upgrade -y
     fi
     if [[ "$pd_audio_config_answer" == "y" ]]; then
     distro_packs="sudo pulseaudio"
@@ -447,7 +488,7 @@ apt update
 apt install -y eza
 rm pd_setup.sh
 EOF
-elif [[ "$selected_distro" == "archlinux" ]]; then
+else
 cat <<'EOF' > $distro_path/root/pd_setup.sh
 #!/bin/bash
 
@@ -787,6 +828,77 @@ fi
 TOP_EOF
 }
 
+function handel_fedora_based_app_installer() {
+cat <<TOP_EOF > "$PREFIX/bin/$selected_distro"
+#!/data/data/com.termux/files/usr/bin/bash
+
+if [[ "\$#" -eq 0 ]]; then
+    proot-distro login --user $final_user_name $selected_distro --shared-tmp
+elif [[ "\$1" = "install" ]]; then
+if [[ ! -d "/data/data/com.termux/files/usr/share/applications/pd_added" ]]; then
+        mkdir -p "/data/data/com.termux/files/usr/share/applications/pd_added"
+        fi
+proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:1.0 sudo dnf install \${@:2}
+cat <<EOF > "$save_root_path/packinstall.sh"
+packages=(\${@:2})
+EOF
+cat <<'EOF' >> "$save_root_path/packinstall.sh"
+for package_name in "\${packages[@]}"; do
+desktop_files=\$(rpm -q --list "\$package_name" | grep "^/usr/share/applications/.*\.desktop\$")
+if [ -z "\$desktop_files" ]; then
+    echo "${R}[${W}-${R}]${G} No .desktop files found for package ${C}'\$package_name' ${G}in /usr/share/applications."
+else
+    for desktop_files_name in \$desktop_files; do
+        desktop_files_with_ext=\$(basename "\$desktop_files_name")
+        desktop_files_without_ext="\${desktop_files_with_ext%.desktop}"
+        echo "${R}[${W}-${R}]${G} Adding ${C}\${desktop_files_without_ext} ${G}To Termux Menu"
+        cp "/usr/share/applications/\${desktop_files_with_ext}" "/data/data/com.termux/files/usr/share/applications/pd_added/"
+        sed -i 's/Exec=/Exec=pdrun /g' "/data/data/com.termux/files/usr/share/applications/pd_added/\${desktop_files_with_ext}"
+    done
+fi
+done
+rm packinstall.sh
+EOF
+proot-distro login $selected_distro -- /bin/bash -c 'bash packinstall.sh'
+
+elif [[ "\$1" = "remove" ]]; then
+proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:1.0 sudo dnf remove \${@:2}
+cat <<EOF > "$save_root_path/packremove.sh"
+packages=(\${@:2})
+EOF
+cat <<'EOF' >> "$save_root_path/packremove.sh"
+for package_name in "\${packages[@]}"; do
+desktop_files=\$(rpm -q --list "\$package_name" | grep "^/usr/share/applications/.*\.desktop\$")
+if [ -z "\$desktop_files" ]; then
+    echo "${R}[${W}-${R}]${G} No .desktop files found for package ${C}'\$package_name' ${G}in /usr/share/applications."
+else
+    for desktop_files_name in \$desktop_files; do
+        desktop_files_with_ext=\$(basename "\$desktop_files_name")
+        desktop_files_without_ext="\${desktop_files_with_ext%.desktop}"
+        echo "${R}[${W}-${R}]${G} Removing ${C}\${desktop_files_without_ext} ${G}From Termux Menu" 
+        rm /data/data/com.termux/files/usr/share/applications/pd_added/\${desktop_files_with_ext}
+    done
+fi
+done
+rm packremove.sh
+EOF
+proot-distro login $selected_distro -- /bin/bash -c 'bash packremove.sh'
+else
+echo "sudo dnf \$@
+rm else.sh
+" > $save_root_path/else.sh
+proot-distro login $selected_distro -- /bin/sh -c 'bash else.sh'
+fi
+
+if [[ \$1 = "install" ]] || [[ \$1 = "remove" ]] || [[ \$1 = "autoremove" ]]; then
+gtk-update-icon-cache
+update-desktop-database -q "$PREFIX/share/applications/pd_added"
+fi
+
+TOP_EOF
+
+}
+
 function distro_create_app_installer() {
     banner
     echo "${R}[${W}-${R}]${G}${BOLD}Creating App Launcher"${W}
@@ -802,6 +914,8 @@ elif [[ "$selected_distro" == "archlinux" ]]; then
 handel_arch_based_app_installer
 elif [[ "$selected_distro" == "alpine" ]]; then
 handel_alpine_based_app_installer
+elif [[ "$selected_distro" == "fedora" ]]; then
+handel_fedora_based_app_installer
 fi
 
 chmod +x "$PREFIX/bin/$selected_distro"
