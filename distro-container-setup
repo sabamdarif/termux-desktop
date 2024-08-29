@@ -196,10 +196,11 @@ echo ""
 
 function distro_basic_task() {
     banner
-    echo "${R}[${W}-${R}]${G}${BOLD}Updating ${C}$selected_distro ${G}And Install Required Packages"${W}
+    echo "${R}[${W}-${R}]${G}${BOLD}Updating ${C}$selected_distro ${G}And Installing Required Packages"${W}
     echo
     if [[ "$selected_distro" == "debian" ]] || [[ "$selected_distro" == "ubuntu" ]]; then
     proot-distro login $selected_distro --shared-tmp -- env DISPLAY=:1.0 apt update
+    proot-distro login $selected_distro --shared-tmp -- env DISPLAY=:1.0 apt upgrade -y
     elif [[ "$selected_distro" == "archlinux" ]]; then
     proot-distro login $selected_distro --shared-tmp -- env DISPLAY=:1.0 pacman -Syu --noconfirm
     elif [[ "$selected_distro" == "alpine" ]]; then
@@ -950,7 +951,7 @@ chmod +x "$PREFIX/bin/pdrun"
 }
 
 #########################################################################
-############### Distro Folders , Theme And Icon Link ##################
+################ Distro Folders , Theme And Icon Link ###################
 #########################################################################
 
 function distro_folders_link() {
@@ -973,6 +974,16 @@ proot-distro login --user $final_user_name $selected_distro -- /bin/sh -c 'bash 
     ln -s /data/data/com.termux/files/home/.fonts $save_path
 
 }
+
+#########################################################################
+########################## Check Installation ###########################
+#########################################################################
+if [[ -d "$PREFIX/bin/$selected_distro" ]] && [[ -d "$PREFIX/var/lib/proot-distro/installed-rootfs/$selected_distro" ]]; then
+echo
+echo "${R}[${W}-${R}]${G}${BOLD}$selected_distro container setup successfully"${W}
+else
+echo "${R}[${W}-${R}]${R}Some problem occurrs in $selected_distro setup${W}"
+fi
 
 setup_distro
 distro_basic_task
