@@ -4,7 +4,7 @@ function hw_install_required_packages() {
     banner
     echo "${R} [${W}-${R}]${G}${BOLD}Installing Required Packages For Hardware Acceleration"${W}
 	echo
-    if [[ "$termux_hw_answer" == "3" ]]; then
+    if [[ "$termux_hw_answer" == "4" ]]; then
     package_install_and_check "mesa-zink mesa-vulkan-icd-freedreno-dri3"
     else
     package_install_and_check "mesa-zink virglrenderer-mesa-zink vulkan-loader-android angle-android virglrenderer-android"
@@ -21,7 +21,7 @@ function setup_hw_method() {
     hw_method="GALLIUM_DRIVER=zink MESA_GL_VERSION_OVERRIDE=4.0"
     pd_hw_method="GALLIUM_DRIVER=zink MESA_GL_VERSION_OVERRIDE=4.0"
 elif [[ $termux_hw_answer == "2" ]]; then
-    initialize_server_method="virgl_test_server_android"
+    initialize_server_method="virgl_test_server_android --angle-gl"
     hw_method="GALLIUM_DRIVER=virpipe MESA_GL_VERSION_OVERRIDE=4.0"
     pd_hw_method="GALLIUM_DRIVER=virpipe MESA_GL_VERSION_OVERRIDE=4.0"
 elif [[ $termux_hw_answer == "3" ]]; then

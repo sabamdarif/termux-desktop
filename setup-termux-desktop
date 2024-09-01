@@ -484,7 +484,7 @@ function questions() {
 function distro_hw_questions() {
 	if [[ "$distro_add_answer" == "y" ]]; then
     echo
-    echo "${R}[${W}-${R}]${G}${BOLD}Select Hardware Acceleration Method Distro Container"${W}
+    echo "${R}[${W}-${R}]${G}${BOLD}Select Hardware Acceleration API For Distro Container"${W}
     echo
     echo "${R}[${W}-${R}]${G}If You Are Not Sure So Skip It It Will Use The Previous One"${W}
     echo
@@ -523,7 +523,7 @@ function hw_questions() {
     echo
     echo "${R}[${W}-${R}]${B}This:- https://github.com/sabamdarif/termux-desktop/blob/main/hw-acceleration.md"${W}
     echo
-    echo "${R}[${W}-${R}]${G}${BOLD}Select Hardware Acceleration Method Which Support Best Fot Your Device"${W}
+    echo "${R}[${W}-${R}]${G}${BOLD}Select Hardware Acceleration API"${W}
     echo
 	echo "${Y}1. ZINK"${W}
 	echo
@@ -531,7 +531,7 @@ function hw_questions() {
 	echo
 	echo "${Y}3. VIRGL ZINK"${W}
 	echo
-	echo "${Y}4. Turnip (Adreno GPU Only , Adreno 610 And Above)"${W}
+	echo "${Y}4. Freedreno (Adreno GPU Only , Adreno 610 And Above)"${W}
 	echo
 	read -p "${Y}select an option : "${W} termux_hw_answer
 	termux_hw_answer=${termux_hw_answer:-1} 
@@ -568,7 +568,7 @@ function distro_questions() {
 	confirmation_y_or_n "Do you want to configure audio support for distro container" pd_audio_config_answer
 	if [[ "$distro_add_answer" == "y" ]] && [[ "$zsh_answer" == "y" ]]; then
 	banner
-	confirmation_y_or_n "Do you want to Configuring Zsh also for distro container (take longer time to login into distro)" distro_zsh_answer
+	confirmation_y_or_n "Do you want to Configuring Zsh also for distro container ${C}(take longer time to login into distro)" distro_zsh_answer
 	echo "distro_zsh_answer=\"$distro_zsh_answer\"" >> $config_file
 	fi
 	if [[ "$distro_add_answer" == "y" ]] && [[ "$terminal_utility_setup_answer" == "y" ]]; then
@@ -872,22 +872,11 @@ function distro_container_setup() {
 ################ Add Vnc And Termux:x11 Launch Scripts ##################
 #########################################################################
 
-function setup_vnc() {
-    banner
-    echo "${R}[${W}-${R}]${G}${BOLD} Configuring Vnc..."${W}
-    echo
-    package_install_and_check "tigervnc"
-    check_and_create_directory "$HOME/.vnc"
-    check_and_delete "$HOME/.vnc/xstartup"
-    cat << EOF > "$HOME/.vnc/xstartup"
-    $de_startup &
-EOF
-    chmod +x "$HOME/.vnc/xstartup"
+function setup_vncstart_cmd() {
     check_and_delete "$PREFIX/bin/vncstart"
 cat <<EOF > "$PREFIX/bin/vncstart"
 #!/data/data/com.termux/files/usr/bin/bash
 
-selected_initialize_server_method="${initialize_server_method}"
 selected_hw_method="${hw_method}"
 case \$1 in
 --nogpu)
@@ -898,12 +887,15 @@ echo "${G}Type ${C}vncstart ${G}to start vncserver with gpu acceleration"${W}
 echo "${G}Type ${C}vncstart ---nogpu ${G}to start vncserver without gpu acceleration"${W}
 ;;
 *)
-eval "\${selected_initialize_server_method} &"
-eval "\$selected_hw_method vncserver"
+${initialize_server_method} &
+$hw_method vncserver
 ;;
 esac
 EOF
     chmod +x "$PREFIX/bin/vncstart"
+}
+
+function setup_vncstop_cmd() {
     check_and_delete "$PREFIX/bin/vncstop"
 cat <<'EOF' > "$PREFIX/bin/vncstop"
 #!/data/data/com.termux/files/usr/bin/bash
@@ -922,30 +914,28 @@ rm $PREFIX/tmp/.X1-lock > /dev/null 2>&1
 rm $PREFIX/tmp/.X11-unix/X1 > /dev/null 2>&1
 EOF
     chmod +x "$PREFIX/bin/vncstop"
-	
 }
 
-function setup_termux_x11() {
-	banner
-        echo "${R}[${W}-${R}]${G}${BOLD} Configuring Termux:X11 "${W}
-        echo
-        package_install_and_check "termux-x11-nightly"
-		local repo_owner="termux"
-		local repo_name="termux-x11"
-		local latest_tag
-		latest_tag=$(get_latest_release "$repo_owner" "$repo_name")
-		local termux_x11_url="https://github.com/$repo_owner/$repo_name/releases/download/$latest_tag/"
-		local assets
-		assets=$(curl -s "https://api.github.com/repos/$repo_owner/$repo_name/releases/latest" | grep -oP '(?<="name": ")[^"]*')
-		deb_assets=$(echo "$assets" | grep termux-x11.*all.deb)
-		wget -O $current_path/termux-x11.deb $termux_x11_url/$deb_assets
-		apt install $current_path/termux-x11.deb -y
-		rm $current_path/termux-x11.deb
-		sed -i '12s/^#//' $HOME/.termux/termux.properties
+function setup_vnc() {
+    banner
+    echo "${R}[${W}-${R}]${G}${BOLD} Configuring Vnc..."${W}
+    echo
+    package_install_and_check "tigervnc"
+    check_and_create_directory "$HOME/.vnc"
+    check_and_delete "$HOME/.vnc/xstartup"
+cat << EOF > "$HOME/.vnc/xstartup"
+    $de_startup &
+EOF
+    chmod +x "$HOME/.vnc/xstartup"
+	setup_vncstart_cmd
+	setup_vncstop_cmd
+}
+
+function setup_tx11start_cmd() {
+	check_and_delete "$PREFIX/bin/tx11start"
 cat <<EOF > "$PREFIX/bin/tx11start"
 #!/data/data/com.termux/files/usr/bin/bash
 
-selected_initialize_server_method="${initialize_server_method}"
 selected_hw_method="${hw_method}"
 case \$1 in
 --nogpu)
@@ -960,13 +950,13 @@ echo -e "${G}Type ${C}tx11start ${G}to start termux:x11 with gpu acceleration"${
 echo -e "${G}Type ${C}tx11start ---nogpu ${G}to start termux:x11 without gpu acceleration"${W}
 ;;
 *)
-eval "\${selected_initialize_server_method} &"
+${initialize_server_method} &
 sleep 1
 XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :1.0 &
 sleep 1
 am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1 &
 sleep 1
-eval "env DISPLAY=:1.0 \${selected_hw_method} dbus-launch --exit-with-session $de_startup > /dev/null 2>&1 &"
+env DISPLAY=:1.0 ${hw_method} dbus-launch --exit-with-session $de_startup > /dev/null 2>&1 &
 ;;
 esac
 EOF
@@ -979,7 +969,10 @@ kill "$process_id" > /dev/null 2>&1
 EOF
 fi
 chmod +x $PREFIX/bin/tx11start
+}
 
+function setup_tx11stop_cmd() {
+	check_and_delete "$PREFIX/bin/tx11stop"
 if [[ "$de_name" == "xfce" ]]; then
 cat <<EOF > "$PREFIX/bin/tx11stop"
 #!/data/data/com.termux/files/usr/bin/bash
@@ -1016,6 +1009,27 @@ exec 2>/dev/null
 EOF
 fi
 chmod +x $PREFIX/bin/tx11stop
+}
+
+function setup_termux_x11() {
+	banner
+        echo "${R}[${W}-${R}]${G}${BOLD} Configuring Termux:X11 "${W}
+        echo
+        package_install_and_check "termux-x11-nightly"
+		local repo_owner="termux"
+		local repo_name="termux-x11"
+		local latest_tag
+		latest_tag=$(get_latest_release "$repo_owner" "$repo_name")
+		local termux_x11_url="https://github.com/$repo_owner/$repo_name/releases/download/$latest_tag/"
+		local assets
+		assets=$(curl -s "https://api.github.com/repos/$repo_owner/$repo_name/releases/latest" | grep -oP '(?<="name": ")[^"]*')
+		deb_assets=$(echo "$assets" | grep termux-x11.*all.deb)
+		wget -O $current_path/termux-x11.deb $termux_x11_url/$deb_assets
+		apt install $current_path/termux-x11.deb -y
+		rm $current_path/termux-x11.deb
+		sed -i '12s/^#//' $HOME/.termux/termux.properties
+		setup_tx11start_cmd
+		setup_tx11stop_cmd
 }
 
 function gui_termux_x11() {
@@ -1395,7 +1409,7 @@ echo -e "
 # print your current termux-desktop configuration
 alias 'tdconfig'='cat $config_file'
 # open the folder where all the apps added by proot-distro are located
-alias 'pdappps'='cd /data/data/com.termux/files/usr/share/applications/pd_added'
+alias 'pdapps'='cd /data/data/com.termux/files/usr/share/applications/pd_added'
 " >> $HOME/.${shell_name}rc
 echo "terminal_utility_setup_answer=\"$terminal_utility_setup_answer\"" >> $config_file
 }
@@ -1763,16 +1777,12 @@ function change_hw() {
 			hw_questions
 			hw_config
 		if [[ "$gui_mode" == "termux_x11" ]]; then
-		    sed -i "s|selected_initialize_server_method=\"[^\"]*\"|selected_initialize_server_method=\"$initialize_server_method\"|" "$PREFIX/bin/tx11start"
-			sed -i "s|selected_hw_method=\"[^\"]*\"|selected_hw_method=\"$hw_method\"|" "$PREFIX/bin/tx11start"
-			elif [[ "$gui_mode" == "vnc" ]]; then
-		    sed -i "s|selected_initialize_server_method=\"[^\"]*\"|selected_initialize_server_method=\"$initialize_server_method\"|" "$PREFIX/bin/vncstart"
-			sed -i "s|selected_hw_method=\"[^\"]*\"|selected_hw_method=\"$hw_method\"|" "$PREFIX/bin/vncstart"
-			elif [[ "$gui_mode" == "both" ]]; then
-		    sed -i "s|selected_initialize_server_method=\"[^\"]*\"|selected_initialize_server_method=\"$initialize_server_method\"|" "$PREFIX/bin/tx11start"
-			sed -i "s|selected_hw_method=\"[^\"]*\"|selected_hw_method=\"$hw_method\"|" "$PREFIX/bin/tx11start"
-			sed -i "s|selected_initialize_server_method=\"[^\"]*\"|selected_initialize_server_method=\"$initialize_server_method\"|" "$PREFIX/bin/vncstart"
-			sed -i "s|selected_hw_method=\"[^\"]*\"|selected_hw_method=\"$hw_method\"|" "$PREFIX/bin/vncstart"
+		setup_tx11start_cmd
+		elif [[ "$gui_mode" == "vnc" ]]; then
+		setup_vncstart_cmd
+		elif [[ "$gui_mode" == "both" ]]; then
+		setup_tx11start_cmd
+		setup_vncstart_cmd
 		fi
 		if [[ "$distro_add_answer" == "y" ]]; then
 		sed -i "s|selected_pd_hw_method=\"[^\"]*\"|selected_pd_hw_method=\"$pd_hw_method\"|" "$PREFIX/bin/pdrun"
