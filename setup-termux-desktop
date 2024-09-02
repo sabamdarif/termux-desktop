@@ -11,6 +11,7 @@ C="$(printf '\033[1;36m')"
 W="$(printf '\033[0m')"
 BOLD="$(printf '\033[1m')"
 config_file="$PREFIX/etc/termux-desktop/configuration"
+cd $HOME
 
 function banner() {
 clear
@@ -1566,6 +1567,28 @@ function setup_wine() {
 #########################################################################
 ########################### Finish | Notes ##############################
 #########################################################################
+function cleanup_cache() {
+	banner
+	echo "${R}[${W}-${R}]${G} Cleaning up the cache..."${W}
+	if type -p pacman >/dev/null 2>&1; then
+	pacman -Scc
+	else
+	apt clean all
+	fi
+}
+
+function delete_installer_file() {
+	script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+	script_name="$(basename "${BASH_SOURCE[0]}")"
+	if [[ "$script_dir" != "$PREFIX/bin" ]]; then
+	    if [[ -f "$script_dir/$script_name" ]]; then
+		rm "$script_dir/$script_name"
+		else
+		echo "${R}Installer file not found"${W}
+		fi
+	fi
+	
+}
 
 function notes() {
 	banner
@@ -1940,7 +1963,7 @@ function print_basic_details() {
 	local model="$(getprop ro.product.brand) $(getprop ro.product.model)"
 	local lotal_ram=$(free -htm | awk '/Mem:/ {print $2}')
 	device_arch=$(uname -m)
-cat << EOF > $config_file
+cat <<EOF > $config_file
 
 ####################################
 ########## Termux Desktop ##########
@@ -1963,34 +1986,44 @@ cat << EOF > $config_file
 EOF
 }
 
-function update_or_add_shortcut() {
-if [[ -e "$PREFIX/bin/setup-termux-desktop" ]]; then
-local current_script_hash=$(curl -sL https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop | sha256sum | cut -d ' ' -f 1)
-local local_script_hash=$(basename $(sha256sum $PREFIX/bin/setup-termux-desktop))
-if [[ "$local_script_hash" != "$current_script_hash" ]]; then
-confirmation_y_or_n "You are using an old installer. Do you want to update it to the latest version" update_installer
-    if [[ "$update_installer" == "y" ]]; then
-	mv $PREFIX/bin/setup-termux-desktop $PREFIX/etc/termux-desktop/
-	check_and_backup "$PREFIX/etc/termux-desktop/setup-termux-desktop"
+function check_for_update_and_update_installer() {
+	if [[ -e "$PREFIX/bin/setup-termux-desktop" ]]; then
+	local current_script_hash=$(curl -sL https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop | sha256sum | cut -d ' ' -f 1)
+	local local_script_hash=$(basename $(sha256sum $PREFIX/bin/setup-termux-desktop | cut -d ' ' -f 1))
+	    if [[ "$local_script_hash" != "$current_script_hash" ]]; then
+		confirmation_y_or_n "You are using an old installer. Do you want to update it to the latest version" update_installer
+		    if [[ "$update_installer" == "y" ]]; then
+			mv $PREFIX/bin/setup-termux-desktop $PREFIX/etc/termux-desktop/
+			check_and_backup "$PREFIX/etc/termux-desktop/setup-termux-desktop"
+			curl -Lsf https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop -o $PREFIX/bin/setup-termux-desktop
+			chmod +x $PREFIX/bin/setup-termux-desktop
+			termux-reload-settings
+			local new_local_script_hash=$(basename $(sha256sum $PREFIX/bin/setup-termux-desktop | cut -d ' ' -f 1))
+			    if [[ "$new_local_script_hash" == "$current_script_hash" ]]; then
+				echo "${R}[${W}-${R}]${G}Installer updated successfully"${W}
+				exit 0
+				else
+				echo "${R}[${W}-${R}]${G}Failed to update the installer"${W}
+				exit 0
+				fi
+			elif [[ "$update_installer" == "n" ]]; then
+			echo "${R}[${W}-${R}]${G}Keeping the old installer"${W}
+			exit 0
+			fi
+		else
+		echo -e "${R}[${W}-${R}]${G}${BOLD} You are using the latest installer\n Good job!"${W}
+		fi
+	fi
+}
+
+function check_and_add_installer() {
+	if [[ -e "$PREFIX/bin/setup-termux-desktop" ]]; then
+	check_for_update_and_update_installer
+	else
+	echo "${R}[${W}-${R}]${G} Adding setup-termux-desktop installer to bin"${W}
 	curl -Lsf https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop -o $PREFIX/bin/setup-termux-desktop
 	chmod +x $PREFIX/bin/setup-termux-desktop
-	local local_script_hash=$(basename $(sha256sum $PREFIX/bin/setup-termux-desktop))
-	    if [[ -e "$PREFIX/bin/setup-termux-desktop" ]] && [[ "$local_script_hash" == "$current_script_hash" ]]; then
-		echo "${R}[${W}-${R}]${G}Installer updated successfully${W}"
-		sleep 0.2
-		else
-		echo "${R}[${W}-${R}]${G}Failed to update the installer${W}"
-		sleep 0.5
-		fi
-	exit 0
-	else
-	echo "${R}[${W}-${R}]${G}Keeping the old installer"${W}
 	fi
-fi
-echo "${R}[${W}-${R}]${G} Adding setup-termux-desktop installer"${W}
-curl -Lsf https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop -o $PREFIX/bin/setup-termux-desktop
-chmod +x $PREFIX/bin/setup-termux-desktop
-fi
 }
 
 #########################################################################
@@ -2043,9 +2076,8 @@ function reset_changes() {
 ######################### Call Functions ################################
 #########################################################################
 check_termux
-cd $HOME
+check_and_add_installer
 current_path=$(pwd)
-update_or_add_shortcut
 function install_termux_desktop() {
 update_sys
 sleep 2
@@ -2086,8 +2118,10 @@ distro_container_setup
 gui_launcher
 terminal_utility_setup
 some_fixes
-notes
+cleanup_cache
 termux-wake-unlock
+notes
+delete_installer_file
 }
 
 function show_help() {
