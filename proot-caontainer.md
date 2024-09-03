@@ -44,6 +44,9 @@
 
 ### How To Login Into Your Installed Distro:
 
-- <b>Type `Distro-Name` To Login Into Distro</b>
+- <b>Type `Distro-Name` To login into your installed distro</b>
 
-    >Like: type debian to login into debian
+    >Like: type `debian` to login into debian
+- <b>Type `Distro-Name --root / -r` To login as root</b>
+- <b>Type `Distro-Name --remove` To remove the installed distro and all it's data and the files related to it</b>
+- <b>Type `Distro-Name --help / -h` To show help</b>

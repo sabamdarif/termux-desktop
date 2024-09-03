@@ -867,6 +867,7 @@ function distro_container_setup() {
 	wget -O ${current_path}/distro-container-setup https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/distro-container-setup ; chmod +x ${current_path}/distro-container-setup ; . ${current_path}/distro-container-setup
 	rm ${current_path}/distro-container-setup
 	fi
+	echo "distro_add_answer=\"$distro_add_answer\"" >> $config_file
 }
 
 #########################################################################
