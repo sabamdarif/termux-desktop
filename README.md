@@ -15,14 +15,14 @@
 
 - :books: Easy To Setup
 - :art: New Beautiful Theme And Styles
-- :wine_glass: Wine To Run Windows Apps
+- :wine_glass: Wine To Run Windows Apps _(x86_64 in arm64 device)_
 - :mechanical_arm: Hardware Acceleration Enabled
 - :paperclips: Termux:X11 / Vnc For Gui Access
 -  :jigsaw: One Click To Install Some useful Apps
    - :globe_with_meridians: Browser: Firefox / Chromium
    - :man_technologist: Code Editor: VS Code / Geany
    - :camera: Image Editor: Gimp / Inkscape
-   - :wine_glass: Wine To Run Windows Apps
+- :package: Install apps like libreoffice _(apps that are not avilable in termux by default)_
 - :link: And Much More...
 <br>
 
@@ -44,7 +44,7 @@
 - No Root Required
 - Android 7+ phone
 - [Termux](https://termux.dev/en/) From [Github](https://github.com/termux/termux-app/releases) Or [Fdroid](https://f-droid.org/en/packages/com.termux/)
-> Termux from Google Play is unmaintained due to API requirements, so instead use the F-Droid Or Github build.
+> Termux from Google Play can't poperly install x11-packages due to API limitation, so instead use the F-Droid Or Github build.
 - 2GB of RAM 3GB of RAM
 - 1.5 - 2 GB Of Internet
 - 3 - 4 GB Of Free Storage

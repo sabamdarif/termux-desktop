@@ -151,9 +151,14 @@ function package_check_and_remove() {
 	packs_list=($@)
 	for package_name in "${packs_list[@]}"; do
 	if dpkg -s "$package_name" >/dev/null 2>&1; then
-	echo "${R}[${W}-${R}]${G}${BOLD} Removeing package: ${C}$package_name "${W}
 	    if [[ "$package_name" != "already_exist" ]]; then
-		    apt autoremove "$package_name" -y
+		echo "${R}[${W}-${R}]${G}${BOLD} Removeing package: ${C}$package_name "${W}
+		apt autoremove "$package_name" -y
+		fi
+	elif pacman -Qi "$package_name" >/dev/null 2>&1; then
+	    if [[ "$package_name" != "already_exist" ]]; then
+		echo "${R}[${W}-${R}]${G}${BOLD} Removeing package: ${C}$package_name "${W}
+		pacman -Rnsy "$package_name"
 		fi
     fi
 done
@@ -683,7 +688,7 @@ function install_required_packages() {
 	if type -p pacman >/dev/null 2>&1; then
 	package_install_and_check "wget pv jq curl pulseaudio termux-am"
 	else
-	package_install_and_check "wget pv jq curl pulseaudio termux-am x11-repo tur-repo"
+	package_install_and_check "wget pv jq curl pulseaudio tar xz-utils gzip termux-am x11-repo tur-repo"
 	fi
 	sed -i 's/termux-am="already_exist"/ /' $config_file
 	update_sys
@@ -698,7 +703,7 @@ function install_desktop() {
 	elif [[ "$desktop_answer" == "2" ]]; then
 	echo "${R}[${W}-${R}]${G}${BOLD} Installing Lxqt Desktop"${W}
 	echo
-	package_install_and_check "lxqt papirus-icon-theme xorg-xsetroot xwayland kvantum"
+	package_install_and_check "lxqt openbox papirus-icon-theme xorg-xsetroot xwayland kvantum"
 	fi
 }
 
@@ -1294,7 +1299,7 @@ function setup_zsh() {
 	echo "${R}[${W}-${R}]${G}${BOLD} Configuring Zsh.."${W}
 	echo
 	package_install_and_check "zsh git"
-	wget https://raw.githubusercontent.com/sabamdarif/short-linux-scripts/main/install-zsh.sh && bash install-zsh.sh
+	wget https://raw.githubusercontent.com/sabamdarif/simple-linux-scripts/main/install-zsh.sh && bash install-zsh.sh
 	clear
 	fi
 	get_shellrc_path
@@ -1322,13 +1327,16 @@ function terminal_utility_setup() {
 	check_and_create_directory "$HOME/.termux"
 	check_and_backup "$HOME/.termux/colors.properties"
 	wget -O $HOME/.termux/colors.properties https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/other/colors.properties
+	package_install_and_check "openssh"
+	wget -O $PREFIX/bin/termux-ssh https://raw.githubusercontent.com/sabamdarif/simple-linux-scripts/main/termux-ssh
+	chmod +x $PREFIX/bin/termux-ssh
+	cp $shell_rc_file ${shell_rc_file}-2
+	check_and_backup "$shell_rc_file"
+	mv ${shell_rc_file}-2 ${shell_rc_file}
 	if type -p pacman >/dev/null 2>&1; then
 	package_install_and_check "bat eza zoxide fastfetch"
 	else
 	package_install_and_check "nala bat eza zoxide fastfetch"
-	cp $shell_rc_file ${shell_rc_file}-2
-	check_and_backup "$shell_rc_file"
-	mv ${shell_rc_file}-2 ${shell_rc_file}
 cat <<'EOF' >> "$shell_rc_file"
 alias apt='nala $@'
 alias pkg='nala $@'
@@ -1339,6 +1347,8 @@ alias cat='bat $@'
 alias ls='eza --icons $@'
 alias mkdir='mkdir -p'
 alias neofetch='fastfetch'
+alias startssh='termux-ssh'
+alias stopssh='termux-ssh stop'
 #######################################################
 # SPECIAL FUNCTIONS
 #######################################################
@@ -1400,7 +1410,7 @@ mkdirg() {
 	cd "$1"
 }
 EOF
-cat <<EOF >> "$HOME/.${shell_name}rc"
+cat <<EOF >> "$shell_rc_file"
 # set zoxide as cd
 eval "\$(zoxide init --cmd cd ${shell_name})"
 EOF
