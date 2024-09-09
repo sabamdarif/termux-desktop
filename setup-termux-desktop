@@ -804,6 +804,13 @@ function additional_required_package_installler() {
 	echo "${G} No Additional Packages Required For Theme: ${style_answer}"${W}
 	sleep 1
 	fi
+	elif [[ "$de_name" == "openbox" ]]; then
+	    if [[ "$style_answer" == "1" ]]; then
+		install_font_for_style "1"
+		else
+		echo "${G} No Additional Packages Required For Theme: ${style_answer}"${W}
+		sleep 1
+		fi
 	fi
 }
 
