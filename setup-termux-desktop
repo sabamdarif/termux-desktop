@@ -340,7 +340,9 @@ function questions() {
 	echo "${Y}1. XFCE"${W}
 	echo
 	echo "${Y}2. LXQT"${W}
-	echo 
+	echo
+	echo "${Y}3. OPENBOX WM"${W}
+	echo
 	read -p "${Y}select an option (Default 1): "${W} desktop_answer
 	echo
 	echo "${R}[${W}-${R}]${G}Continuing with answer: $desktop_answer"${W}
@@ -357,6 +359,11 @@ function questions() {
 	themes_folder="$PREFIX/share/themes"
 	icons_folder="$sys_icons_folder"
 	de_startup="startlxqt"
+	elif [[ "$desktop_answer" == "3" ]]; then
+	de_name="openbox"
+	themes_folder="$PREFIX/share/themes"
+	icons_folder="$sys_icons_folder"
+	de_startup="openbox-session"
 	fi
 	echo "de_startup=\"$de_startup\"" >> $config_file
 	echo "de_name=\"$de_name\"" >> $config_file
@@ -537,7 +544,7 @@ function hw_questions() {
 	echo
 	echo "${Y}3. VIRGL ZINK"${W}
 	echo
-	echo "${Y}4. Freedreno (Adreno GPU Only , Adreno 610 And Above)"${W}
+	echo "${Y}4. Freedreno ${C}(Adreno 610 And Above | didn't work for me)"${W}
 	echo
 	read -p "${Y}select an option : "${W} termux_hw_answer
 	termux_hw_answer=${termux_hw_answer:-1} 
@@ -704,6 +711,10 @@ function install_desktop() {
 	echo "${R}[${W}-${R}]${G}${BOLD} Installing Lxqt Desktop"${W}
 	echo
 	package_install_and_check "lxqt openbox papirus-icon-theme xorg-xsetroot xwayland kvantum"
+	elif [[ "$desktop_answer" == "3" ]]; then
+	echo "${R}[${W}-${R}]${G}${BOLD} Installing Openbox WM"${W}
+	echo
+	package_install_and_check "openbox polybar xorg-xsetroot lxappearance wmctrl feh xwayland kvantum thunar firefox mpd rofi bmon xcompmgr xfce4-settings gedit"
 	fi
 }
 
@@ -715,6 +726,8 @@ function set_config_dir() {
 	config_dirs=(autostart cairo-dock dconf gtk-3.0 Mousepad pulse Thunar menu ristretto rofi xfce4)
 	elif [[ "$de_name" == "lxqt" ]]; then
 	config_dirs=(fontconfig gtk-3.0 lxqt pcmanfm-qt QtProject.conf glib-2.0 Kvantum openbox qterminal.org)
+	elif [[ "$de_name" == "openbox" ]]; then
+	config_dirs=(dconf gedit Kvantum openbox pulse rofi xfce4 enchant gtk-3.0 mimeapps.list polybar QtProject.conf Thunar)
     fi
 }
 
@@ -722,7 +735,7 @@ function theme_installer() {
     banner
     echo "${R}[${W}-${R}]${G}${BOLD} Configuring Theme: ${C}${style_name}"${W}
 	echo
-	if [[ "$de_name" == "xfce" ]]; then
+	if [[ "$de_name" == "xfce" ]] || [[ "$de_name" == "openbox" ]]; then
 	package_install_and_check "gnome-themes-extra"
 	fi
     sleep 3

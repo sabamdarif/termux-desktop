@@ -33,3 +33,75 @@
  - **Mobox:-** it can run x86_64 windows apps in aarch64 device with good performance
  > **:warning: You need to set up Mobox after the termux-desktop installation finishes [From Here](https://github.com/olegos2/mobox)**
  - **Hangover-wine:-** (can only be install using [pacman package manager](https://wiki.termux.com/wiki/Switching_package_manager)), do the same thing like mobox
+
+---
+
+## Openbox Keybindings Cheat Sheet
+
+This document provides a list of keybindings used in Openbox for quick reference.
+
+#### General Navigation
+
+| **Keybinding**              | **Action**                                 |
+|-----------------------------|--------------------------------------------|
+| `Ctrl + Alt + Left`          | Go to the previous desktop                 |
+| `Ctrl + Alt + Right`         | Go to the next desktop                     |
+| `Ctrl + Alt + Up`            | Go to the desktop above                    |
+| `Ctrl + Alt + Down`          | Go to the desktop below                    |
+| `Shift + Alt + Left`         | Send window to the previous desktop        |
+| `Shift + Alt + Right`        | Send window to the next desktop            |
+| `Shift + Alt + Up`           | Send window to the desktop above           |
+| `Shift + Alt + Down`         | Send window to the desktop below           |
+| `Win + F1`                   | Go to desktop 1                            |
+| `Win + F2`                   | Go to desktop 2                            |
+| `Win + F3`                   | Go to desktop 3                            |
+| `Win + F4`                   | Go to desktop 4                            |
+
+#### Window Management
+
+| **Keybinding**              | **Action**                                 |
+|-----------------------------|--------------------------------------------|
+| `Win + Space`                | Launch Rofi (launcher)                     |
+| `Win + Shift + Space`        | Launch Rofi (dashboard)                    |
+| `Alt + Tab`                  | Switch to the next window                  |
+| `Win + Tab`                  | Switch to the next window                  |
+| `Win + Left`                 | Unmaximize horizontally                    |
+| `Win + Right`                | Unmaximize horizontally                    |
+| `Win + Up`                   | Maximize window                            |
+| `Win + Down`                 | Unmaximize window                          |
+| `Alt + F4`                   | Close window                               |
+| `Alt + Escape`               | Lower window                               |
+| `Alt + Space`                | Open client menu                           |
+| `Alt + Shift + Tab`          | Switch to the previous window              |
+| `Win + Shift + Right`        | Cycle windows to the right                 |
+| `Win + Shift + Left`         | Cycle windows to the left                  |
+| `Win + Shift + Up`           | Cycle windows upwards                      |
+| `Win + Shift + Down`         | Cycle windows downwards                    |
+| `Ctrl + Alt + M`             | Unminimize all windows                     |
+| `Ctrl + Alt + T`             | Open terminal (aterm)                      |
+
+#### Window Movement and Resizing
+
+| **Keybinding**              | **Action**                                 |
+|-----------------------------|--------------------------------------------|
+| `Win + Alt + Up`             | Move window up                            |
+| `Win + Alt + Down`           | Move window down                          |
+| `Win + Alt + Left`           | Move window left                          |
+| `Win + Alt + Right`          | Move window right                         |
+| `Ctrl + Alt + Right`         | Resize window horizontally (increase)     |
+| `Ctrl + Alt + Left`          | Resize window horizontally (decrease)     |
+| `Ctrl + Alt + Down`          | Resize window vertically (increase)       |
+| `Ctrl + Alt + Up`            | Resize window vertically (decrease)       |
+
+#### Miscellaneous
+
+| **Keybinding**              | **Action**                                 |
+|-----------------------------|--------------------------------------------|
+| `Win + D`                   | Toggle show desktop                        |
+| `Shift + Win + 1`           | Send window to desktop 1                   |
+| `Shift + Win + 2`           | Send window to desktop 2                   |
+| `Shift + Win + 3`           | Send window to desktop 3                   |
+| `Shift + Win + 4`           | Send window to desktop 4                   |
+| `Shift + Win + 5`           | Send window to desktop 5                   |
+
+---

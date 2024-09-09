@@ -14,10 +14,12 @@
 ## Features:
 
 - :books: Easy To Setup
+- :desktop_computer: XFCE, LXQt, and Openbox, all supported
 - :art: New Beautiful Theme And Styles
 - :wine_glass: Wine To Run Windows Apps _(x86_64 in arm64 device)_
 - :mechanical_arm: Hardware Acceleration Enabled
 - :paperclips: Termux:X11 / Vnc For Gui Access
+- :package: Work with both APT , PACMAN
 -  :jigsaw: One Click To Install Some useful Apps
    - :globe_with_meridians: Browser: Firefox / Chromium
    - :man_technologist: Code Editor: VS Code / Geany
@@ -26,11 +28,18 @@
 - :link: And Much More...
 <br>
 
-
 ## :warning: Follow This Steps :point_down:
 
 ### 1. Check Basic Requirment: [from here](#requirements)
-### 2. Check All Avilable Desktop Styles: [XFCE](xfce_styles.md) , [LXQT](lxqt_styles.md)
+### 2. Check All Avilable Desktop Styles:
+
+<b>
+
+- [XFCE](xfce_styles.md)
+- [LXQT](lxqt_styles.md)
+- [OPENBOX](openbox_styles.md)
+</b>
+
 ### 3. Check About Hardware Acceleration : [from here](https://github.com/sabamdarif/termux-desktop?tab=readme-ov-file#hardware-acceleration-in-distro-container-and-also-in-termux)
 ### 4. Check About Distro Container: [from here](https://github.com/sabamdarif/termux-desktop?tab=readme-ov-file#want-to-install-more-apps-like-libreoffice-which-are-not-avilable-in-termux) [[Video Tutorial](https://youtu.be/KiUTyGZ2grE)]
 ### 5. Check Natively Supported Apps list: [from here](applist.md)
