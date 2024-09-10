@@ -776,7 +776,11 @@ function theme_installer() {
         for the_config_dir in "${config_dirs[@]}"; do
 		check_and_delete "$HOME/.config/$the_config_dir"
         done
+	if [[ "$de_name" == "openbox" ]]; then
+	download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/${de_name}/look_${style_answer}/config.tar.gz" "$HOME"
+	else
 	download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/${de_name}/look_${style_answer}/config.tar.gz" "$HOME/.config/"
+	fi
 }
 
 #########################################################################
@@ -1028,6 +1032,23 @@ kill -9 "\$termux_x11_pid" > /dev/null 2>&1
 pkill -9 pulseaudio > /dev/null 2>&1
 killall virgl_test_server > /dev/null 2>&1
 pkill -9 lxqt-* > /dev/null 2>&1
+pkill -9 dbus-* > /dev/null 2>&1
+pkill -f com.termux.x11 > /dev/null 2>&1
+echo -e "${G}Termux:X11 Stopped Successfully ${W}"
+fi
+exec 2>/dev/null
+EOF
+elif [[ "$de_name" == "openbox" ]]; then
+cat <<EOF > "$PREFIX/bin/tx11stop"
+#!/data/data/com.termux/files/usr/bin/bash
+
+termux_x11_pid=\$(pgrep -f "/system/bin/app_process / com.termux.x11.Loader :1.0")
+de_pid=\$(pgrep -f "$de_startup")
+if [[ -n "\$termux_x11_pid" ]] || [[ -n "\$de_pid" ]]; then
+kill -9 "\$termux_x11_pid" > /dev/null 2>&1
+pkill -9 pulseaudio > /dev/null 2>&1
+killall virgl_test_server > /dev/null 2>&1
+pkill -9 openbox* > /dev/null 2>&1
 pkill -9 dbus-* > /dev/null 2>&1
 pkill -f com.termux.x11 > /dev/null 2>&1
 echo -e "${G}Termux:X11 Stopped Successfully ${W}"
@@ -1613,7 +1634,7 @@ function delete_installer_file() {
 	script_name="$(basename "${BASH_SOURCE[0]}")"
 	if [[ "$script_dir" != "$PREFIX/bin" ]]; then
 	    if [[ -f "$script_dir/$script_name" ]]; then
-		rm "$script_dir/$script_name"
+		(exec rm -- "$script_dir/$script_name") &
 		else
 		echo "${R}Installer file not found"${W}
 		fi
@@ -1667,6 +1688,8 @@ function remove_termux_desktop() {
 	package_check_and_remove "xfce4 xfce4-goodies xwayland kvantum"
 	elif [[ "$de_name" == "lxqt" ]]; then
 	package_check_and_remove "lxqt xorg-xsetroot papirus-icon-theme xwayland kvantum"
+	elif [[ "$de_name" == "openbox" ]]; then
+	package_check_and_remove "openbox polybar xorg-xsetroot lxappearance wmctrl feh xwayland kvantum thunar firefox mpd rofi bmon xcompmgr xfce4-settings gedit"
 	fi
 	#remove zsh
 	if [[ "$zsh_answer" == "y" ]]; then

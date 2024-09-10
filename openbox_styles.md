@@ -1,4 +1,4 @@
-## 0. Stock :
+## 0. Stock:
 
 <center><img src="images/openbox/look_0/desktop.png"></center>
 
@@ -12,7 +12,7 @@
 </details>
 <br>
 
-## 1. Nordic Openbox
+## 1. Nordic Openbox:
 ### Keybord shortcuts:- [Here](https://github.com/sabamdarif/termux-desktop/blob/main/see-more.md#openbox-keybindings-cheat-sheet)
 >Inspired from [adi1090x termux-desktop](https://github.com/adi1090x/termux-desktop)
 >my modifiacation over his style

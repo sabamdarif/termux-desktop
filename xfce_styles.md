@@ -1,4 +1,4 @@
-## 0. Stock :
+## 0. Stock:
 
 <center><img src="images/xfce/look_0/desktop.png"></center>
 
