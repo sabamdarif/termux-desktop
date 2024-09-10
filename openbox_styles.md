@@ -14,8 +14,9 @@
 
 ## 1. Nordic Openbox:
 ### Keybord shortcuts:- [Here](https://github.com/sabamdarif/termux-desktop/blob/main/see-more.md#openbox-keybindings-cheat-sheet)
->Inspired from [adi1090x termux-desktop](https://github.com/adi1090x/termux-desktop)
->my modifiacation over his style
+>Inspired from [adi1090x's termux-desktop](https://github.com/adi1090x/termux-desktop)
+
+>My modifications to his style
 
 <details>
 <summary><b style ="font-size: small">Style Details: </summary>

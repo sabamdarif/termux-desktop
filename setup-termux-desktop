@@ -714,7 +714,7 @@ function install_desktop() {
 	elif [[ "$desktop_answer" == "3" ]]; then
 	echo "${R}[${W}-${R}]${G}${BOLD} Installing Openbox WM"${W}
 	echo
-	package_install_and_check "openbox polybar xorg-xsetroot lxappearance wmctrl feh xwayland kvantum thunar firefox mpd rofi bmon xcompmgr xfce4-settings gedit"
+	package_install_and_check "openbox polybar xorg-xsetroot lxappearance wmctrl feh xwayland kvantum termux-api thunar firefox mpd rofi bmon xcompmgr xfce4-settings gedit"
 	fi
 }
 

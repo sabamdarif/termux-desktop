@@ -38,6 +38,7 @@
 - [XFCE](xfce_styles.md)
 - [LXQT](lxqt_styles.md)
 - [OPENBOX](openbox_styles.md)
+>Openbox keybord shortcuts :- [Here](https://github.com/sabamdarif/termux-desktop/blob/main/see-more.md#openbox-keybindings-cheat-sheet)
 </b>
 
 ### 3. Check About Hardware Acceleration : [from here](https://github.com/sabamdarif/termux-desktop?tab=readme-ov-file#hardware-acceleration-in-distro-container-and-also-in-termux)
@@ -59,6 +60,7 @@
 - 3 - 4 GB Of Free Storage
 - VNC Client [RealVnc](https://play.google.com/store/apps/details?id=com.realvnc.viewer.android) Or [Nethunter Kex](https://store.nethunter.com/en/packages/com.offsec.nethunter.kex/)
 - [Termux:X11](https://github.com/termux/termux-x11/releases)
+- [Termux-API](https://github.com/termux/termux-api/releases) _(For Openbox only)_
 
 <br>
 
