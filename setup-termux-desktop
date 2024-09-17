@@ -121,7 +121,7 @@ for package_name in "${packs_list[@]}"; do
 	    pacman -Sy --overwrite '*' $package_name
 	    pacman -Sy --noconfirm $package_name
 	  else
-        pkg --fix-broken install -y
+        apt --fix-broken install -y
         dpkg --configure -a
 	  fi
         pkg install "$package_name" -y
@@ -483,6 +483,24 @@ function questions() {
 	echo
 	read -p "${Y}select an option (Default 1): "${W} gui_mode
 	gui_mode=${gui_mode:-1}
+	echo "${R}[${W}-${R}]${G}Continuing with answer: $gui_mode"${W}
+	sleep 0.2
+	banner
+	confirmation_y_or_n "Do you want to start the desktop at Termux startup" de_on_startup
+	if [[ "$de_on_startup" == "y" && "$gui_mode" == "3" ]]; then
+	echo "${R}[${W}-${R}]${G} You chose both vnc and termux:x11 to access gui mode"${W}
+	echo
+	echo "${R}[${W}-${R}]${G} Which will be your default"${W}
+	echo
+	echo "${Y}1. Termux:x11"${W}
+	echo
+	echo "${Y}2. Vnc"${W}
+	echo
+	read -p "${Y}select an option (1 is Recomended): "${W} autostart_gui_mode
+	autostart_gui_mode=${autostart_gui_mode:-1}
+	echo "${R}[${W}-${R}]${G}Continuing with answer: $autostart_gui_mode"${W}
+	sleep 0.2
+	fi
 	banner
 	echo "${R}[${W}-${R}]${Y}${BOLD}Do you want to add a distro container (proot distro)"${W}
 	echo
@@ -1340,7 +1358,13 @@ function setup_zsh() {
 	echo "${R}[${W}-${R}]${G}${BOLD} Configuring Zsh.."${W}
 	echo
 	package_install_and_check "zsh git"
-	wget https://raw.githubusercontent.com/sabamdarif/simple-linux-scripts/main/install-zsh.sh && bash install-zsh.sh
+	wget https://raw.githubusercontent.com/sabamdarif/simple-linux-scripts/main/install-zsh.sh
+	if [[ "$distro_add_answer" == "y" ]]; then
+	bash install-zsh.sh -u "$user_name"
+	else
+	bash install-zsh.sh
+	fi
+	check_and_delete "install-zsh.sh"
 	clear
 	fi
 	get_shellrc_path
@@ -1617,6 +1641,65 @@ function setup_wine() {
 }
 
 #########################################################################
+########################### Add Autostart ###############################
+#########################################################################
+
+function add_vnc_autostart() {
+	echo "${R}[${W}-${R}]${G}${BOLD} Adding vnc to autostart"${W}
+	if grep -q "^vncstart" $rc_file; then
+	echo "${R}[${W}-${R}]${G} Termux:X11 start already exist"${W}
+	else
+cat << EOF >> "$shell_rc_file"
+# Start Vnc
+if pgrep vncserver > /dev/null; then
+echo "${G}Vncserver is already running"${W}
+else
+echo "${G}Starting Vnc..."${W}
+vncstart
+fi
+EOF
+	fi
+}
+
+function add_tx11_autostart() {
+	echo "${R}[${W}-${R}]${G}${BOLD} Adding Termux:x11 to autostart"${W}
+	if grep -q "^tx11start" $rc_file; then
+	echo "${R}[${W}-${R}]${G} Termux:X11 start already exist"${W}
+	else
+cat << EOF >> "$shell_rc_file"
+# Start Termux:X11
+if pgrep com.termux.x11 > /dev/null; then
+echo "${G}X server is already running"${W}
+else
+echo "${G}Starting Termux:x11..."${W}
+tx11start
+fi
+EOF
+	fi
+}
+
+function add_to_autostart() {
+	if [[ "$de_on_startup" == "y" ]]; then
+	   if [[ "$gui_mode" == "3" ]]; then
+	      if [[ "$autostart_gui_mode" == "2" ]]; then
+		  add_vnc_autostart
+		  elif [[ "$autostart_gui_mode" == "1" ]]; then
+		  add_tx11_autostart
+		  else
+		  add_tx11_autostart
+		  fi
+		elif [[ "$gui_mode" == "2" ]]; then
+		add_vnc_autostart
+		elif [[ "$gui_mode" == "1" ]]; then
+		add_tx11_autostart
+		else
+		add_tx11_autostart
+	   fi
+	fi
+}
+
+
+#########################################################################
 ########################### Finish | Notes ##############################
 #########################################################################
 function cleanup_cache() {
@@ -1804,7 +1887,7 @@ function remove_termux_desktop() {
 function gui_check_up() {
 termux_x11_pid=$(pgrep -f /system/bin/app_process.*com.termux.x11.Loader)
 de_pid=$(pgrep -f "$de_startup")
-if [ -n "$termux_x11_pid" ] || [ -n "$de_pid" ]  >/dev/null 2>&1; then
+if [ -n "$termux_x11_pid" ] || [ -n "$de_pid" ] >/dev/null 2>&1; then
 echo "${G}Please Stop The Gui Desktop Server First"${W}
 exit 0
 fi
@@ -2016,7 +2099,10 @@ function print_basic_details() {
 	android_version=$(getprop ro.build.version.release)
 	local model="$(getprop ro.product.brand) $(getprop ro.product.model)"
 	local lotal_ram=$(free -htm | awk '/Mem:/ {print $2}')
-	device_arch=$(uname -m)
+	app_arch=$(uname -m)
+	supported_arch="$(getprop ro.product.cpu.abilist)"
+	net_condition="$(getprop gsm.network.type)"
+	country="$(getprop gsm.sim.operator.iso-country)"
 cat <<EOF > $config_file
 
 ####################################
@@ -2031,7 +2117,10 @@ cat <<EOF > $config_file
 # Device Model: $model
 # Android Version: $android_version
 # Total Ram: $lotal_ram
-# Architecture: $device_arch
+# Architecture: $app_arch
+# System CPU Architecture: $supported_arch
+# Network Condition: $net_condition (On first run)
+# Country: $country
 #
 ########################
 
@@ -2171,6 +2260,7 @@ banner
 distro_container_setup
 gui_launcher
 terminal_utility_setup
+add_to_autostart
 some_fixes
 cleanup_cache
 termux-wake-unlock
