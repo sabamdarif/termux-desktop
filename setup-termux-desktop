@@ -1652,9 +1652,9 @@ function add_vnc_autostart() {
 cat << EOF >> "$shell_rc_file"
 # Start Vnc
 if pgrep vncserver > /dev/null; then
-echo "${G}Vncserver is already running"${W}
+echo "${G}Vncserver is already running${W}"
 else
-echo "${G}Starting Vnc..."${W}
+echo "${G}Starting Vnc...${W}"
 vncstart
 fi
 EOF
@@ -1669,9 +1669,9 @@ function add_tx11_autostart() {
 cat << EOF >> "$shell_rc_file"
 # Start Termux:X11
 if pgrep com.termux.x11 > /dev/null; then
-echo "${G}X server is already running"${W}
+echo "${G}X server is already running${W}"
 else
-echo "${G}Starting Termux:x11..."${W}
+echo "${G}Starting Termux:x11...${W}"
 tx11start
 fi
 EOF
