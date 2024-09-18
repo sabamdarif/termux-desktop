@@ -1646,15 +1646,15 @@ function setup_wine() {
 
 function add_vnc_autostart() {
 	echo "${R}[${W}-${R}]${G}${BOLD} Adding vnc to autostart"${W}
-	if grep -q "^vncstart" $rc_file; then
+	if grep -q "^vncstart" $shell_rc_file; then
 	echo "${R}[${W}-${R}]${G} Termux:X11 start already exist"${W}
 	else
 cat << EOF >> "$shell_rc_file"
 # Start Vnc
 if pgrep vncserver > /dev/null; then
-echo "${G}Vncserver is already running"${W}
+echo "${G}Vncserver is already running${W}"
 else
-echo "${G}Starting Vnc..."${W}
+echo "${G}Starting Vnc...${W}"
 vncstart
 fi
 EOF
@@ -1663,15 +1663,15 @@ EOF
 
 function add_tx11_autostart() {
 	echo "${R}[${W}-${R}]${G}${BOLD} Adding Termux:x11 to autostart"${W}
-	if grep -q "^tx11start" $rc_file; then
+	if grep -q "^tx11start" $shell_rc_file; then
 	echo "${R}[${W}-${R}]${G} Termux:X11 start already exist"${W}
 	else
 cat << EOF >> "$shell_rc_file"
 # Start Termux:X11
 if pgrep com.termux.x11 > /dev/null; then
-echo "${G}X server is already running"${W}
+echo "${G}X server is already running${W}"
 else
-echo "${G}Starting Termux:x11..."${W}
+echo "${G}Starting Termux:x11...${W}"
 tx11start
 fi
 EOF
