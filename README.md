@@ -158,6 +158,7 @@ curl -Lf https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-
 - `setup-termux-desktop --change style` *To Change Desktop Style*
 - `setup-termux-desktop --change hw` *To Change Hardware Acceleration Method*
 - `setup-termux-desktop --change pd` *To Change Installed Proot-Distro*
+- `setup-termux-desktop --change autostart` *To change autostart behaviour*
 <br>
 
 - `setup-termux-desktop --reinstall icons / themes /config` *To Reinstall Icons / Themes / Config*

@@ -1651,7 +1651,7 @@ function add_vnc_autostart() {
 	else
 cat << EOF >> "$shell_rc_file"
 # Start Vnc
-if pgrep vncserver > /dev/null; then
+if pgrep Xvnc > /dev/null; then
 echo "${G}Vncserver is already running${W}"
 else
 echo "${G}Starting Vnc...${W}"
@@ -1668,7 +1668,8 @@ function add_tx11_autostart() {
 	else
 cat << EOF >> "$shell_rc_file"
 # Start Termux:X11
-if pgrep com.termux.x11 > /dev/null; then
+termux_x11_pid=\$(pgrep -f "/system/bin/app_process / com.termux.x11.Loader :1.0")
+if [[ -n "\$termux_x11_pid" ]]; then
 echo "${G}X server is already running${W}"
 else
 echo "${G}Starting Termux:x11...${W}"
@@ -1696,6 +1697,7 @@ function add_to_autostart() {
 		add_tx11_autostart
 	   fi
 	fi
+	echo "de_on_startup=\"$de_on_startup\"" >> $config_file
 }
 
 
@@ -2015,6 +2017,54 @@ function change_distro() {
 }
 
 #########################################################################
+######################### Change Autostart ##############################
+#########################################################################
+
+function change_autostart() {
+    . "$config_file"
+
+    if [[ $SHELL = *zsh ]]; then
+        current_shell="zsh"
+        shell_rc_file="$HOME/.zshrc"
+    elif [[ $SHELL = *bash ]]; then
+        current_shell="bash"
+        shell_rc_file="/data/data/com.termux/files/usr/etc/bash.bashrc"
+    fi
+
+    if [[ "$zsh_answer" == "y" && "$current_shell" == "bash" ]] || [[ "$zsh_answer" == "n" && "$current_shell" == "zsh" ]]; then
+        echo "${R}It looks like you have changed your shell after the installation ${W}"
+        exit 0
+    fi
+
+    if [[ "$de_on_startup" == "y" ]]; then
+        if grep -q "^vncstart" "$shell_rc_file"; then
+            sed -i '/# Start Vnc/,/fi/d' "$shell_rc_file"
+			echo "de_on_startup=\"n\"" >> $config_file
+        elif grep -q "^tx11start" "$shell_rc_file"; then
+            sed -i '/# Start Termux:X11/,/fi/d' "$shell_rc_file"
+			echo "de_on_startup=\"n\"" >> $config_file
+        fi
+	elif [[ "$de_on_startup" == "n" ]]; then
+	    if [[ "$de_on_startup" == "y" && "$gui_mode" == "3" ]]; then
+		echo "${R}[${W}-${R}]${G} You chose both vnc and termux:x11 to access gui mode"${W}
+		echo
+		echo "${R}[${W}-${R}]${G} Which will be your default"${W}
+		echo
+		echo "${Y}1. Termux:x11"${W}
+		echo
+		echo "${Y}2. Vnc"${W}
+		echo
+		read -p "${Y}select an option (1 is Recomended): "${W} autostart_gui_mode
+		autostart_gui_mode=${autostart_gui_mode:-1}
+		echo "${R}[${W}-${R}]${G}Continuing with answer: $autostart_gui_mode"${W}
+		sleep 0.2
+		add_to_autostart
+		fi 
+    fi
+}
+
+
+#########################################################################
 ######################### Reinstall themes ##############################
 #########################################################################
 
@@ -2285,6 +2335,7 @@ function show_change_help() {
 	style      to change installed style
 	pd,distro  to change installed distro container
 	hw,hwa     to change hardware acceleration method
+	autostart  to change autostart behaviour
 	h,help     to show help
 	"
 	echo "example uses : --change style"
@@ -2319,6 +2370,9 @@ case $1 in
                 ;;
 			hw|hwa)
                 change_hw
+                ;;
+			autostart)
+                change_autostart
                 ;;
 			h|help)
 			    show_change_help

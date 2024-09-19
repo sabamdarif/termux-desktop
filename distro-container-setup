@@ -801,9 +801,9 @@ cat <<EOF >> "$PREFIX/bin/$selected_distro"
 function remove_distro_container() {
      while true; do
         read -p "${R}[${W}-${R}]${Y}${BOLD} Do you want to remove the distro${R}(it can't be undone) ${Y}(y/n) ${W}" ans_remove_distro
-        case $ans_remove_distro in
+        case \$ans_remove_distro in
             [yY]* )
-                echo "${R}[${W}-${R}]${G}Continuing with answer: $ans_remove_distro${W}"
+                echo "${R}[${W}-${R}]${G}Continuing with answer: \$ans_remove_distro${W}"
                 sleep 0.2
                 if [[ -d $distro_path ]]; then
                 proot-distro remove $selected_distro
@@ -851,7 +851,7 @@ $selected_distro -r                      to login as root\n
 $selected_distro --remove                to complitely remove the distro and delete all files and data related to it\n
 "
 }
-case $1 in
+case \$1 in
 --root|-r)
 proot-distro sh $selected_distro
 ;;
