@@ -171,6 +171,36 @@ function get_file_name_number() {
     theme_number=$(echo "$folder_name" | grep -oE '[1-9][0-9]*')
 }
 
+function extract_zip_with_progress() {
+    local archive="$1"
+    local target_dir="$2"
+
+    if [[ ! -f "$archive" ]]; then
+        echo "${R}$archive doesn't exist${W}"
+        return 1
+    fi
+
+    local total_files=$(unzip -l "$archive" | grep -E '^\s+[0-9]+' | wc -l)
+
+    if [[ "$total_files" -eq 0 ]]; then
+        echo "${R}No files found in the archive${W}"
+        return 1
+    fi
+
+    echo "Total files to extract: $total_files"
+    
+    local extracted_files=0
+    unzip -o "$archive" -d "$target_dir" | while read line; do
+        if [[ "$line" =~ inflating: ]]; then
+            ((extracted_files++))
+            progress=$((extracted_files * 100 / total_files))
+            echo -ne "${G}Extracting: ${C}$progress% ($extracted_files/$total_files) \r"${W}
+        fi
+    done
+
+    echo -e "\n ${G}${archive} Extraction complete!"${W}
+}
+
 function extract_archive() {
     local archive="$1"
     if [[ ! -f "$archive" ]]; then
@@ -189,6 +219,9 @@ function extract_archive() {
         *.tar)
             pv -s "$total_size" -p -r "$archive" | tar xf - || { echo "${R}Failed to extract ${C}$archive${W}"; return; }
             ;;
+		*.zip)
+		extract_zip_with_progress "${archive}"
+		;;
         *)
             echo "${R}Unsupported archive format: ${C}$archive${W}"
             return 1
@@ -277,10 +310,7 @@ function install_font_for_style() {
 	local style_number="$1"
 	echo "${R}[${W}-${R}]${G}Installing Fonts..."${W}
 	check_and_create_directory "$HOME/.fonts"
-	cd $HOME/.fonts
-	wget https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/$de_name/look_${style_number}/font.tar.gz
-	tar -xzvf font.tar.gz
-	rm font.tar.gz
+	download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/$de_name/look_${style_number}/font.tar.gz" "$HOME/.fonts"
 	fc-cache -f
 	cd
 }
@@ -985,7 +1015,6 @@ function setup_tx11start_cmd() {
 cat <<EOF > "$PREFIX/bin/tx11start"
 #!/data/data/com.termux/files/usr/bin/bash
 
-selected_hw_method="${hw_method}"
 case \$1 in
 --nogpu)
 XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :1.0 &
@@ -1503,10 +1532,8 @@ function setup_fonts() {
 	check_and_create_directory "$HOME/.termux"
 	check_and_create_directory "$HOME/.fonts"
 	check_and_backup "$HOME/.termux/font.ttf"
-	wget -O $HOME/font.zip https://github.com/ryanoasis/nerd-fonts/releases/download/v3.2.1/0xProto.zip
-	unzip "$HOME/font.zip" -d "$HOME/.fonts"
+	download_and_extract "https://github.com/ryanoasis/nerd-fonts/releases/download/v3.2.1/0xProto.zip" "$HOME/.fonts"
 	check_and_delete "$HOME/.fonts/README.md $HOME/.fonts/LICENSE"
-	rm $HOME/font.zip
 	cp $HOME/.fonts/0xProtoNerdFont-Regular.ttf $HOME/.termux/font.ttf
 	fc-cache -f
 	check_and_create_directory "$HOME/.config/fastfetch"
@@ -1712,6 +1739,22 @@ function cleanup_cache() {
 	else
 	apt clean all
 	fi
+}
+
+function add_common_function() {
+	check_and_delete "$PREFIX/etc/termux-desktop/common_functions"
+cat <<'EOF' > "$PREFIX/etc/termux-desktop/common_functions"
+R="$(printf '\033[1;31m')"                    
+G="$(printf '\033[1;32m')"
+Y="$(printf '\033[1;33m')"
+B="$(printf '\033[1;34m')"
+C="$(printf '\033[1;36m')"                             
+W="$(printf '\033[0m')"
+BOLD="$(printf '\033[1m')"
+config_file="$PREFIX/etc/termux-desktop/configuration"
+EOF
+declare -f check_termux check_and_create_directory check_and_delete check_and_backup check_and_restore package_install_and_check package_check_and_remove get_file_name_number extract_archive download_and_extract count_subfolders confirmation_y_or_n get_latest_release >> "$PREFIX/etc/termux-desktop/common_functions"
+chmod +x $PREFIX/etc/termux-desktop/common_functions
 }
 
 function delete_installer_file() {
@@ -2190,6 +2233,7 @@ function check_for_update_and_update_installer() {
 			check_and_backup "$PREFIX/etc/termux-desktop/setup-termux-desktop"
 			curl -Lsf https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop -o $PREFIX/bin/setup-termux-desktop
 			chmod +x $PREFIX/bin/setup-termux-desktop
+			add_common_function
 			termux-reload-settings
 			local new_local_script_hash=$(basename $(sha256sum $PREFIX/bin/setup-termux-desktop | cut -d ' ' -f 1))
 			    if [[ "$new_local_script_hash" == "$current_script_hash" ]]; then
@@ -2319,38 +2363,41 @@ delete_installer_file
 }
 
 function show_help() {
-	echo -e "
-	-i,--install      to start installation
-	-r,--remove       to remove termux desktop
-	-c,--change       to change some previously made configuration
-	-ri,--reinstall   to reinstall some previously install stuff
-	--reset           to reset all changes made by this script without uninstalling any package
-	-h,--help         to show help
-	"
+echo -e "
+-i,--install      to start installation
+-r,--remove       to remove termux desktop
+-c,--change       to change some previously made configuration
+-ri,--reinstall   to reinstall some previously install stuff
+--reset           to reset all changes made by this script without uninstalling any package
+-h,--help         to show help
+"
 }
 
 function show_change_help() {
-	echo "options you can use with --change"
-	echo -e "
-	style      to change installed style
-	pd,distro  to change installed distro container
-	hw,hwa     to change hardware acceleration method
-	autostart  to change autostart behaviour
-	h,help     to show help
-	"
-	echo "example uses : --change style"
+echo "options you can use with --change"
+echo -e "
+style      to change installed style
+pd,distro  to change installed distro container
+hw,hwa     to change hardware acceleration method
+autostart  to change autostart behaviour
+h,help     to show help
+
+example uses : --change style
+"
 }
 
 function show_reinstall_help() {
-	echo "options you can use with --reinstall"
-	echo -e "
-	icons      to reinstall icons pack
-	themes     to reinstall themes pack
-	config     to reinstall config
-	h,help     to show help
-	"
-	echo "example uses : --reinstall icons"
-	echo "example uses : --reinstall icons,themes...etc to reinstall them at once"
+echo -e "
+options you can use with --reinstall
+
+icons      to reinstall icons pack
+themes     to reinstall themes pack
+config     to reinstall config
+h,help     to show help
+
+example uses : --reinstall icons
+example uses : --reinstall icons,themes...etc to reinstall them at once
+"
 }
 
 case $1 in
