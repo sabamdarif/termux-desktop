@@ -234,10 +234,11 @@ echo ""
 
 function distro_basic_task() {
     banner
-    echo "${R}[${W}-${R}]${G}${BOLD}Updating ${C}$selected_distro ${G}And Install Required Packages"${W}
+    echo "${R}[${W}-${R}]${G}${BOLD}Updating ${C}$selected_distro ${G}And Installing Required Packages"${W}
     echo
     if [[ "$selected_distro" == "debian" ]] || [[ "$selected_distro" == "ubuntu" ]]; then
     proot-distro login $selected_distro --shared-tmp -- env DISPLAY=:1.0 apt update
+    proot-distro login $selected_distro --shared-tmp -- env DISPLAY=:1.0 apt upgrade -y
     elif [[ "$selected_distro" == "archlinux" ]]; then
     proot-distro login $selected_distro --shared-tmp -- env DISPLAY=:1.0 pacman -Syu --noconfirm
     elif [[ "$selected_distro" == "alpine" ]]; then
@@ -277,6 +278,7 @@ proot-distro login $selected_distro -- /bin/bash -c 'bash pd_basic_setup.sh'
     elif [[ "$pd_useradd_answer" == "y" ]]; then
     final_user_name="${user_name}"
     fi
+    echo "final_user_name=\"$final_user_name\"" >> $config_file
 if [[ "$pd_pass_type" == "2" ]];then
 if [[ "$selected_distro" == "alpine" ]]; then
 cat <<EOF > $distro_path/root/useradd.sh
@@ -654,7 +656,7 @@ rm packinstall.sh
 EOF
 proot-distro login $selected_distro -- /bin/bash -c 'bash packinstall.sh'
 
-elif [[ "\$1" = "remove" ]] || [[ "\$1" = "remove" ]]; then
+elif [[ "\$1" = "remove" ]] || [[ "\$1" = "autoremove" ]]; then
 proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:1.0 sudo $package_manager \$1 \${@:2}
 cat <<EOF > "$save_root_path/packremove.sh"
 packages=(\${@:2})
@@ -676,11 +678,8 @@ done
 rm packremove.sh
 EOF
 proot-distro login $selected_distro -- /bin/bash -c 'bash packremove.sh'
-else
-echo "sudo $package_manager \$@
-rm else.sh
-" > $save_root_path/else.sh
-proot-distro login $selected_distro -- /bin/sh -c 'bash else.sh'
+elif [[ "\$1" = "update" ]]; then
+proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:1.0 sudo $package_manager update
 fi
 
 if [[ \$1 = "install" ]] || [[ \$1 = "remove" ]] || [[ \$1 = "autoremove" ]]; then
@@ -746,11 +745,8 @@ done
 rm packremove.sh
 EOF
 proot-distro login $selected_distro -- /bin/bash -c 'bash packremove.sh'
-else
-echo "sudo pacman -S --noconfirm \$@
-rm else.sh
-" > $save_root_path/else.sh
-proot-distro login $selected_distro -- /bin/sh -c 'bash else.sh'
+elif [[ "\$1" = "update" ]]; then
+proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:1.0 sudo pacman -Su
 fi
 
 if [[ \$1 = "install" ]] || [[ \$1 = "remove" ]]; then
@@ -813,11 +809,8 @@ done
 rm packremove.sh
 EOF
 proot-distro login $selected_distro -- /bin/bash -c 'bash packremove.sh'
-else
-echo "sudo apk \${@}
-rm else.sh
-" > $save_root_path/else.sh
-proot-distro login $selected_distro -- /bin/sh -c 'bash else.sh'
+elif [[ "\$1" = "update" ]]; then
+proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:1.0 sudo apk update
 fi
 
 if [[ \$1 = "install" ]] || [[ \$1 = "remove" ]]; then
@@ -918,8 +911,74 @@ elif [[ "$selected_distro" == "fedora" ]]; then
 handel_fedora_based_app_installer
 fi
 
-chmod +x "$PREFIX/bin/$selected_distro"
+cat <<EOF >> "$PREFIX/bin/$selected_distro"
+function remove_distro_container() {
+     while true; do
+        read -p "${R}[${W}-${R}]${Y}${BOLD} Do you want to remove the distro${R}(it can't be undone) ${Y}(y/n) ${W}" ans_remove_distro
+        case \$ans_remove_distro in
+            [yY]* )
+                echo "${R}[${W}-${R}]${G}Continuing with answer: \$ans_remove_distro${W}"
+                sleep 0.2
+                if [[ -d $distro_path ]]; then
+                proot-distro remove $selected_distro
+                distro_file_list=(
+                    "$PREFIX/bin/pdrun"
+                    "$PREFIX/share/applications/pd_added"
+                    "$PREFIX/bin/add2menu"
+                    "$PREFIX/share/applications/add2menu.desktop"
+                    "$PREFIX/bin/$selected_distro"
+                )
+                    for distro_file in "${distro_file_list[@]}"; do
+                    if [[ -e "$distro_file" ]]; then
+                        if [[ -d "$distro_file" ]]; then
+                        rm -rf $distro_file
+                        else
+                        rm $distro_file
+                        fi
+                    else
+                    echo "${R}File does not exist: $distro_file"${W}
+                    fi
+                    done
+                echo "${G}$$selected_distro removed successfully"${W}
+                echo "distro_add_answer=\"n\"" >> $config_file
+                else
+                echo "${R}$selected_distro does not exist"
+                fi
+                break;;
+            [nN]* )
+                echo "${R}[${W}-${R}]${C}Skipping distro remove"${W}
+                sleep 0.2
+                break;;
+            * )
+                echo "${R}[${W}-${R}]${R}Invalid input. Please enter 'y' or 'n'."${W}
+                ;;
+        esac
+    done
+}
 
+function help_distro_container() {
+echo -e "
+$selected_distro install packagename     to install packages and add them to termux desktop\n
+$selected_distro remove packagename      to remove packages and also remove them to termux desktop\n
+$selected_distro update                  to update the distro\n
+$selected_distro -r                      to login as root\n
+$selected_distro --remove                to complitely remove the distro and delete all files and data related to it\n
+"
+}
+case \$1 in
+--root|-r)
+proot-distro sh $selected_distro
+;;
+--remove)
+remove_distro_container
+;;
+--help|-h)
+help_distro_container
+;;
+esac
+EOF
+
+chmod +x "$PREFIX/bin/$selected_distro"
 
 #########################################################################
 ########################### Add To Menu Setup ###########################
@@ -1052,8 +1111,8 @@ case \$1 in
 proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:1.0 \${@:2}
 ;;
 --help|-h)
-echo "${G}Type ${C}pdrun COMMAND_TO_RUN${G}to start with gpu acceleration"${W}
-echo "${G}Type ${C}pdrun ---nogpu COMMAND_TO_RUN${G}to start without gpu acceleration"${W}
+echo "${G}Type ${C}pdrun launch command ${G}to start with gpu acceleration"${W}
+echo "${G}Type ${C}pdrun ---nogpu launch command ${G}to start without gpu acceleration"${W}
 ;;
 *)
 proot-distro login --user $final_user_name $selected_distro --shared-tmp -- eval "env DISPLAY=:1.0 \$selected_pd_hw_method \$@"
@@ -1064,7 +1123,7 @@ chmod +x "$PREFIX/bin/pdrun"
 }
 
 #########################################################################
-############### Distro Folders , Theme And Icon Link ##################
+################ Distro Folders , Theme And Icon Link ###################
 #########################################################################
 
 function distro_folders_link() {
@@ -1087,6 +1146,16 @@ proot-distro login --user $final_user_name $selected_distro -- /bin/sh -c 'bash 
     ln -s /data/data/com.termux/files/home/.fonts $save_path
 
 }
+
+#########################################################################
+########################## Check Installation ###########################
+#########################################################################
+if [[ -d "$PREFIX/bin/$selected_distro" ]] && [[ -d "$PREFIX/var/lib/proot-distro/installed-rootfs/$selected_distro" ]]; then
+echo
+echo "${R}[${W}-${R}]${G}${BOLD}$selected_distro container setup successfully"${W}
+else
+echo "${R}[${W}-${R}]${R}Some problem occurrs in $selected_distro setup${W}"
+fi
 
 setup_distro
 distro_basic_task

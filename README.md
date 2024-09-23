@@ -14,27 +14,37 @@
 ## Features:
 
 - :books: Easy To Setup
+- :desktop_computer: XFCE, LXQt, and Openbox, all supported
 - :art: New Beautiful Theme And Styles
-- :wine_glass: Wine To Run Windows Apps
+- :wine_glass: Wine To Run Windows Apps _(x86_64 in arm64 device)_
 - :mechanical_arm: Hardware Acceleration Enabled
 - :paperclips: Termux:X11 / Vnc For Gui Access
+- :package: Work with both APT , PACMAN
 -  :jigsaw: One Click To Install Some useful Apps
    - :globe_with_meridians: Browser: Firefox / Chromium
    - :man_technologist: Code Editor: VS Code / Geany
    - :camera: Image Editor: Gimp / Inkscape
-   - :wine_glass: Wine To Run Windows Apps
+- :package: Install apps like libreoffice _(apps that are not avilable in termux by default)_
 - :link: And Much More...
 <br>
-
 
 ## :warning: Follow This Steps :point_down:
 
 ### 1. Check Basic Requirment: [from here](#requirements)
-### 2. Check All Avilable Desktop Styles: [XFCE](xfce_styles.md) , [LXQT](lxqt_styles.md)
+### 2. Check All Avilable Desktop Styles:
+
+<b>
+
+- [XFCE](xfce_styles.md)
+- [LXQT](lxqt_styles.md)
+- [OPENBOX](openbox_styles.md)
+>Openbox keybord shortcuts :- [Here](https://github.com/sabamdarif/termux-desktop/blob/main/see-more.md#openbox-keybindings-cheat-sheet)
+</b>
+
 ### 3. Check About Hardware Acceleration : [from here](https://github.com/sabamdarif/termux-desktop?tab=readme-ov-file#hardware-acceleration-in-distro-container-and-also-in-termux)
-### 4. Check About Distro Container: [from here](https://github.com/sabamdarif/termux-desktop?tab=readme-ov-file#want-to-install-more-apps-like-libreoffice-which-are-not-avilable-in-termux)
+### 4. Check About Distro Container: [from here](https://github.com/sabamdarif/termux-desktop?tab=readme-ov-file#want-to-install-more-apps-like-libreoffice-which-are-not-avilable-in-termux) [[Video Tutorial](https://youtu.be/KiUTyGZ2grE)]
 ### 5. Check Natively Supported Apps list: [from here](applist.md)
-### 6. Installation: [from here](#installation) [[Tutorial](https://youtu.be/SlR9f9hl5CQ)]
+### 6. Installation: [from here](#installation) [[Video Tutorial](https://youtu.be/SlR9f9hl5CQ)]
 ### 7. Uses: [from here](#uses)
 ### 8. See More: [from here](see-more.md)
 
@@ -44,12 +54,13 @@
 - No Root Required
 - Android 7+ phone
 - [Termux](https://termux.dev/en/) From [Github](https://github.com/termux/termux-app/releases) Or [Fdroid](https://f-droid.org/en/packages/com.termux/)
-> Termux from Google Play is unmaintained due to API requirements, so instead use the F-Droid Or Github build.
+> Termux from Google Play can't poperly install x11-packages due to API limitation, so instead use the F-Droid Or Github build.
 - 2GB of RAM 3GB of RAM
 - 1.5 - 2 GB Of Internet
 - 3 - 4 GB Of Free Storage
 - VNC Client [RealVnc](https://play.google.com/store/apps/details?id=com.realvnc.viewer.android) Or [Nethunter Kex](https://store.nethunter.com/en/packages/com.offsec.nethunter.kex/)
 - [Termux:X11](https://github.com/termux/termux-x11/releases)
+- [Termux-API](https://github.com/termux/termux-api/releases) _(For Openbox only)_
 
 <br>
 
@@ -113,7 +124,7 @@
 
 
 ```bash
-curl -Lf https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop -o setup-termux-desktop ; chmod +x setup-termux-desktop ; ./setup-termux-desktop
+curl -Lf https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop -o setup-termux-desktop && chmod +x setup-termux-desktop && ./setup-termux-desktop
 ```
 
 <a name="uses"></a>
@@ -147,6 +158,7 @@ curl -Lf https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-
 - `setup-termux-desktop --change style` *To Change Desktop Style*
 - `setup-termux-desktop --change hw` *To Change Hardware Acceleration Method*
 - `setup-termux-desktop --change pd` *To Change Installed Proot-Distro*
+- `setup-termux-desktop --change autostart` *To change autostart behaviour*
 <br>
 
 - `setup-termux-desktop --reinstall icons / themes /config` *To Reinstall Icons / Themes / Config*

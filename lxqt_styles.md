@@ -1,4 +1,4 @@
-## 0. Stock :
+## 0. Stock:
 
 <center><img src="images/lxqt/look_0/desktop.png"></center>
 
@@ -12,7 +12,7 @@
 </details>
 <br>
 
-## 1. Nordic LXQT
+## 1. Nordic LXQT:
 
 <details>
 <summary><b style ="font-size: small">Style Details: </summary>
@@ -46,7 +46,7 @@ Icon Used:
 
 <br>
 
-## 2. Windows Like
+## 2. Windows Like:
 
 <details>
 <summary><b style ="font-size: small">Style Details: </summary>

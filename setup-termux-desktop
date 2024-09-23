@@ -1,12 +1,17 @@
 #!/data/data/com.termux/files/usr/bin/bash
-R="$(printf '\033[1;31m')"                           
+
+#########################################################################
+############################# Call First ################################
+#########################################################################
+R="$(printf '\033[1;31m')"                    
 G="$(printf '\033[1;32m')"
 Y="$(printf '\033[1;33m')"
 B="$(printf '\033[1;34m')"
-C="$(printf '\033[1;36m')"                                       
+C="$(printf '\033[1;36m')"                             
 W="$(printf '\033[0m')"
 BOLD="$(printf '\033[1m')"
 config_file="$PREFIX/etc/termux-desktop/configuration"
+cd $HOME
 
 function banner() {
 clear
@@ -16,6 +21,13 @@ echo
 echo "${C}${BOLD} Install Gui Desktop In Termux"${W}
 echo "${C}${BOLD} code by @sabamdrif"${W}
 echo
+}
+
+function check_termux() {
+	if [[ $HOME != *termux* ]]; then 
+	echo "${R}${BOLD}Please run it inside termux"${W}
+	exit 0
+	fi
 }
 
 #########################################################################
@@ -109,7 +121,7 @@ for package_name in "${packs_list[@]}"; do
 	    pacman -Sy --overwrite '*' $package_name
 	    pacman -Sy --noconfirm $package_name
 	  else
-        pkg --fix-broken install -y
+        apt --fix-broken install -y
         dpkg --configure -a
 	  fi
         pkg install "$package_name" -y
@@ -139,9 +151,14 @@ function package_check_and_remove() {
 	packs_list=($@)
 	for package_name in "${packs_list[@]}"; do
 	if dpkg -s "$package_name" >/dev/null 2>&1; then
-	echo "${R}[${W}-${R}]${G}${BOLD} Removeing package: ${C}$package_name "${W}
 	    if [[ "$package_name" != "already_exist" ]]; then
-		    apt autoremove "$package_name" -y
+		echo "${R}[${W}-${R}]${G}${BOLD} Removeing package: ${C}$package_name "${W}
+		apt autoremove "$package_name" -y
+		fi
+	elif pacman -Qi "$package_name" >/dev/null 2>&1; then
+	    if [[ "$package_name" != "already_exist" ]]; then
+		echo "${R}[${W}-${R}]${G}${BOLD} Removeing package: ${C}$package_name "${W}
+		pacman -Rnsy "$package_name"
 		fi
     fi
 done
@@ -152,6 +169,36 @@ function get_file_name_number() {
     current_file=$(basename "$0")
     folder_name="${current_file%.sh}"
     theme_number=$(echo "$folder_name" | grep -oE '[1-9][0-9]*')
+}
+
+function extract_zip_with_progress() {
+    local archive="$1"
+    local target_dir="$2"
+
+    if [[ ! -f "$archive" ]]; then
+        echo "${R}$archive doesn't exist${W}"
+        return 1
+    fi
+
+    local total_files=$(unzip -l "$archive" | grep -E '^\s+[0-9]+' | wc -l)
+
+    if [[ "$total_files" -eq 0 ]]; then
+        echo "${R}No files found in the archive${W}"
+        return 1
+    fi
+
+    echo "Total files to extract: $total_files"
+    
+    local extracted_files=0
+    unzip -o "$archive" -d "$target_dir" | while read line; do
+        if [[ "$line" =~ inflating: ]]; then
+            ((extracted_files++))
+            progress=$((extracted_files * 100 / total_files))
+            echo -ne "${G}Extracting: ${C}$progress% ($extracted_files/$total_files) \r"${W}
+        fi
+    done
+
+    echo -e "\n ${G}${archive} Extraction complete!"${W}
 }
 
 function extract_archive() {
@@ -172,6 +219,9 @@ function extract_archive() {
         *.tar)
             pv -s "$total_size" -p -r "$archive" | tar xf - || { echo "${R}Failed to extract ${C}$archive${W}"; return; }
             ;;
+		*.zip)
+		extract_zip_with_progress "${archive}"
+		;;
         *)
             echo "${R}Unsupported archive format: ${C}$archive${W}"
             return 1
@@ -262,10 +312,7 @@ function install_font_for_style() {
 	local style_number="$1"
 	echo "${R}[${W}-${R}]${G}Installing Fonts..."${W}
 	check_and_create_directory "$HOME/.fonts"
-	cd $HOME/.fonts
-	wget https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/$de_name/look_${style_number}/font.tar.gz
-	tar -xzvf font.tar.gz
-	rm font.tar.gz
+	download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/$de_name/look_${style_number}/font.tar.gz" "$HOME/.fonts"
 	fc-cache -f
 	cd
 }
@@ -325,7 +372,9 @@ function questions() {
 	echo "${Y}1. XFCE"${W}
 	echo
 	echo "${Y}2. LXQT"${W}
-	echo 
+	echo
+	echo "${Y}3. OPENBOX WM"${W}
+	echo
 	read -p "${Y}select an option (Default 1): "${W} desktop_answer
 	echo
 	echo "${R}[${W}-${R}]${G}Continuing with answer: $desktop_answer"${W}
@@ -342,6 +391,11 @@ function questions() {
 	themes_folder="$PREFIX/share/themes"
 	icons_folder="$sys_icons_folder"
 	de_startup="startlxqt"
+	elif [[ "$desktop_answer" == "3" ]]; then
+	de_name="openbox"
+	themes_folder="$PREFIX/share/themes"
+	icons_folder="$sys_icons_folder"
+	de_startup="openbox-session"
 	fi
 	echo "de_startup=\"$de_startup\"" >> $config_file
 	echo "de_name=\"$de_name\"" >> $config_file
@@ -461,6 +515,24 @@ function questions() {
 	echo
 	read -p "${Y}select an option (Default 1): "${W} gui_mode
 	gui_mode=${gui_mode:-1}
+	echo "${R}[${W}-${R}]${G}Continuing with answer: $gui_mode"${W}
+	sleep 0.2
+	banner
+	confirmation_y_or_n "Do you want to start the desktop at Termux startup" de_on_startup
+	if [[ "$de_on_startup" == "y" && "$gui_mode" == "3" ]]; then
+	echo "${R}[${W}-${R}]${G} You chose both vnc and termux:x11 to access gui mode"${W}
+	echo
+	echo "${R}[${W}-${R}]${G} Which will be your default"${W}
+	echo
+	echo "${Y}1. Termux:x11"${W}
+	echo
+	echo "${Y}2. Vnc"${W}
+	echo
+	read -p "${Y}select an option (1 is Recomended): "${W} autostart_gui_mode
+	autostart_gui_mode=${autostart_gui_mode:-1}
+	echo "${R}[${W}-${R}]${G}Continuing with answer: $autostart_gui_mode"${W}
+	sleep 0.2
+	fi
 	banner
 	echo "${R}[${W}-${R}]${Y}${BOLD}Do you want to add a distro container (proot distro)"${W}
 	echo
@@ -475,7 +547,7 @@ function questions() {
 function distro_hw_questions() {
 	if [[ "$distro_add_answer" == "y" ]]; then
     echo
-    echo "${R}[${W}-${R}]${G}${BOLD}Select Hardware Acceleration Method Distro Container"${W}
+    echo "${R}[${W}-${R}]${G}${BOLD}Select Hardware Acceleration API For Distro Container"${W}
     echo
     echo "${R}[${W}-${R}]${G}If You Are Not Sure So Skip It It Will Use The Previous One"${W}
     echo
@@ -514,7 +586,7 @@ function hw_questions() {
     echo
     echo "${R}[${W}-${R}]${B}This:- https://github.com/sabamdarif/termux-desktop/blob/main/hw-acceleration.md"${W}
     echo
-    echo "${R}[${W}-${R}]${G}${BOLD}Select Hardware Acceleration Method Which Support Best Fot Your Device"${W}
+    echo "${R}[${W}-${R}]${G}${BOLD}Select Hardware Acceleration API"${W}
     echo
 	echo "${Y}1. ZINK"${W}
 	echo
@@ -522,7 +594,7 @@ function hw_questions() {
 	echo
 	echo "${Y}3. VIRGL ZINK"${W}
 	echo
-	echo "${Y}4. Turnip (Adreno GPU Only , Adreno 610 And Above)"${W}
+	echo "${Y}4. Freedreno ${C}(Adreno 610 And Above | didn't work for me)"${W}
 	echo
 	read -p "${Y}select an option : "${W} termux_hw_answer
 	termux_hw_answer=${termux_hw_answer:-1} 
@@ -561,7 +633,7 @@ function distro_questions() {
 	confirmation_y_or_n "Do you want to configure audio support for distro container" pd_audio_config_answer
 	if [[ "$distro_add_answer" == "y" ]] && [[ "$zsh_answer" == "y" ]]; then
 	banner
-	confirmation_y_or_n "Do you want to Configuring Zsh also for distro container (take longer time to login into distro)" distro_zsh_answer
+	confirmation_y_or_n "Do you want to Configuring Zsh also for distro container ${C}(take longer time to login into distro)" distro_zsh_answer
 	echo "distro_zsh_answer=\"$distro_zsh_answer\"" >> $config_file
 	fi
 	if [[ "$distro_add_answer" == "y" ]] && [[ "$terminal_utility_setup_answer" == "y" ]]; then
@@ -675,7 +747,7 @@ function install_required_packages() {
 	if type -p pacman >/dev/null 2>&1; then
 	package_install_and_check "wget pv jq curl pulseaudio termux-am"
 	else
-	package_install_and_check "wget pv jq curl pulseaudio termux-am x11-repo tur-repo"
+	package_install_and_check "wget pv jq curl pulseaudio tar xz-utils gzip termux-am x11-repo tur-repo"
 	fi
 	sed -i 's/termux-am="already_exist"/ /' $config_file
 	update_sys
@@ -690,7 +762,11 @@ function install_desktop() {
 	elif [[ "$desktop_answer" == "2" ]]; then
 	echo "${R}[${W}-${R}]${G}${BOLD} Installing Lxqt Desktop"${W}
 	echo
-	package_install_and_check "lxqt papirus-icon-theme xorg-xsetroot xwayland kvantum"
+	package_install_and_check "lxqt openbox papirus-icon-theme xorg-xsetroot xwayland kvantum"
+	elif [[ "$desktop_answer" == "3" ]]; then
+	echo "${R}[${W}-${R}]${G}${BOLD} Installing Openbox WM"${W}
+	echo
+	package_install_and_check "openbox polybar xorg-xsetroot lxappearance wmctrl feh xwayland kvantum termux-api thunar firefox mpd rofi bmon xcompmgr xfce4-settings gedit"
 	fi
 }
 
@@ -702,6 +778,8 @@ function set_config_dir() {
 	config_dirs=(autostart cairo-dock dconf gtk-3.0 Mousepad pulse Thunar menu ristretto rofi xfce4)
 	elif [[ "$de_name" == "lxqt" ]]; then
 	config_dirs=(fontconfig gtk-3.0 lxqt pcmanfm-qt QtProject.conf glib-2.0 Kvantum openbox qterminal.org)
+	elif [[ "$de_name" == "openbox" ]]; then
+	config_dirs=(dconf gedit Kvantum openbox pulse rofi xfce4 enchant gtk-3.0 mimeapps.list polybar QtProject.conf Thunar)
     fi
 }
 
@@ -709,7 +787,7 @@ function theme_installer() {
     banner
     echo "${R}[${W}-${R}]${G}${BOLD} Configuring Theme: ${C}${style_name}"${W}
 	echo
-	if [[ "$de_name" == "xfce" ]]; then
+	if [[ "$de_name" == "xfce" ]] || [[ "$de_name" == "openbox" ]]; then
 	package_install_and_check "gnome-themes-extra"
 	fi
     sleep 3
@@ -750,7 +828,11 @@ function theme_installer() {
         for the_config_dir in "${config_dirs[@]}"; do
 		check_and_delete "$HOME/.config/$the_config_dir"
         done
+	if [[ "$de_name" == "openbox" ]]; then
+	download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/${de_name}/look_${style_answer}/config.tar.gz" "$HOME"
+	else
 	download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/${de_name}/look_${style_answer}/config.tar.gz" "$HOME/.config/"
+	fi
 }
 
 #########################################################################
@@ -778,6 +860,13 @@ function additional_required_package_installler() {
 	echo "${G} No Additional Packages Required For Theme: ${style_answer}"${W}
 	sleep 1
 	fi
+	elif [[ "$de_name" == "openbox" ]]; then
+	    if [[ "$style_answer" == "1" ]]; then
+		install_font_for_style "1"
+		else
+		echo "${G} No Additional Packages Required For Theme: ${style_answer}"${W}
+		sleep 1
+		fi
 	fi
 }
 
@@ -859,28 +948,18 @@ function distro_container_setup() {
 	wget -O ${current_path}/distro-container-setup https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/distro-container-setup ; chmod +x ${current_path}/distro-container-setup ; . ${current_path}/distro-container-setup
 	rm ${current_path}/distro-container-setup
 	fi
+	echo "distro_add_answer=\"$distro_add_answer\"" >> $config_file
 }
 
 #########################################################################
 ################ Add Vnc And Termux:x11 Launch Scripts ##################
 #########################################################################
 
-function setup_vnc() {
-    banner
-    echo "${R}[${W}-${R}]${G}${BOLD} Configuring Vnc..."${W}
-    echo
-    package_install_and_check "tigervnc"
-    check_and_create_directory "$HOME/.vnc"
-    check_and_delete "$HOME/.vnc/xstartup"
-    cat << EOF > "$HOME/.vnc/xstartup"
-    $de_startup &
-EOF
-    chmod +x "$HOME/.vnc/xstartup"
+function setup_vncstart_cmd() {
     check_and_delete "$PREFIX/bin/vncstart"
 cat <<EOF > "$PREFIX/bin/vncstart"
 #!/data/data/com.termux/files/usr/bin/bash
 
-selected_initialize_server_method="${initialize_server_method}"
 selected_hw_method="${hw_method}"
 case \$1 in
 --nogpu)
@@ -891,12 +970,15 @@ echo "${G}Type ${C}vncstart ${G}to start vncserver with gpu acceleration"${W}
 echo "${G}Type ${C}vncstart ---nogpu ${G}to start vncserver without gpu acceleration"${W}
 ;;
 *)
-eval "\${selected_initialize_server_method} &"
-eval "\$selected_hw_method vncserver"
+${initialize_server_method} &
+$hw_method vncserver
 ;;
 esac
 EOF
     chmod +x "$PREFIX/bin/vncstart"
+}
+
+function setup_vncstop_cmd() {
     check_and_delete "$PREFIX/bin/vncstop"
 cat <<'EOF' > "$PREFIX/bin/vncstop"
 #!/data/data/com.termux/files/usr/bin/bash
@@ -915,31 +997,28 @@ rm $PREFIX/tmp/.X1-lock > /dev/null 2>&1
 rm $PREFIX/tmp/.X11-unix/X1 > /dev/null 2>&1
 EOF
     chmod +x "$PREFIX/bin/vncstop"
-	
 }
 
-function setup_termux_x11() {
-	banner
-        echo "${R}[${W}-${R}]${G}${BOLD} Configuring Termux:X11 "${W}
-        echo
-        package_install_and_check "termux-x11-nightly"
-		local repo_owner="termux"
-		local repo_name="termux-x11"
-		local latest_tag
-		latest_tag=$(get_latest_release "$repo_owner" "$repo_name")
-		local termux_x11_url="https://github.com/$repo_owner/$repo_name/releases/download/$latest_tag/"
-		local assets
-		assets=$(curl -s "https://api.github.com/repos/$repo_owner/$repo_name/releases/latest" | grep -oP '(?<="name": ")[^"]*')
-		deb_assets=$(echo "$assets" | grep termux-x11.*all.deb)
-		wget -O $current_path/termux-x11.deb $termux_x11_url/$deb_assets
-		apt install $current_path/termux-x11.deb -y
-		rm $current_path/termux-x11.deb
-		sed -i '12s/^#//' $HOME/.termux/termux.properties
+function setup_vnc() {
+    banner
+    echo "${R}[${W}-${R}]${G}${BOLD} Configuring Vnc..."${W}
+    echo
+    package_install_and_check "tigervnc"
+    check_and_create_directory "$HOME/.vnc"
+    check_and_delete "$HOME/.vnc/xstartup"
+cat << EOF > "$HOME/.vnc/xstartup"
+    $de_startup &
+EOF
+    chmod +x "$HOME/.vnc/xstartup"
+	setup_vncstart_cmd
+	setup_vncstop_cmd
+}
+
+function setup_tx11start_cmd() {
+	check_and_delete "$PREFIX/bin/tx11start"
 cat <<EOF > "$PREFIX/bin/tx11start"
 #!/data/data/com.termux/files/usr/bin/bash
 
-selected_initialize_server_method="${initialize_server_method}"
-selected_hw_method="${hw_method}"
 case \$1 in
 --nogpu)
 XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :1.0 &
@@ -953,13 +1032,13 @@ echo -e "${G}Type ${C}tx11start ${G}to start termux:x11 with gpu acceleration"${
 echo -e "${G}Type ${C}tx11start ---nogpu ${G}to start termux:x11 without gpu acceleration"${W}
 ;;
 *)
-eval "\${selected_initialize_server_method} &"
+${initialize_server_method} &
 sleep 1
 XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :1.0 &
 sleep 1
 am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1 &
 sleep 1
-eval "env DISPLAY=:1.0 \${selected_hw_method} dbus-launch --exit-with-session $de_startup > /dev/null 2>&1 &"
+env DISPLAY=:1.0 ${hw_method} dbus-launch --exit-with-session $de_startup > /dev/null 2>&1 &
 ;;
 esac
 EOF
@@ -972,7 +1051,10 @@ kill "$process_id" > /dev/null 2>&1
 EOF
 fi
 chmod +x $PREFIX/bin/tx11start
+}
 
+function setup_tx11stop_cmd() {
+	check_and_delete "$PREFIX/bin/tx11stop"
 if [[ "$de_name" == "xfce" ]]; then
 cat <<EOF > "$PREFIX/bin/tx11stop"
 #!/data/data/com.termux/files/usr/bin/bash
@@ -1007,8 +1089,46 @@ echo -e "${G}Termux:X11 Stopped Successfully ${W}"
 fi
 exec 2>/dev/null
 EOF
+elif [[ "$de_name" == "openbox" ]]; then
+cat <<EOF > "$PREFIX/bin/tx11stop"
+#!/data/data/com.termux/files/usr/bin/bash
+
+termux_x11_pid=\$(pgrep -f "/system/bin/app_process / com.termux.x11.Loader :1.0")
+de_pid=\$(pgrep -f "$de_startup")
+if [[ -n "\$termux_x11_pid" ]] || [[ -n "\$de_pid" ]]; then
+kill -9 "\$termux_x11_pid" > /dev/null 2>&1
+pkill -9 pulseaudio > /dev/null 2>&1
+killall virgl_test_server > /dev/null 2>&1
+pkill -9 openbox* > /dev/null 2>&1
+pkill -9 dbus-* > /dev/null 2>&1
+pkill -f com.termux.x11 > /dev/null 2>&1
+echo -e "${G}Termux:X11 Stopped Successfully ${W}"
+fi
+exec 2>/dev/null
+EOF
 fi
 chmod +x $PREFIX/bin/tx11stop
+}
+
+function setup_termux_x11() {
+	banner
+        echo "${R}[${W}-${R}]${G}${BOLD} Configuring Termux:X11 "${W}
+        echo
+        package_install_and_check "termux-x11-nightly"
+		local repo_owner="termux"
+		local repo_name="termux-x11"
+		local latest_tag
+		latest_tag=$(get_latest_release "$repo_owner" "$repo_name")
+		local termux_x11_url="https://github.com/$repo_owner/$repo_name/releases/download/$latest_tag/"
+		local assets
+		assets=$(curl -s "https://api.github.com/repos/$repo_owner/$repo_name/releases/latest" | grep -oP '(?<="name": ")[^"]*')
+		deb_assets=$(echo "$assets" | grep termux-x11.*all.deb)
+		wget -O $current_path/termux-x11.deb $termux_x11_url/$deb_assets
+		apt install $current_path/termux-x11.deb -y
+		rm $current_path/termux-x11.deb
+		sed -i '12s/^#//' $HOME/.termux/termux.properties
+		setup_tx11start_cmd
+		setup_tx11stop_cmd
 }
 
 function gui_termux_x11() {
@@ -1271,7 +1391,13 @@ function setup_zsh() {
 	echo "${R}[${W}-${R}]${G}${BOLD} Configuring Zsh.."${W}
 	echo
 	package_install_and_check "zsh git"
-	wget https://raw.githubusercontent.com/sabamdarif/short-linux-scripts/main/install-zsh.sh && bash install-zsh.sh
+	wget https://raw.githubusercontent.com/sabamdarif/simple-linux-scripts/main/install-zsh.sh
+	if [[ "$distro_add_answer" == "y" ]]; then
+	bash install-zsh.sh -u "$user_name"
+	else
+	bash install-zsh.sh
+	fi
+	check_and_delete "install-zsh.sh"
 	clear
 	fi
 	get_shellrc_path
@@ -1299,13 +1425,16 @@ function terminal_utility_setup() {
 	check_and_create_directory "$HOME/.termux"
 	check_and_backup "$HOME/.termux/colors.properties"
 	wget -O $HOME/.termux/colors.properties https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/other/colors.properties
+	package_install_and_check "openssh"
+	wget -O $PREFIX/bin/termux-ssh https://raw.githubusercontent.com/sabamdarif/simple-linux-scripts/main/termux-ssh
+	chmod +x $PREFIX/bin/termux-ssh
+	cp $shell_rc_file ${shell_rc_file}-2
+	check_and_backup "$shell_rc_file"
+	mv ${shell_rc_file}-2 ${shell_rc_file}
 	if type -p pacman >/dev/null 2>&1; then
 	package_install_and_check "bat eza zoxide fastfetch"
 	else
 	package_install_and_check "nala bat eza zoxide fastfetch"
-	cp $shell_rc_file ${shell_rc_file}-2
-	check_and_backup "$shell_rc_file"
-	mv ${shell_rc_file}-2 ${shell_rc_file}
 cat <<'EOF' >> "$shell_rc_file"
 alias apt='nala $@'
 alias pkg='nala $@'
@@ -1316,6 +1445,8 @@ alias cat='bat $@'
 alias ls='eza --icons $@'
 alias mkdir='mkdir -p'
 alias neofetch='fastfetch'
+alias startssh='termux-ssh'
+alias stopssh='termux-ssh stop'
 #######################################################
 # SPECIAL FUNCTIONS
 #######################################################
@@ -1377,7 +1508,7 @@ mkdirg() {
 	cd "$1"
 }
 EOF
-cat <<EOF >> "$HOME/.${shell_name}rc"
+cat <<EOF >> "$shell_rc_file"
 # set zoxide as cd
 eval "\$(zoxide init --cmd cd ${shell_name})"
 EOF
@@ -1388,7 +1519,7 @@ echo -e "
 # print your current termux-desktop configuration
 alias 'tdconfig'='cat $config_file'
 # open the folder where all the apps added by proot-distro are located
-alias 'pdappps'='cd /data/data/com.termux/files/usr/share/applications/pd_added'
+alias 'pdapps'='cd /data/data/com.termux/files/usr/share/applications/pd_added'
 " >> $HOME/.${shell_name}rc
 echo "terminal_utility_setup_answer=\"$terminal_utility_setup_answer\"" >> $config_file
 }
@@ -1405,10 +1536,8 @@ function setup_fonts() {
 	check_and_create_directory "$HOME/.termux"
 	check_and_create_directory "$HOME/.fonts"
 	check_and_backup "$HOME/.termux/font.ttf"
-	wget -O $HOME/font.zip https://github.com/ryanoasis/nerd-fonts/releases/download/v3.2.1/0xProto.zip
-	unzip "$HOME/font.zip" -d "$HOME/.fonts"
+	download_and_extract "https://github.com/ryanoasis/nerd-fonts/releases/download/v3.2.1/0xProto.zip" "$HOME/.fonts"
 	check_and_delete "$HOME/.fonts/README.md $HOME/.fonts/LICENSE"
-	rm $HOME/font.zip
 	cp $HOME/.fonts/0xProtoNerdFont-Regular.ttf $HOME/.termux/font.ttf
 	fc-cache -f
 	check_and_create_directory "$HOME/.config/fastfetch"
@@ -1523,6 +1652,7 @@ function setup_wine() {
 	elif [[ "$wine_answer" == "3" ]]; then
 	if type -p pacman >/dev/null 2>&1; then
 	package_install_and_check "hangover-wine winetricks"
+	wine_shortcut
 	echo "setup_wine=\"hangover-wine\"" >> $config_file
 	else
 	echo "${R}[${W}-${R}]${C} Skipping wine Installation..."${W}
@@ -1542,8 +1672,107 @@ function setup_wine() {
 }
 
 #########################################################################
+########################### Add Autostart ###############################
+#########################################################################
+
+function add_vnc_autostart() {
+	echo "${R}[${W}-${R}]${G}${BOLD} Adding vnc to autostart"${W}
+	if grep -q "^vncstart" $shell_rc_file; then
+	echo "${R}[${W}-${R}]${G} Termux:X11 start already exist"${W}
+	else
+cat << EOF >> "$shell_rc_file"
+# Start Vnc
+if pgrep Xvnc > /dev/null; then
+echo "${G}Vncserver is already running${W}"
+else
+echo "${G}Starting Vnc...${W}"
+vncstart
+fi
+EOF
+	fi
+}
+
+function add_tx11_autostart() {
+	echo "${R}[${W}-${R}]${G}${BOLD} Adding Termux:x11 to autostart"${W}
+	if grep -q "^tx11start" $shell_rc_file; then
+	echo "${R}[${W}-${R}]${G} Termux:X11 start already exist"${W}
+	else
+cat << EOF >> "$shell_rc_file"
+# Start Termux:X11
+termux_x11_pid=\$(pgrep -f "/system/bin/app_process / com.termux.x11.Loader :1.0")
+if [[ -n "\$termux_x11_pid" ]]; then
+echo "${G}X server is already running${W}"
+else
+echo "${G}Starting Termux:x11...${W}"
+tx11start
+fi
+EOF
+	fi
+}
+
+function add_to_autostart() {
+	if [[ "$de_on_startup" == "y" ]]; then
+	   if [[ "$gui_mode" == "3" ]]; then
+	      if [[ "$autostart_gui_mode" == "2" ]]; then
+		  add_vnc_autostart
+		  elif [[ "$autostart_gui_mode" == "1" ]]; then
+		  add_tx11_autostart
+		  else
+		  add_tx11_autostart
+		  fi
+		elif [[ "$gui_mode" == "2" ]]; then
+		add_vnc_autostart
+		elif [[ "$gui_mode" == "1" ]]; then
+		add_tx11_autostart
+		else
+		add_tx11_autostart
+	   fi
+	fi
+	echo "de_on_startup=\"$de_on_startup\"" >> $config_file
+}
+
+
+#########################################################################
 ########################### Finish | Notes ##############################
 #########################################################################
+function cleanup_cache() {
+	banner
+	echo "${R}[${W}-${R}]${G} Cleaning up the cache..."${W}
+	if type -p pacman >/dev/null 2>&1; then
+	pacman -Scc
+	else
+	apt clean all
+	fi
+}
+
+function add_common_function() {
+	check_and_delete "$PREFIX/etc/termux-desktop/common_functions"
+cat <<'EOF' > "$PREFIX/etc/termux-desktop/common_functions"
+R="$(printf '\033[1;31m')"                    
+G="$(printf '\033[1;32m')"
+Y="$(printf '\033[1;33m')"
+B="$(printf '\033[1;34m')"
+C="$(printf '\033[1;36m')"                             
+W="$(printf '\033[0m')"
+BOLD="$(printf '\033[1m')"
+config_file="$PREFIX/etc/termux-desktop/configuration"
+EOF
+declare -f check_termux check_and_create_directory check_and_delete check_and_backup check_and_restore package_install_and_check package_check_and_remove get_file_name_number extract_archive download_and_extract count_subfolders confirmation_y_or_n get_latest_release >> "$PREFIX/etc/termux-desktop/common_functions"
+chmod +x $PREFIX/etc/termux-desktop/common_functions
+}
+
+function delete_installer_file() {
+	script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+	script_name="$(basename "${BASH_SOURCE[0]}")"
+	if [[ "$script_dir" != "$PREFIX/bin" ]]; then
+	    if [[ -f "$script_dir/$script_name" ]]; then
+		(exec rm -- "$script_dir/$script_name") &
+		else
+		echo "${R}Installer file not found"${W}
+		fi
+	fi
+	
+}
 
 function notes() {
 	banner
@@ -1591,6 +1820,8 @@ function remove_termux_desktop() {
 	package_check_and_remove "xfce4 xfce4-goodies xwayland kvantum"
 	elif [[ "$de_name" == "lxqt" ]]; then
 	package_check_and_remove "lxqt xorg-xsetroot papirus-icon-theme xwayland kvantum"
+	elif [[ "$de_name" == "openbox" ]]; then
+	package_check_and_remove "openbox polybar xorg-xsetroot lxappearance wmctrl feh xwayland kvantum thunar firefox mpd rofi bmon xcompmgr xfce4-settings gedit"
 	fi
 	#remove zsh
 	if [[ "$zsh_answer" == "y" ]]; then
@@ -1705,7 +1936,7 @@ function remove_termux_desktop() {
 function gui_check_up() {
 termux_x11_pid=$(pgrep -f /system/bin/app_process.*com.termux.x11.Loader)
 de_pid=$(pgrep -f "$de_startup")
-if [ -n "$termux_x11_pid" ] || [ -n "$de_pid" ]  >/dev/null 2>&1; then
+if [ -n "$termux_x11_pid" ] || [ -n "$de_pid" ] >/dev/null 2>&1; then
 echo "${G}Please Stop The Gui Desktop Server First"${W}
 exit 0
 fi
@@ -1755,16 +1986,12 @@ function change_hw() {
 			hw_questions
 			hw_config
 		if [[ "$gui_mode" == "termux_x11" ]]; then
-		    sed -i "s|selected_initialize_server_method=\"[^\"]*\"|selected_initialize_server_method=\"$initialize_server_method\"|" "$PREFIX/bin/tx11start"
-			sed -i "s|selected_hw_method=\"[^\"]*\"|selected_hw_method=\"$hw_method\"|" "$PREFIX/bin/tx11start"
-			elif [[ "$gui_mode" == "vnc" ]]; then
-		    sed -i "s|selected_initialize_server_method=\"[^\"]*\"|selected_initialize_server_method=\"$initialize_server_method\"|" "$PREFIX/bin/vncstart"
-			sed -i "s|selected_hw_method=\"[^\"]*\"|selected_hw_method=\"$hw_method\"|" "$PREFIX/bin/vncstart"
-			elif [[ "$gui_mode" == "both" ]]; then
-		    sed -i "s|selected_initialize_server_method=\"[^\"]*\"|selected_initialize_server_method=\"$initialize_server_method\"|" "$PREFIX/bin/tx11start"
-			sed -i "s|selected_hw_method=\"[^\"]*\"|selected_hw_method=\"$hw_method\"|" "$PREFIX/bin/tx11start"
-			sed -i "s|selected_initialize_server_method=\"[^\"]*\"|selected_initialize_server_method=\"$initialize_server_method\"|" "$PREFIX/bin/vncstart"
-			sed -i "s|selected_hw_method=\"[^\"]*\"|selected_hw_method=\"$hw_method\"|" "$PREFIX/bin/vncstart"
+		setup_tx11start_cmd
+		elif [[ "$gui_mode" == "vnc" ]]; then
+		setup_vncstart_cmd
+		elif [[ "$gui_mode" == "both" ]]; then
+		setup_tx11start_cmd
+		setup_vncstart_cmd
 		fi
 		if [[ "$distro_add_answer" == "y" ]]; then
 		sed -i "s|selected_pd_hw_method=\"[^\"]*\"|selected_pd_hw_method=\"$pd_hw_method\"|" "$PREFIX/bin/pdrun"
@@ -1799,14 +2026,10 @@ function change_distro() {
 			pd remove $selected_distro
 			rm -rf $PREFIX/share/applications/pd_added
 			rm $PREFIX/bin/$selected_distro
+			pd_hw_method=$(grep 'selected_pd_hw_method=' $PREFIX/bin/pdrun | sed -e 's/.*selected_pd_hw_method="\([^"]*\)".*/\1/')
 			rm $HOME/.${selected_distro}-sound-access
-			distro_container_setup
-			if [[ -d "$PREFIX/bin/$selected_distro" ]] && [[ -d "$PREFIX/var/lib/proot-distro/installed-rootfs/$selected_distro" ]]; then
 			echo
-			echo "${R}[${W}-${R}]${G}${BOLD}Distro container changed successfully"${W}
-			else
-			echo "${R}[${W}-${R}]${R}Some problem occurrs ${W}"
-			fi
+			distro_container_setup
 			else
 			echo "${R}[${W}-${R}]${C}Canceling distro change process..."${W}
 			sleep 2
@@ -1836,15 +2059,57 @@ function change_distro() {
 			distro_hw_questions
 			hw_config
 			distro_container_setup
-			if [[ -d "$PREFIX/bin/$selected_distro" ]] && [[ -d "$PREFIX/var/lib/proot-distro/installed-rootfs/$selected_distro" ]]; then
-			echo
-			echo "${R}[${W}-${R}]${G}${BOLD}Distro container created successfully"${W}
-			else
-			echo "${R}[${W}-${R}]${R}Some problem occurrs ${W}"
-			fi
 	fi
 	fi
 }
+
+#########################################################################
+######################### Change Autostart ##############################
+#########################################################################
+
+function change_autostart() {
+    . "$config_file"
+
+    if [[ $SHELL = *zsh ]]; then
+        current_shell="zsh"
+        shell_rc_file="$HOME/.zshrc"
+    elif [[ $SHELL = *bash ]]; then
+        current_shell="bash"
+        shell_rc_file="/data/data/com.termux/files/usr/etc/bash.bashrc"
+    fi
+
+    if [[ "$zsh_answer" == "y" && "$current_shell" == "bash" ]] || [[ "$zsh_answer" == "n" && "$current_shell" == "zsh" ]]; then
+        echo "${R}It looks like you have changed your shell after the installation ${W}"
+        exit 0
+    fi
+
+    if [[ "$de_on_startup" == "y" ]]; then
+        if grep -q "^vncstart" "$shell_rc_file"; then
+            sed -i '/# Start Vnc/,/fi/d' "$shell_rc_file"
+			echo "de_on_startup=\"n\"" >> $config_file
+        elif grep -q "^tx11start" "$shell_rc_file"; then
+            sed -i '/# Start Termux:X11/,/fi/d' "$shell_rc_file"
+			echo "de_on_startup=\"n\"" >> $config_file
+        fi
+	elif [[ "$de_on_startup" == "n" ]]; then
+	    if [[ "$de_on_startup" == "y" && "$gui_mode" == "3" ]]; then
+		echo "${R}[${W}-${R}]${G} You chose both vnc and termux:x11 to access gui mode"${W}
+		echo
+		echo "${R}[${W}-${R}]${G} Which will be your default"${W}
+		echo
+		echo "${Y}1. Termux:x11"${W}
+		echo
+		echo "${Y}2. Vnc"${W}
+		echo
+		read -p "${Y}select an option (1 is Recomended): "${W} autostart_gui_mode
+		autostart_gui_mode=${autostart_gui_mode:-1}
+		echo "${R}[${W}-${R}]${G}Continuing with answer: $autostart_gui_mode"${W}
+		sleep 0.2
+		add_to_autostart
+		fi 
+    fi
+}
+
 
 #########################################################################
 ######################### Reinstall themes ##############################
@@ -1931,8 +2196,11 @@ function print_basic_details() {
 	android_version=$(getprop ro.build.version.release)
 	local model="$(getprop ro.product.brand) $(getprop ro.product.model)"
 	local lotal_ram=$(free -htm | awk '/Mem:/ {print $2}')
-	device_arch=$(uname -m)
-cat << EOF > $config_file
+	app_arch=$(uname -m)
+	supported_arch="$(getprop ro.product.cpu.abilist)"
+	net_condition="$(getprop gsm.network.type)"
+	country="$(getprop gsm.sim.operator.iso-country)"
+cat <<EOF > $config_file
 
 ####################################
 ########## Termux Desktop ##########
@@ -1946,7 +2214,10 @@ cat << EOF > $config_file
 # Device Model: $model
 # Android Version: $android_version
 # Total Ram: $lotal_ram
-# Architecture: $device_arch
+# Architecture: $app_arch
+# System CPU Architecture: $supported_arch
+# Network Condition: $net_condition (On first run)
+# Country: $country
 #
 ########################
 
@@ -1955,31 +2226,45 @@ cat << EOF > $config_file
 EOF
 }
 
-function update_or_add_shortcut() {
-if [[ -e "$PREFIX/bin/setup-termux-desktop" ]]; then
-local current_script_hash=$(curl -sL https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop | sha256sum | cut -d ' ' -f 1)
-local local_script_hash=$(basename $(sha256sum $PREFIX/bin/setup-termux-desktop))
-if [[ "$local_script_hash" != "$current_script_hash" ]]; then
-confirmation_y_or_n "You are using an old installer. Do you want to update it to the latest version" update_installer
-    if [[ "$update_installer" == "y" ]]; then
-	check_and_backup "$PREFIX/etc/termux-desktop/setup-termux-desktop"
-	mv $PREFIX/bin/setup-termux-desktop*.bak $PREFIX/etc/termux-desktop
+function check_for_update_and_update_installer() {
+	if [[ -e "$PREFIX/bin/setup-termux-desktop" ]]; then
+	local current_script_hash=$(curl -sL https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop | sha256sum | cut -d ' ' -f 1)
+	local local_script_hash=$(basename $(sha256sum $PREFIX/bin/setup-termux-desktop | cut -d ' ' -f 1))
+	    if [[ "$local_script_hash" != "$current_script_hash" ]]; then
+		confirmation_y_or_n "You are using an old installer. Do you want to update it to the latest version" update_installer
+		    if [[ "$update_installer" == "y" ]]; then
+			mv $PREFIX/bin/setup-termux-desktop $PREFIX/etc/termux-desktop/
+			check_and_backup "$PREFIX/etc/termux-desktop/setup-termux-desktop"
+			curl -Lsf https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop -o $PREFIX/bin/setup-termux-desktop
+			chmod +x $PREFIX/bin/setup-termux-desktop
+			add_common_function
+			termux-reload-settings
+			local new_local_script_hash=$(basename $(sha256sum $PREFIX/bin/setup-termux-desktop | cut -d ' ' -f 1))
+			    if [[ "$new_local_script_hash" == "$current_script_hash" ]]; then
+				echo "${R}[${W}-${R}]${G}Installer updated successfully"${W}
+				exit 0
+				else
+				echo "${R}[${W}-${R}]${G}Failed to update the installer"${W}
+				exit 0
+				fi
+			elif [[ "$update_installer" == "n" ]]; then
+			echo "${R}[${W}-${R}]${G}Keeping the old installer"${W}
+			exit 0
+			fi
+		else
+		echo -e "${R}[${W}-${R}]${G}${BOLD} You are using the latest installer\n Good job!"${W}
+		fi
+	fi
+}
+
+function check_and_add_installer() {
+	if [[ -e "$PREFIX/bin/setup-termux-desktop" ]]; then
+	check_for_update_and_update_installer
+	else
+	echo "${R}[${W}-${R}]${G} Adding setup-termux-desktop installer to bin"${W}
 	curl -Lsf https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop -o $PREFIX/bin/setup-termux-desktop
 	chmod +x $PREFIX/bin/setup-termux-desktop
-	local local_script_hash=$(basename $(sha256sum $PREFIX/bin/setup-termux-desktop))
-	    if [[ -e "$PREFIX/bin/setup-termux-desktop" ]] && [[ "$local_script_hash" == "$current_script_hash" ]]; then
-		echo "${R}[${W}-${R}]${G}Installer updated successfully${W}"
-		else
-		echo "${R}[${W}-${R}]${G}Failed to update the installer${W}"
-		fi
-	else
-	echo "${R}[${W}-${R}]${G}Keeping the old installer"${W}
 	fi
-fi
-echo "${R}[${W}-${R}]${G} Adding setup-termux-desktop installer"${W}
-curl -Lsf https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop -o $PREFIX/bin/setup-termux-desktop
-chmod +x $PREFIX/bin/setup-termux-desktop
-fi
 }
 
 #########################################################################
@@ -2031,10 +2316,9 @@ function reset_changes() {
 #########################################################################
 ######################### Call Functions ################################
 #########################################################################
-
-cd $HOME
+check_termux
+check_and_add_installer
 current_path=$(pwd)
-update_or_add_shortcut
 function install_termux_desktop() {
 update_sys
 sleep 2
@@ -2074,43 +2358,50 @@ banner
 distro_container_setup
 gui_launcher
 terminal_utility_setup
+add_to_autostart
 some_fixes
-notes
+cleanup_cache
 termux-wake-unlock
+notes
+delete_installer_file
 }
 
 function show_help() {
-	echo -e "
-	-i,--install      to start installation
-	-r,--remove       to remove termux desktop
-	-c,--change       to change some previously made configuration
-	-ri,--reinstall   to reinstall some previously install stuff
-	--reset           to reset all changes made by this script without uninstalling any package
-	-h,--help         to show help
-	"
+echo -e "
+-i,--install      to start installation
+-r,--remove       to remove termux desktop
+-c,--change       to change some previously made configuration
+-ri,--reinstall   to reinstall some previously install stuff
+--reset           to reset all changes made by this script without uninstalling any package
+-h,--help         to show help
+"
 }
 
 function show_change_help() {
-	echo "options you can use with --change"
-	echo -e "
-	style      to change installed style
-	pd,distro  to change installed distro container
-	hw,hwa     to change hardware acceleration method
-	h,help     to show help
-	"
-	echo "example uses : --change style"
+echo "options you can use with --change"
+echo -e "
+style      to change installed style
+pd,distro  to change installed distro container
+hw,hwa     to change hardware acceleration method
+autostart  to change autostart behaviour
+h,help     to show help
+
+example uses : --change style
+"
 }
 
 function show_reinstall_help() {
-	echo "options you can use with --reinstall"
-	echo -e "
-	icons      to reinstall icons pack
-	themes     to reinstall themes pack
-	config     to reinstall config
-	h,help     to show help
-	"
-	echo "example uses : --reinstall icons"
-	echo "example uses : --reinstall icons,themes...etc to reinstall them at once"
+echo -e "
+options you can use with --reinstall
+
+icons      to reinstall icons pack
+themes     to reinstall themes pack
+config     to reinstall config
+h,help     to show help
+
+example uses : --reinstall icons
+example uses : --reinstall icons,themes...etc to reinstall them at once
+"
 }
 
 case $1 in
@@ -2130,6 +2421,9 @@ case $1 in
                 ;;
 			hw|hwa)
                 change_hw
+                ;;
+			autostart)
+                change_autostart
                 ;;
 			h|help)
 			    show_change_help

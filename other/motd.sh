@@ -13,12 +13,17 @@ fi
 termux_build=$(echo "$TERMUX_APK_RELEASE" | awk '{print tolower($0)}' | awk '{for(i=1;i<=NF;i++) $i=toupper(substr($i,1,1)) substr($i,2)} 1')
 cpu=$(</sys/class/thermal/thermal_zone0/temp)
 TEMP=$(echo $cpu | cut -c 1-2)
-PROCESSOR_NAME=$(cat /proc/cpuinfo | grep Hardware | cut -d ' ' -f 2)
+PROCESSOR_BRAND_NAME="$(getprop ro.soc.manufacturer)"
+PROCESSOR_NAME="$(getprop ro.soc.model)"
 PROCESSOR_COUNT=$(grep -ioP 'processor\t:' /proc/cpuinfo | wc -l)
 
-[[ "$TEMP" -lt "60" ]] && FG=${G}
-[[ "$TEMP" -gt "60" ]] && FG=${Y}                      
-[[ "$TEMP" -gt "75" ]] && FG=${R}
+if [[ "$TEMP" -lt "20" ]]; then
+FG="${C}"
+elif [[ "$TEMP" -gt "20" && "$TEMP" -lt "60" ]]; then
+FG="${G}"
+elif [[ "$TEMP" -gt "60" ]]; then
+FG="${R}"
+fi
 
 clear
 
@@ -36,13 +41,13 @@ IFS=" " read USED AVAIL TOTAL <<<$(free -htm | grep "Mem" | awk {'print $3,$7,$2
 printf "      %+25s ${G}${LOGO}${W}"
 echo -e "
 ${W}${BOLD}System Info:
-$C Distro          : $W$DISTRO
-$C Host            : $W$MODEL
-$C Kernel          : $W$(uname -sr)
-$C CPU             : $W$PROCESSOR_NAME ($G$PROCESSOR_COUNT$W vCPU)
-$C Termux Version  : $G${TERMUX_VERSION}-${termux_build}$W
-$C Memory          : $G$USED$W used, $G$TOTAL$W total$W
-$C Temperature     : $G${TEMP}°c$W"
+$C System          : $G  ${W}$DISTRO
+$C Host            : $G  ${W}$MODEL
+$C Kernel          : $G  ${W}$(uname -sr)
+$C CPU             : $G  ${W}${PROCESSOR_BRAND_NAME} ${PROCESSOR_NAME} ($G$PROCESSOR_COUNT$W vCPU)
+$C Termux Version  : $G  ${W}${TERMUX_VERSION}-${termux_build}$W
+$C Memory          : $G  ${G}$USED$W used, $G$TOTAL$W total$W
+$C Temperature     : $FG  ${TEMP}°c$W"
 
 max_usage=95
 bar_width=45
