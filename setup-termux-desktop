@@ -924,8 +924,29 @@ function hw_config() {
 	banner
 	echo "${R}[${W}-${R}]${G}${BOLD} Configuring Hardware Acceleration"${W}
 	echo
-    wget -O ${current_path}/enable-hw-acceleration https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/enable-hw-acceleration ; chmod +x ${current_path}/enable-hw-acceleration ; . ${current_path}/enable-hw-acceleration
+	if [[ -f "${current_path}/enable-hw-acceleration" ]]; then
+	local current_script_hash=$(curl -sL  https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/enable-hw-acceleration | sha256sum | cut -d ' ' -f 1)
+	local local_script_hash=$(basename $(sha256sum ${current_path}/enable-hw-acceleration | cut -d ' ' -f 1))
+	    if [[ "$local_script_hash" != "$current_script_hash" ]]; then
+		echo "${R}[${W}-${R}]${G} It look like you already have a different hw-acceleration installer in your current directory"${W}
+		echo
+		confirmation_y_or_n "Do you want to change it with the latest installer" change_old_hw_installer
+		    if [[ "$change_old_hw_installer" == "y" ]]; then
+			check_and_backup "${current_path}/enable-hw-acceleration"
+			wget -O ${current_path}/enable-hw-acceleration https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/enable-hw-acceleration && chmod +x ${current_path}/enable-hw-acceleration && . ${current_path}/enable-hw-acceleration
+			else
+			echo "${R}[${W}-${R}]${G} Using the local hardware acceleraion setup file"${W}
+			chmod +x ${current_path}/enable-hw-acceleration ; . ${current_path}/enable-hw-acceleration
+			fi
+			echo "change_old_hw_installer=\"$change_old_hw_installer\"" >> $config_file
+		else
+		echo "${R}[${W}-${R}]${G} Using the local hardware acceleraion setup file"${W}
+		chmod +x ${current_path}/enable-hw-acceleration ; . ${current_path}/enable-hw-acceleration
+		fi
+	else
+	wget -O ${current_path}/enable-hw-acceleration https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/enable-hw-acceleration && chmod +x ${current_path}/enable-hw-acceleration && . ${current_path}/enable-hw-acceleration
 	rm ${current_path}/enable-hw-acceleration
+	fi
 }
 
 #########################################################################
@@ -941,8 +962,29 @@ function distro_container_setup() {
 	banner
 	echo "${R}[${W}-${R}]${G}${BOLD} Configuring Distro Container"${W}
 	echo
-	wget -O ${current_path}/distro-container-setup https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/distro-container-setup ; chmod +x ${current_path}/distro-container-setup ; . ${current_path}/distro-container-setup
+	if [[ -f "${current_path}/distro-container-setup" ]]; then
+	local current_script_hash=$(curl -sL  https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/distro-container-setup | sha256sum | cut -d ' ' -f 1)
+	local local_script_hash=$(basename $(sha256sum ${current_path}/distro-container-setup | cut -d ' ' -f 1))
+	    if [[ "$local_script_hash" != "$current_script_hash" ]]; then
+		echo "${R}[${W}-${R}]${G} It look like you already have a different hw-acceleration installer in your current directory"${W}
+		echo
+		confirmation_y_or_n "Do you want to change it with the latest installer" change_old_distro_installer
+		    if [[ "$change_old_distro_installer" == "y" ]]; then
+			check_and_backup "${current_path}/distro-container-setup"
+			wget -O ${current_path}/distro-container-setup https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/distro-container-setup && chmod +x ${current_path}/distro-container-setup && . ${current_path}/distro-container-setup
+			else
+			echo "${R}[${W}-${R}]${G} Using the local hardware acceleraion setup file"${W}
+			chmod +x ${current_path}/distro-container-setup ; . ${current_path}/distro-container-setup
+			fi
+			echo "change_old_distro_installer=\"$change_old_distro_installer\"" >> $config_file
+		else
+		echo "${R}[${W}-${R}]${G} Using the local hardware acceleraion setup file"${W}
+		chmod +x ${current_path}/distro-container-setup ; . ${current_path}/distro-container-setup
+		fi
+	else
+	wget -O ${current_path}/distro-container-setup https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/distro-container-setup && chmod +x ${current_path}/distro-container-setup && . ${current_path}/distro-container-setup
 	rm ${current_path}/distro-container-setup
+	fi
 	fi
 	echo "distro_add_answer=\"$distro_add_answer\"" >> $config_file
 }
@@ -1758,16 +1800,13 @@ chmod +x $PREFIX/etc/termux-desktop/common_functions
 }
 
 function delete_installer_file() {
-	script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-	script_name="$(basename "${BASH_SOURCE[0]}")"
-	if [[ "$script_dir" != "$PREFIX/bin" ]]; then
-	    if [[ -f "$script_dir/$script_name" ]]; then
-		(exec rm -- "$script_dir/$script_name") &
+	if [[ "$current_path" != */bin ]]; then
+	    if [[ -f "${current_path}/setup-termux-desktop" ]]; then
+		(exec rm -- "${current_path}/setup-termux-desktop") &
 		else
 		echo "${R}Installer file not found"${W}
 		fi
 	fi
-	
 }
 
 function notes() {
@@ -2248,7 +2287,7 @@ function check_for_update_and_update_installer() {
 			exit 0
 			fi
 		else
-		echo -e "${R}[${W}-${R}]${G}${BOLD} You are using the latest installer\n Good job!"${W}
+		echo -e "${R}[${W}-${R}]${G}${BOLD} Good job, you are using the latest installer"${W}
 		fi
 	fi
 }
@@ -2421,11 +2460,12 @@ case $1 in
 			autostart)
                 change_autostart
                 ;;
-			h|help)
+			h|help|-h|--help)
 			    show_change_help
                 ;;
             *)
                 echo "${R}[${W}-${R}]${R}${BOLD} Invalid option: ${C}$2"${W}
+				echo "${R}[${W}-${R}]${G} Use --change help to show help"${W}
                 ;;
         esac
         ;;
@@ -2442,12 +2482,13 @@ case $1 in
                 config)
                     reinstall_config
                     ;;
-                h|help)
+                h|help|-h|--help)
 				    show_reinstall_help
                     exit
                     ;;
                 *)
                     echo "${R}[${W}-${R}]${R}${BOLD} Invalid option: ${C}$option"${W}
+					echo "${R}[${W}-${R}]${G} Use --reinstall help to show help"${W}
                     ;;
             esac
         done
