@@ -10,7 +10,8 @@ B="$(printf '\033[1;34m')"
 C="$(printf '\033[1;36m')"                             
 W="$(printf '\033[0m')"
 BOLD="$(printf '\033[1m')"
-config_file="$PREFIX/etc/termux-desktop/configuration"
+termux_desktop_path="$PREFIX/etc/termux-desktop"
+config_file="$termux_desktop_path/configuration"
 cd $HOME
 
 function banner() {
@@ -998,7 +999,6 @@ function setup_vncstart_cmd() {
 cat <<EOF > "$PREFIX/bin/vncstart"
 #!/data/data/com.termux/files/usr/bin/bash
 
-selected_hw_method="${hw_method}"
 case \$1 in
 --nogpu)
 vncserver
@@ -1793,7 +1793,8 @@ B="$(printf '\033[1;34m')"
 C="$(printf '\033[1;36m')"                             
 W="$(printf '\033[0m')"
 BOLD="$(printf '\033[1m')"
-config_file="$PREFIX/etc/termux-desktop/configuration"
+termux_desktop_path="$PREFIX/etc/termux-desktop"
+config_file="$termux_desktop_path/configuration"
 EOF
 declare -f check_termux check_and_create_directory check_and_delete check_and_backup check_and_restore package_install_and_check package_check_and_remove get_file_name_number extract_archive download_and_extract count_subfolders confirmation_y_or_n get_latest_release >> "$PREFIX/etc/termux-desktop/common_functions"
 chmod +x $PREFIX/etc/termux-desktop/common_functions
@@ -2277,6 +2278,7 @@ function check_for_update_and_update_installer() {
 			local new_local_script_hash=$(basename $(sha256sum $PREFIX/bin/setup-termux-desktop | cut -d ' ' -f 1))
 			    if [[ "$new_local_script_hash" == "$current_script_hash" ]]; then
 				echo "${R}[${W}-${R}]${G}Installer updated successfully"${W}
+				rm $termux_desktop_path/skip_update
 				exit 0
 				else
 				echo "${R}[${W}-${R}]${G}Failed to update the installer"${W}
@@ -2284,6 +2286,11 @@ function check_for_update_and_update_installer() {
 				fi
 			elif [[ "$update_installer" == "n" ]]; then
 			echo "${R}[${W}-${R}]${G}Keeping the old installer"${W}
+			    if [[ -d "$termux_desktop_path" ]]; then
+				touch $termux_desktop_path/skip_update
+				else
+				echo "${R}$termux_desktop_path does not exist"${W}
+				fi
 			exit 0
 			fi
 		else
@@ -2294,7 +2301,12 @@ function check_for_update_and_update_installer() {
 
 function check_and_add_installer() {
 	if [[ -e "$PREFIX/bin/setup-termux-desktop" ]]; then
-	check_for_update_and_update_installer
+	    if [[ ! -e "$termux_desktop_path/skip_update" ]]; then
+		check_for_update_and_update_installer
+		else
+		echo "${R}[${W}-${R}]${G}${BOLD} You paused the update"${W}
+		echo "${R}[${W}-${R}]${G}${BOLD} Use ${C}--update ${G}to re-start update"${W}
+		fi
 	else
 	echo "${R}[${W}-${R}]${G} Adding setup-termux-desktop installer to bin"${W}
 	curl -Lsf https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop -o $PREFIX/bin/setup-termux-desktop
@@ -2493,6 +2505,9 @@ case $1 in
             esac
         done
         ;;
+	--update)
+	check_for_update_and_update_installer
+	;;
     --help|-h)
         show_help
         ;;
