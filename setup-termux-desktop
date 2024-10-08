@@ -14,6 +14,11 @@ termux_desktop_path="$PREFIX/etc/termux-desktop"
 config_file="$termux_desktop_path/configuration"
 cd $HOME
 
+function debug() {
+	log_file="$HOME/termux-desktop.log"
+	exec > >(tee -a "$log_file") 2>&1
+}
+
 function banner() {
 clear
 echo "${Y} ▀█▀ █▀▀ █▀█ █▀▄▀█ █░█ ▀▄▀   █▀▄ █▀▀ █▀ █▄▀ ▀█▀ █▀█ █▀█ "${W}
@@ -2450,6 +2455,11 @@ example uses : --reinstall icons
 example uses : --reinstall icons,themes...etc to reinstall them at once
 "
 }
+
+if [[ $1 == "--debug" ]]; then
+    debug
+    shift
+fi
 
 case $1 in
     --remove|-r)

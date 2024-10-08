@@ -169,5 +169,8 @@ curl -Lf https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-
 <br>
 
 - `setup-termux-desktop --remove / -r` *To Remove Termux Desktop*
+<br>
+
+- `setup-termux-desktop --debug` **(At The Start)** *To generate a log file for any of the above command*
 
 ## If you like my work then don't forget to give a Star :blush:
