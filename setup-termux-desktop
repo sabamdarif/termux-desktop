@@ -1111,7 +1111,19 @@ killall virgl_test_server > /dev/null 2>&1
 pkill -9 xfce-* > /dev/null 2>&1
 pkill -9 dbus-* > /dev/null 2>&1
 pkill -f com.termux.x11 > /dev/null 2>&1
-echo -e "${G}Termux:X11 Stopped Successfully ${W}"
+    if [[ !-n "\$termux_x11_pid" ]] || [[ !-n "\$de_pid" ]]; then
+	echo -e "${G}Termux:X11 Stopped Successfully ${W}"
+	fi
+elif [[ "\$1" == "-f" ]]; then
+pkill -f com.termux.x11 > /dev/null 2>&1
+pkill -9 xfce-* > /dev/null 2>&1
+killall virgl_test_server > /dev/null 2>&1
+pkill -9 pulseaudio > /dev/null 2>&1
+pkill -9 dbus-* > /dev/null 2>&1
+echo -e "${G}Termux:X11 killed Successfully ${W}"
+elif [[ "\$1" == "-h" ]]; then
+echo -e "tx11stop       to stop termux:x11"
+echo -e "tx11stop -f    to kill termux:x11"
 fi
 exec 2>/dev/null
 EOF
@@ -1128,7 +1140,19 @@ killall virgl_test_server > /dev/null 2>&1
 pkill -9 lxqt-* > /dev/null 2>&1
 pkill -9 dbus-* > /dev/null 2>&1
 pkill -f com.termux.x11 > /dev/null 2>&1
-echo -e "${G}Termux:X11 Stopped Successfully ${W}"
+   if [[ !-n "\$termux_x11_pid" ]] || [[ !-n "\$de_pid" ]]; then
+	echo -e "${G}Termux:X11 Stopped Successfully ${W}"
+	fi
+elif [[ "\$1" == "-f" ]]; then
+pkill -f com.termux.x11 > /dev/null 2>&1
+pkill -9 lxqt-* > /dev/null 2>&1
+killall virgl_test_server > /dev/null 2>&1
+pkill -9 pulseaudio > /dev/null 2>&1
+pkill -9 dbus-* > /dev/null 2>&1
+echo -e "${G}Termux:X11 killed Successfully ${W}"
+elif [[ "\$1" == "-h" ]]; then
+echo -e "tx11stop       to stop termux:x11"
+echo -e "tx11stop -f    to kill termux:x11"
 fi
 exec 2>/dev/null
 EOF
@@ -1145,7 +1169,19 @@ killall virgl_test_server > /dev/null 2>&1
 pkill -9 openbox* > /dev/null 2>&1
 pkill -9 dbus-* > /dev/null 2>&1
 pkill -f com.termux.x11 > /dev/null 2>&1
-echo -e "${G}Termux:X11 Stopped Successfully ${W}"
+   if [[ !-n "\$termux_x11_pid" ]] || [[ !-n "\$de_pid" ]]; then
+	echo -e "${G}Termux:X11 Stopped Successfully ${W}"
+	fi
+elif [[ "\$1" == "-f" ]]; then
+pkill -f com.termux.x11 > /dev/null 2>&1
+pkill -9 openbox* > /dev/null 2>&1
+killall virgl_test_server > /dev/null 2>&1
+pkill -9 pulseaudio > /dev/null 2>&1
+pkill -9 dbus-* > /dev/null 2>&1
+echo -e "${G}Termux:X11 killed Successfully ${W}"
+elif [[ "\$1" == "-h" ]]; then
+echo -e "tx11stop       to stop termux:x11"
+echo -e "tx11stop -f    to kill termux:x11"
 fi
 exec 2>/dev/null
 EOF
@@ -1235,7 +1271,7 @@ case \$1 in
         ;;
 	--kill|-k|-kill)
 	vncstop -f > /dev/null 2>&1
-	tx11stop > /dev/null 2>&1
+	tx11stop -f > /dev/null 2>&1
 	echo -e "${G}Gui services killed successfully ${W}"
 	;;
     --stop|-s)
@@ -1254,6 +1290,7 @@ case \$1 in
     --help|-h)
         echo -e "${G}Use ${C}gui --start tx11/vnc${G} or ${C}gui -l tx11/vnc${G} to start a gui"
         echo -e "Use ${C}gui --stop tx11/vnc${G} or ${C}gui -s tx11/vnc${G} to stop a gui${W}"
+		echo -e "Use ${C}gui --kill ${G} To kill both at once${W}"
         ;;
     *)
         echo -e "${R}Invalid choice${W}"
@@ -2283,7 +2320,7 @@ function check_for_update_and_update_installer() {
 			local new_local_script_hash=$(basename $(sha256sum $PREFIX/bin/setup-termux-desktop | cut -d ' ' -f 1))
 			    if [[ "$new_local_script_hash" == "$current_script_hash" ]]; then
 				echo "${R}[${W}-${R}]${G}Installer updated successfully"${W}
-				rm $termux_desktop_path/skip_update
+				check_and_delete "$termux_desktop_path/skip_update"
 				exit 0
 				else
 				echo "${R}[${W}-${R}]${G}Failed to update the installer"${W}
@@ -2291,11 +2328,7 @@ function check_for_update_and_update_installer() {
 				fi
 			elif [[ "$update_installer" == "n" ]]; then
 			echo "${R}[${W}-${R}]${G}Keeping the old installer"${W}
-			    if [[ -d "$termux_desktop_path" ]]; then
-				touch $termux_desktop_path/skip_update
-				else
-				echo "${R}$termux_desktop_path does not exist"${W}
-				fi
+				touch $termux_desktop_path/skip_update >/dev/null 2>&1
 			exit 0
 			fi
 		else
@@ -2334,10 +2367,6 @@ function reset_changes() {
 	set_config_dir
 	check_and_delete "$config_dirs"
 	shell_name=$($basename "$SHELL")
-	    if [[ "$shell_name" == "zsh" ]]; then
-		chsh -s bash
-		rm -rf $HOME/.oh-my-zsh
-		fi
 		get_shellrc_path
 		check_and_delete "$shell_rc_file"
 		check_and_restore "$shell_rc_file"
@@ -2360,6 +2389,14 @@ function reset_changes() {
 		    if grep -q "motd.sh$" "$PREFIX/etc/termux-login.sh"; then
 			sed -i "s|.*motd\.sh$|# |" "$PREFIX/etc/termux-login.sh"
 			fi
+		fi
+		check_and_delete "$HOME/Music"
+		check_and_delete "$HOME/Downloads"
+		check_and_delete "$HOME/Pictures"
+		check_and_delete "$HOME/Videos"
+		if [[ "$shell_name" == "zsh" ]]; then
+		chsh -s bash
+		rm -rf $HOME/.oh-my-zsh
 		fi
 	echo -e "${R}[${W}-${R}]${G}${BOLD} Reset successfull\n Now restart Termux"${W}
 	fi
@@ -2420,6 +2457,7 @@ delete_installer_file
 
 function show_help() {
 echo -e "
+--debug           to create a log file
 -i,--install      to start installation
 -r,--remove       to remove termux desktop
 -c,--change       to change some previously made configuration
