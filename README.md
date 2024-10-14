@@ -134,6 +134,10 @@ curl -Lf https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-
 ### Command:- `tx11start`
 - `tx11start` *to star Termux:11 with gpu acceleration*
 - `tx11start --nogpu` *to star Termux:11 without gpu acceleration*
+### Command:- `vncstop`
+- `tx11stop` *to stop Termux:11*
+- `tx11stop -f` *to kill Termux:11*
+
 ### Command:- `vncstart`
 - `vncstart` *to start vncserver*
 - `vncstart ---nogpu` *to start vncserver without gpu acceleration*
