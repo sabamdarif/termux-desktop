@@ -6,13 +6,13 @@ function hw_install_required_packages() {
 	echo
     if [[ "$termux_hw_answer" == "1" ]]; then
     #zink
-    hw_package_list="mesa-zink vulkan-loader-android angle-android virglrenderer-android"
+    hw_package_list="mesa-zink vulkan-loader-android angle-android virglrenderer"
     elif [[ "$termux_hw_answer" == "2" ]]; then
     #virgl angle
     hw_package_list="angle-android virglrenderer-android"
     elif [[ "$termux_hw_answer" == "3" ]]; then
     #virgl zink
-    hw_package_list="mesa-zink vulkan-loader-android angle-android virglrenderer-android"
+    hw_package_list="mesa-zink virglrenderer-mesa-zink vulkan-loader-android angle-android virglrenderer-android"
     elif [[ "$termux_hw_answer" == "4" ]]; then
     #freedreno
     hw_package_list="mesa-zink mesa-zink-vulkan-icd-freedreno mesa-vulkan-icd-freedreno-dri3"
