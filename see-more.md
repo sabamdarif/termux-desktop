@@ -36,7 +36,7 @@
 
 ---
 
-## Openbox Keybindings Cheat Sheet
+## :hammer_and_wrench:Openbox Keybindings Cheat Sheet
 
 This document provides a list of keybindings used in Openbox for quick reference.
 
@@ -105,3 +105,31 @@ This document provides a list of keybindings used in Openbox for quick reference
 | `Shift + Win + 5`           | Send window to desktop 5                   |
 
 ---
+
+## :hammer_and_wrench:How the update the icon pack or theme:
+
+- Stop the desktop
+- Go to the style preview section
+- Find the style you installed
+- Click on the `Style Details:` section
+- Click on the links
+- Download the latest archive file
+- move them to termux `$HOME` folder
+> Ex. `mv path/to/archive_file_name $HOME`
+- Now to move the right archive to the right folder
+  - <b>For XFCE</b>
+    - Themes folder :- `$HOME/.themes`
+    - Icons folder :- `$HOME/.icons`
+  - <b>For LXQT And OPENBOX</b>
+    - Themes folder :- `$PREFIX/share/themes`
+    -  Icons folder :- `$PREFIX/share/icons`
+- Backup the old themes/icons folders
+> Ex. `tar -czvf icons_backup.tar.gz folder1 folder2 .... && mv icons_backup.tar.gz $HOME/icons_backup.tar.gz`
+- Remove old folders
+> Ex. `rm -rf folder1 folder2 ....`
+- Extract the new archive
+> Ex. `tar -xzvf new_archive.tar.gz`
+- Remove the archive
+> Ex. `rm new_archive.tar.gz`
+
+##### or, run `setup-termux-desktop --update icon/theme /path/to/archive_file_name` (will be added soon...)

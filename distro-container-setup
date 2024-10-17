@@ -584,6 +584,8 @@ mkdirg() {
 EOF
 )
 fi
+
+if [[ "$distro_terminal_utility_setup_answer" == "y" ]];then
     if [[ "$pd_useradd_answer" == "y" ]]; then
     cp $distro_path/home/$final_user_name/.${pd_shell_name}rc $distro_path/home/$final_user_name/.${pd_shell_name}rc-2
     check_and_backup "$distro_path/home/$final_user_name/.${pd_shell_name}rc"
@@ -612,6 +614,7 @@ cat <<'EOF' >> "$distro_path/root/.${pd_shell_name}rc"
 alias apt='sudo nala $@'
 alias apt-get='sudo nala $@'
 EOF
+fi
 fi
 }
 
