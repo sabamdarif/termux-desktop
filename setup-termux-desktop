@@ -1115,7 +1115,7 @@ killall virgl_test_server > /dev/null 2>&1
 pkill -9 xfce-* > /dev/null 2>&1
 pkill -9 dbus-* > /dev/null 2>&1
 pkill -f com.termux.x11 > /dev/null 2>&1
-    if [[ !-n "\$termux_x11_pid" ]] || [[ !-n "\$de_pid" ]]; then
+    if [[ ! -n "\$termux_x11_pid" ]] || [[ ! -n "\$de_pid" ]]; then
 	echo -e "${G}Termux:X11 Stopped Successfully ${W}"
 	fi
 elif [[ "\$1" == "-f" ]]; then
@@ -1144,7 +1144,7 @@ killall virgl_test_server > /dev/null 2>&1
 pkill -9 lxqt-* > /dev/null 2>&1
 pkill -9 dbus-* > /dev/null 2>&1
 pkill -f com.termux.x11 > /dev/null 2>&1
-   if [[ !-n "\$termux_x11_pid" ]] || [[ !-n "\$de_pid" ]]; then
+   if [[ ! -n "\$termux_x11_pid" ]] || [[ ! -n "\$de_pid" ]]; then
 	echo -e "${G}Termux:X11 Stopped Successfully ${W}"
 	fi
 elif [[ "\$1" == "-f" ]]; then
@@ -1173,7 +1173,7 @@ killall virgl_test_server > /dev/null 2>&1
 pkill -9 openbox* > /dev/null 2>&1
 pkill -9 dbus-* > /dev/null 2>&1
 pkill -f com.termux.x11 > /dev/null 2>&1
-   if [[ !-n "\$termux_x11_pid" ]] || [[ !-n "\$de_pid" ]]; then
+   if [[ ! -n "\$termux_x11_pid" ]] || [[ ! -n "\$de_pid" ]]; then
 	echo -e "${G}Termux:X11 Stopped Successfully ${W}"
 	fi
 elif [[ "\$1" == "-f" ]]; then
@@ -2393,6 +2393,9 @@ function reset_changes() {
 		    if grep -q "motd.sh$" "$PREFIX/etc/termux-login.sh"; then
 			sed -i "s|.*motd\.sh$|# |" "$PREFIX/etc/termux-login.sh"
 			fi
+		rm $PREFIX/share/applications/wine-*.desktop >/dev/null 2>&1
+		check_and_delete "$termux_desktop_path"
+		check_and_delete "$PREFIX/bin/tx11start $PREFIX/bin/tx11stop $PREFIX/bin/vncstop $PREFIX/bin/vncstart $PREFIX/bin/gui"
 		fi
 		check_and_delete "$HOME/Music"
 		check_and_delete "$HOME/Downloads"
