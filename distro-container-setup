@@ -841,7 +841,8 @@ packages=(\${@:2})
 EOF
 cat <<'EOF' >> "$save_root_path/packinstall.sh"
 for package_name in "\${packages[@]}"; do
-desktop_files=\$(rpm -q --list "\$package_name" | grep "^/usr/share/applications/.*\.desktop\$")
+package_query=\$(rpm -q "\$package_name" | sed 's/-[0-9].*//')
+desktop_files=\$(\$package_query | grep "^/usr/share/applications/.*\.desktop\$")
 if [ -z "\$desktop_files" ]; then
     echo "${R}[${W}-${R}]${G} No .desktop files found for package ${C}'\$package_name' ${G}in /usr/share/applications."
 else
@@ -865,7 +866,7 @@ packages=(\${@:2})
 EOF
 cat <<'EOF' >> "$save_root_path/packremove.sh"
 for package_name in "\${packages[@]}"; do
-desktop_files=\$(rpm -q --list "\$package_name" | grep "^/usr/share/applications/.*\.desktop\$")
+desktop_files=\$(rpm -q "\$package_name" | grep "^/usr/share/applications/.*\.desktop\$")
 if [ -z "\$desktop_files" ]; then
     echo "${R}[${W}-${R}]${G} No .desktop files found for package ${C}'\$package_name' ${G}in /usr/share/applications."
 else
