@@ -12,7 +12,9 @@ function hw_install_required_packages() {
 }
 
 #########################################################################
-################# Add HW Server Initialize Method #######################
+#
+# Add HW Server Initialize Method
+#
 #########################################################################
 
 function setup_hw_method() {

@@ -14,7 +14,7 @@
 ## Features:
 
 - :books: Easy To Setup
-- :desktop_computer: XFCE, LXQt, and Openbox, all supported
+- :desktop_computer: XFCE, LXQt, and OPENBOX supported
 - :art: New Beautiful Theme And Styles
 - :wine_glass: Wine To Run Windows Apps _(x86_64 in arm64 device)_
 - :mechanical_arm: Hardware Acceleration Enabled
@@ -24,6 +24,7 @@
    - :globe_with_meridians: Browser: Firefox / Chromium
    - :man_technologist: Code Editor: VS Code / Geany
    - :camera: Image Editor: Gimp / Inkscape
+   - :link: More...
 - :package: Install apps like libreoffice _(apps that are not avilable in termux by default)_
 - :link: And Much More...
 <br>
