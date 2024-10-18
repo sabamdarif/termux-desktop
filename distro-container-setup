@@ -28,7 +28,9 @@ function setup_distro() {
     distro_path="$PREFIX/var/lib/proot-distro/installed-rootfs/$selected_distro"
 }
 #########################################################################
-############################# Fix Sound Issue ###########################
+#
+# Fix Sound Issue
+#
 #########################################################################
 
 function distro_fix_sound_issue() {
@@ -43,7 +45,9 @@ EOF
 }
 
 #########################################################################
-######### Update Distro | Install Required Packages | Add User ##########
+#
+# Update Distro | Install Required Packages | Add User
+#
 #########################################################################
 
 function pd_package_install_and_check() {
@@ -56,11 +60,11 @@ function pd_package_install_and_check() {
 for package_name in "${packs_list[@]}"; do
     echo "${R}[${W}-${R}]${G}${BOLD} Installing package: ${C}$package_name ${W}"
     if [[ "$ID" == "debian" ]] || [[ "$ID" == "ubuntu" ]]; then
-        sudo apt install "$package_name" -y
+    sudo apt install "$package_name" -y
     elif [[ "$ID" == arch* ]]; then
-        sudo pacman -Sy --noconfirm "$package_name"
+    sudo pacman -Sy --noconfirm "$package_name"
     elif [[ "$ID" == "alpine" ]]; then
-        sudo apk add "$package_name"
+    sudo apk add "$package_name"
     elif [[ "$ID" == "fedora" ]]; then
         sudo dnf install "$package_name" -y
     fi
@@ -68,12 +72,12 @@ for package_name in "${packs_list[@]}"; do
     if [ $? -ne 0 ]; then
         echo "${R}[${W}-${R}]${G}${BOLD} Error detected during installation of: ${C}$package_name ${W}"
         if [[ "$ID" == "debian" ]] || [[ "$ID" == "ubuntu" ]]; then
-            sudo apt --fix-broken install -y
-            sudo dpkg --configure -a
-            sudo apt install "$package_name" -y
+        sudo apt --fix-broken install -y
+        sudo dpkg --configure -a
+        sudo apt install "$package_name" -y
         elif [[ "$ID" == arch* ]]; then
-            sudo pacman -Syu --noconfirm
-            sudo pacman -Sy --noconfirm "$package_name"
+        sudo pacman -Syu --noconfirm
+        sudo pacman -Sy --noconfirm "$package_name"
         elif [[ "$ID" == "alpine" ]]; then
             sudo apk fix
             sudo apk add "$package_name"
@@ -104,15 +108,15 @@ fi
 #check installation
 if [[ "$ID" == "debian" ]] || [[ "$ID" == "ubuntu" ]]; then
     if dpkg -s "$package_name" >/dev/null 2>&1; then
-        echo "${R}[${W}-${R}]${G} $package_name installed successfully ${W}"
+    echo "${R}[${W}-${R}]${G} $package_name installed successfully ${W}"
     else
         if type -p "$package_name" &>/dev/null || [ -e "$PREFIX/bin/$package_name"* ] || [ -e "$PREFIX/bin/"*"$package_name" ]; then
-            echo "${R}[${W}-${R}]${C} $package_name ${G}installed successfully ${W}"
+        echo "${R}[${W}-${R}]${C} $package_name ${G}installed successfully ${W}"
         fi
     fi
 elif [[ "$ID" == arch* ]]; then
     if pacman -Qi "$package_name" >/dev/null 2>&1; then
-        echo "${R}[${W}-${R}]${G} $package_name installed successfully ${W}"
+    echo "${R}[${W}-${R}]${G} $package_name installed successfully ${W}"
     else
         if type -p "$package_name" &>/dev/null || [ -e "$PREFIX/bin/$package_name"* ] || [ -e "$PREFIX/bin/"*"$package_name" ]; then
         echo "${R}[${W}-${R}]${C} $package_name ${G}installed successfully ${W}"
@@ -161,12 +165,12 @@ for package_name in "${packs_list[@]}"; do
     if [ $? -ne 0 ]; then
         echo "${R}[${W}-${R}]${G}${BOLD} Error detected during installation of: ${C}$package_name ${W}"
         if [[ "$ID" == "debian" ]] || [[ "$ID" == "ubuntu" ]]; then
-            apt --fix-broken install -y
-            dpkg --configure -a
-            apt install "$package_name" -y
+        apt --fix-broken install -y
+        dpkg --configure -a
+        apt install "$package_name" -y
         elif [[ "$ID" == arch* ]]; then
-            pacman -Syu --noconfirm
-            pacman -Sy --noconfirm "$package_name"
+        pacman -Syu --noconfirm
+        pacman -Sy --noconfirm "$package_name"
         elif [[ "$ID" == "alpine" ]]; then
             apk fix
             apk add "$package_name"
@@ -197,15 +201,15 @@ fi
 #check installation
 if [[ "$ID" == "debian" ]] || [[ "$ID" == "ubuntu" ]]; then
     if dpkg -s "$package_name" >/dev/null 2>&1; then
-        echo "${R}[${W}-${R}]${G} $package_name installed successfully ${W}"
+    echo "${R}[${W}-${R}]${G} $package_name installed successfully ${W}"
     else
         if type -p "$package_name" &>/dev/null || [ -e "$PREFIX/bin/$package_name"* ] || [ -e "$PREFIX/bin/"*"$package_name" ]; then
-            echo "${R}[${W}-${R}]${C} $package_name ${G}installed successfully ${W}"
+        echo "${R}[${W}-${R}]${C} $package_name ${G}installed successfully ${W}"
         fi
     fi
 elif [[ "$ID" == arch* ]]; then
     if pacman -Qi "$package_name" >/dev/null 2>&1; then
-        echo "${R}[${W}-${R}]${G} $package_name installed successfully ${W}"
+    echo "${R}[${W}-${R}]${G} $package_name installed successfully ${W}"
     else
         if type -p "$package_name" &>/dev/null || [ -e "$PREFIX/bin/$package_name"* ] || [ -e "$PREFIX/bin/"*"$package_name" ]; then
         echo "${R}[${W}-${R}]${C} $package_name ${G}installed successfully ${W}"
@@ -346,7 +350,9 @@ proot-distro login $selected_distro -- /bin/sh -c 'sudo -k'
 }
 
 #########################################################################
-################## Setup Zsh And Terminal Utility #######################
+#
+# Setup Zsh And Terminal Utility
+#
 #########################################################################
 
 function distro_zsh_answer() {
@@ -619,7 +625,9 @@ fi
 }
 
 #########################################################################
-#################### Create App Installer Shortcut ######################
+#
+# Create App Installer Shortcut
+#
 #########################################################################
 
 function handel_debian_based_app_installer() {
@@ -1091,7 +1099,9 @@ cp $PREFIX/share/applications/add2menu.desktop $HOME/Desktop/
 }
 
 #########################################################################
-########################## App Launcher Setup ###########################
+#
+# App Launcher Setup
+#
 #########################################################################
 
 function distro_app_launch_setup() {
@@ -1128,7 +1138,9 @@ chmod +x "$PREFIX/bin/pdrun"
 }
 
 #########################################################################
-################ Distro Folders , Theme And Icon Link ###################
+#
+# Distro Folders , Theme And Icon Link
+#
 #########################################################################
 
 function distro_folders_link() {
@@ -1153,7 +1165,9 @@ proot-distro login --user $final_user_name $selected_distro -- /bin/sh -c 'bash 
 }
 
 #########################################################################
-########################## Check Installation ###########################
+#
+# Check Installation
+#
 #########################################################################
 if [[ -d "$PREFIX/bin/$selected_distro" ]] && [[ -d "$PREFIX/var/lib/proot-distro/installed-rootfs/$selected_distro" ]]; then
 echo
