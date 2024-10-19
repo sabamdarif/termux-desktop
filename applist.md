@@ -2,7 +2,7 @@
 
 >Most of the apps are available in tur(termux user repo) or in x11 repo
 
-### Audacity:
+### Audacity (Audio Editor):
 
 > pkg install audacity -y
 
@@ -37,3 +37,45 @@
 > pkg install transmission-gtk -y
 
 <center><img src="images/apps/transmission.png"></center>
+
+### Shotcut (Video Editor):
+
+> pkg install shotcut jack jack2 jack-example-tools -y
+
+<center><img src="images/apps/shotcut.png"></center>
+
+### Rhythmbox (Music Player):
+
+> pkg install rhythmbox -y
+
+<center><img src="images/apps/rhythmbox.png"></center>
+
+### Gedit (Text Editor):
+
+> pkg install gedit -y
+
+<center><img src="images/apps/gedit.png"></center>
+
+### Leaf Pad (Text Editor):
+
+> pkg install leafpad -y
+
+<center><img src="images/apps/leafpad.png"></center>
+
+### Xpdf Reader:
+
+> pkg install xpdf -y
+
+<center><img src="images/apps/xpdf.png"></center>
+
+### Otter Browser (Browser):
+
+> pkg install otter-browser -y
+
+<center><img src="images/apps/otter-browser.png"></center>
+
+### Netsurf (Browser):
+
+> pkg install netsurf -y
+
+<center><img src="images/apps/netsurf.png"></center>

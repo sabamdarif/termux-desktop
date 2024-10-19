@@ -66,7 +66,7 @@ for package_name in "${packs_list[@]}"; do
     elif [[ "$ID" == "alpine" ]]; then
     sudo apk add "$package_name"
     elif [[ "$ID" == "fedora" ]]; then
-        sudo dnf install "$package_name" -y
+    sudo dnf install "$package_name" -y
     fi
 #handel error in installation
     if [ $? -ne 0 ]; then
@@ -79,8 +79,8 @@ for package_name in "${packs_list[@]}"; do
         sudo pacman -Syu --noconfirm
         sudo pacman -Sy --noconfirm "$package_name"
         elif [[ "$ID" == "alpine" ]]; then
-            sudo apk fix
-            sudo apk add "$package_name"
+        sudo apk fix
+        sudo apk add "$package_name"
         elif [[ "$ID" == "fedora" ]]; then
         sudo dnf --refresh install -y
         sudo rpm --rebuilddb
@@ -125,10 +125,10 @@ elif [[ "$ID" == arch* ]]; then
 elif [[ "$ID" == "alpine" ]]; then
     if apk info -e "$package_name"; then
             echo "${R}[${W}-${R}]${G} $package_name installed successfully ${W}"
-        else
-            if type -p "$package_name" &>/dev/null || [ -e "$PREFIX/bin/$package_name"* ] || [ -e "$PREFIX/bin/"*"$package_name" ]; then
-                echo "${R}[${W}-${R}]${C} $package_name ${G}installed successfully ${W}"
-            fi
+    else
+        if type -p "$package_name" &>/dev/null || [ -e "$PREFIX/bin/$package_name"* ] || [ -e "$PREFIX/bin/"*"$package_name" ]; then
+        echo "${R}[${W}-${R}]${C} $package_name ${G}installed successfully ${W}"
+        fi
     fi
 elif [[ "$ID" == "fedora" ]]; then
     if rpm -q "$package_name" >/dev/null 2>&1; then

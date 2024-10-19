@@ -2482,6 +2482,7 @@ function reset_changes() {
 		fi
 		check_and_delete "$HOME/Music"
 		check_and_delete "$HOME/Downloads"
+		check_and_delete "$HOME/Desktop"
 		check_and_delete "$HOME/Pictures"
 		check_and_delete "$HOME/Videos"
 		if [[ "$shell_name" == "zsh" ]]; then
