@@ -135,6 +135,13 @@ curl -Lf https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-
 ### Command:- `tx11start`
 - `tx11start` *to star Termux:11 with gpu acceleration*
 - `tx11start --nogpu` *to star Termux:11 without gpu acceleration*
+- `tx11start --nogpu --legacy` *to star Termux:11 without gpu acceleration and _-legacy-drawing_*
+- `tx11start --nodbus` *to star Termux:11 without dbus*
+- `tx11start --nodbus --nogpu` *to star Termux:11 without gpu acceleration and dbus*
+- `tx11start --nodbus --nogpu --legacy` *to star Termux:11 without gpu acceleration and dbus and with _-legacy-drawing_*
+- `tx11start --nodbus --legacy` *to star Termux:11 without dbus and use _-legacy-drawing_ (nodbus and gpu)*
+- `tx11start --legacy` *to star Termux:11 with _-legacy-drawing_ (with dbus and gpu)*
+
 ### Command:- `tx11stop`
 - `tx11stop` *to stop Termux:11*
 - `tx11stop -f` *to kill Termux:11*

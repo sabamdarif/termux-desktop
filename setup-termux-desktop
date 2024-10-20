@@ -1112,15 +1112,53 @@ sleep 1
 am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1
 sleep 1
 env DISPLAY=:1.0 dbus-launch --exit-with-session $de_startup > /dev/null 2>&1 &
+    if [[ "\$2" == "--legacy" ]]; then
+	XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :1.0 -legacy-drawing &
+	sleep 1
+	am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1
+	sleep 1
+	env DISPLAY=:1.0 dbus-launch --exit-with-session $de_startup > /dev/null 2>&1 &
+	fi
+;;
+--nodbus)
+${initialize_server_method} &
+XDG_RUNTIME_DIR=\${TMPDIR} GALLIUM_DRIVER=zink MESA_GL_VERSION_OVERRIDE=4.0 termux-x11 :1 -xstartup "$de_startup"
+    case \$2 in
+	--nogpu)
+	XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :1 -xstartup "$de_startup"
+	    if [[ "\$3" == "--legacy" ]]; then
+		XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :1 -legacy-drawing -xstartup "$de_startup"
+		fi
+	;;
+	--legacy)
+	${initialize_server_method} &
+	XDG_RUNTIME_DIR=\${TMPDIR} GALLIUM_DRIVER=zink MESA_GL_VERSION_OVERRIDE=4.0 termux-x11 :1 -legacy-drawing -xstartup "$de_startup"
+	;;
+	*)
+	echo -e "${G}Type ${C}--legacy ${G}to start termux:x11 with -legacy-drawing"${W}
+	echo -e "${G}Type ${C}---nogpu ${G}to start termux:x11 without gpu acceleration"${W}
+	;;
+	esac
+;;
+--legacy)
+${initialize_server_method} &
+sleep 1
+XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :1 -legacy-drawing &
+sleep 1
+am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1 &
+sleep 1
+env DISPLAY=:1.0 ${hw_method} dbus-launch --exit-with-session $de_startup > /dev/null 2>&1 &
 ;;
 --help|-h)
 echo -e "${G}Type ${C}tx11start ${G}to start termux:x11 with gpu acceleration"${W}
-echo -e "${G}Type ${C}tx11start ---nogpu ${G}to start termux:x11 without gpu acceleration"${W}
+echo -e "${G}Type ${C}tx11start --nogpu ${G}to start termux:x11 without gpu acceleration"${W}
+echo -e "${G}Type ${C}tx11start --nodbus ${G}to start termux:x11 without gpu dbus"${W}
+echo -e "${G}Type ${C}tx11start --legacy ${G}to start termux:x11 with -legacy-drawing"${W}
 ;;
 *)
 ${initialize_server_method} &
 sleep 1
-XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :1.0 &
+XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :1 &
 sleep 1
 am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1 &
 sleep 1
@@ -1163,7 +1201,7 @@ pkill -9 xfce-* > /dev/null 2>&1
 killall virgl_test_server > /dev/null 2>&1
 pkill -9 pulseaudio > /dev/null 2>&1
 pkill -9 dbus-* > /dev/null 2>&1
-echo -e "${G}Termux:X11 killed Successfully ${W}"
+echo -e "${G}Termux:X11 Successfulll Force Stopped ${W}"
 elif [[ "\$1" == "-h" ]]; then
 echo -e "tx11stop       to stop termux:x11"
 echo -e "tx11stop -f    to kill termux:x11"
@@ -1192,7 +1230,7 @@ pkill -9 lxqt-* > /dev/null 2>&1
 killall virgl_test_server > /dev/null 2>&1
 pkill -9 pulseaudio > /dev/null 2>&1
 pkill -9 dbus-* > /dev/null 2>&1
-echo -e "${G}Termux:X11 killed Successfully ${W}"
+echo -e "${G}Termux:X11 Successfulll Force Stopped ${W}"
 elif [[ "\$1" == "-h" ]]; then
 echo -e "tx11stop       to stop termux:x11"
 echo -e "tx11stop -f    to kill termux:x11"
@@ -1221,7 +1259,7 @@ pkill -9 openbox* > /dev/null 2>&1
 killall virgl_test_server > /dev/null 2>&1
 pkill -9 pulseaudio > /dev/null 2>&1
 pkill -9 dbus-* > /dev/null 2>&1
-echo -e "${G}Termux:X11 killed Successfully ${W}"
+echo -e "${G}Termux:X11 Successfulll Force Stopped ${W}"
 elif [[ "\$1" == "-h" ]]; then
 echo -e "tx11stop       to stop termux:x11"
 echo -e "tx11stop -f    to kill termux:x11"
@@ -1901,7 +1939,7 @@ BOLD="$(printf '\033[1m')"
 termux_desktop_path="$PREFIX/etc/termux-desktop"
 config_file="$termux_desktop_path/configuration"
 EOF
-declare -f check_termux check_and_create_directory check_and_delete check_and_backup check_and_restore package_install_and_check package_check_and_remove get_file_name_number extract_archive download_and_extract count_subfolders confirmation_y_or_n get_latest_release >> "$PREFIX/etc/termux-desktop/common_functions"
+declare -f check_termux debug check_and_create_directory check_and_delete check_and_backup check_and_restore package_install_and_check package_check_and_remove get_file_name_number extract_archive download_and_extract count_subfolders confirmation_y_or_n get_latest_release >> "$PREFIX/etc/termux-desktop/common_functions"
 chmod +x $PREFIX/etc/termux-desktop/common_functions
 }
 
