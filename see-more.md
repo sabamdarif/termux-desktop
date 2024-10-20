@@ -25,16 +25,6 @@
 - **startssh** To start a ssh server (after starting ssh, it will print the ip and port which you need for the connection)
 - **stopssh** To stop the ssh server
 ---
-## :wine_glass:Learn about Wine:
-
-#### There is three type of wine intallation options
-
- - **Native:-** it can run apps based on your cpu architecture, like in arm based cpu you can only install windows [arm apps](https://armrepo.ver.lt/)
- - **Mobox:-** it can run x86_64 windows apps in aarch64 device with good performance
- > **:warning: You need to set up Mobox after the termux-desktop installation finishes [From Here](https://github.com/olegos2/mobox)**
- - **Hangover-wine:-** (can only be install using [pacman package manager](https://wiki.termux.com/wiki/Switching_package_manager)), do the same thing like mobox
-
----
 
 ## :hammer_and_wrench:Openbox Keybindings Cheat Sheet
 
@@ -133,3 +123,5 @@ This document provides a list of keybindings used in Openbox for quick reference
 > Ex. `rm new_archive.tar.gz`
 
 ##### or, run `setup-termux-desktop --update icon/theme /path/to/archive_file_name` (will be added soon...)
+
+---

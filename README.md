@@ -19,7 +19,7 @@
 - :wine_glass: Wine To Run Windows Apps _(x86_64 in arm64 device)_
 - :mechanical_arm: Hardware Acceleration Enabled
 - :paperclips: Termux:X11 / Vnc For Gui Access
-- :package: Work with both APT , PACMAN
+- :package: Work with both APT , [PACMAN](https://youtu.be/ditNvG5Nxj0)
 -  :jigsaw: One Click To Install Some useful Apps
    - :globe_with_meridians: Browser: Firefox / Chromium
    - :man_technologist: Code Editor: VS Code / Geany
@@ -91,7 +91,7 @@
 
 <center><img src="images/apps/parole-vlc.png"></center>
 
-### Wine: [See More](https://github.com/sabamdarif/termux-desktop/blob/main/see-more.md#about-wine)
+### Wine: [See More](https://github.com/sabamdarif/termux-desktop/blob/main/wine.md#about-wine)
 
 <center><img src="images/apps/wine.png"></center>
 

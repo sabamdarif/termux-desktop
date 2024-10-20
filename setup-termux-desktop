@@ -1201,7 +1201,7 @@ pkill -9 xfce-* > /dev/null 2>&1
 killall virgl_test_server > /dev/null 2>&1
 pkill -9 pulseaudio > /dev/null 2>&1
 pkill -9 dbus-* > /dev/null 2>&1
-echo -e "${G}Termux:X11 Successfulll Force Stopped ${W}"
+echo -e "${G}Termux:X11 Successfully Force Stopped ${W}"
 elif [[ "\$1" == "-h" ]]; then
 echo -e "tx11stop       to stop termux:x11"
 echo -e "tx11stop -f    to kill termux:x11"
@@ -1230,7 +1230,7 @@ pkill -9 lxqt-* > /dev/null 2>&1
 killall virgl_test_server > /dev/null 2>&1
 pkill -9 pulseaudio > /dev/null 2>&1
 pkill -9 dbus-* > /dev/null 2>&1
-echo -e "${G}Termux:X11 Successfulll Force Stopped ${W}"
+echo -e "${G}Termux:X11 Successfully Force Stopped ${W}"
 elif [[ "\$1" == "-h" ]]; then
 echo -e "tx11stop       to stop termux:x11"
 echo -e "tx11stop -f    to kill termux:x11"
@@ -1259,7 +1259,7 @@ pkill -9 openbox* > /dev/null 2>&1
 killall virgl_test_server > /dev/null 2>&1
 pkill -9 pulseaudio > /dev/null 2>&1
 pkill -9 dbus-* > /dev/null 2>&1
-echo -e "${G}Termux:X11 Successfulll Force Stopped ${W}"
+echo -e "${G}Termux:X11 Successfully Force Stopped ${W}"
 elif [[ "\$1" == "-h" ]]; then
 echo -e "tx11stop       to stop termux:x11"
 echo -e "tx11stop -f    to kill termux:x11"
