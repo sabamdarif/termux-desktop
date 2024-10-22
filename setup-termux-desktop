@@ -2166,6 +2166,14 @@ function change_hw() {
 	        echo "${R}[${W}-${R}]${G}Your current hardware acceleration method for $selected_distro is :${C}${BOLD}${pd_hw_answer}${W}"
 	        echo
 		fi
+		    echo "${R}[${W}-${R}]${G} Changing drivers might break the desktop enviortment sometime"${W}
+		    confirmation_y_or_n "Do you want to continue" confirmation_break_de
+			if [[ "$confirmation_break_de" == "y" ]]; then
+		    package_check_and_remove "mesa-zink vulkan-loader-android virglrenderer-android angle-android mesa-vulkan-icd-freedreno-dri3"
+			else
+			exit 0
+			fi
+			echo "${R}[${W}-${R}]${R}${BOLD}This process might break your desktop environment${W}"
 	        echo "${R}[${W}-${R}]${G}${BOLD}Make your new choise${W}"
 	        echo " "
 			hw_questions

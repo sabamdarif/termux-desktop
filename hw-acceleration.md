@@ -42,7 +42,9 @@ pdrun --no--gpu program
 
 <center><img src="images/termux-glmark2.png"></center>
 
-## :point_right:How to Change Hardware Acceleration Method ?
+## :point_right:How to Change Hardware Acceleration drivers ?
+
+- Install the reuired packages
 
 - <b>Go To `$PREFIX/bin`</b>
 
@@ -51,6 +53,10 @@ pdrun --no--gpu program
 - <b>Here You Find A Line Called `GALLIUM_DRIVER=`</b>
 
 - <b>Change The Word After `=` with `zink / virpipe` Which You Want And Save It</b>
+
+#### or, change the drivers automatically 
+> :warning: might break the desktop sometime
+- <b>run `setup-termux-desktop --change hw` and select the new drivers</b>
 
 <br><br>
 
@@ -72,8 +78,8 @@ pdrun --no--gpu program
 
 > Device used: Lenovo Legion Y700 2022 model (Snapdragon 870 - Adreno 650)
 
-🔥[[Video -By DroidMaster] Hardware Acceleration Part 1 - What it is, how it is used (VIRGL AND ZINK)](https://www.youtube.com/watch?v=fgGOizUDQpY)   
-🔥[[Video -By DroidMaster] Hardware Acceleration Part 2 - (VIRGL, ZINK, TURNIP) - how can you use them](https://youtu.be/07kq4RHbXrE?si=5ClDpIm8Kr3M0Y_D)
+:fire:[[Video -By DroidMaster] Hardware Acceleration Part 1 - What it is, how it is used (VIRGL AND ZINK)](https://www.youtube.com/watch?v=fgGOizUDQpY)   
+:fire:[[Video -By DroidMaster] Hardware Acceleration Part 2 - (VIRGL, ZINK, TURNIP) - how can you use them](https://youtu.be/07kq4RHbXrE?si=5ClDpIm8Kr3M0Y_D)
 
 
 ### GLMARK2 
@@ -261,7 +267,7 @@ pdrun --no--gpu program
 ### [Firefox Aquarium WebGL Benchmark](https://webglsamples.org/aquarium/aquarium.html)
 
 > [!NOTE]  
-> You need to [enable WebGL in Firefox](https://tecnorobot.educa2.madrid.org/tecnologia/-/visor/configurar-webgl) to use the GPU
+> You need to [enable WebGL in Firefox](https://otechworld.com/webgl-in-firefox/) to use the GPU
 
 <table>
   <thead>
