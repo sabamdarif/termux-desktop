@@ -163,7 +163,7 @@ done
 echo ""
 }
 
-# will check the package is installed or not the remove it
+# will check the package is installed or not then remove it
 function package_check_and_remove() {
 	packs_list=($@)
 	for package_name in "${packs_list[@]}"; do
@@ -175,13 +175,12 @@ function package_check_and_remove() {
 	elif pacman -Qi "$package_name" >/dev/null 2>&1; then
 	    if [[ "$package_name" != "already_exist" ]]; then
 		echo "${R}[${W}-${R}]${G}${BOLD} Removeing package: ${C}$package_name "${W}
-		pacman -Rnsy "$package_name"
+		pacman -Rnds --noconfirm "$package_name"
 		fi
     fi
 done
 
 }
-
 
 function get_file_name_number() {
     current_file=$(basename "$0")
@@ -402,9 +401,9 @@ function questions() {
 	echo
 	read -p "${Y}select an option (Default 1): "${W} desktop_answer
 	echo
+	desktop_answer=${desktop_answer:-1}
 	echo "${R}[${W}-${R}]${G}Continuing with answer: $desktop_answer"${W}
 	sleep 0.2
-	desktop_answer=${desktop_answer:-1}
 	# set the location based on chosen desktop
 	sys_icons_folder="$PREFIX/share/icons"
 	if [[ "$desktop_answer" == "1" ]]; then
@@ -1052,8 +1051,8 @@ case \$1 in
 vncserver
 ;;
 --help|-h)
-echo "${G}Type ${C}vncstart ${G}to start vncserver with gpu acceleration"${W}
-echo "${G}Type ${C}vncstart ---nogpu ${G}to start vncserver without gpu acceleration"${W}
+echo "${C}vncstart ${G}to start vncserver with gpu acceleration"${W}
+echo "${C}vncstart ---nogpu ${G}to start vncserver without gpu acceleration"${W}
 ;;
 *)
 ${initialize_server_method} &
@@ -1123,6 +1122,7 @@ env DISPLAY=:1.0 dbus-launch --exit-with-session $de_startup > /dev/null 2>&1 &
 --nodbus)
 ${initialize_server_method} &
 XDG_RUNTIME_DIR=\${TMPDIR} GALLIUM_DRIVER=zink MESA_GL_VERSION_OVERRIDE=4.0 termux-x11 :1 -xstartup "$de_startup"
+exit 0
     case \$2 in
 	--nogpu)
 	XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :1 -xstartup "$de_startup"
@@ -1135,8 +1135,9 @@ XDG_RUNTIME_DIR=\${TMPDIR} GALLIUM_DRIVER=zink MESA_GL_VERSION_OVERRIDE=4.0 term
 	XDG_RUNTIME_DIR=\${TMPDIR} GALLIUM_DRIVER=zink MESA_GL_VERSION_OVERRIDE=4.0 termux-x11 :1 -legacy-drawing -xstartup "$de_startup"
 	;;
 	*)
-	echo -e "${G}Type ${C}--legacy ${G}to start termux:x11 with -legacy-drawing"${W}
-	echo -e "${G}Type ${C}---nogpu ${G}to start termux:x11 without gpu acceleration"${W}
+	echo -e "${C}--legacy ${G}to start termux:x11 with -legacy-drawing"${W}
+	echo -e "${C}---nogpu ${G}to start termux:x11 without gpu acceleration"${W}
+	exit 0
 	;;
 	esac
 ;;
@@ -1150,10 +1151,11 @@ sleep 1
 env DISPLAY=:1.0 ${hw_method} dbus-launch --exit-with-session $de_startup > /dev/null 2>&1 &
 ;;
 --help|-h)
-echo -e "${G}Type ${C}tx11start ${G}to start termux:x11 with gpu acceleration"${W}
-echo -e "${G}Type ${C}tx11start --nogpu ${G}to start termux:x11 without gpu acceleration"${W}
-echo -e "${G}Type ${C}tx11start --nodbus ${G}to start termux:x11 without gpu dbus"${W}
-echo -e "${G}Type ${C}tx11start --legacy ${G}to start termux:x11 with -legacy-drawing"${W}
+echo -e "${C}tx11start ${G}to start termux:x11 with gpu acceleration"${W}
+echo -e "${C}tx11start --nogpu ${G}to start termux:x11 without gpu acceleration"${W}
+echo -e "${C}tx11start --nodbus ${G}to start termux:x11 without gpu dbus"${W}
+echo -e "${C}tx11start --legacy ${G}to start termux:x11 with -legacy-drawing"${W}
+exit 0
 ;;
 *)
 ${initialize_server_method} &
@@ -1944,7 +1946,8 @@ chmod +x $PREFIX/etc/termux-desktop/common_functions
 }
 
 function delete_installer_file() {
-	if [[ "$current_path" != */bin ]]; then
+	current_script_path="$(realpath "$0")"
+	if [[ "$current_script_path" != */bin* ]]; then
 	    if [[ -f "${current_path}/setup-termux-desktop" ]]; then
 		(exec rm -- "${current_path}/setup-termux-desktop") &
 		else
@@ -2501,8 +2504,6 @@ function reset_changes() {
 	check_and_delete "$config_dirs"
 	shell_name=$($basename "$SHELL")
 		get_shellrc_path
-		check_and_delete "$shell_rc_file"
-		check_and_restore "$shell_rc_file"
 		check_and_backup "$config_file"
 		touch $config_file
 		print_basic_details
@@ -2535,6 +2536,8 @@ function reset_changes() {
 		chsh -s bash
 		rm -rf $HOME/.oh-my-zsh
 		fi
+		check_and_delete "$shell_rc_file"
+		check_and_restore "$shell_rc_file"
 	echo -e "${R}[${W}-${R}]${G}${BOLD} Reset successfull\n Now restart Termux"${W}
 	fi
 }

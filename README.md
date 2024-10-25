@@ -70,7 +70,7 @@
 <center><img src="images/xfce/look_1/look.png"></center>
 <br>
 
-## See Other Styles: [XFCE](xfce_styles.md),[LXQT](lxqt_styles.md)
+## See Other Styles: [XFCE](xfce_styles.md),[LXQT](lxqt_styles.md),[OPENBOX](openbox_styles.md)
 
 ## Screenshots:
 > All gui apps screenshot

@@ -4,6 +4,7 @@ function hw_install_required_packages() {
     banner
     echo "${R} [${W}-${R}]${G}${BOLD}Installing Required Packages For Hardware Acceleration"${W}
 	echo
+    pacman -Rdd vulkan-loader
     if [[ "$termux_hw_answer" == "1" ]]; then
     #zink
     hw_package_list="mesa-zink vulkan-loader-android angle-android virglrenderer"
@@ -16,6 +17,9 @@ function hw_install_required_packages() {
     elif [[ "$termux_hw_answer" == "4" ]]; then
     #freedreno
     hw_package_list="mesa-zink mesa-zink-vulkan-icd-freedreno mesa-vulkan-icd-freedreno-dri3"
+    fi
+    if type -p pacman >/dev/null 2>&1; then
+    package_check_and_remove "mesa vulkan-loader"
     fi
     package_install_and_check "${hw_package_list}"
 }
