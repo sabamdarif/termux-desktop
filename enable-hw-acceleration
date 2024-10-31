@@ -4,7 +4,6 @@ function hw_install_required_packages() {
     banner
     echo "${R} [${W}-${R}]${G}${BOLD}Installing Required Packages For Hardware Acceleration"${W}
 	echo
-    pacman -Rdd vulkan-loader
     if [[ "$termux_hw_answer" == "1" ]]; then
     #zink
     hw_package_list="mesa-zink vulkan-loader-android angle-android virglrenderer"

@@ -351,7 +351,9 @@ function questions_theme_select() {
     local main_folder="patch/$de_name"
     local subfolder_count_value=$(count_subfolders "$owner" "$repo" "$main_folder")
 	cd $HOME
+	echo "${R}[${W}-${R}]${G}Downloading list...."${W}
     wget -qO ${current_path}/styles.md https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/${de_name}_styles.md
+	clear
     if [[ -n "$subfolder_count_value" ]]; then
         echo "${R}[${W}-${R}]${G}Check the $de_name styles section in github"${W}
 		echo
@@ -570,7 +572,7 @@ function questions() {
 	echo "distro_add_answer=\"$distro_add_answer\"" >> $config_file
 }
 
-# distro hardware accelrration related question
+# distro hardware accelrration related questions
 function distro_hw_questions() {
 	if [[ "$distro_add_answer" == "y" ]]; then
        echo
@@ -608,7 +610,7 @@ function distro_hw_questions() {
     fi
 }
 
-# hardware accelrration related question
+# hardware accelrration related questions
 function hw_questions() {
     echo "${R}[${W}-${R}]${G}${BOLD}First Read This"${W}
     echo
@@ -633,6 +635,7 @@ function hw_questions() {
 	distro_hw_questions
 }
 
+# distro related questions
 function choose_distro() {
 	echo "${R}[${W}-${R}]${G}${BOLD}Select Distro You Want To Add"${W}
 	echo
@@ -691,6 +694,10 @@ function distro_questions() {
 	sleep 0.2
 	    if [[ "$pd_pass_type" == "1" ]]; then
 	    while true; do
+		echo "${R}[${W}-${R}]${G}Default Password Will Be Set, Because Sometime It Might Ask You For Password"${W}
+		echo
+		echo "${R}[${W}-${R}]${G}Password:-${C}root"${W}
+		echo
 	    read -p "${R}[${W}-${R}]${G}Input username [Lowercase]: "${W} user_name
 	    echo
 	    read -p "${R}[${W}-${R}]${Y}Do you want to continue with username ${C}$user_name ${Y}? (y/n) : "${W} choice
