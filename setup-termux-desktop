@@ -805,6 +805,9 @@ function install_desktop() {
 	echo
 	package_install_and_check "openbox polybar xorg-xsetroot lxappearance wmctrl feh xwayland kvantum termux-api thunar firefox mpd rofi bmon xcompmgr xfce4-settings gedit"
 	fi
+	# if [[ "$distro_add_answer" == "y" ]]; then
+	# package_install_and_check "xdg-utils"
+	# fi
 }
 
 #########################################################################

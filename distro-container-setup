@@ -1013,76 +1013,105 @@ distro_path="$distro_path"
 
 cat <<'EOF' >> $PREFIX/bin/add2menu
 
+#!/bin/bash
+
+# Function to list displayable .desktop files
 list_desktop_files_with_name() {
-    find "$1" -name "*.desktop" -type f -exec awk -F '=' '/^Name=/ {gsub(/.desktop$/,"",$2); print $2 ";;" FILENAME}' {} \;
+    find "$1" -name "*.desktop" -type f -exec awk -F '=' '
+    /^Name=/ {name=$2}
+    /^NoDisplay=/ {no_display=$2}
+    END {
+        if (no_display != "true") {
+            gsub(/.desktop$/,"",name);
+            print name ";;" FILENAME
+        }
+    }' {} \;
 }
 
-action=$(zenity --list --title="Choose Action" --text="Select an action:" --checklist --column="" --column="Action" FALSE "Add Application To Termux Menu" FALSE "Remove Application From Termux Menu")             
+# Main action selection
+action=$(zenity --list --title="Choose Action" --text="Select an action:" --radiolist --column="Select" --column="Action" \
+    TRUE "Add Application To Termux Menu" FALSE "Remove Application From Termux Menu")
+
+# Exit if no action selected
 if [[ -z $action ]]; then
-  zenity --info --text="No action selected. Quitting..." --title="Operation Cancelled"
-  exit 0
+    zenity --info --text="No action selected. Quitting..." --title="Operation Cancelled"
+    exit 0
 fi
 
-if [[ $action == *"Add Application To Termux Menu"* ]]; then
-  # Get the list of .desktop files with Name parameter
-  files=$(list_desktop_files_with_name "$distro_path/usr/share/applications/")
+# Add applications
+if [[ $action == "Add Application To Termux Menu" ]]; then
+    # Fetch list of displayable .desktop files
+    files=$(list_desktop_files_with_name "$distro_path/usr/share/applications/")
 
-  if [[ -z $files ]]; then
-    zenity --info --text="No .desktop files found. Quitting..." --title="Operation Cancelled"
-    exit 0
-  fi
+    # Check if there are any files to add
+    if [[ -z $files ]]; then
+        zenity --info --text="No applications found to add. Quitting..." --title="Operation Cancelled"
+        exit 0
+    fi
 
-  # Display the list of files and ask user to select
-  selected_names=$(zenity --list --title="Add To Termux Menu" --text="Select The App Name To Add:" --checklist --column="Include" --column="Name" --separator="," $files)
+    # Display apps in checklist
+    selected_names=$(zenity --list --title="Add To Termux Menu" --text="Select Applications to Add:" \
+        --checklist --column="Include" --column="Name" --separator="," $files)
 
-  if [[ -z $selected_names ]]; then
-    zenity --info --text="No file selected. Quitting..." --title="Operation Cancelled"
-    exit 0
-  fi
+    # Exit if no files selected
+    if [[ -z $selected_names ]]; then
+        zenity --info --text="No applications selected. Quitting..." --title="Operation Cancelled"
+        exit 0
+    fi
 
-  IFS=',' read -ra selected_names_array <<< "$selected_names"
+    # Process each selected .desktop file
+    IFS=',' read -ra selected_names_array <<< "$selected_names"
+    for selected_item in "${selected_names_array[@]}"; do
+        selected_name=${selected_item%%;;*}
+        selected_file=${selected_item##*;;}
 
-  for selected_item in "${selected_names_array[@]}"; do
-    selected_name=${selected_item%%;;*}
-    selected_file=${selected_item##*;;}
+        # Copy and modify the .desktop file
+        cp "$selected_file" "$PREFIX/share/applications/pd_added/"
+        sed -i 's/^Exec=/Exec=pdrun /' "$PREFIX/share/applications/pd_added/${selected_file##*/}"
+    done
 
-    cp "$selected_file" "$PREFIX/share/applications/pd_added/"
-    sed -i 's/Exec=/Exec=pdrun /g' "$PREFIX/share/applications/pd_added/${selected_file##*/}"
-    update-desktop-database -q "$PREFIX/share/applications/pd_added"
-    zenity --info --text="File '$selected_name' added successfully!" --title="Success"
-  done
+    update-desktop-database "$PREFIX/share/applications/"
+    gtk-update-icon-cache "$PREFIX/share/icons/hicolor"
+    # xdg-desktop-menu forceupdate
+    # xdg-icon-resource forceupdate
+
+    zenity --info --text="Selected applications added successfully!" --title="Success"
+
+# Remove applications
+elif [[ $action == "Remove Application From Termux Menu" ]]; then
+    # List existing applications in Termux menu
+    files=$(list_desktop_files_with_name "$PREFIX/share/applications/pd_added/")
+
+    # Check if there are any files to remove
+    if [[ -z $files ]]; then
+        zenity --info --text="No applications found to remove. Quitting..." --title="Operation Cancelled"
+        exit 0
+    fi
+
+    # Display apps in checklist for removal
+    selected_names=$(zenity --list --title="Remove From Termux Menu" --text="Select Applications to Remove:" \
+        --checklist --column="Include" --column="Name" --separator="," $files)
+
+    # Exit if no files selected
+    if [[ -z $selected_names ]]; then
+        zenity --info --text="No applications selected. Quitting..." --title="Operation Cancelled"
+        exit 0
+    fi
+
+    # Process each selected .desktop file for removal
+    IFS=',' read -ra selected_names_array <<< "$selected_names"
+    for selected_item in "${selected_names_array[@]}"; do
+        selected_file=${selected_item##*;;}
+        rm "$selected_file"
+    done
+
+    update-desktop-database "$PREFIX/share/applications/"
+    gtk-update-icon-cache "$PREFIX/share/icons/hicolor"
+    # xdg-desktop-menu forceupdate
+    # xdg-icon-resource forceupdate
+
+    zenity --info --text="Selected applications removed successfully!" --title="Success"
 fi
-
-if [[ $action == *"Remove Application From Termux Menu"* ]]; then
-  # Get the list of .desktop files with Name parameter
-  files=$(list_desktop_files_with_name "$PREFIX/share/applications/pd_added/")
-
-  if [[ -z $files ]]; then
-    zenity --info --text="No .desktop files found in pd_added. Quitting..." --title="Operation Cancelled"
-    exit 0
-  fi
-
-  # Display the list of files and ask user to select
-  selected_names=$(zenity --list --title="Remove From Termux Menu" --text="Choose .desktop files to remove:" --checklist --column="Include" --column="Name" --separator="," $files)
-
-  if [[ -z $selected_names ]]; then
-    zenity --info --text="No file selected for removal. Quitting..." --title="Operation Cancelled"
-    exit 0
-  fi
-
-  IFS=',' read -ra selected_names_array <<< "$selected_names"
-
-  for selected_item in "${selected_names_array[@]}"; do
-    selected_name=${selected_item%%;;*}
-    selected_file=${selected_item##*;;}
-
-    rm "$selected_file"
-    update-desktop-database -q "$PREFIX/share/applications/pd_added"
-    zenity --info --text="File '$selected_name' has been removed successfully!" --title="Success"
-  done
-fi
-
-gtk-update-icon-cache
 EOF
 chmod +x "$PREFIX/bin/add2menu"
 
