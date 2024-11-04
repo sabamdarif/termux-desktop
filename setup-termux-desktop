@@ -514,15 +514,10 @@ function questions() {
 	echo
 	echo "${R}[${W}-${R}]${B} Know More About Mobox:- https://github.com/olegos2/mobox/"${W}
 	echo
-	if type -p pacman >/dev/null 2>&1; then
 	echo "${Y}3. Wine Hangover"${W}
 	echo
 	echo "${Y}4. Skip"${W}
 	echo
-	else
-	echo "${Y}3. Skip"${W}
-	echo
-	fi
 	read -p "${R}[${W}-${R}]${Y}Select Wine Installation Method: "${W} wine_answer
 	wine_answer=${wine_answer:-1}
 	echo
@@ -1839,18 +1834,12 @@ function setup_wine() {
 	cp $PREFIX/share/applications/wine-explorer.desktop $HOME/Desktop/MoboxExplorer.desktop
 	echo "setup_wine=\"mobox\"" >> $config_file
 	elif [[ "$wine_answer" == "3" ]]; then
-	if type -p pacman >/dev/null 2>&1; then
-	package_install_and_check "hangover-wine winetricks"
+	package_install_and_check "hangover hangover-wine winetricks"
 	wine_shortcut
 	echo "setup_wine=\"hangover-wine\"" >> $config_file
-	else
+	elif [[ "$wine_answer" == "4" ]]; then
 	echo "${R}[${W}-${R}]${C} Skipping wine Installation..."${W}
 	echo "setup_wine=\"skip\"" >> $config_file
-	fi
-	if type -p pacman &>/dev/null && [[ "$wine_answer" == "4" ]]; then
-	echo "${R}[${W}-${R}]${C} Skipping wine Installation..."${W}
-	echo "setup_wine=\"skip\"" >> $config_file
-	fi
 	else
     echo "${R}[${W}-${R}]${G}Installing Wine Natively In Termux"${W}
 	echo

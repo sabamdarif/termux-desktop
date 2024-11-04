@@ -44,6 +44,12 @@
 
 <center><img src="images/apps/shotcut.png"></center>
 
+### Kdenlive (Video Editor):
+
+> pkg install kdenlive -y
+
+<center><img src="images/apps/kdenlive.png"></center>
+
 ### Rhythmbox (Music Player):
 
 > pkg install rhythmbox -y
