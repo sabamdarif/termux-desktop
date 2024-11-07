@@ -576,20 +576,20 @@ function distro_hw_questions() {
        echo "${R}[${W}-${R}]${G}If You Are Not Sure So Skip It It Will Use The Previous One"${W}
        echo
 	   if [[ "$termux_hw_answer" == "2" ]]; then
-	   echo "${Y}1. ZINK"${W}
+	   echo "${Y}1. Vulkan (ZINK)"${W}
 	   echo
-	   echo "${Y}2. VIRGL"${W}
+	   echo "${Y}2. OpenGL (VIRGL)"${W}
 	   echo
-	   echo "${Y}3. VIRGL ZINK"${W}
+	   echo "${Y}3. OpenGL ES (ZINK VIRGL)"${W}
 	   echo
 	   echo "${Y}4. Turnip (Adreno GPU Only)"${W}
 	   echo
 	   echo "${Y}5. Skip"${W}
 	   echo
 	   else
-	   echo "${Y}1. ZINK"${W}
+	   echo "${Y}1. Vulkan (ZINK)"${W}
 	   echo
-	   echo "${Y}2. VIRGL ZINK"${W}
+	   echo "${Y}2. OpenGL ES (ZINK VIRGL)"${W}
 	   echo
 	   echo "${Y}3. Turnip (Adreno GPU Only)"${W}
 	   echo
@@ -613,11 +613,11 @@ function hw_questions() {
     echo
     echo "${R}[${W}-${R}]${G}${BOLD}Select Hardware Acceleration API"${W}
     echo
-	echo "${Y}1. ZINK"${W}
+	echo "${Y}1. Vulkan (ZINK)"${W}
 	echo
-    echo "${Y}2. VIRGL"${W}
+    echo "${Y}2. OpenGL (VIRGL)"${W}
 	echo
-	echo "${Y}3. VIRGL ZINK"${W}
+	echo "${Y}3. OpenGL ES (ZINK VIRGL)"${W}
 	echo
 	echo "${Y}4. Freedreno ${C}(Adreno 610 And Above | didn't work for me)"${W}
 	echo
@@ -1126,7 +1126,7 @@ env DISPLAY=:1.0 dbus-launch --exit-with-session $de_startup > /dev/null 2>&1 &
 ;;
 --nodbus)
 ${initialize_server_method} &
-XDG_RUNTIME_DIR=\${TMPDIR} GALLIUM_DRIVER=zink MESA_GL_VERSION_OVERRIDE=4.0 termux-x11 :1 -xstartup "$de_startup"
+XDG_RUNTIME_DIR=\${TMPDIR} ${hw_method} termux-x11 :1 -xstartup "$de_startup"
 exit 0
     case \$2 in
 	--nogpu)
@@ -1137,7 +1137,7 @@ exit 0
 	;;
 	--legacy)
 	${initialize_server_method} &
-	XDG_RUNTIME_DIR=\${TMPDIR} GALLIUM_DRIVER=zink MESA_GL_VERSION_OVERRIDE=4.0 termux-x11 :1 -legacy-drawing -xstartup "$de_startup"
+	XDG_RUNTIME_DIR=\${TMPDIR} ${hw_method} termux-x11 :1 -legacy-drawing -xstartup "$de_startup"
 	;;
 	*)
 	echo -e "${C}--legacy ${G}to start termux:x11 with -legacy-drawing"${W}
@@ -2392,10 +2392,15 @@ function reinstall_config() {
 #########################################################################
 
 function some_fixes() {
-	#samsung oneui-6 audio fixes
+	# samsung oneui-6 audio fixes
 	local device_brand_name=$(getprop ro.product.brand | cut -d ' ' -f 1)
 	if [[ $device_brand_name == samsung* && $android_version -ge 14 ]]; then
     echo "LD_PRELOAD=/system/lib64/libskcodec.so" >> $shell_rc_file
+	fi
+	# tx11start and vncstart
+	if [[ $termux_hw_answer == "4" ]]; then
+	sed -i 's/^[[:space:]]*&[[:space:]]*$/ /' "$PREFIX/bin/tx11start"
+	sed -i 's/^[[:space:]]*&[[:space:]]*$/ /' "$PREFIX/bin/vncstart"
 	fi
 }
 
