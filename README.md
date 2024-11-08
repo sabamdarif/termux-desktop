@@ -27,7 +27,8 @@
    - :link: More...
 - :package: Install apps like libreoffice _(apps that are not avilable in termux by default)_
 - :link: And Much More...
-<br>
+
+---
 
 ## :warning: Follow This Steps :point_down:
 
@@ -49,6 +50,8 @@
 ### 7. Uses: [from here](#uses)
 ### 8. See More: [from here](see-more.md)
 
+---
+
 <a name="requirements"></a>
 
 ## Minimum Requirements:
@@ -63,14 +66,16 @@
 - [Termux:X11](https://github.com/termux/termux-x11/releases)
 - [Termux-API](https://github.com/termux/termux-api/releases) _(For Openbox only)_
 
-<br>
+---
 
 ## Default Look (XFCE):
 
 <center><img src="images/xfce/look_1/look.png"></center>
 <br>
 
-## See Other Styles: [XFCE](xfce_styles.md),[LXQT](lxqt_styles.md),[OPENBOX](openbox_styles.md)
+## See Other Desktop And Their Avilable Styles: [XFCE](xfce_styles.md),[LXQT](lxqt_styles.md),[OPENBOX](openbox_styles.md)
+
+---
 
 ## Screenshots:
 > All gui apps screenshot
@@ -91,19 +96,25 @@
 
 <center><img src="images/apps/parole-vlc.png"></center>
 
+## See More Natively Supported Apps: [Here](applist.md)
+
+---
+
 ### Wine: [See More](https://github.com/sabamdarif/termux-desktop/blob/main/wine.md#about-wine)
 
 <center><img src="images/apps/wine.png"></center>
 
-## See More Natively Supported Apps: [Here](applist.md)
+---
 
 ## Want To Install More Apps (Like: Libreoffice) Which Are Not Avilable In Termux:
 
-## See How To Use Distro Container: [Click Here](proot-caontainer.md)
+### See How To Use Distro Container: [Click Here](proot-caontainer.md)
 
-## Libre Office:
+#### Libre Office:
 
 <center><img src="images/apps/container-libreoffice-2.png"></center>
+
+---
 
 ## Hardware Acceleration In Distro Container And Also In Termux:
 
@@ -113,7 +124,8 @@
 ## Know More About Hardware Acceleration: [Here](hw-acceleration.md)
 
 <br>
-<br>
+
+---
 
 <a name="installation"></a>
 
@@ -127,6 +139,13 @@
 ```bash
 curl -Lf https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop -o setup-termux-desktop && chmod +x setup-termux-desktop && ./setup-termux-desktop
 ```
+
+---
+
+## :warning:If you are in android 12 or higher then first disable `Phantom Process Killer`
+### Guide:- [Here](https://github.com/atamshkai/Phantom-Process-Killer)
+
+---
 
 <a name="uses"></a>
 
