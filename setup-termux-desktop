@@ -2444,6 +2444,7 @@ function check_for_update_and_update_installer() {
 	if [[ -e "$PREFIX/bin/setup-termux-desktop" ]]; then
 	echo "${R}[${W}-${R}]${G} Checking for update..."${W}
 	echo
+	check_and_create_directory "$termux_desktop_path"
 	local current_script_hash=$(curl -sL https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop | sha256sum | cut -d ' ' -f 1)
 	local local_script_hash=$(basename $(sha256sum $PREFIX/bin/setup-termux-desktop | cut -d ' ' -f 1))
 	    if [[ "$local_script_hash" != "$current_script_hash" ]]; then

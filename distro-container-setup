@@ -290,37 +290,6 @@ proot-distro login $selected_distro -- /bin/bash -c 'bash pd_basic_setup.sh'
     final_pass="root"
     fi
 
-if [[ "$pd_pass_type" == "1" ]];then
-    if [[ "$selected_distro" == "alpine" ]]; then
-cat <<EOF > $distro_path/root/useradd.sh
-#!/bin/bash
-
-groupadd storage
-groupadd wheel
-mkdir -p /home/$final_user_name
-adduser -h /home/$final_user_name -s \$(which bash) -G users -D $final_user_name
-chown ${final_user_name}:users /home/$final_user_name
-chmod u+rw /etc/sudoers
-echo "$final_user_name ALL=(ALL) NOPASSWD:ALL" | tee -a /etc/sudoers > /dev/null 2>&1
-chmod u-w /etc/sudoers
-rm useradd.sh
-EOF
-    else
-cat <<EOF > $distro_path/root/useradd.sh
-#!/bin/bash
-
-groupadd storage
-groupadd wheel
-useradd -m -g users -s \$(which bash) ${final_user_name}
-usermod -aG wheel,polkitd,audio,video,storage ${final_user_name}
-chmod u+rw /etc/sudoers
-echo "$final_user_name ALL=(ALL) NOPASSWD:ALL" | tee -a /etc/sudoers > /dev/null 2>&1
-chmod u-w /etc/sudoers
-rm useradd.sh
-EOF
-    fi
-fi
-
 if [[ "$selected_distro" == "alpine" ]]; then
 cat <<EOF > $distro_path/root/useradd.sh
 #!/bin/bash
@@ -331,9 +300,6 @@ mkdir -p /home/$final_user_name
 adduser -h /home/$final_user_name -s \$(which bash) -G users -D $final_user_name
 chown ${final_user_name}:users /home/$final_user_name
 echo "${final_user_name}:${final_pass}" | chpasswd
-chmod u+rw /etc/sudoers
-echo "$final_user_name ALL=(ALL:ALL) ALL" | tee -a /etc/sudoers > /dev/null 2>&1
-chmod u-w /etc/sudoers
 rm useradd.sh
 EOF
 else
@@ -345,12 +311,32 @@ groupadd wheel
 useradd -m -g users -s \$(which bash) ${final_user_name}
 usermod -aG wheel,polkitd,audio,video,storage ${final_user_name}
 echo "${final_user_name}:${final_pass}" | chpasswd
+rm useradd.sh
+EOF
+fi
+
+proot-distro login $selected_distro -- /bin/sh -c 'bash useradd.sh'
+
+if [[ "$pd_pass_type" == "1" ]];then
+cat <<EOF > $distro_path/root/useradd.sh
+#!/bin/bash
+
+chmod u+rw /etc/sudoers
+echo "$final_user_name ALL=(ALL) NOPASSWD:ALL" | tee -a /etc/sudoers > /dev/null 2>&1
+chmod u-w /etc/sudoers
+rm useradd.sh
+EOF 
+elif [[ "$pd_pass_type" == "2" ]];then
+cat <<EOF > $distro_path/root/useradd.sh
+#!/bin/bash
+
 chmod u+rw /etc/sudoers
 echo "$final_user_name ALL=(ALL:ALL) ALL" | tee -a /etc/sudoers > /dev/null 2>&1
 chmod u-w /etc/sudoers
 rm useradd.sh
 EOF
 fi
+
 proot-distro login $selected_distro -- /bin/sh -c 'bash useradd.sh'
 proot-distro login $selected_distro -- /bin/sh -c 'sudo -k'
 }
