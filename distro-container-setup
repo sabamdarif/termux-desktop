@@ -253,6 +253,10 @@ function distro_basic_task() {
     proot-distro login $selected_distro --shared-tmp -- env DISPLAY=:1.0 dnf upgrade -y
     chmod -R +w $distro_path/
     fi
+    # Set proot timezone
+    timezone=$(getprop persist.sys.timezone)
+    proot-distro login $selected_distro --shared-tmp -- env DISPLAY=:1.0 rm /etc/localtime
+    proot-distro login $selected_distro --shared-tmp -- env DISPLAY=:1.0 cp /usr/share/zoneinfo/$timezone /etc/localtime
     if [[ "$pd_audio_config_answer" == "y" ]]; then
     distro_packs="sudo pulseaudio"
     distro_fix_sound_issue
@@ -289,8 +293,9 @@ proot-distro login $selected_distro -- /bin/bash -c 'bash pd_basic_setup.sh'
     else
     final_pass="root"
     fi
-
+if [[ "$pd_useradd_answer" == "y" ]]; then
 if [[ "$selected_distro" == "alpine" ]]; then
+
 cat <<EOF > $distro_path/root/useradd.sh
 #!/bin/bash
 
@@ -302,7 +307,9 @@ chown ${final_user_name}:users /home/$final_user_name
 echo "${final_user_name}:${final_pass}" | chpasswd
 rm useradd.sh
 EOF
+
 else
+
 cat <<EOF > $distro_path/root/useradd.sh
 #!/bin/bash
 
@@ -313,32 +320,74 @@ usermod -aG wheel,polkitd,audio,video,storage ${final_user_name}
 echo "${final_user_name}:${final_pass}" | chpasswd
 rm useradd.sh
 EOF
+
 fi
 
 proot-distro login $selected_distro -- /bin/sh -c 'bash useradd.sh'
 
 if [[ "$pd_pass_type" == "1" ]];then
-cat <<EOF > $distro_path/root/useradd.sh
+
+cat <<EOF > $distro_path/root/user_permission.sh
 #!/bin/bash
 
 chmod u+rw /etc/sudoers
 echo "$final_user_name ALL=(ALL) NOPASSWD:ALL" | tee -a /etc/sudoers > /dev/null 2>&1
 chmod u-w /etc/sudoers
-rm useradd.sh
-EOF 
+rm user_permission.sh
+EOF
+
 elif [[ "$pd_pass_type" == "2" ]];then
-cat <<EOF > $distro_path/root/useradd.sh
+
+cat <<EOF > $distro_path/root/user_permission.sh
 #!/bin/bash
 
 chmod u+rw /etc/sudoers
 echo "$final_user_name ALL=(ALL:ALL) ALL" | tee -a /etc/sudoers > /dev/null 2>&1
 chmod u-w /etc/sudoers
-rm useradd.sh
+rm user_permission.sh
 EOF
+
 fi
 
-proot-distro login $selected_distro -- /bin/sh -c 'bash useradd.sh'
+proot-distro login $selected_distro -- /bin/sh -c 'bash user_permission.sh'
 proot-distro login $selected_distro -- /bin/sh -c 'sudo -k'
+fi
+}
+
+#########################################################################
+#
+# Hardware Acceleration Setup
+#
+#########################################################################
+
+# setup hardware acceleration, check if the enable-hw-acceleration already exist then then first check if it different from github , then ask user if they want to replace it or not, if not then continue with the lacal enable-hw-acceleration file
+function hw_config() {
+	banner
+	echo "${R}[${W}-${R}]${G}${BOLD} Configuring Hardware Acceleration"${W}
+	echo
+	if [[ -f "${current_path}/enable-hw-acceleration" ]]; then
+	local current_script_hash=$(curl -sL  https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/enable-hw-acceleration | sha256sum | cut -d ' ' -f 1)
+	local local_script_hash=$(basename $(sha256sum ${current_path}/enable-hw-acceleration | cut -d ' ' -f 1))
+	    if [[ "$local_script_hash" != "$current_script_hash" ]]; then
+		echo "${R}[${W}-${R}]${G} It look like you already have a different hw-acceleration installer in your current directory"${W}
+		echo
+		confirmation_y_or_n "Do you want to change it with the latest installer" change_old_hw_installer
+		    if [[ "$change_old_hw_installer" == "y" ]]; then
+			check_and_backup "${current_path}/enable-hw-acceleration"
+			wget -O ${current_path}/enable-hw-acceleration https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/enable-hw-acceleration && chmod +x ${current_path}/enable-hw-acceleration && . ${current_path}/enable-hw-acceleration
+			else
+			echo "${R}[${W}-${R}]${G} Using the local hardware acceleraion setup file"${W}
+			chmod +x ${current_path}/enable-hw-acceleration ; . ${current_path}/enable-hw-acceleration
+			fi
+			echo "change_old_hw_installer=\"$change_old_hw_installer\"" >> $config_file
+		else
+		echo "${R}[${W}-${R}]${G} Using the local hardware acceleraion setup file"${W}
+		chmod +x ${current_path}/enable-hw-acceleration ; . ${current_path}/enable-hw-acceleration
+		fi
+	else
+	wget -O ${current_path}/enable-hw-acceleration https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/enable-hw-acceleration && chmod +x ${current_path}/enable-hw-acceleration && . ${current_path}/enable-hw-acceleration
+	rm ${current_path}/enable-hw-acceleration
+	fi
 }
 
 #########################################################################
@@ -441,7 +490,7 @@ esac
 EOF
 	elif [[ "$distro_terminal_utility_setup_answer" == "y" ]];then
 	banner
-    echo "${R}[${W}-${R}]${C}${BOLD}Configuring Terminal Utility..."${W}
+    echo "${R}[${W}-${R}]${C}${BOLD}Configuring Terminal Utility For $selected_distro ..."${W}
     echo
     if [[ "$selected_distro" == "debian" ]] || [[ "$selected_distro" == "ubuntu" ]]; then
 cat <<'EOF' > $distro_path/root/pd_setup.sh
@@ -486,7 +535,7 @@ wget -qO- https://raw.githubusercontent.com/eza-community/eza/main/deb.asc | sud
 echo "deb [signed-by=/etc/apt/keyrings/gierens.gpg] http://deb.gierens.de stable main" | sudo tee /etc/apt/sources.list.d/gierens.list
 chmod 644 /etc/apt/keyrings/gierens.gpg /etc/apt/sources.list.d/gierens.list
 apt update
-apt install -y eza
+pd_package_install_and_check "eza"
 rm pd_setup.sh
 EOF
 else
@@ -1199,6 +1248,7 @@ fi
 
 setup_distro
 distro_basic_task
+hw_config
 distro_zsh_answer
 distro_terminal_utility_setup
 distro_create_app_installer

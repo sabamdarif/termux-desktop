@@ -77,5 +77,24 @@ else
 fi
 }
 
+function setup_turnip_proot() {
+    banner
+    echo "${R}[${W}-${R}]${G}${BOLD} Setting up Turnip for $selected_distro ..."${W}
+    echo
+    if [[ "$selected_distro" == "debian" ]] || [[ "$selected_distro" == "ubuntu" ]]; then
+    proot-distro login $selected_distro --shared-tmp -- env DISPLAY=:1.0 apt install xdg-desktop-portal xdg-desktop-portal-gtk libgl1 libgl1-mesa-dri libvulkan1 glmark2 -y
+        if [[ "$selected_distro" == "ubuntu" ]]; then
+        proot-distro login $selected_distro --shared-tmp -- env DISPLAY=:1.0 apt install mesa-vulkan-drivers libllvm15t64 -y
+        fi
+    wget https://github.com/bengkelgawai/Termux_XFCE/raw/main/mesa-vulkan-kgsl_23.3.0-ubuntu_arm64.deb
+    mv mesa-vulkan-kgsl_23.3.0-ubuntu_arm64.deb $distro_path/root/
+    proot-distro login $selected_distro --shared-tmp -- env DISPLAY=:1.0 dpkg -i mesa-vulkan-kgsl_23.3.0-ubuntu_arm64.deb
+    proot-distro login $selected_distro --shared-tmp -- env DISPLAY=:1.0 rm mesa-vulkan-kgsl_23.3.0-ubuntu_arm64.deb
+    fi
+}
+
 hw_install_required_packages
 setup_hw_method
+if [[ ("$termux_hw_answer" == "2" && "$pd_hw_answer" == "4") || ("$termux_hw_answer" != "2" && "$pd_hw_answer" == "3") ]]; then
+    setup_turnip_proot
+fi

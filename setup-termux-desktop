@@ -1591,7 +1591,7 @@ function terminal_utility_setup() {
 	echo
 	else
 	banner
-	echo "${R}[${W}-${R}]${C}${BOLD} Configuring Terminal Utility..."${W}
+	echo "${R}[${W}-${R}]${C}${BOLD} Configuring Terminal Utility For Termux..."${W}
 	echo
 	check_and_backup "$PREFIX/etc/motd"
 	check_and_backup "$PREFIX/etc/motd-playstore"
@@ -2589,7 +2589,6 @@ if [[ "$style_answer" == "0" ]]; then
 else
 setup_config
 fi
-hw_config
 banner
 distro_container_setup
 gui_launcher
