@@ -638,8 +638,10 @@ In my tests, I achieved 1000+ FPS in vkmark on all my devices. I tried it on an 
 
 Also if you have Adreno GPU then please select ubuntu or debian as distro container so it can use ternip in the distro container.\n
 Sadly for other then adreno, GPU might not work on the distro container./n
+
+If you type 'n/N' then it will use the old way to setup Hardware Acceleration./n
 	"
-	confirmation_y_or_n "Do you want to enable Experimental Hardware Acceleration support" confirmation_exp_hwa
+	confirmation_y_or_n "Do you want to enable the new Experimental Hardware Acceleration support" confirmation_exp_hwa
 	fi
 }
 
