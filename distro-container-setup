@@ -1189,6 +1189,45 @@ selected_pd_hw_method="$pd_hw_method"
 bash ~/.pd-sound-service
 EOF
     fi
+
+if [[ "$confirmation_exp_hwa" == "y" ]]; then
+    if [[ "$pd_hw_answer" == "3" ]]; then
+cat <<EOF >> "$PREFIX/bin/pdrun"
+xhost + > /dev/null 2>&1
+case \$1 in
+--nogpu)
+proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:1.0 export LIBGL_ALWAYS_SOFTWARE=1
+proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:1.0 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe \${@:2}
+;;
+--help|-h)
+echo "${G}Type ${C}pdrun launch command ${G}to start with gpu acceleration"${W}
+echo "${G}Type ${C}pdrun ---nogpu launch command ${G}to start without gpu acceleration"${W}
+;;
+*)
+proot-distro login --user $final_user_name $selected_distro --shared-tmp -- eval "env DISPLAY=:1.0 \$selected_pd_hw_method \$@"
+;;
+esac
+EOF
+    else
+cat <<EOF >> "$PREFIX/bin/pdrun"
+xhost + > /dev/null 2>&1
+case \$1 in
+--nogpu)
+proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:1.0 export LIBGL_ALWAYS_SOFTWARE=1
+proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:1.0 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe \${@:2}
+;;
+--help|-h)
+echo "${G}Type ${C}pdrun launch command ${G}to start with gpu acceleration"${W}
+echo "${G}Type ${C}pdrun ---nogpu launch command ${G}to start without gpu acceleration"${W}
+;;
+*)
+proot-distro login --user $final_user_name $selected_distro --shared-tmp env DISPLAY=:1.0 \$@
+;;
+esac
+EOF
+    fi
+
+else
 cat <<EOF >> "$PREFIX/bin/pdrun"
 xhost + > /dev/null 2>&1
 case \$1 in
@@ -1204,6 +1243,7 @@ proot-distro login --user $final_user_name $selected_distro --shared-tmp -- eval
 ;;
 esac
 EOF
+fi
 chmod +x "$PREFIX/bin/pdrun"
 }
 

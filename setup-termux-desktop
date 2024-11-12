@@ -337,6 +337,70 @@ function install_font_for_style() {
 	cd
 }
 
+function download_github_action_artifact() {
+	while [[ "$#" -gt 0 ]]; do
+        case "$1" in
+            --user)
+                GITHUB_USER="$2"
+                shift 2
+                ;;
+            --repo)
+                REPO="$2"
+                shift 2
+                ;;
+            --workflow-name)
+                WORKFLOW_NAME="$2" # The name of the CI workflow
+                shift 2
+                ;;
+            --run-name)
+                RUN_NAME="$2" # Specific name/description of the workflow run
+                shift 2
+                ;;
+            --artifact-name)
+                ARTIFACT_NAME="$2" # Artifact name prefix (can be modified as needed)
+                shift 2
+                ;;
+            *)
+                echo "Unknown option: $1"
+                shift
+                ;;
+        esac
+    done
+
+	# Get the workflow ID using the workflow name
+	WORKFLOW_ID=$(gh api repos/$GITHUB_USER/$REPO/actions/workflows --jq ".workflows[] | select(.name == \"$WORKFLOW_NAME\") | .id")
+	# Check if WORKFLOW_ID is found
+	if [ -z "$WORKFLOW_ID" ]; then
+	echo "${R}[${W}-${R}]${R} Workflow '$WORKFLOW_NAME' not found."${W}
+	exit 1
+	fi
+	echo "${R}[${W}-${R}]${G} Workflow ID for ${W}'$WORKFLOW_NAME' ${G}is ${W}$WORKFLOW_ID"
+	# Get the latest workflow run ID with the specific display title
+	WORKFLOW_RUN_ID=$(gh api repos/$GITHUB_USER/$REPO/actions/workflows/$WORKFLOW_ID/runs --paginate --jq ".workflow_runs[] | select(.display_title == \"$RUN_NAME\") | .id" | head -n 1)
+	# Check if WORKFLOW_RUN_ID is obtained
+	if [ -z "$WORKFLOW_RUN_ID" ]; then
+	echo "${R}[${W}-${R}]${R} No workflow run found with the name '$RUN_NAME' for workflow '$WORKFLOW_NAME'."${W}
+	exit 1
+	fi
+	# List artifacts for the found run
+	ARTIFACT_URL=$(gh api repos/$GITHUB_USER/$REPO/actions/runs/$WORKFLOW_RUN_ID/artifacts --jq ".artifacts[] | select(.name == \"$ARTIFACT_NAME\") | .archive_download_url")
+	# If no exact match, look for an artifact starting with ARTIFACT_NAME
+	if [ -z "$ARTIFACT_URL" ]; then
+	echo "${R}[${W}-${R}]${C} Artifact with the exact name '$ARTIFACT_NAME' not found. Looking for artifacts starting with '$ARTIFACT_NAME'..."${W}
+	ARTIFACT_URL=$(gh api repos/$GITHUB_USER/$REPO/actions/runs/$WORKFLOW_RUN_ID/artifacts --jq ".artifacts[] | select(.name | startswith(\"$ARTIFACT_NAME\")) | .archive_download_url" | head -n 1)
+	fi
+	# Check if ARTIFACT_URL is found
+	if [ -z "$ARTIFACT_URL" ]; then
+	echo "${R}[${W}-${R}]${R}No artifact found starting with '$ARTIFACT_NAME'."${W}
+	exit 1
+	fi
+	# Download the artifact using the URL
+	echo "${R}[${W}-${R}]${G} Downloading artifact from run '$RUN_NAME'..."${W}
+	curl -# -L -H "Authorization: Bearer $(gh auth token)" -o artifact.zip "$ARTIFACT_URL"
+	# Extract the artifact
+	extract_archive "artifact.zip"
+}
+
 #########################################################################
 #
 # Ask Required Questions
@@ -565,6 +629,18 @@ function questions() {
 	echo
 	confirmation_y_or_n "Do you want to continue" distro_add_answer
 	echo "distro_add_answer=\"$distro_add_answer\"" >> $config_file
+	if ! type -p pacman >/dev/null 2>&1; then
+	echo "${R}[${W}-${R}]${R}${BOLD} Read This Carefully"${W}
+	echo -e "
+The experimental drivers only support a few GPUs and currently use Vulkan, with no OpenGL support.\n
+
+In my tests, I achieved 1000+ FPS in vkmark on all my devices. I tried it on an Adreno 619 (best everything work fine), Adreno 750 (usable but some apps don't launch), Adreno 720 (good overall but with XFCE WM issues), and Mali G76 (similar issue like Adreno 720).\n
+
+Also if you have Adreno GPU then please select ubuntu or debian as distro container so it can use ternip in the distro container.\n
+Sadly for other then adreno, GPU might not work on the distro container./n
+	"
+	confirmation_y_or_n "Do you want to enable Experimental Hardware Acceleration support" confirmation_exp_hwa
+	fi
 }
 
 # distro hardware accelrration related questions
@@ -606,6 +682,41 @@ function distro_hw_questions() {
 }
 
 # hardware accelrration related questions
+
+function exp_hwa_support() {
+	if [[ "$confirmation_exp_hwa" == "y" ]]; then
+	echo "${R}[${W}-${R}]${G} Experimental Hardware Acceleration Will Use The mesa-vulkan-icd-wrapper Package"${W}
+	echo "${R}[${W}-${R}]${G} It Will Use Vulkan"
+	echo "${R}[${W}-${R}]${G}${BOLD} Select Your Device GPU"${W}
+    echo
+	echo "${Y}1. Adreno"${W}
+	echo
+    echo "${Y}2. Mali"${W}
+	echo
+	echo "${Y}3. Xclipse"${W}
+	echo
+	echo "${Y}4. Others"${W}
+	echo
+	read -p "${Y}select an option : "${W} device_gpu_model
+	device_gpu_model=${device_gpu_model:-1}
+	echo
+	echo "${R}[${W}-${R}]${G}Continuing with answer: $device_gpu_model"${W}
+	echo "device_gpu_model=\"$device_gpu_model\"" >> $config_file
+	sleep 0.2
+	    if [[ "$device_gpu_model" == "1" ]]; then
+		    if [[ "$distro_answer" == "1" || "$distro_answer" == "2" ]]; then
+			pd_hw_answer="3"
+			fi
+	    elif [[ "$device_gpu_model" == "4" ]]; then
+		echo "${R}[${W}-${R}]${C}${BOLD}For other GPUs, this might not work and could break the desktop environment"${W}
+		echo
+		sleep 2
+		fi
+	echo "${R}[${W}-${R}]${G}${BOLD}First Read This"${W}
+    echo
+	fi
+}
+
 function hw_questions() {
     echo "${R}[${W}-${R}]${G}${BOLD}First Read This"${W}
     echo
@@ -1048,6 +1159,25 @@ function distro_container_setup() {
 
 function setup_vncstart_cmd() {
     check_and_delete "$PREFIX/bin/vncstart"
+if [[ "$confirmation_exp_hwa" == "y" ]]; then
+cat <<EOF > "$PREFIX/bin/vncstart"
+#!/data/data/com.termux/files/usr/bin/bash
+
+case \$1 in
+--nogpu)
+export LIBGL_ALWAYS_SOFTWARE=1
+MESA_LOADER_DRIVER_OVERRIDE=llvmpipe vncserver
+;;
+--help|-h)
+echo "${C}vncstart ${G}to start vncserver with gpu acceleration"${W}
+echo "${C}vncstart ---nogpu ${G}to start vncserver without gpu acceleration"${W}
+;;
+*)
+vncserver
+;;
+esac
+EOF
+else
 cat <<EOF > "$PREFIX/bin/vncstart"
 #!/data/data/com.termux/files/usr/bin/bash
 
@@ -1065,6 +1195,7 @@ $hw_method vncserver
 ;;
 esac
 EOF
+fi
     chmod +x "$PREFIX/bin/vncstart"
 }
 
@@ -1106,73 +1237,182 @@ EOF
 
 function setup_tx11start_cmd() {
 	check_and_delete "$PREFIX/bin/tx11start"
+if [[ "$confirmation_exp_hwa" == "y" ]]; then
+cat <<EOF > "$PREFIX/bin/tx11start"
+case \$1 in
+    --nogpu)
+        # Start termux-x11 without GPU acceleration
+        XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :1.0 &
+        sleep 1
+        am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1
+        sleep 1
+        export LIBGL_ALWAYS_SOFTWARE=1
+        env DISPLAY=:1.0 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe dbus-launch --exit-with-session $de_startup > /dev/null 2>&1 &
+        
+        # Check if the second argument is --legacy
+        if [[ "\$2" == "--legacy" ]]; then
+            XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :1.0 -legacy-drawing &
+            sleep 1
+            am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1
+            sleep 1
+            env DISPLAY=:1.0 dbus-launch --exit-with-session $de_startup > /dev/null 2>&1 &
+        fi
+        ;;
+    
+    --nodbus)
+        # Start termux-x11 without D-Bus
+        export DISPLAY=:1.0
+        XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :1 -xstartup "$de_startup"
+        exit 0
+        
+        case \$2 in
+            --nogpu)
+                # Start termux-x11 without GPU and without D-Bus
+                export DISPLAY=:1.0
+                export LIBGL_ALWAYS_SOFTWARE=1
+                XDG_RUNTIME_DIR=\${TMPDIR} MESA_LOADER_DRIVER_OVERRIDE=llvmpipe termux-x11 :1 -xstartup "$de_startup"
+                
+                if [[ "\$3" == "--legacy" ]]; then
+                    export DISPLAY=:1.0
+                    XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :1 -legacy-drawing -xstartup "$de_startup"
+                fi
+                ;;
+            
+            --legacy)
+                # Start termux-x11 with legacy drawing and without D-Bus
+                export DISPLAY=:1.0
+                XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :1 -legacy-drawing -xstartup "$de_startup"
+                ;;
+            
+            *)
+                # Help message for invalid options under --nodbus
+                echo -e "${C}--legacy ${G}to start termux:x11 with -legacy-drawing"${W}
+                echo -e "${C}---nogpu ${G}to start termux:x11 without GPU acceleration"${W}
+                exit 0
+                ;;
+        esac
+        ;;
+    
+    --legacy)
+        # Start termux-x11 with legacy drawing mode
+        sleep 1
+        XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :1 -legacy-drawing &
+        sleep 1
+        am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1 &
+        sleep 1
+        env DISPLAY=:1.0 dbus-launch --exit-with-session $de_startup > /dev/null 2>&1 &
+        ;;
+    
+    --help|-h)
+        # Display help message
+        echo -e "${C}tx11start ${G}to start termux:x11 with GPU acceleration"${W}
+        echo -e "${C}tx11start --nogpu ${G}to start termux:x11 without GPU acceleration"${W}
+        echo -e "${C}tx11start --nodbus ${G}to start termux:x11 without D-Bus"${W}
+        echo -e "${C}tx11start --legacy ${G}to start termux:x11 with -legacy-drawing"${W}
+        exit 0
+        ;;
+    
+    *)
+        # Default case: start termux-x11 with GPU acceleration
+        sleep 1
+        XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :1 &
+        sleep 1
+        am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1 &
+        sleep 1
+        env DISPLAY=:1.0 dbus-launch --exit-with-session $de_startup > /dev/null 2>&1 &
+        ;;
+esac
+
+EOF
+
+else
 cat <<EOF > "$PREFIX/bin/tx11start"
 #!/data/data/com.termux/files/usr/bin/bash
 
+# Main case statement to handle script arguments
 case \$1 in
 --nogpu)
-XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :1.0 &
-sleep 1
-am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1
-sleep 1
-env DISPLAY=:1.0 dbus-launch --exit-with-session $de_startup > /dev/null 2>&1 &
+    # Start Termux X11 without GPU acceleration
+    XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :1.0 &
+    sleep 1
+    am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1
+    sleep 1
+    env DISPLAY=:1.0 dbus-launch --exit-with-session $de_startup > /dev/null 2>&1 &
+
+    # Check if the second argument is --legacy
     if [[ "\$2" == "--legacy" ]]; then
-	XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :1.0 -legacy-drawing &
-	sleep 1
-	am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1
-	sleep 1
-	env DISPLAY=:1.0 dbus-launch --exit-with-session $de_startup > /dev/null 2>&1 &
-	fi
-;;
+        XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :1.0 -legacy-drawing &
+        sleep 1
+        am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1
+        sleep 1
+        env DISPLAY=:1.0 dbus-launch --exit-with-session $de_startup > /dev/null 2>&1 &
+    fi
+    ;;
+
 --nodbus)
-${initialize_server_method} &
-XDG_RUNTIME_DIR=\${TMPDIR} ${hw_method} termux-x11 :1 -xstartup "$de_startup"
-exit 0
+    # Start Termux X11 without dbus-launch
+    export DISPLAY=:1.0
+    ${initialize_server_method} &
+    XDG_RUNTIME_DIR=\${TMPDIR} ${hw_method} termux-x11 :1 -xstartup "$de_startup"
+    exit 0
+
+    # Nested case to check for additional options
     case \$2 in
-	--nogpu)
-	XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :1 -xstartup "$de_startup"
-	    if [[ "\$3" == "--legacy" ]]; then
-		XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :1 -legacy-drawing -xstartup "$de_startup"
-		fi
-	;;
-	--legacy)
-	${initialize_server_method} &
-	XDG_RUNTIME_DIR=\${TMPDIR} ${hw_method} termux-x11 :1 -legacy-drawing -xstartup "$de_startup"
-	;;
-	*)
-	echo -e "${C}--legacy ${G}to start termux:x11 with -legacy-drawing"${W}
-	echo -e "${C}---nogpu ${G}to start termux:x11 without gpu acceleration"${W}
-	exit 0
-	;;
-	esac
-;;
+    --nogpu)
+        export DISPLAY=:1.0
+        XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :1 -xstartup "$de_startup"
+
+        if [[ "\$3" == "--legacy" ]]; then
+            export DISPLAY=:1.0
+            XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :1 -legacy-drawing -xstartup "$de_startup"
+        fi
+        ;;
+    --legacy)
+        export DISPLAY=:1.0
+        ${initialize_server_method} &
+        XDG_RUNTIME_DIR=\${TMPDIR} ${hw_method} termux-x11 :1 -legacy-drawing -xstartup "$de_startup"
+        ;;
+    *)
+        echo -e "${C}--legacy ${G}to start termux:x11 with -legacy-drawing${W}"
+        echo -e "${C}--nogpu ${G}to start termux:x11 without GPU acceleration${W}"
+        exit 0
+        ;;
+    esac
+    ;;
+
 --legacy)
-${initialize_server_method} &
-sleep 1
-XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :1 -legacy-drawing &
-sleep 1
-am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1 &
-sleep 1
-env DISPLAY=:1.0 ${hw_method} dbus-launch --exit-with-session $de_startup > /dev/null 2>&1 &
-;;
+    # Start Termux X11 with legacy drawing mode
+    ${initialize_server_method} &
+    sleep 1
+    XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :1 -legacy-drawing &
+    sleep 1
+    am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1 &
+    sleep 1
+    env DISPLAY=:1.0 ${hw_method} dbus-launch --exit-with-session $de_startup > /dev/null 2>&1 &
+    ;;
+
 --help|-h)
-echo -e "${C}tx11start ${G}to start termux:x11 with gpu acceleration"${W}
-echo -e "${C}tx11start --nogpu ${G}to start termux:x11 without gpu acceleration"${W}
-echo -e "${C}tx11start --nodbus ${G}to start termux:x11 without gpu dbus"${W}
-echo -e "${C}tx11start --legacy ${G}to start termux:x11 with -legacy-drawing"${W}
-exit 0
-;;
+    # Display help information
+    echo -e "${C}tx11start ${G}to start termux:x11 with GPU acceleration${W}"
+    echo -e "${C}tx11start --nogpu ${G}to start termux:x11 without GPU acceleration${W}"
+    echo -e "${C}tx11start --nodbus ${G}to start termux:x11 without dbus${W}"
+    echo -e "${C}tx11start --legacy ${G}to start termux:x11 with -legacy-drawing${W}"
+    exit 0
+    ;;
+
 *)
-${initialize_server_method} &
-sleep 1
-XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :1 &
-sleep 1
-am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1 &
-sleep 1
-env DISPLAY=:1.0 ${hw_method} dbus-launch --exit-with-session $de_startup > /dev/null 2>&1 &
-;;
+    # Default behavior: start Termux X11 with GPU acceleration and dbus
+    ${initialize_server_method} &
+    sleep 1
+    XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :1 &
+    sleep 1
+    am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1 &
+    sleep 1
+    env DISPLAY=:1.0 ${hw_method} dbus-launch --exit-with-session $de_startup > /dev/null 2>&1 &
+    ;;
 esac
 EOF
+fi
 
 if [[ "$de_name" == "xfce" ]]; then
 cat <<'EOF' >> "$PREFIX/bin/tx11start"
@@ -2570,7 +2810,11 @@ if [[ "$distro_add_answer" == "y" ]]; then
 distro_questions
 fi
 banner
+if [[ "$confirmation_exp_hwa" == "y" ]]; then
+exp_hwa_support
+else
 hw_questions
+fi
 setup_folder
 setup_zsh
 setup_fonts

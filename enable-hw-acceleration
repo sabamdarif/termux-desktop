@@ -2,6 +2,31 @@
 
 function hw_install_required_packages() {
     banner
+    echo "${R} [${W}-${R}]${G}${BOLD}Installing Experimental Mesa Driver..."${W}
+	echo
+    if [[ "$confirmation_exp_hwa" == "y" ]]; then
+    device_arch=$(uname -m)
+    case "$device_arch" in
+        aarch64|arm64)
+            archtype="aarch64"
+            ;;
+        arm|armhf)
+            archtype="arm"
+            ;;
+        *)
+            echo "${R} unknown architecture"${W}
+            ;;
+    esac
+    if [[ "$archtype" == "aarch64" ]]; then
+    wget -O mesa_aarch64.deb https://github.com/sabamdarif/termux-desktop/releases/download/mesa-vulkan/mesa_24.2.6-1_aarch64.deb
+    apt install ./mesa_aarch64.deb -y
+    fi
+    if [[ "$archtype" == "aarch64" || "$archtype" == "arm" ]]; then
+    wget -O mesa-vulkan-icd-wrapper.deb  https://github.com/sabamdarif/termux-desktop/releases/download/mesa-vulkan/mesa-vulkan-icd-wrapper-dbg_24.2.5-8_${archtype}.deb
+    apt install ./mesa-vulkan-icd-wrapper.deb -y
+    fi
+
+    else
     echo "${R} [${W}-${R}]${G}${BOLD}Installing Required Packages For Hardware Acceleration"${W}
 	echo
     if [[ "$termux_hw_answer" == "1" ]]; then
@@ -21,6 +46,7 @@ function hw_install_required_packages() {
     package_check_and_remove "mesa vulkan-loader"
     fi
     package_install_and_check "${hw_package_list}"
+    fi
 }
 
 #########################################################################
