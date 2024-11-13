@@ -2647,6 +2647,9 @@ function some_fixes() {
 	sed -i 's/^[[:space:]]*&[[:space:]]*$/ /' "$PREFIX/bin/tx11start"
 	sed -i 's/^[[:space:]]*&[[:space:]]*$/ /' "$PREFIX/bin/vncstart"
 	fi
+	if [[ "$confirmation_exp_hwa" == "y" ]]; then
+	sed -i 's|<property name="vblank_mode" type="string" value="auto"/>|<property name="vblank_mode" type="string" value="off"/>|' "$HOME/.config/xfce4/xfconf/xfce-perchannel-xml/xfwm4.xml"
+	fi
 }
 
 # add the basic details into a config file
