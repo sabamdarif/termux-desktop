@@ -17,9 +17,9 @@ function hw_install_required_packages() {
             echo "${R} unknown architecture"${W}
             ;;
     esac
-    if [[ "$archtype" == "aarch64" ]]; then
-    wget -O mesa_aarch64.deb https://github.com/sabamdarif/termux-desktop/releases/download/mesa-vulkan/mesa_24.2.6-1_aarch64.deb
-    apt install ./mesa_aarch64.deb -y
+    if [[ "$archtype" == "aarch64" || "$archtype" == "arm" ]]; then
+    wget -O mesa.deb https://github.com/sabamdarif/termux-desktop/releases/download/mesa-vulkan/mesa_24.2.6-1_${archtype}.deb
+    apt install ./mesa.deb -y
     fi
     if [[ "$archtype" == "aarch64" || "$archtype" == "arm" ]]; then
     wget -O mesa-vulkan-icd-wrapper.deb  https://github.com/sabamdarif/termux-desktop/releases/download/mesa-vulkan/mesa-vulkan-icd-wrapper-dbg_24.2.5-8_${archtype}.deb

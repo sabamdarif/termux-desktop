@@ -629,6 +629,7 @@ function questions() {
 	echo
 	confirmation_y_or_n "Do you want to continue" distro_add_answer
 	echo "distro_add_answer=\"$distro_add_answer\"" >> $config_file
+	clear
 	if ! type -p pacman >/dev/null 2>&1; then
 	echo "${R}[${W}-${R}]${R}${BOLD} Read This Carefully"${W}
 	echo -e "
@@ -642,6 +643,7 @@ Sadly for other then adreno, GPU might not work on the distro container./n
 If you type 'n/N' then it will use the old way to setup Hardware Acceleration./n
 	"
 	confirmation_y_or_n "Do you want to enable the new Experimental Hardware Acceleration support" confirmation_exp_hwa
+	echo "confirmation_exp_hwa=\"$confirmation_exp_hwa\"" >> $config_file
 	fi
 }
 
@@ -907,11 +909,11 @@ function install_desktop() {
 	elif [[ "$desktop_answer" == "2" ]]; then
 	echo "${R}[${W}-${R}]${G}${BOLD} Installing Lxqt Desktop"${W}
 	echo
-	package_install_and_check "lxqt openbox papirus-icon-theme xorg-xsetroot xwayland kvantum"
+	package_install_and_check "lxqt openbox gtk3 papirus-icon-theme xorg-xsetroot xwayland kvantum"
 	elif [[ "$desktop_answer" == "3" ]]; then
 	echo "${R}[${W}-${R}]${G}${BOLD} Installing Openbox WM"${W}
 	echo
-	package_install_and_check "openbox polybar xorg-xsetroot lxappearance wmctrl feh xwayland kvantum termux-api thunar firefox mpd rofi bmon xcompmgr xfce4-settings gedit"
+	package_install_and_check "openbox polybar xorg-xsetroot lxappearance wmctrl feh xwayland kvantum termux-api thunar firefox mpd rofi bmon xcompmgr xfce4-settings gtk3 gedit"
 	fi
 	# if [[ "$distro_add_answer" == "y" ]]; then
 	# package_install_and_check "xdg-utils"
@@ -1961,6 +1963,7 @@ function setup_fonts() {
 	check_and_create_directory "$HOME/.fonts"
 	check_and_backup "$HOME/.termux/font.ttf"
 	download_and_extract "https://github.com/ryanoasis/nerd-fonts/releases/download/v3.2.1/0xProto.zip" "$HOME/.fonts"
+	clear
 	check_and_delete "$HOME/.fonts/README.md $HOME/.fonts/LICENSE"
 	cp $HOME/.fonts/0xProtoNerdFont-Regular.ttf $HOME/.termux/font.ttf
 	fc-cache -f

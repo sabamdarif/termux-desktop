@@ -141,6 +141,22 @@ curl -Lf https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-
 ```
 
 ---
+## :warning: About The New The Experimental GPU Drivers
+
+<b>
+The experimental drivers only support a few GPUs and currently use Vulkan, with no OpenGL support.
+
+`LXQT work better then XFCE in the new driver.`
+
+In my tests, I achieved 1000+ FPS in vkmark on all my devices. I tried it on an Adreno 619 (best everything work fine), Adreno 750 (usable but some apps don't launch), Adreno 720 (good overall but with XFCE WM issues), and Mali G76 (similar issue like Adreno 720).
+
+Also if you have Adreno GPU then please select ubuntu or debian as distro container so it can use ternip in the distro container.
+Sadly for other then adreno, GPU might not work on the distro container.
+
+If you type 'n/N' then it will use the old way to setup Hardware Acceleration.
+</b>
+
+---
 
 ## :warning:If you are in android 12 or higher then first disable `Phantom Process Killer`
 ### Guide:- [Here](https://github.com/atamshkai/Phantom-Process-Killer)
