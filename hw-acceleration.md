@@ -36,13 +36,13 @@ pdrun --no--gpu program
 - <b>Add The Program To Termux Menu</b>
 - <b>Run The Program From Termux Menu</b>
 
-<br><br>
+<br>
 
 ## Hardware Acceleration In Termux:
 
 <center><img src="images/termux-glmark2.png"></center>
 
-## :point_right:How to Change Hardware Acceleration drivers ? (not applicable to the experimental driver)
+## How to Change Hardware Acceleration drivers ? (not applicable to the experimental driver)
 
 - Install the reuired packages
 
@@ -58,11 +58,11 @@ pdrun --no--gpu program
 > :warning: might break the desktop sometime
 - <b>run `setup-termux-desktop --change hw` and select the new drivers</b>
 
-<br><br>
+<br>
 
-# :anchor:Performance results:
+# :mechanical_arm:Performance results:
 
-#### If you want to use TURNIP you have to install the drivers for it in the proot-distro you installed
+<!-- #### If you want to use TURNIP you have to install the drivers for it in the proot-distro you installed
 
 - <b>You will get the driver here:- [Reddit Post](https://www.reddit.com/r/termux/comments/19dpqas/proot_linux_only_dri3_patch_mesa_turnip_driver/)
 
@@ -71,15 +71,17 @@ pdrun --no--gpu program
 - Latest Drivers:- [K11MCH1/AdrenoToolsDrivers](https://github.com/K11MCH1/AdrenoToolsDrivers/releases)
 - Some More Links:-
   - [Pre-Compiled-Mesa-Turnip-Zink](https://github.com/Herick75/Pre-Compiled-Mesa-Turnip-Zink/releases/tag/Turnip-zink-stable)
-  - [xDoge26/proot-setup](https://github.com/xDoge26/proot-setup/tree/main/Packages)
+  - [xDoge26/proot-setup](https://github.com/xDoge26/proot-setup/tree/main/Packages) -->
 
-### Experimental Driver Performance:
+## Experimental Driver Performance:
 
-**Adreno with mesa-vulkan-icd-wrapper and Turnip**
+##### Adreno with mesa-vulkan-icd-wrapper and Turnip
 ![Experimental Driver Performance Adreno](./images/exp-hwa-adreno.png)
 
-**Mali with mesa-vulkan-icd-wrapper**
+##### Mali with mesa-vulkan-icd-wrapper
 ![Experimental Driver Performance Mali](./images/exp-hwa-mali.png)
+
+---
 
 ### This Test Was Made By [DroidMaster](https://github.com/LinuxDroidMaster)
 
