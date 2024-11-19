@@ -1243,6 +1243,8 @@ function setup_tx11start_cmd() {
 	check_and_delete "$PREFIX/bin/tx11start"
 if [[ "$confirmation_exp_hwa" == "y" ]]; then
 cat <<EOF > "$PREFIX/bin/tx11start"
+#!/data/data/com.termux/files/usr/bin/bash
+
 case \$1 in
     --nogpu)
         # Start termux-x11 without GPU acceleration

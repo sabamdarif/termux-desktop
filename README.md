@@ -124,10 +124,11 @@
 ## Know More About Hardware Acceleration: [Here](hw-acceleration.md)
 
 ---
-## :warning: About The New The Experimental GPU Drivers
+## :warning: About The New The Experimental GPU Drivers (mesa-vulkan-icd-wrapper)
 
 <b>
-The experimental drivers only support a few GPUs and currently use Vulkan, with no OpenGL support.
+
+The experimental drivers only support a few GPUs and currently use Vulkan only
 
 In my tests, I achieved 1000+ FPS in vkmark on all my devices. I tried it on an Adreno 619 (best everything work fine), Adreno 750 (usable but some apps don't launch), Adreno 720 (good overall but with few issues), and Mali G76 (similar issue like Adreno 720).
 
@@ -215,5 +216,21 @@ curl -Lf https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-
 <br>
 
 - `setup-termux-desktop --debug` **(At The Start)** *To generate a log file for any of the above command*
+
+  - `setup-termux-desktop --debug --install` *To create a log of whole installation process*
+
+---
+
+<center>
+
+<a href="https://t.me/hello_android_0">
+<img src="https://img.icons8.com/?size=100&id=oWiuH0jFiU0R&format=png&color=000000">
+</a>
+
+### [[Join in chat]](https://t.me/hello_android_0)
+
+</center>
+
+---
 
 ## If you like my work then don't forget to give a Star :blush:
