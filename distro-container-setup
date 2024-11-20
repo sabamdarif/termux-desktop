@@ -1204,7 +1204,7 @@ echo "${G}Type ${C}pdrun launch command ${G}to start with gpu acceleration"${W}
 echo "${G}Type ${C}pdrun ---nogpu launch command ${G}to start without gpu acceleration"${W}
 ;;
 *)
-proot-distro login --user $final_user_name $selected_distro --shared-tmp -- eval "env DISPLAY=:1.0 \$selected_pd_hw_method \$@"
+proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:1.0 \$@
 ;;
 esac
 EOF
@@ -1221,7 +1221,7 @@ echo "${G}Type ${C}pdrun launch command ${G}to start with gpu acceleration"${W}
 echo "${G}Type ${C}pdrun ---nogpu launch command ${G}to start without gpu acceleration"${W}
 ;;
 *)
-proot-distro login --user $final_user_name $selected_distro --shared-tmp env DISPLAY=:1.0 \$@
+proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:1.0 \$@
 ;;
 esac
 EOF
