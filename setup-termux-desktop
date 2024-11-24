@@ -687,10 +687,34 @@ function distro_hw_questions() {
 
 # hardware accelrration related questions
 
+function exp_distro_hw_support() {
+	banner
+	echo "${R}[${W}-${R}]${G}${BOLD}First Read This"${W}
+	echo
+	echo "${R}[${W}-${R}]${B}This:- https://github.com/sabamdarif/termux-desktop/blob/main/hw-acceleration.md"${W}
+	echo
+	echo "${R}[${W}-${R}]${G}${BOLD}Select Hardware Acceleration API For The Distro Container"${W}
+	echo
+	echo "${Y}1. Vulkan (ZINK)"${W}
+	echo
+	echo "${Y}2. OpenGL (VIRGL)"${W}
+	echo
+	echo "${Y}3. OpenGL ES (ZINK VIRGL)"${W}
+	echo
+	read -p "${Y}select an option : "${W} exp_distro_hw_answer
+	exp_distro_hw_answer=${exp_distro_hw_answer:-1}
+	echo
+	echo "${R}[${W}-${R}]${G}Continuing with answer: $exp_distro_hw_answer"${W}
+	echo "exp_distro_hw_answer=\"$exp_distro_hw_answer\"" >> $config_file
+	sleep 0.2
+	termux_hw_answer="${exp_distro_hw_answer}"
+	echo "termux_hw_answer=\"$termux_hw_answer\"" >> $config_file
+}
+
 function exp_hwa_support() {
 	if [[ "$confirmation_exp_hwa" == "y" ]]; then
 	echo "${R}[${W}-${R}]${G} Experimental Hardware Acceleration Will Use The mesa-vulkan-icd-wrapper Package"${W}
-	echo "${R}[${W}-${R}]${G} It Will Use Vulkan"
+	echo "${R}[${W}-${R}]${C} For other GPUs, Experimental Driver might not work and could break the desktop environment"${W}
 	echo "${R}[${W}-${R}]${G}${BOLD} Select Your Device GPU"${W}
     echo
 	echo "${Y}1. Adreno"${W}
@@ -711,13 +735,11 @@ function exp_hwa_support() {
 		    if [[ "$distro_answer" == "1" || "$distro_answer" == "2" ]]; then
 			pd_hw_answer="3"
 			fi
-	    elif [[ "$device_gpu_model" == "4" ]]; then
-		echo "${R}[${W}-${R}]${C}${BOLD}For other GPUs, this might not work and could break the desktop environment"${W}
-		echo
-		sleep 2
+		elif [[ "$device_gpu_model" != "1" ]]; then
+		    if [[ "$distro_add_answer" == "y" ]]; then
+			exp_distro_hw_support
+			fi
 		fi
-	echo "${R}[${W}-${R}]${G}${BOLD}First Read This"${W}
-    echo
 	fi
 }
 
@@ -1071,6 +1093,7 @@ function setup_folder() {
 	done
 	check_and_create_directory "$HOME/Desktop"
 	ln -s "$HOME/storage/shared/Music" "$HOME/"
+	ln -s "$HOME/storage/shared/Desktop" "$HOME/"
 	ln -s "$HOME/storage/shared/Download" "$HOME/Downloads"
 	ln -s "$HOME/storage/shared/Pictures" "$HOME/"
 	ln -s "$HOME/storage/shared/Videos" "$HOME/"
@@ -1170,7 +1193,7 @@ cat <<EOF > "$PREFIX/bin/vncstart"
 case \$1 in
 --nogpu)
 export LIBGL_ALWAYS_SOFTWARE=1
-MESA_LOADER_DRIVER_OVERRIDE=llvmpipe vncserver
+env MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe vncserver
 ;;
 --help|-h)
 echo "${C}vncstart ${G}to start vncserver with gpu acceleration"${W}
@@ -1253,8 +1276,7 @@ case \$1 in
         am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1
         sleep 1
         export LIBGL_ALWAYS_SOFTWARE=1
-        env DISPLAY=:1.0 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe dbus-launch --exit-with-session $de_startup > /dev/null 2>&1 &
-        
+        env DISPLAY=:1.0 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe dbus-launch --exit-with-session $de_startup > /dev/null 2>&1 &
         # Check if the second argument is --legacy
         if [[ "\$2" == "--legacy" ]]; then
             XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :1.0 -legacy-drawing &
@@ -1276,8 +1298,7 @@ case \$1 in
                 # Start termux-x11 without GPU and without D-Bus
                 export DISPLAY=:1.0
                 export LIBGL_ALWAYS_SOFTWARE=1
-                XDG_RUNTIME_DIR=\${TMPDIR} MESA_LOADER_DRIVER_OVERRIDE=llvmpipe termux-x11 :1 -xstartup "$de_startup"
-                
+                XDG_RUNTIME_DIR=\${TMPDIR} MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe termux-x11 :1 -xstartup "$de_startup"
                 if [[ "\$3" == "--legacy" ]]; then
                     export DISPLAY=:1.0
                     XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :1 -legacy-drawing -xstartup "$de_startup"
@@ -2408,12 +2429,23 @@ function change_hw() {
 	exit 0
 	else
 	. $config_file
+		if [[ "$confirmation_exp_hwa" == "y" ]]; then
+		banner
+		echo "${R}[${W}-${R}]${G} With Experimental Driver You Can Only Change proot-distro's Hardware Acceleration API"${W}
+	    echo
+		echo "${R}[${W}-${R}]${G}Your current hardware acceleration method for $selected_distro is :${C}${BOLD}${pd_hw_answer}${W}"
+	    echo
+		else
 	banner
 	echo "${R}[${W}-${R}]${G}Your current hardware acceleration method for termux is :${C}${BOLD}${termux_hw_answer}${W}"
 	echo
 	    if [[ "$distro_add_answer" == "y" ]]; then
 	        echo "${R}[${W}-${R}]${G}Your current hardware acceleration method for $selected_distro is :${C}${BOLD}${pd_hw_answer}${W}"
 	        echo
+			exp_distro_hw_support
+			hw_config
+			sed -i "s|initialize_server=\"[^\"]*\"|initialize_server=\"$initialize_server_method\"|" "$PREFIX/bin/pdrun"
+			sed -i "s|selected_pd_hw_method=\"[^\"]*\"|selected_pd_hw_method=\"$pd_hw_method\"|" "$PREFIX/bin/pdrun"
 		fi
 		    echo "${R}[${W}-${R}]${G} Changing drivers might break the desktop enviortment sometime"${W}
 		    confirmation_y_or_n "Do you want to continue" confirmation_break_de
@@ -2440,7 +2472,7 @@ function change_hw() {
 		fi
 		clear
 		echo "${G}${BOLD}Hardware acceleration method changed successfully ${W}"
-
+		fi
 	fi
 }
 
@@ -2651,6 +2683,10 @@ function some_fixes() {
 	fi
 	if [[ "$confirmation_exp_hwa" == "y" ]]; then
 	sed -i 's|<property name="vblank_mode" type="string" value="auto"/>|<property name="vblank_mode" type="string" value="off"/>|' "$HOME/.config/xfce4/xfconf/xfce-perchannel-xml/xfwm4.xml"
+		if [[ "$device_gpu_model" == "1" ]]; then
+		sed -i 's|eval "\${initialize_server}" > /dev/null 2>&1 &| |' $PREFIX/bin/pdrun
+		sed -i 's/^[[:space:]]*initialize_server="\s*"/ /' "$PREFIX/bin/pdrun"
+		fi
 	fi
 }
 

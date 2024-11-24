@@ -1157,7 +1157,7 @@ Version=1.0
 Type=Application
 Name=Add To Menu
 Comment=Add proot-distro's apps to termux menu
-Exec=add2menu
+Exec=LIBGL_ALWAYS_SOFTWARE=1 add2menu
 Icon=edit-move
 Categories=System;
 Path=
@@ -1191,55 +1191,39 @@ EOF
     fi
 
 if [[ "$confirmation_exp_hwa" == "y" ]]; then
-    if [[ "$pd_hw_answer" == "3" ]]; then
 cat <<EOF >> "$PREFIX/bin/pdrun"
+initialize_server="${initialize_server_method}"
+
 xhost + > /dev/null 2>&1
 case \$1 in
 --nogpu)
-proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:1.0 export LIBGL_ALWAYS_SOFTWARE=1
-proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:1.0 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe \${@:2}
+proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:1.0 LIBGL_ALWAYS_SOFTWARE=1
+proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:1.0 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe \${@:2}
 ;;
 --help|-h)
 echo "${G}Type ${C}pdrun launch command ${G}to start with gpu acceleration"${W}
 echo "${G}Type ${C}pdrun ---nogpu launch command ${G}to start without gpu acceleration"${W}
 ;;
 *)
-proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:1.0 \$@
+eval "\${initialize_server}" > /dev/null 2>&1 &
+proot-distro login --user $final_user_name $selected_distro --shared-tmp -- eval "env DISPLAY=:1.0 XDG_RUNTIME_DIR=\${TMPDIR} \$selected_pd_hw_method \$@"
 ;;
 esac
 EOF
-    else
-cat <<EOF >> "$PREFIX/bin/pdrun"
-xhost + > /dev/null 2>&1
-case \$1 in
---nogpu)
-proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:1.0 export LIBGL_ALWAYS_SOFTWARE=1
-proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:1.0 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe \${@:2}
-;;
---help|-h)
-echo "${G}Type ${C}pdrun launch command ${G}to start with gpu acceleration"${W}
-echo "${G}Type ${C}pdrun ---nogpu launch command ${G}to start without gpu acceleration"${W}
-;;
-*)
-proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:1.0 \$@
-;;
-esac
-EOF
-    fi
 
 else
 cat <<EOF >> "$PREFIX/bin/pdrun"
 xhost + > /dev/null 2>&1
 case \$1 in
 --nogpu)
-proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:1.0 \${@:2}
+proot-distro login --user $final_user_name $selected_distro --shared-tmp -- eval "env DISPLAY=:1.0 XDG_RUNTIME_DIR=\${TMPDIR} \${@:2}"
 ;;
 --help|-h)
 echo "${G}Type ${C}pdrun launch command ${G}to start with gpu acceleration"${W}
 echo "${G}Type ${C}pdrun ---nogpu launch command ${G}to start without gpu acceleration"${W}
 ;;
 *)
-proot-distro login --user $final_user_name $selected_distro --shared-tmp -- eval "env DISPLAY=:1.0 \$selected_pd_hw_method \$@"
+proot-distro login --user $final_user_name $selected_distro --shared-tmp -- eval "env DISPLAY=:1.0 XDG_RUNTIME_DIR=\${TMPDIR} \$selected_pd_hw_method \$@"
 ;;
 esac
 EOF

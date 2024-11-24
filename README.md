@@ -221,15 +221,11 @@ curl -Lf https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-
 
 ---
 
-<center>
+### Join in chat
 
 <a href="https://t.me/hello_android_0">
 <img src="https://img.icons8.com/?size=100&id=oWiuH0jFiU0R&format=png&color=000000">
 </a>
-
-### [[Join in chat]](https://t.me/hello_android_0)
-
-</center>
 
 ---
 
