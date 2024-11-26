@@ -2,11 +2,11 @@
 
 function hw_install_required_packages() {
     banner
-    echo "${R} [${W}-${R}]${G}${BOLD}Installing Experimental Mesa Driver..."${W}
+    echo "${R}[${W}-${R}]${G}${BOLD} Installing Experimental Mesa Driver..."${W}
 	echo
     if [[ "$confirmation_exp_hwa" == "y" ]]; then
         if [[ "$device_gpu_model" != "1" ]]; then
-        echo "${R} [${W}-${R}]${G}${BOLD}Installing Required Packages For Hardware Acceleration"${W}
+        echo "${R}[${W}-${R}]${G}${BOLD} Installing Required Packages For Hardware Acceleration"${W}
 	    echo
         package_install_and_check "mesa-zink virglrenderer-mesa-zink vulkan-loader-generic angle-android virglrenderer-android"
         fi
@@ -31,7 +31,7 @@ function hw_install_required_packages() {
         check_and_delete "mesa.deb mesa-vulkan-icd-wrapper.deb"
         fi
     else
-    echo "${R} [${W}-${R}]${G}${BOLD}Installing Required Packages For Hardware Acceleration"${W}
+    echo "${R}[${W}-${R}]${G}${BOLD} Installing Required Packages For Hardware Acceleration"${W}
 	echo
     if [[ "$termux_hw_answer" == "1" ]]; then
     #zink
@@ -90,7 +90,7 @@ if [[ "$termux_hw_answer" == "2" ]]; then
     elif [[ $pd_hw_answer == "4" ]]; then
     pd_hw_method="MESA_LOADER_DRIVER_OVERRIDE=zink TU_DEBUG=noconform"
     else
-    echo "${R}[${W}-${R}]${G}Uses The Previous Selection For Distro"${W}
+    echo "${R}[${W}-${R}]${G} Uses The Previous Selection For Distro"${W}
     echo
     fi
 else
@@ -101,7 +101,7 @@ else
     elif [[ $pd_hw_answer == "3" ]]; then
     pd_hw_method="MESA_LOADER_DRIVER_OVERRIDE=zink TU_DEBUG=noconform"
     else
-    echo "${R}[${W}-${R}]${G}Uses The Previous Selection For Distro"${W}
+    echo "${R}[${W}-${R}]${G} Uses The Previous Selection For Distro"${W}
     echo
     fi
 fi

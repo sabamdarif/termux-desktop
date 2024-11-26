@@ -16,12 +16,12 @@ function setup_distro() {
     fi
     echo "selected_distro=\"$selected_distro\"" >> $config_file
     banner
-    echo "${R}[${W}-${R}]${G}${BOLD}Installing ${C}proot-distro"${W}
+    echo "${R}[${W}-${R}]${G}${BOLD} Installing ${C}proot-distro"${W}
     echo
     update_sys
     package_install_and_check "proot-distro"
     banner
-    echo "${R}[${W}-${R}]${G}${BOLD}Setup Selected Distro: ${C}${selected_distro}"${W}
+    echo "${R}[${W}-${R}]${G}${BOLD} Setup Selected Distro: ${C}${selected_distro}"${W}
     echo
     pd install $selected_distro
 
@@ -35,7 +35,7 @@ function setup_distro() {
 
 function distro_fix_sound_issue() {
     banner
-    echo "${R}[${W}-${R}]${G}${BOLD}Fixing Proot Distro Sound Problem..."${W}
+    echo "${R}[${W}-${R}]${G}${BOLD} Fixing Proot Distro Sound Problem..."${W}
     echo
     echo "export PULSE_SERVER=127.0.0.1" >> "$distro_path/etc/profile"
 cat <<EOF > "$HOME/.pd-sound-service"
@@ -238,7 +238,7 @@ echo ""
 
 function distro_basic_task() {
     banner
-    echo "${R}[${W}-${R}]${G}${BOLD}Updating ${C}$selected_distro ${G}And Installing Required Packages"${W}
+    echo "${R}[${W}-${R}]${G}${BOLD} Updating ${C}$selected_distro ${G}And Installing Required Packages"${W}
     echo
     if [[ "$selected_distro" == "debian" ]] || [[ "$selected_distro" == "ubuntu" ]]; then
     proot-distro login $selected_distro --shared-tmp -- env DISPLAY=:1.0 apt update
@@ -404,7 +404,7 @@ function distro_zsh_answer() {
     save_path="$distro_path/root"
     fi
     if [[ "$distro_zsh_answer" == "n" ]]; then
-	echo "${R}[${W}-${R}]${C}Canceling Distro Zsh Setup..."${W}
+	echo "${R}[${W}-${R}]${C} Canceling Distro Zsh Setup..."${W}
     sleep 1.5
 	pd_shell_name="bash"
     else
@@ -456,7 +456,7 @@ echo "pd_shell_name=\"$pd_shell_name\"" >> $config_file
 function distro_terminal_utility_setup() {
     if [[ "$distro_terminal_utility_setup_answer" == "n" ]];then
     banner
-	echo "${R}[${W}-${R}]${C}Skipping Terminal Utility Setup For ${selected_distro}..."${W}
+	echo "${R}[${W}-${R}]${C} Skipping Terminal Utility Setup For ${selected_distro}..."${W}
 	echo
     if [[ "$pd_useradd_answer" == "y" ]]; then
     cp $distro_path/home/$final_user_name/.${pd_shell_name}rc $distro_path/home/$final_user_name/.${pd_shell_name}rc-2
@@ -490,7 +490,7 @@ esac
 EOF
 	elif [[ "$distro_terminal_utility_setup_answer" == "y" ]];then
 	banner
-    echo "${R}[${W}-${R}]${C}${BOLD}Configuring Terminal Utility For $selected_distro ..."${W}
+    echo "${R}[${W}-${R}]${C}${BOLD} Configuring Terminal Utility For $selected_distro ..."${W}
     echo
     if [[ "$selected_distro" == "debian" ]] || [[ "$selected_distro" == "ubuntu" ]]; then
 cat <<'EOF' > $distro_path/root/pd_setup.sh
@@ -948,7 +948,7 @@ TOP_EOF
 
 function distro_create_app_installer() {
     banner
-    echo "${R}[${W}-${R}]${G}${BOLD}Creating App Launcher"${W}
+    echo "${R}[${W}-${R}]${G}${BOLD} Creating App Launcher"${W}
 
 if [[ "$pd_useradd_answer" == "y" ]]; then
 save_user_path="$distro_path/home/$final_user_name"
@@ -971,7 +971,7 @@ function remove_distro_container() {
         read -p "${R}[${W}-${R}]${Y}${BOLD} Do you want to remove the distro${R}(it can't be undone) ${Y}(y/n) ${W}" ans_remove_distro
         case \$ans_remove_distro in
             [yY]* )
-                echo "${R}[${W}-${R}]${G}Continuing with answer: \$ans_remove_distro${W}"
+                echo "${R}[${W}-${R}]${G} Continuing with answer: \$ans_remove_distro${W}"
                 sleep 0.2
                 if [[ -d $distro_path ]]; then
                 proot-distro remove $selected_distro
@@ -1000,11 +1000,11 @@ function remove_distro_container() {
                 fi
                 break;;
             [nN]* )
-                echo "${R}[${W}-${R}]${C}Skipping distro remove"${W}
+                echo "${R}[${W}-${R}]${C} Skipping distro remove"${W}
                 sleep 0.2
                 break;;
             * )
-                echo "${R}[${W}-${R}]${R}Invalid input. Please enter 'y' or 'n'."${W}
+                echo "${R}[${W}-${R}]${R} Invalid input. Please enter 'y' or 'n'."${W}
                 ;;
         esac
     done
@@ -1238,7 +1238,7 @@ chmod +x "$PREFIX/bin/pdrun"
 #########################################################################
 
 function distro_folders_link() {
-    echo "${R}[${W}-${R}]${G}${BOLD}Link Distro Directories With Internal Storage"${W}
+    echo "${R}[${W}-${R}]${G}${BOLD} Link Distro Directories With Internal Storage"${W}
 cat <<EOF > "$save_path/setup-folders.sh"
 #!/bin/bash
 directories=(Desktop Music Downloads Pictures Videos)
@@ -1248,7 +1248,7 @@ done
 rm setup-folders.sh
 EOF
 proot-distro login --user $final_user_name $selected_distro -- /bin/sh -c 'bash setup-folders.sh'
-    echo "${R}[${W}-${R}]${G}${BOLD}Link Distro Termux Themes And Icons With $selected_distro "${W}
+    echo "${R}[${W}-${R}]${G}${BOLD} Link Distro Termux Themes And Icons With $selected_distro "${W}
     sleep 0.5
     check_and_create_directory "$HOME/.icons"
     ln -s $icons_folder $save_path
@@ -1265,9 +1265,9 @@ proot-distro login --user $final_user_name $selected_distro -- /bin/sh -c 'bash 
 #########################################################################
 if [[ -d "$PREFIX/bin/$selected_distro" ]] && [[ -d "$PREFIX/var/lib/proot-distro/installed-rootfs/$selected_distro" ]]; then
 echo
-echo "${R}[${W}-${R}]${G}${BOLD}$selected_distro container setup successfully"${W}
+echo "${R}[${W}-${R}]${G}${BOLD} $selected_distro container setup successfully"${W}
 else
-echo "${R}[${W}-${R}]${R}Some problem occurrs in $selected_distro setup${W}"
+echo "${R}[${W}-${R}]${R} Some problem occurrs in $selected_distro setup${W}"
 fi
 
 setup_distro

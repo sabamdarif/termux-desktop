@@ -115,71 +115,148 @@ function check_and_restore() {
 
 # will check if the package is already installed or not, if it installed then it will reinstall it and at the end it will print success/failed message
 function package_install_and_check() {
-	packs_list=($@)
-for package_name in "${packs_list[@]}"; do
-    echo "${R}[${W}-${R}]${G}${BOLD} Installing package: ${C}$package_name ${W}"
-	if type -p pacman >/dev/null 2>&1; then
-	    if pacman -Qi "$package_name" >/dev/null 2>&1; then
-		echo "${package_name}=\"already_exist\"" >> $config_file
-		fi
-		pacman -Sy --noconfirm --overwrite '*' "$package_name"
-	else
-	   if dpkg -s "$package_name" >/dev/null 2>&1; then
-	    echo "${package_name}=\"already_exist\"" >> $config_file
-		pkg reinstall "$package_name" -y
-	   else
-	    pkg install "$package_name" -y
-	   fi
-	fi
-    if [ $? -ne 0 ]; then
-        echo "${R}[${W}-${R}]${G}${BOLD} Error detected during installation of: ${C}$package_name ${W}"
-	  if type -p pacman >/dev/null 2>&1; then
-	    pacman -Sy --overwrite '*' $package_name
-	    pacman -Sy --noconfirm $package_name
-	  else
-        apt --fix-broken install -y
-        dpkg --configure -a
-	  fi
-        pkg install "$package_name" -y
-    fi
-   if type -p pacman >/dev/null 2>&1; then
-     if pacman -Qi "$package_name" >/dev/null 2>&1; then
-        echo "${R}[${W}-${R}]${G} $package_name installed successfully ${W}"
-    else
-        if type -p "$package_name" &>/dev/null || [ -e "$PREFIX/bin/$package_name"* ] || [ -e "$PREFIX/bin/"*"$package_name" ]; then
-            echo "${R}[${W}-${R}]${C} $package_name ${G}installed successfully ${W}"
+    packs_list=($@)
+    for package_name in "${packs_list[@]}"; do
+        echo "${R}[${W}-${R}]${G}${BOLD} Processing package: ${C}$package_name ${W}"
+        
+        if type -p pacman >/dev/null 2>&1; then
+            if pacman -Qi "$package_name" >/dev/null 2>&1; then
+                echo "${package_name}=\"already_exist\"" >> "$config_file"
+                continue
+            fi
+            
+            if [[ $package_name == *"*"* ]]; then
+                echo "${R}[${W}-${R}]${C} Processing wildcard pattern: $package_name ${W}"
+                packages=$(pacman -Ssq "${package_name%*}" 2>/dev/null)
+                for pkgs in $packages; do
+                    echo "${R}[${W}-${R}]${G}${BOLD} Installing matched package: ${C}$pkgs ${W}"
+                    pacman -Sy --noconfirm --overwrite '*' "$pkgs"
+                done
+            else
+                pacman -Sy --noconfirm --overwrite '*' "$package_name"
+            fi
+            
+        else
+            if [[ $package_name == *"*"* ]]; then
+                echo "${R}[${W}-${R}]${C} Processing wildcard pattern: $package_name ${W}"
+                packages_by_name=$(apt-cache search "${package_name%*}" | awk "/^${package_name}/ {print \$1}")
+				packages_by_description=$(apt-cache search "${package_name%*}" | grep -Ei "\b${package_name%*}\b" | awk '{print $1}')
+				packages=$(echo -e "${packages_by_name}\n${packages_by_description}" | sort -u)
+                for pkgs in $packages; do
+                    echo "${R}[${W}-${R}]${G}${BOLD} Installing matched package: ${C}$pkgs ${W}"
+                    if dpkg -s "$pkgs" >/dev/null 2>&1; then
+                        echo "${pkgs}=\"already_exist\"" >> "$config_file"
+                        pkg reinstall "$pkgs" -y
+                    else
+                        pkg install "$pkgs" -y
+                    fi
+                done
+            else
+                if dpkg -s "$package_name" >/dev/null 2>&1; then
+                    echo "${package_name}=\"already_exist\"" >> "$config_file"
+                    pkg reinstall "$package_name" -y
+                else
+                    pkg install "$package_name" -y
+                fi
+            fi
         fi
-    fi
-   else
-    if dpkg -s "$package_name" >/dev/null 2>&1; then
-        echo "${R}[${W}-${R}]${G} $package_name installed successfully ${W}"
-    else
-        if type -p "$package_name" &>/dev/null || [ -e "$PREFIX/bin/$package_name"* ] || [ -e "$PREFIX/bin/"*"$package_name" ]; then
-            echo "${R}[${W}-${R}]${C} $package_name ${G}installed successfully ${W}"
+
+        # Check installation success
+        if [ $? -ne 0 ]; then
+            echo "${R}[${W}-${R}]${G}${BOLD} Error detected during installation of: ${C}$package_name ${W}"
+            if type -p pacman >/dev/null 2>&1; then
+                pacman -Sy --overwrite '*' "$package_name"
+                pacman -Sy --noconfirm "$package_name"
+            else
+                apt --fix-broken install -y
+                dpkg --configure -a
+                pkg install "$package_name" -y
+            fi
         fi
-    fi
-   fi
-done
-echo ""
+
+        # Final verification
+		if [[ $package_name != *"*"* ]]; then
+        	if type -p pacman >/dev/null 2>&1; then
+        	    if pacman -Qi "$package_name" >/dev/null 2>&1; then
+        	        echo "${R}[${W}-${R}]${G} $package_name installed successfully ${W}"
+        	    else
+        	        echo "${R}[${W}-${R}]${C} $package_name installation failed ${W}"
+        	    fi
+        	else
+        	    if dpkg -s "$package_name" >/dev/null 2>&1; then
+        	        echo "${R}[${W}-${R}]${G} $package_name installed successfully ${W}"
+        	    else
+        	        echo "${R}[${W}-${R}]${C} $package_name installation failed ${W}"
+        	    fi
+        	fi
+		if
+    done
+    echo ""
 }
 
 # will check the package is installed or not then remove it
 function package_check_and_remove() {
-	packs_list=($@)
-	for package_name in "${packs_list[@]}"; do
-	if dpkg -s "$package_name" >/dev/null 2>&1; then
-	    if [[ "$package_name" != "already_exist" ]]; then
-		echo "${R}[${W}-${R}]${G}${BOLD} Removeing package: ${C}$package_name "${W}
-		apt autoremove "$package_name" -y
-		fi
-	elif pacman -Qi "$package_name" >/dev/null 2>&1; then
-	    if [[ "$package_name" != "already_exist" ]]; then
-		echo "${R}[${W}-${R}]${G}${BOLD} Removeing package: ${C}$package_name "${W}
-		pacman -Rnds --noconfirm "$package_name"
-		fi
-    fi
-done
+    packs_list=($@)
+    for package_name in "${packs_list[@]}"; do
+        echo "${R}[${W}-${R}]${G}${BOLD} Processing package: ${C}$package_name ${W}"
 
+        if [[ $package_name == *"*"* ]]; then
+            echo "${R}[${W}-${R}]${C} Processing wildcard pattern: $package_name ${W}"
+
+            if type -p pacman >/dev/null 2>&1; then
+                packages=$(pacman -Qq | grep -E "${package_name//\*/.*}")
+            else
+                packages=$(dpkg --get-selections | awk '{print $1}' | grep -E "${package_name//\*/.*}")
+            fi
+
+            for pkg in $packages; do
+                echo "${R}[${W}-${R}]${G}${BOLD} Removing matched package: ${C}$pkg ${W}"
+
+                if type -p pacman >/dev/null 2>&1; then
+                    if pacman -Qi "$pkg" >/dev/null 2>&1; then
+                        pacman -Rnds --noconfirm "$pkg"
+                        if [ $? -eq 0 ]; then
+                            echo "${R}[${W}-${R}]${G} $pkg removed successfully ${W}"
+                        else
+                            echo "${R}[${W}-${R}]${C} Failed to remove $pkg ${W}"
+                        fi
+                    fi
+                else
+                    if dpkg -s "$pkg" >/dev/null 2>&1; then
+                        apt autoremove "$pkg" -y
+                        if [ $? -eq 0 ]; then
+                            echo "${R}[${W}-${R}]${G} $pkg removed successfully ${W}"
+                        else
+                            echo "${R}[${W}-${R}]${C} Failed to remove $pkg ${W}"
+                        fi
+                    fi
+                fi
+            done
+        else
+            if type -p pacman >/dev/null 2>&1; then
+                if pacman -Qi "$package_name" >/dev/null 2>&1; then
+                    echo "${R}[${W}-${R}]${G}${BOLD} Removing package: ${C}$package_name ${W}"
+                    pacman -Rnds --noconfirm "$package_name"
+                    if [ $? -eq 0 ]; then
+                        echo "${R}[${W}-${R}]${G} $package_name removed successfully ${W}"
+                    else
+                        echo "${R}[${W}-${R}]${C} Failed to remove $package_name ${W}"
+                    fi
+                fi
+            else
+                if dpkg -s "$package_name" >/dev/null 2>&1; then
+                    echo "${R}[${W}-${R}]${G}${BOLD} Removing package: ${C}$package_name ${W}"
+                    apt autoremove "$package_name" -y
+                    if [ $? -eq 0 ]; then
+                        echo "${R}[${W}-${R}]${G} $package_name removed successfully ${W}"
+                    else
+                        echo "${R}[${W}-${R}]${C} Failed to remove $package_name ${W}"
+                    fi
+                fi
+            fi
+        fi
+    done
+    echo ""
 }
 
 function get_file_name_number() {
@@ -274,7 +351,7 @@ function download_and_extract() {
     if [[ "$success" = true ]]; then
 	    if [[ -f "$filename" ]]; then
 		echo
-		echo "${R}[${W}-${R}]${G}Extacting $filename" ${W}
+		echo "${R}[${W}-${R}]${G} Extacting $filename" ${W}
 		    extract_archive "$filename"
 			rm "$filename"
 	    fi
@@ -303,15 +380,15 @@ function confirmation_y_or_n() {
         eval "$2='$response'"
         case $response in
             [yY]* )
-                echo "${R}[${W}-${R}]${G}Continuing with answer: $response"${W}
+                echo "${R}[${W}-${R}]${G} Continuing with answer: $response"${W}
 				sleep 0.2
                 break;;
             [nN]* )
-                echo "${R}[${W}-${R}]${C}Skipping this setp"${W}
+                echo "${R}[${W}-${R}]${C} Skipping this setp"${W}
 				sleep 0.2
                 break;;
             * )
-               	echo "${R}[${W}-${R}]${R}Invalid input. Please enter 'y' or 'n'."${W}
+               	echo "${R}[${W}-${R}]${R} Invalid input. Please enter 'y' or 'n'."${W}
                 ;;
         esac
     done
@@ -330,7 +407,7 @@ function get_latest_release() {
 
 function install_font_for_style() {
 	local style_number="$1"
-	echo "${R}[${W}-${R}]${G}Installing Fonts..."${W}
+	echo "${R}[${W}-${R}]${G} Installing Fonts..."${W}
 	check_and_create_directory "$HOME/.fonts"
 	download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/$de_name/look_${style_number}/font.tar.gz" "$HOME/.fonts"
 	fc-cache -f
@@ -391,7 +468,7 @@ function download_github_action_artifact() {
 	fi
 	# Check if ARTIFACT_URL is found
 	if [ -z "$ARTIFACT_URL" ]; then
-	echo "${R}[${W}-${R}]${R}No artifact found starting with '$ARTIFACT_NAME'."${W}
+	echo "${R}[${W}-${R}]${R} No artifact found starting with '$ARTIFACT_NAME'."${W}
 	exit 1
 	fi
 	# Download the artifact using the URL
@@ -415,17 +492,17 @@ function questions_theme_select() {
     local main_folder="patch/$de_name"
     local subfolder_count_value=$(count_subfolders "$owner" "$repo" "$main_folder")
 	cd $HOME
-	echo "${R}[${W}-${R}]${G}Downloading list...."${W}
+	echo "${R}[${W}-${R}]${G} Downloading list...."${W}
     wget -qO ${current_path}/styles.md https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/${de_name}_styles.md
 	clear
     if [[ -n "$subfolder_count_value" ]]; then
-        echo "${R}[${W}-${R}]${G}Check the $de_name styles section in github"${W}
+        echo "${R}[${W}-${R}]${G} Check the $de_name styles section in github"${W}
 		echo
-		echo "${R}[${W}-${R}]${B}https://github.com/sabamdarif/termux-desktop/blob/main/${de_name}_styles.md"${W}
+		echo "${R}[${W}-${R}]${B} https://github.com/sabamdarif/termux-desktop/blob/main/${de_name}_styles.md"${W}
 		echo
-        echo "${R}[${W}-${R}]${G}Number of avilable custom styles for $de_name is: ${C}${subfolder_count_value}"${W}
+        echo "${R}[${W}-${R}]${G} Number of avilable custom styles for $de_name is: ${C}${subfolder_count_value}"${W}
 		echo
-        echo "${R}[${W}-${R}]${G}Available Styles:${W}"
+        echo "${R}[${W}-${R}]${G} Available Styles:${W}"
 		echo
 grep -oP '## \d+\..+?(?=(\n## \d+\.|\Z))' styles.md | while read -r style; do
     echo "${Y}${style#### }${W}"
@@ -441,11 +518,11 @@ done
 			    echo
                 echo "${R}The entered style number is incorrect."${W}
 				echo
-                echo "${R}[${W}-${R}]${Y}Please enter a number between 0 to ${subfolder_count_value}"${W}
+                echo "${R}[${W}-${R}]${Y} Please enter a number between 0 to ${subfolder_count_value}"${W}
 				echo
-				echo "${R}[${W}-${R}]${G}Check the $de_name styles section in github"${W}
+				echo "${R}[${W}-${R}]${G} Check the $de_name styles section in github"${W}
 				echo
-				echo "${R}[${W}-${R}]${B}https://github.com/sabamdarif/termux-desktop/blob/main/${de_name}_styles.md"${W}
+				echo "${R}[${W}-${R}]${B} https://github.com/sabamdarif/termux-desktop/blob/main/${de_name}_styles.md"${W}
 				echo
             fi
 	done
@@ -457,7 +534,7 @@ done
 
 function questions() {
 	banner
-	echo "${R}[${W}-${R}]${G}Select Desktop Environment"${W}
+	echo "${R}[${W}-${R}]${G} Select Desktop Environment"${W}
 	echo
 	echo "${Y}1. XFCE"${W}
 	echo
@@ -465,13 +542,16 @@ function questions() {
 	echo
 	echo "${Y}3. OPENBOX WM"${W}
 	echo
+	echo "${Y}4. MATE (Unstable)"${W}
+	echo
 	read -p "${Y}select an option (Default 1): "${W} desktop_answer
 	echo
 	desktop_answer=${desktop_answer:-1}
-	echo "${R}[${W}-${R}]${G}Continuing with answer: $desktop_answer"${W}
+	echo "${R}[${W}-${R}]${G} Continuing with answer: $desktop_answer"${W}
 	sleep 0.2
-	# set the location based on chosen desktop
+	# set the variables based on chosen de
 	sys_icons_folder="$PREFIX/share/icons"
+	sys_themes_folder="$PREFIX/share/themes"
 	if [[ "$desktop_answer" == "1" ]]; then
 	de_name="xfce"
 	themes_folder="$HOME/.themes"
@@ -479,14 +559,19 @@ function questions() {
 	de_startup="xfce4-session"
 	elif [[ "$desktop_answer" == "2" ]]; then
 	de_name="lxqt"
-	themes_folder="$PREFIX/share/themes"
+	themes_folder="$sys_themes_folder"
 	icons_folder="$sys_icons_folder"
 	de_startup="startlxqt"
 	elif [[ "$desktop_answer" == "3" ]]; then
 	de_name="openbox"
-	themes_folder="$PREFIX/share/themes"
+	themes_folder="$sys_themes_folder"
 	icons_folder="$sys_icons_folder"
 	de_startup="openbox-session"
+	elif [[ "$desktop_answer" == "4" ]]; then
+	de_name="mate"
+	themes_folder="$HOME/.themes"
+	icons_folder="$HOME/.icons"
+	de_startup="mate-session"
 	fi
 	echo "de_startup=\"$de_startup\"" >> $config_file
 	echo "de_name=\"$de_name\"" >> $config_file
@@ -495,12 +580,12 @@ function questions() {
 
 	banner
 	questions_theme_select
-	echo "${R}[${W}-${R}]${G}Continuing with answer: ${style_answer}.$style_name"${W}
+	echo "${R}[${W}-${R}]${G} Continuing with answer: ${style_answer}.$style_name"${W}
 	echo "style_answer=\"$style_answer\"" >> $config_file
 	echo "style_name=\"$style_name\"" >> $config_file
 	sleep 0.2
 	banner
-	echo "${R}[${W}-${R}]${G}${BOLD}Select browser you want to install"${W}
+	echo "${R}[${W}-${R}]${G}${BOLD} Select browser you want to install"${W}
 	echo
 	echo "${Y}1. firefox"${W}
 	echo
@@ -513,10 +598,10 @@ function questions() {
 	read -p "${Y}select an option (Default 1): "${W} browser_answer
 	browser_answer=${browser_answer:-1}
 	echo
-	echo "${R}[${W}-${R}]${G}Continuing with answer: $browser_answer"${W}
+	echo "${R}[${W}-${R}]${G} Continuing with answer: $browser_answer"${W}
 	sleep 0.2
 	banner
-	echo "${R}[${W}-${R}]${G}${BOLD}Select IDE you want to install"${W}
+	echo "${R}[${W}-${R}]${G}${BOLD} Select IDE you want to install"${W}
 	echo
 	echo "${Y}1. VS Code"${W}
 	echo
@@ -529,10 +614,10 @@ function questions() {
 	read -p "${Y}select an option (Default 1): "${W} ide_answer
 	ide_answer=${ide_answer:-1}
 	echo
-	echo "${R}[${W}-${R}]${G}Continuing with answer: $ide_answer"${W}
+	echo "${R}[${W}-${R}]${G} Continuing with answer: $ide_answer"${W}
 	sleep 0.2
 	banner
-	echo "${R}[${W}-${R}]${G}${BOLD}Select Media Player you want to install"${W}
+	echo "${R}[${W}-${R}]${G}${BOLD} Select Media Player you want to install"${W}
 	echo
 	echo "${Y}1. Vlc"${W}
 	echo
@@ -545,10 +630,10 @@ function questions() {
 	read -p "${Y}select an option (Default 1): "${W} player_answer
 	player_answer=${player_answer:-1}
 	echo
-	echo "${R}[${W}-${R}]${G}Continuing with answer: $player_answer"${W}
+	echo "${R}[${W}-${R}]${G} Continuing with answer: $player_answer"${W}
 	sleep 0.2
 	banner
-	echo "${R}[${W}-${R}]${G}${BOLD}Select Photo Editor"${W}
+	echo "${R}[${W}-${R}]${G}${BOLD} Select Photo Editor"${W}
 	echo
 	echo "${Y}1. Gimp"${W}
 	echo
@@ -561,7 +646,7 @@ function questions() {
 	read -p "${Y}select an option (Default 1): "${W} photo_editor_answer
 	photo_editor_answer=${photo_editor_answer:-1}
 	echo
-	echo "${R}[${W}-${R}]${G}Continuing with answer: $photo_editor_answer"${W}
+	echo "${R}[${W}-${R}]${G} Continuing with answer: $photo_editor_answer"${W}
 	sleep 0.2
 	banner
 	confirmation_y_or_n "Do you want to install a graphical package manager [Synaptic]" synaptic_answer
@@ -570,11 +655,11 @@ function questions() {
 	echo
 	confirmation_y_or_n "Do you want to add some more wallpaper" ext_wall_answer
 	banner
-	echo "${R}[${W}-${R}]${G}${BOLD}Do you want to install wine in termux ${C}(without proot-distro)"${W}
+	echo "${R}[${W}-${R}]${G}${BOLD} Do you want to install wine in termux ${C}(without proot-distro)"${W}
 	echo
 	echo "${Y}1. Natively ${C}(can run only arm64 based exe) (Default)"${W}
 	echo
-	echo "${Y}2. Using Mobox ${C}(best)"${W}
+	echo "${Y}2. Using Mobox ${C}"${W}
 	echo
 	echo "${R}[${W}-${R}]${B} Know More About Mobox:- https://github.com/olegos2/mobox/"${W}
 	echo
@@ -582,17 +667,20 @@ function questions() {
 	echo
 	echo "${Y}4. Skip"${W}
 	echo
-	read -p "${R}[${W}-${R}]${Y}Select Wine Installation Method: "${W} wine_answer
+	read -p "${R}[${W}-${R}]${Y} Select Wine Installation Method: "${W} wine_answer
 	wine_answer=${wine_answer:-1}
 	echo
-	echo "${R}[${W}-${R}]${G}Continuing with answer: $wine_answer"${W}
+	echo "${R}[${W}-${R}]${G} Continuing with answer: $wine_answer"${W}
 	sleep 0.2
 	banner
 	confirmation_y_or_n "Do you want to Configuring Zsh" zsh_answer
 	banner
+	echo
+	echo "${R}[${W}-${R}]${B} Know More About Terminal Utility:- https://github.com/sabamdarif/termux-desktop/blob/main/see-more.md#hammer_and_wrenchlearn-about-terminal-utilities"${W}
+	echo
 	confirmation_y_or_n "Do you want install some terminal utility to make better terminal exprience" terminal_utility_setup_answer
 	banner
-	echo "${R}[${W}-${R}]${G}${BOLD}Select Gui Mode"${W}
+	echo "${R}[${W}-${R}]${G}${BOLD} Select Gui Mode"${W}
 	echo
 	echo "${Y}1. Termux:x11"${W}
 	echo
@@ -602,7 +690,7 @@ function questions() {
 	echo
 	read -p "${Y}select an option (Default 1): "${W} gui_mode
 	gui_mode=${gui_mode:-1}
-	echo "${R}[${W}-${R}]${G}Continuing with answer: $gui_mode"${W}
+	echo "${R}[${W}-${R}]${G} Continuing with answer: $gui_mode"${W}
 	sleep 0.2
 	banner
 	confirmation_y_or_n "Do you want to start the desktop at Termux startup" de_on_startup
@@ -617,15 +705,15 @@ function questions() {
 	echo
 	read -p "${Y}select an option (1 is Recomended): "${W} autostart_gui_mode
 	autostart_gui_mode=${autostart_gui_mode:-1}
-	echo "${R}[${W}-${R}]${G}Continuing with answer: $autostart_gui_mode"${W}
+	echo "${R}[${W}-${R}]${G} Continuing with answer: $autostart_gui_mode"${W}
 	sleep 0.2
 	fi
 	banner
-	echo "${R}[${W}-${R}]${Y}${BOLD}Do you want to add a distro container (proot distro)"${W}
+	echo "${R}[${W}-${R}]${Y}${BOLD} Do you want to add a distro container (proot distro)"${W}
 	echo
 	echo "${R}[${W}-${R}]${G} It will help you to install those app which are not avilable in termux"${W}
 	echo
-	echo "${R}[${W}-${R}]${C}You can launch those installed apps from termux like other apps"${W}
+	echo "${R}[${W}-${R}]${C} You can launch those installed apps from termux like other apps"${W}
 	echo
 	confirmation_y_or_n "Do you want to continue" distro_add_answer
 	echo "distro_add_answer=\"$distro_add_answer\"" >> $config_file
@@ -651,9 +739,9 @@ If you type 'n/N' then it will use the old way to setup Hardware Acceleration./n
 function distro_hw_questions() {
 	if [[ "$distro_add_answer" == "y" ]]; then
        echo
-       echo "${R}[${W}-${R}]${G}${BOLD}Select Hardware Acceleration API For Distro Container"${W}
+       echo "${R}[${W}-${R}]${G}${BOLD} Select Hardware Acceleration API For Distro Container"${W}
        echo
-       echo "${R}[${W}-${R}]${G}If You Are Not Sure So Skip It It Will Use The Previous One"${W}
+       echo "${R}[${W}-${R}]${G} If You Are Not Sure So Skip It It Will Use The Previous One"${W}
        echo
 	   if [[ "$termux_hw_answer" == "2" ]]; then
 	   echo "${Y}1. Vulkan (ZINK)"${W}
@@ -679,7 +767,7 @@ function distro_hw_questions() {
 	read -p "${Y}select an option : "${W} pd_hw_answer
 	pd_hw_answer=${pd_hw_answer:-1}
 	echo
-	echo "${R}[${W}-${R}]${G}Continuing with answer: $pd_hw_answer"${W}
+	echo "${R}[${W}-${R}]${G} Continuing with answer: $pd_hw_answer"${W}
 	sleep 0.2
 	echo "pd_hw_answer=\"$pd_hw_answer\"" >> $config_file
     fi
@@ -689,11 +777,11 @@ function distro_hw_questions() {
 
 function exp_distro_hw_support() {
 	banner
-	echo "${R}[${W}-${R}]${G}${BOLD}First Read This"${W}
+	echo "${R}[${W}-${R}]${G}${BOLD} First Read This"${W}
 	echo
-	echo "${R}[${W}-${R}]${B}This:- https://github.com/sabamdarif/termux-desktop/blob/main/hw-acceleration.md"${W}
+	echo "${R}[${W}-${R}]${B} This:- https://github.com/sabamdarif/termux-desktop/blob/main/hw-acceleration.md"${W}
 	echo
-	echo "${R}[${W}-${R}]${G}${BOLD}Select Hardware Acceleration API For The Distro Container"${W}
+	echo "${R}[${W}-${R}]${G}${BOLD} Select Hardware Acceleration API For The Distro Container"${W}
 	echo
 	echo "${Y}1. Vulkan (ZINK)"${W}
 	echo
@@ -704,7 +792,7 @@ function exp_distro_hw_support() {
 	read -p "${Y}select an option : "${W} exp_distro_hw_answer
 	exp_distro_hw_answer=${exp_distro_hw_answer:-1}
 	echo
-	echo "${R}[${W}-${R}]${G}Continuing with answer: $exp_distro_hw_answer"${W}
+	echo "${R}[${W}-${R}]${G} Continuing with answer: $exp_distro_hw_answer"${W}
 	echo "exp_distro_hw_answer=\"$exp_distro_hw_answer\"" >> $config_file
 	sleep 0.2
 	termux_hw_answer="${exp_distro_hw_answer}"
@@ -728,7 +816,7 @@ function exp_hwa_support() {
 	read -p "${Y}select an option : "${W} device_gpu_model
 	device_gpu_model=${device_gpu_model:-1}
 	echo
-	echo "${R}[${W}-${R}]${G}Continuing with answer: $device_gpu_model"${W}
+	echo "${R}[${W}-${R}]${G} Continuing with answer: $device_gpu_model"${W}
 	echo "device_gpu_model=\"$device_gpu_model\"" >> $config_file
 	sleep 0.2
 	    if [[ "$device_gpu_model" == "1" ]]; then
@@ -744,11 +832,11 @@ function exp_hwa_support() {
 }
 
 function hw_questions() {
-    echo "${R}[${W}-${R}]${G}${BOLD}First Read This"${W}
+    echo "${R}[${W}-${R}]${G}${BOLD} First Read This"${W}
     echo
-    echo "${R}[${W}-${R}]${B}This:- https://github.com/sabamdarif/termux-desktop/blob/main/hw-acceleration.md"${W}
+    echo "${R}[${W}-${R}]${B} This:- https://github.com/sabamdarif/termux-desktop/blob/main/hw-acceleration.md"${W}
     echo
-    echo "${R}[${W}-${R}]${G}${BOLD}Select Hardware Acceleration API"${W}
+    echo "${R}[${W}-${R}]${G}${BOLD} Select Hardware Acceleration API"${W}
     echo
 	echo "${Y}1. Vulkan (ZINK)"${W}
 	echo
@@ -761,7 +849,7 @@ function hw_questions() {
 	read -p "${Y}select an option : "${W} termux_hw_answer
 	termux_hw_answer=${termux_hw_answer:-1}
 	echo
-	echo "${R}[${W}-${R}]${G}Continuing with answer: $termux_hw_answer"${W}
+	echo "${R}[${W}-${R}]${G} Continuing with answer: $termux_hw_answer"${W}
 	echo "termux_hw_answer=\"$termux_hw_answer\"" >> $config_file
 	sleep 0.2
 	distro_hw_questions
@@ -769,7 +857,7 @@ function hw_questions() {
 
 # distro related questions
 function choose_distro() {
-	echo "${R}[${W}-${R}]${G}${BOLD}Select Distro You Want To Add"${W}
+	echo "${R}[${W}-${R}]${G}${BOLD} Select Distro You Want To Add"${W}
 	echo
 	echo "${Y}1. Debian"${W}
 	echo
@@ -785,7 +873,7 @@ function choose_distro() {
 	distro_answer=${distro_answer:-1}
 	echo "distro_answer=\"$distro_answer\"" >> $config_file
 	echo
-	echo "${R}[${W}-${R}]${G}Continuing with answer: $distro_answer"${W}
+	echo "${R}[${W}-${R}]${G} Continuing with answer: $distro_answer"${W}
 	sleep 0.2
 }
 
@@ -809,7 +897,7 @@ function distro_questions() {
 	echo "pd_useradd_answer=\"$pd_useradd_answer\"" >> $config_file
 	echo
 	if [[ "$pd_useradd_answer" == "n" ]]; then
-	echo "${R}[${W}-${R}]${G}Skiping User Account Setup"${W}
+	echo "${R}[${W}-${R}]${G} Skiping User Account Setup"${W}
 	else
 	echo "${R}[${W}-${R}]${G}${BOLD} Select user account type"${W}
 	echo
@@ -821,26 +909,26 @@ function distro_questions() {
 	pd_pass_type=${pd_pass_type:-1}
 	echo "pd_pass_type=\"$pd_pass_type\"" >> $config_file
 	echo
-	echo "${R}[${W}-${R}]${G}Continuing with answer: $pd_pass_type"${W}
+	echo "${R}[${W}-${R}]${G} Continuing with answer: $pd_pass_type"${W}
 	echo
 	sleep 0.2
 	    if [[ "$pd_pass_type" == "1" ]]; then
 	    while true; do
-		echo "${R}[${W}-${R}]${G}Default Password Will Be Set, Because Sometime It Might Ask You For Password"${W}
+		echo "${R}[${W}-${R}]${G} Default Password Will Be Set, Because Sometime It Might Ask You For Password"${W}
 		echo
-		echo "${R}[${W}-${R}]${G}Password:-${C}root"${W}
+		echo "${R}[${W}-${R}]${G} Password:-${C}root"${W}
 		echo
-	    read -p "${R}[${W}-${R}]${G}Input username [Lowercase]: "${W} user_name
+	    read -p "${R}[${W}-${R}]${G} Input username [Lowercase]: "${W} user_name
 	    echo
-	    read -p "${R}[${W}-${R}]${Y}Do you want to continue with username ${C}$user_name ${Y}? (y/n) : "${W} choice
+	    read -p "${R}[${W}-${R}]${Y} Do you want to continue with username ${C}$user_name ${Y}? (y/n) : "${W} choice
 	    echo
 	    choice="${choice:-y}"
 	    echo
-	    echo "${R}[${W}-${R}]${G}Continuing with answer: $choice"${W}
+	    echo "${R}[${W}-${R}]${G} Continuing with answer: $choice"${W}
 	    sleep 0.2
 	    case $choice in
 	    [yY]* )
-	    echo "${R}[${W}-${R}]${G}Continuing with username ${C}$user_name "${W}
+	    echo "${R}[${W}-${R}]${G} Continuing with username ${C}$user_name "${W}
 	    break;;
 	    [nN]* )
 	    echo "${G}Please provide username again."${W}
@@ -865,12 +953,12 @@ function distro_questions() {
 	    echo
 	    choice="${choice:-y}"
 	    echo
-	    echo "${R}[${W}-${R}]${G}Continuing with answer: $choice"${W}
+	    echo "${R}[${W}-${R}]${G} Continuing with answer: $choice"${W}
 	    echo ""
 	    sleep 0.2
 	    case $choice in
 	    [yY]* )
-	    echo "${R}[${W}-${R}]${G}Continuing with username ${C}$user_name ${G}and password ${C}$pass"${W}
+	    echo "${R}[${W}-${R}]${G} Continuing with username ${C}$user_name ${G}and password ${C}$pass"${W}
 	    break;;
 	    [nN]* )
 	    echo "${G}Please provide username and password again."${W}
@@ -936,6 +1024,11 @@ function install_desktop() {
 	echo "${R}[${W}-${R}]${G}${BOLD} Installing Openbox WM"${W}
 	echo
 	package_install_and_check "openbox polybar xorg-xsetroot lxappearance wmctrl feh xwayland kvantum termux-api thunar firefox mpd rofi bmon xcompmgr xfce4-settings gtk3 gedit"
+	elif [[ "$desktop_answer" == "4" ]]; then
+	echo "${R}[${W}-${R}]${G}${BOLD} Installing MATE"${W}
+	echo
+	package_install_and_check "mate*"
+	package_install_and_check "marco galculator mousepad xfce4-taskmanager file-roller"
 	fi
 	# if [[ "$distro_add_answer" == "y" ]]; then
 	# package_install_and_check "xdg-utils"
@@ -978,7 +1071,7 @@ function theme_installer() {
 	local icons_theme
 	for icons_theme in $icons_themes_names; do
 	if [[ -d "$icons_folder/$icons_theme" ]]; then
-	echo "${R}[${W}-${R}]${G}Creating icon cache..."${W}
+	echo "${R}[${W}-${R}]${G} Creating icon cache..."${W}
 	gtk-update-icon-cache -f -t $icons_folder/$icons_theme
 	fi
 	done
@@ -987,7 +1080,7 @@ function theme_installer() {
 	local sys_icons_theme
 	for sys_icons_theme in $sys_icons_themes_names; do
 	if [[ -d "$sys_icons_folder/$sys_icons_theme" ]]; then
-	echo "${R}[${W}-${R}]${G}Creating icon cache..."${W}
+	echo "${R}[${W}-${R}]${G} Creating icon cache..."${W}
 	gtk-update-icon-cache -f -t $sys_icons_folder/$sys_icons_theme
 	fi
 	done
@@ -1192,15 +1285,14 @@ cat <<EOF > "$PREFIX/bin/vncstart"
 
 case \$1 in
 --nogpu)
-export LIBGL_ALWAYS_SOFTWARE=1
-env MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe vncserver
+env XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg LIBGL_ALWAYS_SOFTWARE=1 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe vncserver
 ;;
 --help|-h)
 echo "${C}vncstart ${G}to start vncserver with gpu acceleration"${W}
 echo "${C}vncstart ---nogpu ${G}to start vncserver without gpu acceleration"${W}
 ;;
 *)
-vncserver
+env XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg vncserver
 ;;
 esac
 EOF
@@ -1210,7 +1302,7 @@ cat <<EOF > "$PREFIX/bin/vncstart"
 
 case \$1 in
 --nogpu)
-vncserver
+env XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg vncserver
 ;;
 --help|-h)
 echo "${C}vncstart ${G}to start vncserver with gpu acceleration"${W}
@@ -1218,7 +1310,7 @@ echo "${C}vncstart ---nogpu ${G}to start vncserver without gpu acceleration"${W}
 ;;
 *)
 ${initialize_server_method} &
-$hw_method vncserver
+env XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg $hw_method vncserver
 ;;
 esac
 EOF
@@ -1275,40 +1367,34 @@ case \$1 in
         sleep 1
         am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1
         sleep 1
-        export LIBGL_ALWAYS_SOFTWARE=1
-        env DISPLAY=:1.0 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe dbus-launch --exit-with-session $de_startup > /dev/null 2>&1 &
+        env DISPLAY=:1.0 LIBGL_ALWAYS_SOFTWARE=1 XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe dbus-launch --exit-with-session $de_startup > /dev/null 2>&1 &
         # Check if the second argument is --legacy
         if [[ "\$2" == "--legacy" ]]; then
             XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :1.0 -legacy-drawing &
             sleep 1
             am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1
             sleep 1
-            env DISPLAY=:1.0 dbus-launch --exit-with-session $de_startup > /dev/null 2>&1 &
+            env DISPLAY=:1.0 XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg dbus-launch --exit-with-session $de_startup > /dev/null 2>&1 &
         fi
         ;;
     
     --nodbus)
         # Start termux-x11 without D-Bus
-        export DISPLAY=:1.0
-        XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :1 -xstartup "$de_startup"
+        env DISPLAY=:1.0 XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :1 -xstartup "$de_startup"
         exit 0
         
         case \$2 in
             --nogpu)
-                # Start termux-x11 without GPU and without D-Bus
-                export DISPLAY=:1.0
-                export LIBGL_ALWAYS_SOFTWARE=1
-                XDG_RUNTIME_DIR=\${TMPDIR} MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe termux-x11 :1 -xstartup "$de_startup"
+                # Start termux-x11 without GPU and without D-Bus 
+                env DISPLAY=:1.0 LIBGL_ALWAYS_SOFTWARE=1 XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg XDG_RUNTIME_DIR=\${TMPDIR} MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe termux-x11 :1 -xstartup "$de_startup"
                 if [[ "\$3" == "--legacy" ]]; then
-                    export DISPLAY=:1.0
-                    XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :1 -legacy-drawing -xstartup "$de_startup"
+                    env DISPLAY=:1.0 XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :1 -legacy-drawing -xstartup "$de_startup"
                 fi
                 ;;
             
             --legacy)
                 # Start termux-x11 with legacy drawing and without D-Bus
-                export DISPLAY=:1.0
-                XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :1 -legacy-drawing -xstartup "$de_startup"
+                env DISPLAY=:1.0 XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :1 -legacy-drawing -xstartup "$de_startup"
                 ;;
             
             *)
@@ -1327,7 +1413,7 @@ case \$1 in
         sleep 1
         am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1 &
         sleep 1
-        env DISPLAY=:1.0 dbus-launch --exit-with-session $de_startup > /dev/null 2>&1 &
+        env DISPLAY=:1.0 XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg dbus-launch --exit-with-session $de_startup > /dev/null 2>&1 &
         ;;
     
     --help|-h)
@@ -1346,7 +1432,7 @@ case \$1 in
         sleep 1
         am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1 &
         sleep 1
-        env DISPLAY=:1.0 dbus-launch --exit-with-session $de_startup > /dev/null 2>&1 &
+        env DISPLAY=:1.0 XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg dbus-launch --exit-with-session $de_startup > /dev/null 2>&1 &
         ;;
 esac
 
@@ -1364,7 +1450,7 @@ case \$1 in
     sleep 1
     am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1
     sleep 1
-    env DISPLAY=:1.0 dbus-launch --exit-with-session $de_startup > /dev/null 2>&1 &
+    env DISPLAY=:1.0 XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg dbus-launch --exit-with-session $de_startup > /dev/null 2>&1 &
 
     # Check if the second argument is --legacy
     if [[ "\$2" == "--legacy" ]]; then
@@ -1372,32 +1458,28 @@ case \$1 in
         sleep 1
         am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1
         sleep 1
-        env DISPLAY=:1.0 dbus-launch --exit-with-session $de_startup > /dev/null 2>&1 &
+        env DISPLAY=:1.0 XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg dbus-launch --exit-with-session $de_startup > /dev/null 2>&1 &
     fi
     ;;
 
 --nodbus)
     # Start Termux X11 without dbus-launch
-    export DISPLAY=:1.0
     ${initialize_server_method} &
-    XDG_RUNTIME_DIR=\${TMPDIR} ${hw_method} termux-x11 :1 -xstartup "$de_startup"
+    env DISPLAY=:1.0 XDG_RUNTIME_DIR=\${TMPDIR} ${hw_method} termux-x11 :1 -xstartup "$de_startup"
     exit 0
 
     # Nested case to check for additional options
     case \$2 in
     --nogpu)
-        export DISPLAY=:1.0
-        XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :1 -xstartup "$de_startup"
+        env DISPLAY=:1.0 XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :1 -xstartup "$de_startup"
 
         if [[ "\$3" == "--legacy" ]]; then
-            export DISPLAY=:1.0
-            XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :1 -legacy-drawing -xstartup "$de_startup"
+            env DISPLAY=:1.0 XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :1 -legacy-drawing -xstartup "$de_startup"
         fi
         ;;
     --legacy)
-        export DISPLAY=:1.0
         ${initialize_server_method} &
-        XDG_RUNTIME_DIR=\${TMPDIR} ${hw_method} termux-x11 :1 -legacy-drawing -xstartup "$de_startup"
+        env DISPLAY=:1.0 XDG_RUNTIME_DIR=\${TMPDIR} ${hw_method} termux-x11 :1 -legacy-drawing -xstartup "$de_startup"
         ;;
     *)
         echo -e "${C}--legacy ${G}to start termux:x11 with -legacy-drawing${W}"
@@ -1415,7 +1497,7 @@ case \$1 in
     sleep 1
     am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1 &
     sleep 1
-    env DISPLAY=:1.0 ${hw_method} dbus-launch --exit-with-session $de_startup > /dev/null 2>&1 &
+    env DISPLAY=:1.0 XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${hw_method} dbus-launch --exit-with-session $de_startup > /dev/null 2>&1 &
     ;;
 
 --help|-h)
@@ -1435,7 +1517,7 @@ case \$1 in
     sleep 1
     am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1 &
     sleep 1
-    env DISPLAY=:1.0 ${hw_method} dbus-launch --exit-with-session $de_startup > /dev/null 2>&1 &
+    env DISPLAY=:1.0 XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${hw_method} dbus-launch --exit-with-session $de_startup > /dev/null 2>&1 &
     ;;
 esac
 EOF
@@ -1453,65 +1535,7 @@ chmod +x $PREFIX/bin/tx11start
 
 function setup_tx11stop_cmd() {
 	check_and_delete "$PREFIX/bin/tx11stop"
-if [[ "$de_name" == "xfce" ]]; then
-cat <<EOF > "$PREFIX/bin/tx11stop"
-#!/data/data/com.termux/files/usr/bin/bash
-
-termux_x11_pid=\$(pgrep -f "/system/bin/app_process / com.termux.x11.Loader :1.0")
-de_pid=\$(pgrep -f "$de_startup")
-if [[ -n "\$termux_x11_pid" ]] || [[ -n "\$de_pid" ]]; then
-kill -9 "\$termux_x11_pid" > /dev/null 2>&1
-pkill -9 pulseaudio > /dev/null 2>&1
-killall virgl_test_server > /dev/null 2>&1
-pkill -9 xfce-* > /dev/null 2>&1
-pkill -9 dbus-* > /dev/null 2>&1
-pkill -f com.termux.x11 > /dev/null 2>&1
-    if [[ ! -n "\$termux_x11_pid" ]] || [[ ! -n "\$de_pid" ]]; then
-	echo -e "${G}Termux:X11 Stopped Successfully ${W}"
-	fi
-elif [[ "\$1" == "-f" ]]; then
-pkill -f com.termux.x11 > /dev/null 2>&1
-pkill -9 xfce-* > /dev/null 2>&1
-killall virgl_test_server > /dev/null 2>&1
-pkill -9 pulseaudio > /dev/null 2>&1
-pkill -9 dbus-* > /dev/null 2>&1
-echo -e "${G}Termux:X11 Successfully Force Stopped ${W}"
-elif [[ "\$1" == "-h" ]]; then
-echo -e "tx11stop       to stop termux:x11"
-echo -e "tx11stop -f    to kill termux:x11"
-fi
-exec 2>/dev/null
-EOF
-elif [[ "$de_name" == "lxqt" ]]; then
-cat <<EOF > "$PREFIX/bin/tx11stop"
-#!/data/data/com.termux/files/usr/bin/bash
-
-termux_x11_pid=\$(pgrep -f "/system/bin/app_process / com.termux.x11.Loader :1.0")
-de_pid=\$(pgrep -f "$de_startup")
-if [[ -n "\$termux_x11_pid" ]] || [[ -n "\$de_pid" ]]; then
-kill -9 "\$termux_x11_pid" > /dev/null 2>&1
-pkill -9 pulseaudio > /dev/null 2>&1
-killall virgl_test_server > /dev/null 2>&1
-pkill -9 lxqt-* > /dev/null 2>&1
-pkill -9 dbus-* > /dev/null 2>&1
-pkill -f com.termux.x11 > /dev/null 2>&1
-   if [[ ! -n "\$termux_x11_pid" ]] || [[ ! -n "\$de_pid" ]]; then
-	echo -e "${G}Termux:X11 Stopped Successfully ${W}"
-	fi
-elif [[ "\$1" == "-f" ]]; then
-pkill -f com.termux.x11 > /dev/null 2>&1
-pkill -9 lxqt-* > /dev/null 2>&1
-killall virgl_test_server > /dev/null 2>&1
-pkill -9 pulseaudio > /dev/null 2>&1
-pkill -9 dbus-* > /dev/null 2>&1
-echo -e "${G}Termux:X11 Successfully Force Stopped ${W}"
-elif [[ "\$1" == "-h" ]]; then
-echo -e "tx11stop       to stop termux:x11"
-echo -e "tx11stop -f    to kill termux:x11"
-fi
-exec 2>/dev/null
-EOF
-elif [[ "$de_name" == "openbox" ]]; then
+if [[ "$de_name" == "openbox" ]]; then
 cat <<EOF > "$PREFIX/bin/tx11stop"
 #!/data/data/com.termux/files/usr/bin/bash
 
@@ -1524,12 +1548,41 @@ killall virgl_test_server > /dev/null 2>&1
 pkill -9 openbox* > /dev/null 2>&1
 pkill -9 dbus-* > /dev/null 2>&1
 pkill -f com.termux.x11 > /dev/null 2>&1
-   if [[ ! -n "\$termux_x11_pid" ]] || [[ ! -n "\$de_pid" ]]; then
+	if [[ ! -n "\$termux_x11_pid" ]] || [[ ! -n "\$de_pid" ]]; then
 	echo -e "${G}Termux:X11 Stopped Successfully ${W}"
 	fi
 elif [[ "\$1" == "-f" ]]; then
 pkill -f com.termux.x11 > /dev/null 2>&1
 pkill -9 openbox* > /dev/null 2>&1
+killall virgl_test_server > /dev/null 2>&1
+pkill -9 pulseaudio > /dev/null 2>&1
+pkill -9 dbus-* > /dev/null 2>&1
+echo -e "${G}Termux:X11 Successfully Force Stopped ${W}"
+elif [[ "\$1" == "-h" ]]; then
+echo -e "tx11stop       to stop termux:x11"
+echo -e "tx11stop -f    to kill termux:x11"
+fi
+exec 2>/dev/null
+EOF
+else
+cat <<EOF > "$PREFIX/bin/tx11stop"
+#!/data/data/com.termux/files/usr/bin/bash
+
+termux_x11_pid=\$(pgrep -f "/system/bin/app_process / com.termux.x11.Loader :1.0")
+de_pid=\$(pgrep -f "$de_startup")
+if [[ -n "\$termux_x11_pid" ]] || [[ -n "\$de_pid" ]]; then
+kill -9 "\$termux_x11_pid" > /dev/null 2>&1
+pkill -9 pulseaudio > /dev/null 2>&1
+killall virgl_test_server > /dev/null 2>&1
+pkill -9 $de_name-* > /dev/null 2>&1
+pkill -9 dbus-* > /dev/null 2>&1
+pkill -f com.termux.x11 > /dev/null 2>&1
+	if [[ ! -n "\$termux_x11_pid" ]] || [[ ! -n "\$de_pid" ]]; then
+	echo -e "${G}Termux:X11 Stopped Successfully ${W}"
+	fi
+elif [[ "\$1" == "-f" ]]; then
+pkill -f com.termux.x11 > /dev/null 2>&1
+pkill -9 $de_name-* > /dev/null 2>&1
 killall virgl_test_server > /dev/null 2>&1
 pkill -9 pulseaudio > /dev/null 2>&1
 pkill -9 dbus-* > /dev/null 2>&1
@@ -1854,7 +1907,7 @@ function setup_zsh() {
 function terminal_utility_setup() {
 	if [[ "$terminal_utility_setup_answer" == "n" ]]; then
     banner
-	echo "${R}[${W}-${R}]${C}Skipping Terminal Utility Setup..."${W}
+	echo "${R}[${W}-${R}]${C} Skipping Terminal Utility Setup..."${W}
 	echo
 	else
 	banner
@@ -2091,7 +2144,7 @@ function setup_wine() {
 	elif [[ "$wine_answer" == "2" ]]; then
 	echo "${R}[${W}-${R}]${G}${BOLD} Addind Mobox Launch Option To Termux"${W}
 	echo
-	echo "${R}[${W}-${R}]${C}${BOLD}After the installation finishes, make sure to install Mobox using their official instructions"${W}
+	echo "${R}[${W}-${R}]${C}${BOLD} After the installation finishes, make sure to install Mobox using their official instructions"${W}
 	echo
 	echo "${R}[${W}-${R}]${G}${BOLD} Mobox:- ${C}https://github.com/olegos2/mobox"${W}
 	echo
@@ -2109,7 +2162,7 @@ function setup_wine() {
 	echo "${R}[${W}-${R}]${C} Skipping wine Installation..."${W}
 	echo "setup_wine=\"skip\"" >> $config_file
 	else
-    echo "${R}[${W}-${R}]${G}Installing Wine Natively In Termux"${W}
+    echo "${R}[${W}-${R}]${G} Installing Wine Natively In Termux"${W}
 	echo
 	package_install_and_check "wine-stable winetricks"
 	wine_shortcut
@@ -2257,7 +2310,7 @@ function remove_termux_desktop() {
 	echo ""
 	confirmation_y_or_n "Are You Sure You Want To Remove Termux Desktop Completely" ask_remove
 	if [[ "$ask_remove" == "n" ]]; then
-	echo "${R}[${W}-${R}]${G}${BOLD}Canceling..."${W}
+	echo "${R}[${W}-${R}]${G}${BOLD} Canceling..."${W}
 	exit 0
 	else
 	echo "${R}[${W}-${R}]${R}${BOLD} Removeing Termux Desktop"${W}
@@ -2375,7 +2428,7 @@ function remove_termux_desktop() {
 	fi
 	check_and_delete "$PREFIX/etc/termux-desktop $PREFIX/bin/setup-termux-desktop"
 	clear
-	echo "${R}[${W}-${R}]${G}${BOLD}Everything remove successfully"${W}
+	echo "${R}[${W}-${R}]${G}${BOLD} Everything remove successfully"${W}
 	fi
 	fi
 }
@@ -2433,14 +2486,14 @@ function change_hw() {
 		banner
 		echo "${R}[${W}-${R}]${G} With Experimental Driver You Can Only Change proot-distro's Hardware Acceleration API"${W}
 	    echo
-		echo "${R}[${W}-${R}]${G}Your current hardware acceleration method for $selected_distro is :${C}${BOLD}${pd_hw_answer}${W}"
+		echo "${R}[${W}-${R}]${G} Your current hardware acceleration method for $selected_distro is :${C}${BOLD}${pd_hw_answer}${W}"
 	    echo
 		else
 	banner
-	echo "${R}[${W}-${R}]${G}Your current hardware acceleration method for termux is :${C}${BOLD}${termux_hw_answer}${W}"
+	echo "${R}[${W}-${R}]${G} Your current hardware acceleration method for termux is :${C}${BOLD}${termux_hw_answer}${W}"
 	echo
 	    if [[ "$distro_add_answer" == "y" ]]; then
-	        echo "${R}[${W}-${R}]${G}Your current hardware acceleration method for $selected_distro is :${C}${BOLD}${pd_hw_answer}${W}"
+	        echo "${R}[${W}-${R}]${G} Your current hardware acceleration method for $selected_distro is :${C}${BOLD}${pd_hw_answer}${W}"
 	        echo
 			exp_distro_hw_support
 			hw_config
@@ -2454,8 +2507,8 @@ function change_hw() {
 			else
 			exit 0
 			fi
-			echo "${R}[${W}-${R}]${R}${BOLD}This process might break your desktop environment${W}"
-	        echo "${R}[${W}-${R}]${G}${BOLD}Make your new choise${W}"
+			echo "${R}[${W}-${R}]${R}${BOLD} This process might break your desktop environment${W}"
+	        echo "${R}[${W}-${R}]${G}${BOLD} Make your new choise${W}"
 	        echo " "
 			hw_questions
 			hw_config
@@ -2491,14 +2544,14 @@ function change_distro() {
 	banner
 	if [[ "$distro_add_answer" == "y" ]]; then
 	    if [[ -d "$PREFIX/var/lib/proot-distro/installed-rootfs/$selected_distro" ]] ;then
-		echo "${R}[${W}-${R}]${G}Your currently installed distro is is :${C}${BOLD}${selected_distro}${W}"
+		echo "${R}[${W}-${R}]${G} Your currently installed distro is is :${C}${BOLD}${selected_distro}${W}"
 		echo
-		echo "${R}[${W}-${R}]${R}Changing distro will delete all the data from your previous distro"${W}
+		echo "${R}[${W}-${R}]${R} Changing distro will delete all the data from your previous distro"${W}
 		echo
 		confirmation_y_or_n "Do you want to continue" distro_change_confirmation
 		    if [[ "$distro_change_confirmation" == "y" ]]; then
 			choose_distro
-			echo "${R}[${W}-${R}]${G}Removing $selected_distro and it's data"${W}
+			echo "${R}[${W}-${R}]${G} Removing $selected_distro and it's data"${W}
 			pd remove $selected_distro
 			rm -rf $PREFIX/share/applications/pd_added
 			rm $PREFIX/bin/$selected_distro
@@ -2507,19 +2560,19 @@ function change_distro() {
 			echo
 			distro_container_setup
 			else
-			echo "${R}[${W}-${R}]${C}Canceling distro change process..."${W}
+			echo "${R}[${W}-${R}]${C} Canceling distro change process..."${W}
 			sleep 2
 			exit 0
 			fi
 	     fi
 	else
-		echo "${R}[${W}-${R}]${G}It look like you haven't install any distro yet"${W}
+		echo "${R}[${W}-${R}]${G} It look like you haven't install any distro yet"${W}
 		echo
-		echo "${R}[${W}-${R}]${Y}${BOLD}Do you want to add a distro container (proot distro)"${W}
+		echo "${R}[${W}-${R}]${Y}${BOLD} Do you want to add a distro container (proot distro)"${W}
 		echo
 		echo "${R}[${W}-${R}]${G} It will help you to install those app which are not avilable in termux"${W}
 		echo
-		echo "${R}[${W}-${R}]${C}You can launch those installed apps from termux like other apps"${W}
+		echo "${R}[${W}-${R}]${C} You can launch those installed apps from termux like other apps"${W}
 		echo
 		confirmation_y_or_n "Do you want to continue" distro_add_answer
 		echo "distro_add_answer=\"$distro_add_answer\"" >> $config_file
@@ -2581,7 +2634,7 @@ function change_autostart() {
 		echo
 		read -p "${Y}select an option (1 is Recomended): "${W} autostart_gui_mode
 		autostart_gui_mode=${autostart_gui_mode:-1}
-		echo "${R}[${W}-${R}]${G}Continuing with answer: $autostart_gui_mode"${W}
+		echo "${R}[${W}-${R}]${G} Continuing with answer: $autostart_gui_mode"${W}
 		sleep 0.2
 		add_to_autostart
 		fi 
@@ -2632,7 +2685,7 @@ function reinstall_icons() {
 	for icon_theme in $icon_themes_names; do
 	check_and_delete "$icons_folder/$icon_theme"
 	mv $tmp_icons_folder/$icon_theme $icons_folder/
-	echo "${R}[${W}-${R}]${G}Creating icon cache..."${W}
+	echo "${R}[${W}-${R}]${G} Creating icon cache..."${W}
 	if [[ "$de_name" == "xfce" ]]; then
 	gtk-update-icon-cache -f -t $icons_folder/$icons_theme
 	fi
@@ -2744,15 +2797,15 @@ function check_for_update_and_update_installer() {
 			termux-reload-settings
 			local new_local_script_hash=$(basename $(sha256sum $PREFIX/bin/setup-termux-desktop | cut -d ' ' -f 1))
 			    if [[ "$new_local_script_hash" == "$current_script_hash" ]]; then
-				echo "${R}[${W}-${R}]${G}Installer updated successfully"${W}
+				echo "${R}[${W}-${R}]${G} Installer updated successfully"${W}
 				check_and_delete "$termux_desktop_path/skip_update_checkup"
 				exit 0
 				else
-				echo "${R}[${W}-${R}]${G}Failed to update the installer"${W}
+				echo "${R}[${W}-${R}]${G} Failed to update the installer"${W}
 				exit 0
 				fi
 			elif [[ "$update_installer" == "n" ]]; then
-			echo "${R}[${W}-${R}]${G}Keeping the old installer"${W}
+			echo "${R}[${W}-${R}]${G} Keeping the old installer"${W}
 			touch $termux_desktop_path/skip_update_checkup >/dev/null 2>&1
 			exit 0
 			fi
