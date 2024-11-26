@@ -1,4 +1,4 @@
-#!/data/data/com.termux/files/usr/bin/bash
+#!/bin/bash
 
 #########################################################################
 #
@@ -189,7 +189,7 @@ function package_install_and_check() {
         	        echo "${R}[${W}-${R}]${C} $package_name installation failed ${W}"
         	    fi
         	fi
-		if
+		fi
     done
     echo ""
 }
