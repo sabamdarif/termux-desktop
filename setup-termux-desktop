@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/data/data/com.termux/files/usr/bin/bash
 
 #########################################################################
 #
@@ -269,6 +269,7 @@ function extract_zip_with_progress() {
     local archive="$1"
     local target_dir="$2"
 
+    # Check if the archive file exists
     if [[ ! -f "$archive" ]]; then
         echo "${R}$archive doesn't exist${W}"
         return 1
@@ -296,12 +297,17 @@ function extract_zip_with_progress() {
 
 function extract_archive() {
     local archive="$1"
+    
+    # Check if the archive exists
     if [[ ! -f "$archive" ]]; then
-        echo "${R}$archive doesn't exist"${W}
+        echo "${R}$archive doesn't exist${W}"
         return
     fi
 
+    # Get the total size of the archive
     total_size=$(stat -c '%s' "$archive")
+    
+    # Handle different archive formats
     case "$archive" in
         *.tar.gz)
             pv -s "$total_size" -p -r "$archive" | tar xzf - || { echo "${R}Failed to extract ${C}$archive${W}"; return; }
@@ -312,9 +318,9 @@ function extract_archive() {
         *.tar)
             pv -s "$total_size" -p -r "$archive" | tar xf - || { echo "${R}Failed to extract ${C}$archive${W}"; return; }
             ;;
-		*.zip)
-		extract_zip_with_progress "${archive}"
-		;;
+        *.zip)
+            extract_zip_with_progress "${archive}"
+            ;;
         *)
             echo "${R}Unsupported archive format: ${C}$archive${W}"
             return 1
@@ -328,14 +334,17 @@ function download_and_extract() {
     local target_dir="$2"
     local filename="${url##*/}"
 
+    # Notify user about downloading
     echo "${C}${BOLD}Downloading ${G}${filename}...${W}"
     sleep 1.5
 
+    # Change to the target directory
     cd "$target_dir" || return 1
 
     local attempt=1
     local success=false
 
+    # Attempt to download the file with retries
     while [[ $attempt -le 3 ]]; do
         if curl -# -L "$url" -o "$filename"; then
             success=true
@@ -348,14 +357,16 @@ function download_and_extract() {
         fi
     done
 
+    # If download is successful, extract and remove the archive
     if [[ "$success" = true ]]; then
-	    if [[ -f "$filename" ]]; then
-		echo
-		echo "${R}[${W}-${R}]${G} Extacting $filename" ${W}
-		    extract_archive "$filename"
-			rm "$filename"
-	    fi
+        if [[ -f "$filename" ]]; then
+            echo
+            echo "${R}[${W}-${R}]${G} Extracting $filename${W}"
+            extract_archive "$filename"
+            rm "$filename"
+        fi
     else
+        # Notify if download fails after all attempts
         echo "${R}Failed to download ${C}${filename}${W}"
         echo "${C}Please check your internet connection${W}"
     fi
@@ -415,7 +426,8 @@ function install_font_for_style() {
 }
 
 function download_github_action_artifact() {
-	while [[ "$#" -gt 0 ]]; do
+    # Parse arguments passed to the function
+    while [[ "$#" -gt 0 ]]; do
         case "$1" in
             --user)
                 GITHUB_USER="$2"
@@ -444,38 +456,48 @@ function download_github_action_artifact() {
         esac
     done
 
-	# Get the workflow ID using the workflow name
-	WORKFLOW_ID=$(gh api repos/$GITHUB_USER/$REPO/actions/workflows --jq ".workflows[] | select(.name == \"$WORKFLOW_NAME\") | .id")
-	# Check if WORKFLOW_ID is found
-	if [ -z "$WORKFLOW_ID" ]; then
-	echo "${R}[${W}-${R}]${R} Workflow '$WORKFLOW_NAME' not found."${W}
-	exit 1
-	fi
-	echo "${R}[${W}-${R}]${G} Workflow ID for ${W}'$WORKFLOW_NAME' ${G}is ${W}$WORKFLOW_ID"
-	# Get the latest workflow run ID with the specific display title
-	WORKFLOW_RUN_ID=$(gh api repos/$GITHUB_USER/$REPO/actions/workflows/$WORKFLOW_ID/runs --paginate --jq ".workflow_runs[] | select(.display_title == \"$RUN_NAME\") | .id" | head -n 1)
-	# Check if WORKFLOW_RUN_ID is obtained
-	if [ -z "$WORKFLOW_RUN_ID" ]; then
-	echo "${R}[${W}-${R}]${R} No workflow run found with the name '$RUN_NAME' for workflow '$WORKFLOW_NAME'."${W}
-	exit 1
-	fi
-	# List artifacts for the found run
-	ARTIFACT_URL=$(gh api repos/$GITHUB_USER/$REPO/actions/runs/$WORKFLOW_RUN_ID/artifacts --jq ".artifacts[] | select(.name == \"$ARTIFACT_NAME\") | .archive_download_url")
-	# If no exact match, look for an artifact starting with ARTIFACT_NAME
-	if [ -z "$ARTIFACT_URL" ]; then
-	echo "${R}[${W}-${R}]${C} Artifact with the exact name '$ARTIFACT_NAME' not found. Looking for artifacts starting with '$ARTIFACT_NAME'..."${W}
-	ARTIFACT_URL=$(gh api repos/$GITHUB_USER/$REPO/actions/runs/$WORKFLOW_RUN_ID/artifacts --jq ".artifacts[] | select(.name | startswith(\"$ARTIFACT_NAME\")) | .archive_download_url" | head -n 1)
-	fi
-	# Check if ARTIFACT_URL is found
-	if [ -z "$ARTIFACT_URL" ]; then
-	echo "${R}[${W}-${R}]${R} No artifact found starting with '$ARTIFACT_NAME'."${W}
-	exit 1
-	fi
-	# Download the artifact using the URL
-	echo "${R}[${W}-${R}]${G} Downloading artifact from run '$RUN_NAME'..."${W}
-	curl -# -L -H "Authorization: Bearer $(gh auth token)" -o artifact.zip "$ARTIFACT_URL"
-	# Extract the artifact
-	extract_archive "artifact.zip"
+    # Get the workflow ID using the workflow name
+    WORKFLOW_ID=$(gh api repos/$GITHUB_USER/$REPO/actions/workflows --jq ".workflows[] | select(.name == \"$WORKFLOW_NAME\") | .id")
+    
+    # Check if WORKFLOW_ID is found
+    if [ -z "$WORKFLOW_ID" ]; then
+        echo "${R}[${W}-${R}]${R} Workflow '$WORKFLOW_NAME' not found."${W}
+        exit 1
+    fi
+
+    # Display the workflow ID
+    echo "${R}[${W}-${R}]${G} Workflow ID for ${W}'$WORKFLOW_NAME' ${G}is ${W}$WORKFLOW_ID"
+
+    # Get the latest workflow run ID with the specific display title
+    WORKFLOW_RUN_ID=$(gh api repos/$GITHUB_USER/$REPO/actions/workflows/$WORKFLOW_ID/runs --paginate --jq ".workflow_runs[] | select(.display_title == \"$RUN_NAME\") | .id" | head -n 1)
+    
+    # Check if WORKFLOW_RUN_ID is obtained
+    if [ -z "$WORKFLOW_RUN_ID" ]; then
+        echo "${R}[${W}-${R}]${R} No workflow run found with the name '$RUN_NAME' for workflow '$WORKFLOW_NAME'."${W}
+        exit 1
+    fi
+
+    # List artifacts for the found run
+    ARTIFACT_URL=$(gh api repos/$GITHUB_USER/$REPO/actions/runs/$WORKFLOW_RUN_ID/artifacts --jq ".artifacts[] | select(.name == \"$ARTIFACT_NAME\") | .archive_download_url")
+    
+    # If no exact match, look for an artifact starting with ARTIFACT_NAME
+    if [ -z "$ARTIFACT_URL" ]; then
+        echo "${R}[${W}-${R}]${C} Artifact with the exact name '$ARTIFACT_NAME' not found. Looking for artifacts starting with '$ARTIFACT_NAME'..."${W}
+        ARTIFACT_URL=$(gh api repos/$GITHUB_USER/$REPO/actions/runs/$WORKFLOW_RUN_ID/artifacts --jq ".artifacts[] | select(.name | startswith(\"$ARTIFACT_NAME\")) | .archive_download_url" | head -n 1)
+    fi
+
+    # Check if ARTIFACT_URL is found
+    if [ -z "$ARTIFACT_URL" ]; then
+        echo "${R}[${W}-${R}]${R} No artifact found starting with '$ARTIFACT_NAME'."${W}
+        exit 1
+    fi
+
+    # Download the artifact using the URL
+    echo "${R}[${W}-${R}]${G} Downloading artifact from run '$RUN_NAME'..."${W}
+    curl -# -L -H "Authorization: Bearer $(gh auth token)" -o artifact.zip "$ARTIFACT_URL"
+
+    # Extract the artifact
+    extract_archive "artifact.zip"
 }
 
 #########################################################################
@@ -491,52 +513,61 @@ function questions_theme_select() {
     local repo="termux-desktop"
     local main_folder="patch/$de_name"
     local subfolder_count_value=$(count_subfolders "$owner" "$repo" "$main_folder" 2>/dev/null)
-	cd $HOME
-	echo "${R}[${W}-${R}]${G} Downloading list...."${W}
+    
+    cd $HOME
+    echo "${R}[${W}-${R}]${G} Downloading list...."${W}
     wget -qO ${current_path}/styles.md https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/${de_name}_styles.md
-	clear
+    clear
+
+    # Check if the subfolder count value is obtained
     if [[ -n "$subfolder_count_value" ]]; then
-        echo "${R}[${W}-${R}]${G} Check the $de_name styles section in github"${W}
-		echo
-		echo "${R}[${W}-${R}]${B} https://github.com/sabamdarif/termux-desktop/blob/main/${de_name}_styles.md"${W}
-		echo
-        echo "${R}[${W}-${R}]${G} Number of avilable custom styles for $de_name is: ${C}${subfolder_count_value}"${W}
-		echo
+        echo "${R}[${W}-${R}]${G} Check the $de_name styles section in GitHub"${W}
+        echo
+        echo "${R}[${W}-${R}]${B} https://github.com/sabamdarif/termux-desktop/blob/main/${de_name}_styles.md"${W}
+        echo
+        echo "${R}[${W}-${R}]${G} Number of available custom styles for $de_name is: ${C}${subfolder_count_value}"${W}
+        echo
         echo "${R}[${W}-${R}]${G} Available Styles:${W}"
-		echo
-grep -oP '## \d+\..+?(?=(\n## \d+\.|\Z))' styles.md | while read -r style; do
-    echo "${Y}${style#### }${W}"
-done
-	while true; do
-    	echo
-    	read -p "${R}[${W}-${R}]${Y} Type number of the style: ${W}" style_answer
+        echo
+        
+        # Display available styles from the styles.md file
+        grep -oP '## \d+\..+?(?=(\n## \d+\.|\Z))' styles.md | while read -r style; do
+            echo "${Y}${style#### }${W}"
+        done
 
-    	# Check if the input is empty
-    	if [[ -z "$style_answer" ]]; then
-    	    echo
-    	    echo "${R}[${W}-${R}]${R} Input cannot be empty. Please type a number."${W}
-    	    continue
-    	fi
+        # Prompt user to select a style
+        while true; do
+            echo
+            read -p "${R}[${W}-${R}]${Y} Type number of the style: ${W}" style_answer
 
-    	# Ensure the input is a valid number and within range
-    	if [[ "$style_answer" =~ ^[0-9]+$ ]] && [[ "$style_answer" -ge 1 ]] && [[ "$style_answer" -le "$subfolder_count_value" ]]; then
-    	    style_name=$(grep -oP "^## $style_answer\..+?(?=(\n## \d+\.|\Z))" styles.md | sed -e "s/^## $style_answer\. //" -e "s/:$//")
-    	    break
-    	else
-    	    echo
-    	    echo "${R}[${W}-${R}]${R} The entered style number is incorrect."${W}
-    	    echo
-    	    echo "${R}[${W}-${R}]${Y} Please enter a number between 0 to ${subfolder_count_value}"${W}
-    	    echo
-    	    echo "${R}[${W}-${R}]${G} Check the $de_name styles section in GitHub"${W}
-    	    echo
-    	    echo "${R}[${W}-${R}]${B} https://github.com/sabamdarif/termux-desktop/blob/main/${de_name}_styles.md"${W}
-    	    echo
-    	fi
-	done
-	rm ${current_path}/styles.md
-	 else
-        echo "${R} Failed to get total avilable styles value."${W}
+            # Check if the input is empty
+            if [[ -z "$style_answer" ]]; then
+                echo
+                echo "${R}[${W}-${R}]${R} Input cannot be empty. Please type a number."${W}
+                continue
+            fi
+
+            # Ensure the input is a valid number and within range
+            if [[ "$style_answer" =~ ^[0-9]+$ ]] && [[ "$style_answer" -ge 1 ]] && [[ "$style_answer" -le "$subfolder_count_value" ]]; then
+                style_name=$(grep -oP "^## $style_answer\..+?(?=(\n## \d+\.|\Z))" styles.md | sed -e "s/^## $style_answer\. //" -e "s/:$//")
+                break
+            else
+                echo
+                echo "${R}[${W}-${R}]${R} The entered style number is incorrect."${W}
+                echo
+                echo "${R}[${W}-${R}]${Y} Please enter a number between 1 to ${subfolder_count_value}"${W}
+                echo
+                echo "${R}[${W}-${R}]${G} Check the $de_name styles section in GitHub"${W}
+                echo
+                echo "${R}[${W}-${R}]${B} https://github.com/sabamdarif/termux-desktop/blob/main/${de_name}_styles.md"${W}
+                echo
+            fi
+        done
+        
+        # Remove the styles.md file after use
+        rm ${current_path}/styles.md
+    else
+        echo "${R} Failed to get total available styles value."${W}
     fi
 }
 
@@ -990,57 +1021,63 @@ function distro_questions() {
 #########################################################################
 
 function update_sys() {
-	banner
-	echo "${R}[${W}-${R}]${G}${BOLD} Updating System...."${W}
-	echo
-	if type -p pacman >/dev/null 2>&1; then
-	pacman -Syu --noconfirm
-	else
-	echo "${G}${BOLD}Selecting best termux packages mirror please wait"${W}
-	unlink "$PREFIX/etc/termux/chosen_mirrors" &>/dev/null
-	ln -s "$PREFIX/etc/termux/mirrors/all" "$PREFIX/etc/termux/chosen_mirrors" &>/dev/null
-	pkg --check-mirror update
-	pkg update -y -o Dpkg::Options::="--force-confnew"
-	pkg upgrade -y -o Dpkg::Options::="--force-confnew"
-	fi
+    banner
+    echo "${R}[${W}-${R}]${G}${BOLD} Updating System...."${W}
+    echo
+
+    if type -p pacman >/dev/null 2>&1; then
+        pacman -Syu --noconfirm
+    else
+        echo "${G}${BOLD}Selecting best termux packages mirror please wait"${W}
+        unlink "$PREFIX/etc/termux/chosen_mirrors" &>/dev/null
+        ln -s "$PREFIX/etc/termux/mirrors/all" "$PREFIX/etc/termux/chosen_mirrors" &>/dev/null
+        pkg --check-mirror update
+        pkg update -y -o Dpkg::Options::="--force-confnew"
+        pkg upgrade -y -o Dpkg::Options::="--force-confnew"
+    fi
 }
 
 function install_required_packages() {
-	banner
-	echo "${R}[${W}-${R}]${Y}${BOLD} Installling required packages..."${W}
-	echo
-	if type -p pacman >/dev/null 2>&1; then
-	package_install_and_check "wget pv jq curl pulseaudio termux-am"
-	else
-	package_install_and_check "wget pv jq curl pulseaudio tar xz-utils gzip termux-am x11-repo tur-repo"
-	fi
-	sed -i 's/termux-am="already_exist"/ /' $config_file
-	update_sys
+    banner
+    echo "${R}[${W}-${R}]${Y}${BOLD} Installing required packages..."${W}
+    echo
+
+    if type -p pacman >/dev/null 2>&1; then
+        package_install_and_check "wget pv jq curl pulseaudio termux-am"
+    else
+        package_install_and_check "wget pv jq curl pulseaudio tar xz-utils gzip termux-am x11-repo tur-repo"
+    fi
+
+    sed -i 's/termux-am="already_exist"/ /' $config_file
+    update_sys
 }
 
 function install_desktop() {
-	banner
-	if [[ "$desktop_answer" == "1" ]]; then
-	echo "${R}[${W}-${R}]${G}${BOLD} Installing Xfce4 Desktop"${W}
-	echo
-	package_install_and_check "xfce4 xfce4-goodies xwayland kvantum"
-	elif [[ "$desktop_answer" == "2" ]]; then
-	echo "${R}[${W}-${R}]${G}${BOLD} Installing Lxqt Desktop"${W}
-	echo
-	package_install_and_check "lxqt openbox gtk3 papirus-icon-theme xorg-xsetroot xwayland kvantum"
-	elif [[ "$desktop_answer" == "3" ]]; then
-	echo "${R}[${W}-${R}]${G}${BOLD} Installing Openbox WM"${W}
-	echo
-	package_install_and_check "openbox polybar xorg-xsetroot lxappearance wmctrl feh xwayland kvantum termux-api thunar firefox mpd rofi bmon xcompmgr xfce4-settings gtk3 gedit"
-	elif [[ "$desktop_answer" == "4" ]]; then
-	echo "${R}[${W}-${R}]${G}${BOLD} Installing MATE"${W}
-	echo
-	package_install_and_check "mate*"
-	package_install_and_check "marco galculator mousepad xfce4-taskmanager file-roller"
-	fi
-	# if [[ "$distro_add_answer" == "y" ]]; then
-	# package_install_and_check "xdg-utils"
-	# fi
+    banner
+
+    if [[ "$desktop_answer" == "1" ]]; then
+        echo "${R}[${W}-${R}]${G}${BOLD} Installing Xfce4 Desktop"${W}
+        echo
+        package_install_and_check "xfce4 xfce4-goodies xwayland kvantum"
+    elif [[ "$desktop_answer" == "2" ]]; then
+        echo "${R}[${W}-${R}]${G}${BOLD} Installing Lxqt Desktop"${W}
+        echo
+        package_install_and_check "lxqt openbox gtk3 papirus-icon-theme xorg-xsetroot xwayland kvantum"
+    elif [[ "$desktop_answer" == "3" ]]; then
+        echo "${R}[${W}-${R}]${G}${BOLD} Installing Openbox WM"${W}
+        echo
+        package_install_and_check "openbox polybar xorg-xsetroot lxappearance wmctrl feh xwayland kvantum termux-api thunar firefox mpd rofi bmon xcompmgr xfce4-settings gtk3 gedit"
+    elif [[ "$desktop_answer" == "4" ]]; then
+        echo "${R}[${W}-${R}]${G}${BOLD} Installing MATE"${W}
+        echo
+        package_install_and_check "mate*"
+        package_install_and_check "marco galculator mousepad xfce4-taskmanager file-roller"
+    fi
+
+    # Uncomment if additional package installation is needed
+    # if [[ "$distro_add_answer" == "y" ]]; then
+    #     package_install_and_check "xdg-utils"
+    # fi
 }
 
 #########################################################################
@@ -1061,53 +1098,62 @@ function set_config_dir() {
 function theme_installer() {
     banner
     echo "${R}[${W}-${R}]${G}${BOLD} Configuring Theme: ${C}${style_name}"${W}
-	echo
-	if [[ "$de_name" == "xfce" ]] || [[ "$de_name" == "openbox" ]]; then
-	package_install_and_check "gnome-themes-extra"
-	fi
+    echo
+
+    if [[ "$de_name" == "xfce" ]] || [[ "$de_name" == "openbox" ]]; then
+        package_install_and_check "gnome-themes-extra"
+    fi
+
     sleep 3
     banner
     echo "${R}[${W}-${R}]${G}${BOLD} Configuring Wallpapers..."${W}
-	echo
-	check_and_create_directory "$PREFIX/share/backgrounds"
-	download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/${de_name}/look_${style_answer}/wallpaper.tar.gz" "$PREFIX/share/backgrounds/"
+    echo
+    check_and_create_directory "$PREFIX/share/backgrounds"
+    download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/${de_name}/look_${style_answer}/wallpaper.tar.gz" "$PREFIX/share/backgrounds/"
+
     banner
-	check_and_create_directory "$icons_folder"
-	download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/${de_name}/look_${style_answer}/icon.tar.gz" "$icons_folder"
-	if [[ "$de_name" == "xfce" ]]; then
-	local icons_themes_names=$(ls $icons_folder)
-	local icons_theme
-	for icons_theme in $icons_themes_names; do
-	if [[ -d "$icons_folder/$icons_theme" ]]; then
-	echo "${R}[${W}-${R}]${G} Creating icon cache..."${W}
-	gtk-update-icon-cache -f -t $icons_folder/$icons_theme
-	fi
-	done
-	fi
-	local sys_icons_themes_names=$(ls $sys_icons_folder)
-	local sys_icons_theme
-	for sys_icons_theme in $sys_icons_themes_names; do
-	if [[ -d "$sys_icons_folder/$sys_icons_theme" ]]; then
-	echo "${R}[${W}-${R}]${G} Creating icon cache..."${W}
-	gtk-update-icon-cache -f -t $sys_icons_folder/$sys_icons_theme
-	fi
-	done
-	echo "${R}[${W}-${R}]${G}${BOLD} Installing Theme..."${W}
-	echo
-	check_and_create_directory "$themes_folder"
-	download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/${de_name}/look_${style_answer}/theme.tar.gz" "$themes_folder"
-	echo "${R}[${W}-${R}]${G} Making Additional Configuration..."${W}
-	echo
-	check_and_create_directory "$HOME/.config"
-	set_config_dir
-    for the_config_dir in "${config_dirs[@]}"; do
-	check_and_delete "$HOME/.config/$the_config_dir"
+    check_and_create_directory "$icons_folder"
+    download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/${de_name}/look_${style_answer}/icon.tar.gz" "$icons_folder"
+
+    if [[ "$de_name" == "xfce" ]]; then
+        local icons_themes_names=$(ls $icons_folder)
+        local icons_theme
+        for icons_theme in $icons_themes_names; do
+            if [[ -d "$icons_folder/$icons_theme" ]]; then
+                echo "${R}[${W}-${R}]${G} Creating icon cache..."${W}
+                gtk-update-icon-cache -f -t $icons_folder/$icons_theme
+            fi
+        done
+    fi
+
+    local sys_icons_themes_names=$(ls $sys_icons_folder)
+    local sys_icons_theme
+    for sys_icons_theme in $sys_icons_themes_names; do
+        if [[ -d "$sys_icons_folder/$sys_icons_theme" ]]; then
+            echo "${R}[${W}-${R}]${G} Creating icon cache..."${W}
+            gtk-update-icon-cache -f -t $sys_icons_folder/$sys_icons_theme
+        fi
     done
-	if [[ "$de_name" == "openbox" ]]; then
-	download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/${de_name}/look_${style_answer}/config.tar.gz" "$HOME"
-	else
-	download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/${de_name}/look_${style_answer}/config.tar.gz" "$HOME/.config/"
-	fi
+
+    echo "${R}[${W}-${R}]${G}${BOLD} Installing Theme..."${W}
+    echo
+    check_and_create_directory "$themes_folder"
+    download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/${de_name}/look_${style_answer}/theme.tar.gz" "$themes_folder"
+
+    echo "${R}[${W}-${R}]${G} Making Additional Configuration..."${W}
+    echo
+    check_and_create_directory "$HOME/.config"
+    set_config_dir
+
+    for the_config_dir in "${config_dirs[@]}"; do
+        check_and_delete "$HOME/.config/$the_config_dir"
+    done
+
+    if [[ "$de_name" == "openbox" ]]; then
+        download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/${de_name}/look_${style_answer}/config.tar.gz" "$HOME"
+    else
+        download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/${de_name}/look_${style_answer}/config.tar.gz" "$HOME/.config/"
+    fi
 }
 
 #########################################################################
@@ -1208,32 +1254,42 @@ function setup_folder() {
 
 # setup hardware acceleration, check if the enable-hw-acceleration already exist then then first check if it different from github , then ask user if they want to replace it or not, if not then continue with the lacal enable-hw-acceleration file
 function hw_config() {
-	banner
-	echo "${R}[${W}-${R}]${G}${BOLD} Configuring Hardware Acceleration"${W}
-	echo
-	if [[ -f "${current_path}/enable-hw-acceleration" ]]; then
-	local current_script_hash=$(curl -sL  https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/enable-hw-acceleration | sha256sum | cut -d ' ' -f 1)
-	local local_script_hash=$(basename $(sha256sum ${current_path}/enable-hw-acceleration | cut -d ' ' -f 1))
-	    if [[ "$local_script_hash" != "$current_script_hash" ]]; then
-		echo "${R}[${W}-${R}]${G} It look like you already have a different hw-acceleration installer in your current directory"${W}
-		echo
-		confirmation_y_or_n "Do you want to change it with the latest installer" change_old_hw_installer
-		    if [[ "$change_old_hw_installer" == "y" ]]; then
-			check_and_backup "${current_path}/enable-hw-acceleration"
-			wget -O ${current_path}/enable-hw-acceleration https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/enable-hw-acceleration && chmod +x ${current_path}/enable-hw-acceleration && . ${current_path}/enable-hw-acceleration
-			else
-			echo "${R}[${W}-${R}]${G} Using the local hardware acceleraion setup file"${W}
-			chmod +x ${current_path}/enable-hw-acceleration ; . ${current_path}/enable-hw-acceleration
-			fi
-			echo "change_old_hw_installer=\"$change_old_hw_installer\"" >> $config_file
-		else
-		echo "${R}[${W}-${R}]${G} Using the local hardware acceleraion setup file"${W}
-		chmod +x ${current_path}/enable-hw-acceleration ; . ${current_path}/enable-hw-acceleration
-		fi
-	else
-	wget -O ${current_path}/enable-hw-acceleration https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/enable-hw-acceleration && chmod +x ${current_path}/enable-hw-acceleration && . ${current_path}/enable-hw-acceleration
-	rm ${current_path}/enable-hw-acceleration
-	fi
+    banner
+    echo "${R}[${W}-${R}]${G}${BOLD} Configuring Hardware Acceleration"${W}
+    echo
+
+    if [[ -f "${current_path}/enable-hw-acceleration" ]]; then
+        local current_script_hash=$(curl -sL https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/enable-hw-acceleration | sha256sum | cut -d ' ' -f 1)
+        local local_script_hash=$(basename $(sha256sum ${current_path}/enable-hw-acceleration | cut -d ' ' -f 1))
+
+        if [[ "$local_script_hash" != "$current_script_hash" ]]; then
+            echo "${R}[${W}-${R}]${G} It looks like you already have a different hw-acceleration installer in your current directory"${W}
+            echo
+            confirmation_y_or_n "Do you want to change it with the latest installer" change_old_hw_installer
+
+            if [[ "$change_old_hw_installer" == "y" ]]; then
+                check_and_backup "${current_path}/enable-hw-acceleration"
+                wget -O ${current_path}/enable-hw-acceleration https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/enable-hw-acceleration
+                chmod +x ${current_path}/enable-hw-acceleration
+                . ${current_path}/enable-hw-acceleration
+            else
+                echo "${R}[${W}-${R}]${G} Using the local hardware acceleration setup file"${W}
+                chmod +x ${current_path}/enable-hw-acceleration
+                . ${current_path}/enable-hw-acceleration
+            fi
+
+            echo "change_old_hw_installer=\"$change_old_hw_installer\"" >> $config_file
+        else
+            echo "${R}[${W}-${R}]${G} Using the local hardware acceleration setup file"${W}
+            chmod +x ${current_path}/enable-hw-acceleration
+            . ${current_path}/enable-hw-acceleration
+        fi
+    else
+        wget -O ${current_path}/enable-hw-acceleration https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/enable-hw-acceleration
+        chmod +x ${current_path}/enable-hw-acceleration
+        . ${current_path}/enable-hw-acceleration
+        rm ${current_path}/enable-hw-acceleration
+    fi
 }
 
 #########################################################################
@@ -1244,39 +1300,50 @@ function hw_config() {
 
 # same as the hardware acceleration setup but for distro-container-setup file
 function distro_container_setup() {
-	if [[ "$distro_add_answer" == "n" ]]; then
-	banner
-	echo "${R}[${W}-${R}]${C} Skipping Distro Container Setup..."${W}
-	echo
-	else
-	banner
-	echo "${R}[${W}-${R}]${G}${BOLD} Configuring Distro Container"${W}
-	echo
-	if [[ -f "${current_path}/distro-container-setup" ]]; then
-	local current_script_hash=$(curl -sL  https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/distro-container-setup | sha256sum | cut -d ' ' -f 1)
-	local local_script_hash=$(basename $(sha256sum ${current_path}/distro-container-setup | cut -d ' ' -f 1))
-	    if [[ "$local_script_hash" != "$current_script_hash" ]]; then
-		echo "${R}[${W}-${R}]${G} It look like you already have a different hw-acceleration installer in your current directory"${W}
-		echo
-		confirmation_y_or_n "Do you want to change it with the latest installer" change_old_distro_installer
-		    if [[ "$change_old_distro_installer" == "y" ]]; then
-			check_and_backup "${current_path}/distro-container-setup"
-			wget -O ${current_path}/distro-container-setup https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/distro-container-setup && chmod +x ${current_path}/distro-container-setup && . ${current_path}/distro-container-setup
-			else
-			echo "${R}[${W}-${R}]${G} Using the local hardware acceleraion setup file"${W}
-			chmod +x ${current_path}/distro-container-setup ; . ${current_path}/distro-container-setup
-			fi
-			echo "change_old_distro_installer=\"$change_old_distro_installer\"" >> $config_file
-		else
-		echo "${R}[${W}-${R}]${G} Using the local hardware acceleraion setup file"${W}
-		chmod +x ${current_path}/distro-container-setup ; . ${current_path}/distro-container-setup
-		fi
-	else
-	wget -O ${current_path}/distro-container-setup https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/distro-container-setup && chmod +x ${current_path}/distro-container-setup && . ${current_path}/distro-container-setup
-	rm ${current_path}/distro-container-setup
-	fi
-	fi
-	echo "distro_add_answer=\"$distro_add_answer\"" >> $config_file
+    if [[ "$distro_add_answer" == "n" ]]; then
+        banner
+        echo "${R}[${W}-${R}]${C} Skipping Distro Container Setup..."${W}
+        echo
+    else
+        banner
+        echo "${R}[${W}-${R}]${G}${BOLD} Configuring Distro Container"${W}
+        echo
+
+        if [[ -f "${current_path}/distro-container-setup" ]]; then
+            local current_script_hash=$(curl -sL https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/distro-container-setup | sha256sum | cut -d ' ' -f 1)
+            local local_script_hash=$(basename $(sha256sum ${current_path}/distro-container-setup | cut -d ' ' -f 1))
+
+            if [[ "$local_script_hash" != "$current_script_hash" ]]; then
+                echo "${R}[${W}-${R}]${G} It looks like you already have a different distro-container setup script in your current directory"${W}
+                echo
+                confirmation_y_or_n "Do you want to change it with the latest installer" change_old_distro_installer
+
+                if [[ "$change_old_distro_installer" == "y" ]]; then
+                    check_and_backup "${current_path}/distro-container-setup"
+                    wget -O ${current_path}/distro-container-setup https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/distro-container-setup
+                    chmod +x ${current_path}/distro-container-setup
+                    . ${current_path}/distro-container-setup
+                else
+                    echo "${R}[${W}-${R}]${G} Using the local distro-container setup file"${W}
+                    chmod +x ${current_path}/distro-container-setup
+                    . ${current_path}/distro-container-setup
+                fi
+
+                echo "change_old_distro_installer=\"$change_old_distro_installer\"" >> $config_file
+            else
+                echo "${R}[${W}-${R}]${G} Using the local distro-container setup file"${W}
+                chmod +x ${current_path}/distro-container-setup
+                . ${current_path}/distro-container-setup
+            fi
+        else
+            wget -O ${current_path}/distro-container-setup https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/distro-container-setup
+            chmod +x ${current_path}/distro-container-setup
+            . ${current_path}/distro-container-setup
+            rm ${current_path}/distro-container-setup
+        fi
+    fi
+
+    echo "distro_add_answer=\"$distro_add_answer\"" >> $config_file
 }
 
 #########################################################################
@@ -2788,54 +2855,59 @@ EOF
 
 # check for the changes in the installer file
 function check_for_update_and_update_installer() {
-	if [[ -e "$PREFIX/bin/setup-termux-desktop" ]]; then
-	echo "${R}[${W}-${R}]${G} Checking for update..."${W}
-	echo
-	check_and_create_directory "$termux_desktop_path"
-	local current_script_hash=$(curl -sL https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop | sha256sum | cut -d ' ' -f 1)
-	local local_script_hash=$(basename $(sha256sum $PREFIX/bin/setup-termux-desktop | cut -d ' ' -f 1))
-	    if [[ "$local_script_hash" != "$current_script_hash" ]]; then
-		confirmation_y_or_n "You are using an old installer. Do you want to update it to the latest version" update_installer
-		    if [[ "$update_installer" == "y" ]]; then
-			mv $PREFIX/bin/setup-termux-desktop $PREFIX/etc/termux-desktop/
-			check_and_backup "$PREFIX/etc/termux-desktop/setup-termux-desktop"
-			curl -Lsf https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop -o $PREFIX/bin/setup-termux-desktop
-			chmod +x $PREFIX/bin/setup-termux-desktop
-			add_common_function
-			termux-reload-settings
-			local new_local_script_hash=$(basename $(sha256sum $PREFIX/bin/setup-termux-desktop | cut -d ' ' -f 1))
-			    if [[ "$new_local_script_hash" == "$current_script_hash" ]]; then
-				echo "${R}[${W}-${R}]${G} Installer updated successfully"${W}
-				check_and_delete "$termux_desktop_path/skip_update_checkup"
-				exit 0
-				else
-				echo "${R}[${W}-${R}]${G} Failed to update the installer"${W}
-				exit 0
-				fi
-			elif [[ "$update_installer" == "n" ]]; then
-			echo "${R}[${W}-${R}]${G} Keeping the old installer"${W}
-			touch $termux_desktop_path/skip_update_checkup >/dev/null 2>&1
-			exit 0
-			fi
-		else
-		echo -e "${R}[${W}-${R}]${G}${BOLD} Good job, you are using the latest installer"${W}
-		fi
-	fi
+    if [[ -e "$PREFIX/bin/setup-termux-desktop" ]]; then
+        echo "${R}[${W}-${R}]${G} Checking for update..."${W}
+        echo
+
+        check_and_create_directory "$termux_desktop_path"
+        local current_script_hash=$(curl -sL https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop | sha256sum | cut -d ' ' -f 1)
+        local local_script_hash=$(basename $(sha256sum $PREFIX/bin/setup-termux-desktop | cut -d ' ' -f 1))
+
+        if [[ "$local_script_hash" != "$current_script_hash" ]]; then
+            confirmation_y_or_n "You are using an old installer. Do you want to update it to the latest version" update_installer
+
+            if [[ "$update_installer" == "y" ]]; then
+                mv $PREFIX/bin/setup-termux-desktop $PREFIX/etc/termux-desktop/
+                check_and_backup "$PREFIX/etc/termux-desktop/setup-termux-desktop"
+                curl -Lsf https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop -o $PREFIX/bin/setup-termux-desktop
+                chmod +x $PREFIX/bin/setup-termux-desktop
+                add_common_function
+                termux-reload-settings
+
+                local new_local_script_hash=$(basename $(sha256sum $PREFIX/bin/setup-termux-desktop | cut -d ' ' -f 1))
+
+                if [[ "$new_local_script_hash" == "$current_script_hash" ]]; then
+                    echo "${R}[${W}-${R}]${G} Installer updated successfully"${W}
+                    check_and_delete "$termux_desktop_path/skip_update_checkup"
+                    exit 0
+                else
+                    echo "${R}[${W}-${R}]${G} Failed to update the installer"${W}
+                    exit 0
+                fi
+            elif [[ "$update_installer" == "n" ]]; then
+                echo "${R}[${W}-${R}]${G} Keeping the old installer"${W}
+                touch $termux_desktop_path/skip_update_checkup >/dev/null 2>&1
+                exit 0
+            fi
+        else
+            echo -e "${R}[${W}-${R}]${G}${BOLD} Good job, you are using the latest installer"${W}
+        fi
+    fi
 }
 
 function check_and_add_installer() {
-	if [[ -e "$PREFIX/bin/setup-termux-desktop" ]]; then
-	    if [[ ! -e "$termux_desktop_path/skip_update_checkup" ]] || [[ "$1" != "--update" ]]; then
-		check_for_update_and_update_installer
-		else
-		echo "${R}[${W}-${R}]${G}${BOLD} You paused the update"${W}
-		echo "${R}[${W}-${R}]${G}${BOLD} Use ${C}--update ${G}to re-start update"${W}
-		fi
-	else
-	echo "${R}[${W}-${R}]${G} Adding setup-termux-desktop installer to bin"${W}
-	curl -Lsf https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop -o $PREFIX/bin/setup-termux-desktop
-	chmod +x $PREFIX/bin/setup-termux-desktop
-	fi
+    if [[ -e "$PREFIX/bin/setup-termux-desktop" ]]; then
+        if [[ ! -e "$termux_desktop_path/skip_update_checkup" ]] || [[ "$1" != "--update" ]]; then
+            check_for_update_and_update_installer
+        else
+            echo "${R}[${W}-${R}]${G}${BOLD} You paused the update"${W}
+            echo "${R}[${W}-${R}]${G}${BOLD} Use ${C}--update ${G}to re-start update"${W}
+        fi
+    else
+        echo "${R}[${W}-${R}]${G} Adding setup-termux-desktop installer to bin"${W}
+        curl -Lsf https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop -o $PREFIX/bin/setup-termux-desktop
+        chmod +x $PREFIX/bin/setup-termux-desktop
+    fi
 }
 
 #########################################################################
@@ -2845,53 +2917,60 @@ function check_and_add_installer() {
 #########################################################################
 
 function reset_changes() {
-	if [[ ! -e "$config_file" ]]; then
-	echo -e "${C} It look like you haven't install the desktop yet\n Please install the desktop first"${W}
-	exit 0
-	else
-	. $config_file
-	banner
-	echo "${R}[${W}-${R}]${G} Removing $de_name Config..."${W}
-	set_config_dir
-	check_and_delete "$config_dirs"
-	shell_name=$($basename "$SHELL")
-		get_shellrc_path
-		check_and_backup "$config_file"
-		touch $config_file
-		print_basic_details
-		chmod +x $config_file
-		    if [[ "$distro_add_answer" == "y" ]]; then
-			confirmation_y_or_n "Do you want to reset distro container as well" conf_distro_reset
-			    if [[ "$conf_distro_reset" ==  "y" ]]; then
-				check_and_restore "$save_path/.${pd_shell_name}rc"
-				fi
-			fi
-		if [[ "$terminal_utility_setup_answer" == "y" ]]; then
-		check_and_delete "$PREFIX/etc/motd.sh $HOME/.termux $HOME/.fonts/font.ttf $HOME/.termux/colors.properties"
-		check_and_restore "$PREFIX/etc/motd"
-		check_and_restore "$PREFIX/etc/motd-playstore"
-		check_and_restore "$PREFIX/etc/motd.sh"
-		check_and_restore "$HOME/.termux/colors.properties"
-		    if grep -q "motd.sh$" "$PREFIX/etc/termux-login.sh"; then
-			sed -i "s|.*motd\.sh$|# |" "$PREFIX/etc/termux-login.sh"
-			fi
-		rm $PREFIX/share/applications/wine-*.desktop >/dev/null 2>&1
-		check_and_delete "$termux_desktop_path"
-		check_and_delete "$PREFIX/bin/tx11start $PREFIX/bin/tx11stop $PREFIX/bin/vncstop $PREFIX/bin/vncstart $PREFIX/bin/gui"
-		fi
-		check_and_delete "$HOME/Music"
-		check_and_delete "$HOME/Downloads"
-		check_and_delete "$HOME/Desktop"
-		check_and_delete "$HOME/Pictures"
-		check_and_delete "$HOME/Videos"
-		if [[ "$shell_name" == "zsh" ]]; then
-		chsh -s bash
-		rm -rf $HOME/.oh-my-zsh
-		fi
-		check_and_delete "$shell_rc_file"
-		check_and_restore "$shell_rc_file"
-	echo -e "${R}[${W}-${R}]${G}${BOLD} Reset successfull\n Now restart Termux"${W}
-	fi
+    if [[ ! -e "$config_file" ]]; then
+        echo -e "${C} It looks like you haven't installed the desktop yet.\n Please install the desktop first.${W}"
+        exit 0
+    else
+        . $config_file
+        banner
+        echo "${R}[${W}-${R}]${G} Removing $de_name Config..."${W}
+        set_config_dir
+        check_and_delete "$config_dirs"
+
+        shell_name=$($basename "$SHELL")
+        get_shellrc_path
+        check_and_backup "$config_file"
+        touch $config_file
+        print_basic_details
+        chmod +x $config_file
+
+        if [[ "$distro_add_answer" == "y" ]]; then
+            confirmation_y_or_n "Do you want to reset the distro container as well?" conf_distro_reset
+            if [[ "$conf_distro_reset" == "y" ]]; then
+                check_and_restore "$save_path/.${pd_shell_name}rc"
+            fi
+        fi
+
+        if [[ "$terminal_utility_setup_answer" == "y" ]]; then
+            check_and_delete "$PREFIX/etc/motd.sh $HOME/.termux $HOME/.fonts/font.ttf $HOME/.termux/colors.properties"
+            check_and_restore "$PREFIX/etc/motd"
+            check_and_restore "$PREFIX/etc/motd-playstore"
+            check_and_restore "$PREFIX/etc/motd.sh"
+            check_and_restore "$HOME/.termux/colors.properties"
+            if grep -q "motd.sh$" "$PREFIX/etc/termux-login.sh"; then
+                sed -i "s|.*motd\.sh$|# |" "$PREFIX/etc/termux-login.sh"
+            fi
+            rm $PREFIX/share/applications/wine-*.desktop >/dev/null 2>&1
+            check_and_delete "$termux_desktop_path"
+            check_and_delete "$PREFIX/bin/tx11start $PREFIX/bin/tx11stop $PREFIX/bin/vncstop $PREFIX/bin/vncstart $PREFIX/bin/gui"
+        fi
+
+        check_and_delete "$HOME/Music"
+        check_and_delete "$HOME/Downloads"
+        check_and_delete "$HOME/Desktop"
+        check_and_delete "$HOME/Pictures"
+        check_and_delete "$HOME/Videos"
+
+        if [[ "$shell_name" == "zsh" ]]; then
+            chsh -s bash
+            rm -rf $HOME/.oh-my-zsh
+        fi
+
+        check_and_delete "$shell_rc_file"
+        check_and_restore "$shell_rc_file"
+
+        echo -e "${R}[${W}-${R}]${G}${BOLD} Reset successful.\n Now restart Termux.${W}"
+    fi
 }
 
 #########################################################################

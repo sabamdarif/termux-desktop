@@ -1,32 +1,33 @@
 #!/data/data/com.termux/files/usr/bin/bash
 
 function setup_distro() {
-    if [[ "$distro_answer" == "1" ]]; then
-    selected_distro="debian"
-    elif [[ "$distro_answer" == "2" ]]; then
-    selected_distro="ubuntu"
-    elif [[ "$distro_answer" == "3" ]]; then
-    selected_distro="archlinux"
-    elif [[ "$distro_answer" == "4" ]]; then
-    selected_distro="alpine"
-    elif [[ "$distro_answer" == "5" ]]; then
-    selected_distro="fedora"
-    else
-    selected_distro="debian"
-    fi
+    case "$distro_answer" in
+        1) selected_distro="debian" ;;
+        2) selected_distro="ubuntu" ;;
+        3) selected_distro="archlinux" ;;
+        4) selected_distro="alpine" ;;
+        5) selected_distro="fedora" ;;
+        *) selected_distro="debian" ;;
+    esac
+
     echo "selected_distro=\"$selected_distro\"" >> $config_file
+
     banner
     echo "${R}[${W}-${R}]${G}${BOLD} Installing ${C}proot-distro"${W}
     echo
+
     update_sys
     package_install_and_check "proot-distro"
+
     banner
-    echo "${R}[${W}-${R}]${G}${BOLD} Setup Selected Distro: ${C}${selected_distro}"${W}
+    echo "${R}[${W}-${R}]${G}${BOLD} Setting up Selected Distro: ${C}${selected_distro}"${W}
     echo
-    pd install $selected_distro
+
+    pd install "$selected_distro"
 
     distro_path="$PREFIX/var/lib/proot-distro/installed-rootfs/$selected_distro"
 }
+
 #########################################################################
 #
 # Fix Sound Issue
@@ -51,189 +52,199 @@ EOF
 #########################################################################
 
 function pd_package_install_and_check() {
-	packs_list=($@)
-#get distro id
+    packs_list=($@)
+
+    #get distro id
     if [ -f /etc/os-release ]; then
-    . /etc/os-release
+        . /etc/os-release
     fi
-#instll package
-for package_name in "${packs_list[@]}"; do
-    echo "${R}[${W}-${R}]${G}${BOLD} Installing package: ${C}$package_name ${W}"
-    if [[ "$ID" == "debian" ]] || [[ "$ID" == "ubuntu" ]]; then
-    sudo apt install "$package_name" -y
-    elif [[ "$ID" == arch* ]]; then
-    sudo pacman -Sy --noconfirm "$package_name"
-    elif [[ "$ID" == "alpine" ]]; then
-    sudo apk add "$package_name"
-    elif [[ "$ID" == "fedora" ]]; then
-    sudo dnf install "$package_name" -y
-    fi
-#handel error in installation
-    if [ $? -ne 0 ]; then
-        echo "${R}[${W}-${R}]${G}${BOLD} Error detected during installation of: ${C}$package_name ${W}"
+
+    #instll package
+    for package_name in "${packs_list[@]}"; do
+        echo "${R}[${W}-${R}]${G}${BOLD} Installing package: ${C}$package_name ${W}"
         if [[ "$ID" == "debian" ]] || [[ "$ID" == "ubuntu" ]]; then
-        sudo apt --fix-broken install -y
-        sudo dpkg --configure -a
-        sudo apt install "$package_name" -y
+            sudo apt install "$package_name" -y
         elif [[ "$ID" == arch* ]]; then
-        sudo pacman -Syu --noconfirm
-        sudo pacman -Sy --noconfirm "$package_name"
+            sudo pacman -Sy --noconfirm "$package_name"
         elif [[ "$ID" == "alpine" ]]; then
-        sudo apk fix
-        sudo apk add "$package_name"
+            sudo apk add "$package_name"
         elif [[ "$ID" == "fedora" ]]; then
-        sudo dnf --refresh install -y
-        sudo rpm --rebuilddb
-        sudo dnf install "$package_name" -y
+            sudo dnf install "$package_name" -y
         fi
-    fi
-#reinstall
-if [[ "$ID" == "debian" ]] || [[ "$ID" == "ubuntu" ]]; then
-    if ! dpkg -s "$package_name" >/dev/null 2>&1; then
-    sudo apt install "$package_name" -y
-    fi
-elif [[ "$ID" == arch* ]]; then
-    if ! pacman -Qi "$package_name" >/dev/null 2>&1; then
-    sudo pacman -Sy --noconfirm "$package_name"
-    fi
-elif [[ "$ID" == "alpine" ]]; then
-    if ! apk info -e "$package_name"; then
-    sudo apk add "$package_name"
-    fi
-elif [[ "$ID" == "fedora" ]]; then
-    if ! rpm -q "$package_name" >/dev/null 2>&1; then
-    sudo dnf install "$package_name" -y
-    fi
-fi
-#check installation
-if [[ "$ID" == "debian" ]] || [[ "$ID" == "ubuntu" ]]; then
-    if dpkg -s "$package_name" >/dev/null 2>&1; then
-    echo "${R}[${W}-${R}]${G} $package_name installed successfully ${W}"
-    else
-        if type -p "$package_name" &>/dev/null || [ -e "$PREFIX/bin/$package_name"* ] || [ -e "$PREFIX/bin/"*"$package_name" ]; then
-        echo "${R}[${W}-${R}]${C} $package_name ${G}installed successfully ${W}"
+
+        #handel error in installation
+        if [ $? -ne 0 ]; then
+            echo "${R}[${W}-${R}]${G}${BOLD} Error detected during installation of: ${C}$package_name ${W}"
+            if [[ "$ID" == "debian" ]] || [[ "$ID" == "ubuntu" ]]; then
+                sudo apt --fix-broken install -y
+                sudo dpkg --configure -a
+                sudo apt install "$package_name" -y
+            elif [[ "$ID" == arch* ]]; then
+                sudo pacman -Syu --noconfirm
+                sudo pacman -Sy --noconfirm "$package_name"
+            elif [[ "$ID" == "alpine" ]]; then
+                sudo apk fix
+                sudo apk add "$package_name"
+            elif [[ "$ID" == "fedora" ]]; then
+                sudo dnf --refresh install -y
+                sudo rpm --rebuilddb
+                sudo dnf install "$package_name" -y
+            fi
         fi
-    fi
-elif [[ "$ID" == arch* ]]; then
-    if pacman -Qi "$package_name" >/dev/null 2>&1; then
-    echo "${R}[${W}-${R}]${G} $package_name installed successfully ${W}"
-    else
-        if type -p "$package_name" &>/dev/null || [ -e "$PREFIX/bin/$package_name"* ] || [ -e "$PREFIX/bin/"*"$package_name" ]; then
-        echo "${R}[${W}-${R}]${C} $package_name ${G}installed successfully ${W}"
+
+        #reinstall
+        if [[ "$ID" == "debian" ]] || [[ "$ID" == "ubuntu" ]]; then
+            if ! dpkg -s "$package_name" >/dev/null 2>&1; then
+                sudo apt install "$package_name" -y
+            fi
+        elif [[ "$ID" == arch* ]]; then
+            if ! pacman -Qi "$package_name" >/dev/null 2>&1; then
+                sudo pacman -Sy --noconfirm "$package_name"
+            fi
+        elif [[ "$ID" == "alpine" ]]; then
+            if ! apk info -e "$package_name"; then
+                sudo apk add "$package_name"
+            fi
+        elif [[ "$ID" == "fedora" ]]; then
+            if ! rpm -q "$package_name" >/dev/null 2>&1; then
+                sudo dnf install "$package_name" -y
+            fi
         fi
-    fi
-elif [[ "$ID" == "alpine" ]]; then
-    if apk info -e "$package_name"; then
-            echo "${R}[${W}-${R}]${G} $package_name installed successfully ${W}"
-    else
-        if type -p "$package_name" &>/dev/null || [ -e "$PREFIX/bin/$package_name"* ] || [ -e "$PREFIX/bin/"*"$package_name" ]; then
-        echo "${R}[${W}-${R}]${C} $package_name ${G}installed successfully ${W}"
+
+        #check installation
+        if [[ "$ID" == "debian" ]] || [[ "$ID" == "ubuntu" ]]; then
+            if dpkg -s "$package_name" >/dev/null 2>&1; then
+                echo "${R}[${W}-${R}]${G} $package_name installed successfully ${W}"
+            else
+                if type -p "$package_name" &>/dev/null || [ -e "$PREFIX/bin/$package_name"* ] || [ -e "$PREFIX/bin/"*"$package_name" ]; then
+                    echo "${R}[${W}-${R}]${C} $package_name ${G}installed successfully ${W}"
+                fi
+            fi
+        elif [[ "$ID" == arch* ]]; then
+            if pacman -Qi "$package_name" >/dev/null 2>&1; then
+                echo "${R}[${W}-${R}]${G} $package_name installed successfully ${W}"
+            else
+                if type -p "$package_name" &>/dev/null || [ -e "$PREFIX/bin/$package_name"* ] || [ -e "$PREFIX/bin/"*"$package_name" ]; then
+                    echo "${R}[${W}-${R}]${C} $package_name ${G}installed successfully ${W}"
+                fi
+            fi
+        elif [[ "$ID" == "alpine" ]]; then
+            if apk info -e "$package_name"; then
+                echo "${R}[${W}-${R}]${G} $package_name installed successfully ${W}"
+            else
+                if type -p "$package_name" &>/dev/null || [ -e "$PREFIX/bin/$package_name"* ] || [ -e "$PREFIX/bin/"*"$package_name" ]; then
+                    echo "${R}[${W}-${R}]${C} $package_name ${G}installed successfully ${W}"
+                fi
+            fi
+        elif [[ "$ID" == "fedora" ]]; then
+            if rpm -q "$package_name" >/dev/null 2>&1; then
+                echo "${R}[${W}-${R}]${G} $package_name installed successfully ${W}"
+            else
+                if type -p "$package_name" &>/dev/null || [ -e "$PREFIX/bin/$package_name"* ] || [ -e "$PREFIX/bin/"*"$package_name" ]; then
+                    echo "${R}[${W}-${R}]${C} $package_name ${G}installed successfully ${W}"
+                fi
+            fi
         fi
-    fi
-elif [[ "$ID" == "fedora" ]]; then
-    if rpm -q "$package_name" >/dev/null 2>&1; then
-    echo "${R}[${W}-${R}]${G} $package_name installed successfully ${W}"
-    else
-        if type -p "$package_name" &>/dev/null || [ -e "$PREFIX/bin/$package_name"* ] || [ -e "$PREFIX/bin/"*"$package_name" ]; then
-        echo "${R}[${W}-${R}]${C} $package_name ${G}installed successfully ${W}"
-        fi
-    fi
-fi
-done
-echo ""
+    done
+    echo ""
 }
 
 function pd_root_package_install_and_check() {
-	packs_list=($@)
-#get distro id
+    packs_list=($@)
+
+    #get distro id
     if [ -f /etc/os-release ]; then
-    . /etc/os-release
+        . /etc/os-release
     fi
-#instll package
-for package_name in "${packs_list[@]}"; do
-    echo "${R}[${W}-${R}]${G}${BOLD} Installing package: ${C}$package_name ${W}"
-    if [[ "$ID" == "debian" ]] || [[ "$ID" == "ubuntu" ]]; then
-        apt install "$package_name" -y
-    elif [[ "$ID" == arch* ]]; then
-        pacman -Sy --noconfirm "$package_name"
-    elif [[ "$ID" == "alpine" ]]; then
-        apk add "$package_name"
-    elif [[ "$ID" == "fedora" ]]; then
-        dnf install "$package_name" -y
-    fi
-#handel error in installation
-    if [ $? -ne 0 ]; then
-        echo "${R}[${W}-${R}]${G}${BOLD} Error detected during installation of: ${C}$package_name ${W}"
+
+    #install package
+    for package_name in "${packs_list[@]}"; do
+        echo "${R}[${W}-${R}]${G}${BOLD} Installing package: ${C}$package_name ${W}"
         if [[ "$ID" == "debian" ]] || [[ "$ID" == "ubuntu" ]]; then
-        apt --fix-broken install -y
-        dpkg --configure -a
-        apt install "$package_name" -y
+            apt install "$package_name" -y
         elif [[ "$ID" == arch* ]]; then
-        pacman -Syu --noconfirm
-        pacman -Sy --noconfirm "$package_name"
+            pacman -Sy --noconfirm "$package_name"
         elif [[ "$ID" == "alpine" ]]; then
-            apk fix
             apk add "$package_name"
         elif [[ "$ID" == "fedora" ]]; then
-        dnf --refresh install -y
-        rpm --rebuilddb
-        dnf install "$package_name" -y
+            dnf install "$package_name" -y
         fi
-    fi
-#reinstall
-if [[ "$ID" == "debian" ]] || [[ "$ID" == "ubuntu" ]]; then
-    if ! dpkg -s "$package_name" >/dev/null 2>&1; then
-    apt install "$package_name" -y
-    fi
-elif [[ "$ID" == arch* ]]; then
-    if ! pacman -Qi "$package_name" >/dev/null 2>&1; then
-    pacman -Sy --noconfirm "$package_name"
-    fi
-elif [[ "$ID" == "alpine" ]]; then
-    if ! apk info -e "$package_name"; then
-    apk add "$package_name"
-    fi
-elif [[ "$ID" == "fedora" ]]; then
-    if ! rpm -q "$package_name" >/dev/null 2>&1; then
-    dnf install "$package_name" -y
-    fi
-fi
-#check installation
-if [[ "$ID" == "debian" ]] || [[ "$ID" == "ubuntu" ]]; then
-    if dpkg -s "$package_name" >/dev/null 2>&1; then
-    echo "${R}[${W}-${R}]${G} $package_name installed successfully ${W}"
-    else
-        if type -p "$package_name" &>/dev/null || [ -e "$PREFIX/bin/$package_name"* ] || [ -e "$PREFIX/bin/"*"$package_name" ]; then
-        echo "${R}[${W}-${R}]${C} $package_name ${G}installed successfully ${W}"
-        fi
-    fi
-elif [[ "$ID" == arch* ]]; then
-    if pacman -Qi "$package_name" >/dev/null 2>&1; then
-    echo "${R}[${W}-${R}]${G} $package_name installed successfully ${W}"
-    else
-        if type -p "$package_name" &>/dev/null || [ -e "$PREFIX/bin/$package_name"* ] || [ -e "$PREFIX/bin/"*"$package_name" ]; then
-        echo "${R}[${W}-${R}]${C} $package_name ${G}installed successfully ${W}"
-        fi
-    fi
-elif [[ "$ID" == "alpine" ]]; then
-    if apk info -e "$package_name"; then
-            echo "${R}[${W}-${R}]${G} $package_name installed successfully ${W}"
-        else
-            if type -p "$package_name" &>/dev/null || [ -e "$PREFIX/bin/$package_name"* ] || [ -e "$PREFIX/bin/"*"$package_name" ]; then
-                echo "${R}[${W}-${R}]${C} $package_name ${G}installed successfully ${W}"
+
+        #handle error in installation
+        if [ $? -ne 0 ]; then
+            echo "${R}[${W}-${R}]${G}${BOLD} Error detected during installation of: ${C}$package_name ${W}"
+            if [[ "$ID" == "debian" ]] || [[ "$ID" == "ubuntu" ]]; then
+                apt --fix-broken install -y
+                dpkg --configure -a
+                apt install "$package_name" -y
+            elif [[ "$ID" == arch* ]]; then
+                pacman -Syu --noconfirm
+                pacman -Sy --noconfirm "$package_name"
+            elif [[ "$ID" == "alpine" ]]; then
+                apk fix
+                apk add "$package_name"
+            elif [[ "$ID" == "fedora" ]]; then
+                dnf --refresh install -y
+                rpm --rebuilddb
+                dnf install "$package_name" -y
             fi
-    fi
-elif [[ "$ID" == "fedora" ]]; then
-    if rpm -q "$package_name" >/dev/null 2>&1; then
-    echo "${R}[${W}-${R}]${G} $package_name installed successfully ${W}"
-    else
-        if type -p "$package_name" &>/dev/null || [ -e "$PREFIX/bin/$package_name"* ] || [ -e "$PREFIX/bin/"*"$package_name" ]; then
-        echo "${R}[${W}-${R}]${C} $package_name ${G}installed successfully ${W}"
         fi
-    fi
-fi
-done
-echo ""
+
+        #reinstall
+        if [[ "$ID" == "debian" ]] || [[ "$ID" == "ubuntu" ]]; then
+            if ! dpkg -s "$package_name" >/dev/null 2>&1; then
+                apt install "$package_name" -y
+            fi
+        elif [[ "$ID" == arch* ]]; then
+            if ! pacman -Qi "$package_name" >/dev/null 2>&1; then
+                pacman -Sy --noconfirm "$package_name"
+            fi
+        elif [[ "$ID" == "alpine" ]]; then
+            if ! apk info -e "$package_name"; then
+                apk add "$package_name"
+            fi
+        elif [[ "$ID" == "fedora" ]]; then
+            if ! rpm -q "$package_name" >/dev/null 2>&1; then
+                dnf install "$package_name" -y
+            fi
+        fi
+
+        #check installation
+        if [[ "$ID" == "debian" ]] || [[ "$ID" == "ubuntu" ]]; then
+            if dpkg -s "$package_name" >/dev/null 2>&1; then
+                echo "${R}[${W}-${R}]${G} $package_name installed successfully ${W}"
+            else
+                if type -p "$package_name" &>/dev/null || [ -e "$PREFIX/bin/$package_name"* ] || [ -e "$PREFIX/bin/"*"$package_name" ]; then
+                    echo "${R}[${W}-${R}]${C} $package_name ${G}installed successfully ${W}"
+                fi
+            fi
+        elif [[ "$ID" == arch* ]]; then
+            if pacman -Qi "$package_name" >/dev/null 2>&1; then
+                echo "${R}[${W}-${R}]${G} $package_name installed successfully ${W}"
+            else
+                if type -p "$package_name" &>/dev/null || [ -e "$PREFIX/bin/$package_name"* ] || [ -e "$PREFIX/bin/"*"$package_name" ]; then
+                    echo "${R}[${W}-${R}]${C} $package_name ${G}installed successfully ${W}"
+                fi
+            fi
+        elif [[ "$ID" == "alpine" ]]; then
+            if apk info -e "$package_name"; then
+                echo "${R}[${W}-${R}]${G} $package_name installed successfully ${W}"
+            else
+                if type -p "$package_name" &>/dev/null || [ -e "$PREFIX/bin/$package_name"* ] || [ -e "$PREFIX/bin/"*"$package_name" ]; then
+                    echo "${R}[${W}-${R}]${C} $package_name ${G}installed successfully ${W}"
+                fi
+            fi
+        elif [[ "$ID" == "fedora" ]]; then
+            if rpm -q "$package_name" >/dev/null 2>&1; then
+                echo "${R}[${W}-${R}]${G} $package_name installed successfully ${W}"
+            else
+                if type -p "$package_name" &>/dev/null || [ -e "$PREFIX/bin/$package_name"* ] || [ -e "$PREFIX/bin/"*"$package_name" ]; then
+                    echo "${R}[${W}-${R}]${C} $package_name ${G}installed successfully ${W}"
+                fi
+            fi
+        fi
+    done
+    echo ""
 }
 
 function distro_basic_task() {
@@ -362,32 +373,43 @@ fi
 
 # setup hardware acceleration, check if the enable-hw-acceleration already exist then then first check if it different from github , then ask user if they want to replace it or not, if not then continue with the lacal enable-hw-acceleration file
 function hw_config() {
-	banner
-	echo "${R}[${W}-${R}]${G}${BOLD} Configuring Hardware Acceleration"${W}
-	echo
-	if [[ -f "${current_path}/enable-hw-acceleration" ]]; then
-	local current_script_hash=$(curl -sL  https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/enable-hw-acceleration | sha256sum | cut -d ' ' -f 1)
-	local local_script_hash=$(basename $(sha256sum ${current_path}/enable-hw-acceleration | cut -d ' ' -f 1))
-	    if [[ "$local_script_hash" != "$current_script_hash" ]]; then
-		echo "${R}[${W}-${R}]${G} It look like you already have a different hw-acceleration installer in your current directory"${W}
-		echo
-		confirmation_y_or_n "Do you want to change it with the latest installer" change_old_hw_installer
-		    if [[ "$change_old_hw_installer" == "y" ]]; then
-			check_and_backup "${current_path}/enable-hw-acceleration"
-			wget -O ${current_path}/enable-hw-acceleration https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/enable-hw-acceleration && chmod +x ${current_path}/enable-hw-acceleration && . ${current_path}/enable-hw-acceleration
-			else
-			echo "${R}[${W}-${R}]${G} Using the local hardware acceleraion setup file"${W}
-			chmod +x ${current_path}/enable-hw-acceleration ; . ${current_path}/enable-hw-acceleration
-			fi
-			echo "change_old_hw_installer=\"$change_old_hw_installer\"" >> $config_file
-		else
-		echo "${R}[${W}-${R}]${G} Using the local hardware acceleraion setup file"${W}
-		chmod +x ${current_path}/enable-hw-acceleration ; . ${current_path}/enable-hw-acceleration
-		fi
-	else
-	wget -O ${current_path}/enable-hw-acceleration https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/enable-hw-acceleration && chmod +x ${current_path}/enable-hw-acceleration && . ${current_path}/enable-hw-acceleration
-	rm ${current_path}/enable-hw-acceleration
-	fi
+    banner
+    echo "${R}[${W}-${R}]${G}${BOLD} Configuring Hardware Acceleration${W}"
+    echo
+
+    if [[ -f "${current_path}/enable-hw-acceleration" ]]; then
+        local current_script_hash=$(curl -sL https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/enable-hw-acceleration | sha256sum | cut -d ' ' -f 1)
+        local local_script_hash=$(basename $(sha256sum ${current_path}/enable-hw-acceleration | cut -d ' ' -f 1))
+
+        if [[ "$local_script_hash" != "$current_script_hash" ]]; then
+            echo "${R}[${W}-${R}]${G} It looks like you already have a different hw-acceleration installer in your current directory${W}"
+            echo
+
+            confirmation_y_or_n "Do you want to change it with the latest installer" change_old_hw_installer
+
+            if [[ "$change_old_hw_installer" == "y" ]]; then
+                check_and_backup "${current_path}/enable-hw-acceleration"
+                wget -O ${current_path}/enable-hw-acceleration https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/enable-hw-acceleration \
+                    && chmod +x ${current_path}/enable-hw-acceleration \
+                    && . ${current_path}/enable-hw-acceleration
+            else
+                echo "${R}[${W}-${R}]${G} Using the local hardware acceleration setup file${W}"
+                chmod +x ${current_path}/enable-hw-acceleration
+                . ${current_path}/enable-hw-acceleration
+            fi
+
+            echo "change_old_hw_installer=\"$change_old_hw_installer\"" >> $config_file
+        else
+            echo "${R}[${W}-${R}]${G} Using the local hardware acceleration setup file${W}"
+            chmod +x ${current_path}/enable-hw-acceleration
+            . ${current_path}/enable-hw-acceleration
+        fi
+    else
+        wget -O ${current_path}/enable-hw-acceleration https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/enable-hw-acceleration \
+            && chmod +x ${current_path}/enable-hw-acceleration \
+            && . ${current_path}/enable-hw-acceleration
+        rm ${current_path}/enable-hw-acceleration
+    fi
 }
 
 #########################################################################
@@ -672,278 +694,306 @@ fi
 #########################################################################
 
 function handel_debian_based_app_installer() {
-if [[ "$distro_terminal_utility_setup_answer" == "y" ]];then
-local package_manager="nala"
-else
-local package_manager="apt"
-fi
-cat <<TOP_EOF > "$PREFIX/bin/$selected_distro"
+    if [[ "$distro_terminal_utility_setup_answer" == "y" ]]; then
+        local package_manager="nala"
+    else
+        local package_manager="apt"
+    fi
+
+    cat <<TOP_EOF > "$PREFIX/bin/$selected_distro"
 #!/data/data/com.termux/files/usr/bin/bash
 
 if [[ "\$#" -eq 0 ]]; then
     proot-distro login --user $final_user_name $selected_distro --shared-tmp
 elif [[ "\$1" = "install" ]]; then
-if [[ ! -d "/data/data/com.termux/files/usr/share/applications/pd_added" ]]; then
+    if [[ ! -d "/data/data/com.termux/files/usr/share/applications/pd_added" ]]; then
         mkdir -p "/data/data/com.termux/files/usr/share/applications/pd_added"
-        fi
-proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:1.0 sudo $package_manager install \${@:2}
-cat <<EOF > "$save_root_path/packinstall.sh"
+    fi
+    proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:1.0 sudo $package_manager install \${@:2}
+
+    cat <<EOF > "$save_root_path/packinstall.sh"
 packages=(\${@:2})
 EOF
-cat <<'EOF' >> "$save_root_path/packinstall.sh"
+    cat <<'EOF' >> "$save_root_path/packinstall.sh"
 for package_name in "\${packages[@]}"; do
-desktop_files=\$(dpkg-query -W -f='\${binary:Package}\n' | grep "^\$package_name\(-.*\)\?\$" | xargs dpkg-query -L | grep "^/usr/share/applications/.*\.desktop\$")
-if [ -z "\$desktop_files" ]; then
-    echo "${R}[${W}-${R}]${G} No .desktop files found for package ${C}'\$package_name' ${G}in/usr/share/applications."
-else
-    for desktop_files_name in \$desktop_files; do
-        desktop_files_with_ext=\$(basename "\$desktop_files_name")
-        desktop_files_without_ext="\${desktop_files_with_ext%.desktop}"
-        echo "${R}[${W}-${R}]${G} Adding ${C}\${desktop_files_without_ext} ${G}To Termux Menu"
-        cp "/usr/share/applications/\${desktop_files_with_ext}" "/data/data/com.termux/files/usr/share/applications/pd_added/"
-        sed -i 's/Exec=/Exec=pdrun /g' "/data/data/com.termux/files/usr/share/applications/pd_added/\${desktop_files_with_ext}"
-    done
-fi
+    desktop_files=\$(dpkg-query -W -f='\${binary:Package}\n' | grep "^\$package_name\(-.*\)\?\$" | xargs dpkg-query -L | grep "^/usr/share/applications/.*\.desktop\$")
+    if [ -z "\$desktop_files" ]; then
+        echo "${R}[${W}-${R}]${G} No .desktop files found for package ${C}'\$package_name' ${G}in /usr/share/applications."
+    else
+        for desktop_files_name in \$desktop_files; do
+            desktop_files_with_ext=\$(basename "\$desktop_files_name")
+            desktop_files_without_ext="\${desktop_files_with_ext%.desktop}"
+            echo "${R}[${W}-${R}]${G} Adding ${C}\${desktop_files_without_ext} ${G}To Termux Menu"
+            cp "/usr/share/applications/\${desktop_files_with_ext}" "/data/data/com.termux/files/usr/share/applications/pd_added/"
+            sed -i 's/Exec=/Exec=pdrun /g' "/data/data/com.termux/files/usr/share/applications/pd_added/\${desktop_files_with_ext}"
+        done
+    fi
 done
 rm packinstall.sh
 EOF
-proot-distro login $selected_distro -- /bin/bash -c 'bash packinstall.sh'
+    proot-distro login $selected_distro -- /bin/bash -c 'bash packinstall.sh'
 
 elif [[ "\$1" = "remove" ]] || [[ "\$1" = "autoremove" ]]; then
-proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:1.0 sudo $package_manager \$1 \${@:2}
-cat <<EOF > "$save_root_path/packremove.sh"
+    proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:1.0 sudo $package_manager \$1 \${@:2}
+    cat <<EOF > "$save_root_path/packremove.sh"
 packages=(\${@:2})
 EOF
-cat <<'EOF' >> "$save_root_path/packremove.sh"
+    cat <<'EOF' >> "$save_root_path/packremove.sh"
 for package_name in "\${packages[@]}"; do
-desktop_files=\$(dpkg-query -W -f='\${binary:Package}\n' | grep "^\$package_name\(-.*\)\?\$" | xargs dpkg-query -L | grep "^/usr/share/applications/.*\.desktop\$")
-if [ -z "\$desktop_files" ]; then
-    echo "${R}[${W}-${R}]${G} No .desktop files found for package ${C}'\$package_name' ${G}in/usr/share/applications."
-else
-    for desktop_files_name in \$desktop_files; do
-        desktop_files_with_ext=\$(basename "\$desktop_files_name")
-        desktop_files_without_ext="\${desktop_files_with_ext%.desktop}"
-        echo "${R}[${W}-${R}]${G} Removing ${C}\${desktop_files_without_ext} ${G}From Termux Menu" 
-        rm /data/data/com.termux/files/usr/share/applications/pd_added/\${desktop_files_with_ext}
-    done
-fi
+    desktop_files=\$(dpkg-query -W -f='\${binary:Package}\n' | grep "^\$package_name\(-.*\)\?\$" | xargs dpkg-query -L | grep "^/usr/share/applications/.*\.desktop\$")
+    if [ -z "\$desktop_files" ]; then
+        echo "${R}[${W}-${R}]${G} No .desktop files found for package ${C}'\$package_name' ${G}in /usr/share/applications."
+    else
+        for desktop_files_name in \$desktop_files; do
+            desktop_files_with_ext=\$(basename "\$desktop_files_name")
+            desktop_files_without_ext="\${desktop_files_with_ext%.desktop}"
+            echo "${R}[${W}-${R}]${G} Removing ${C}\${desktop_files_without_ext} ${G}From Termux Menu"
+            rm /data/data/com.termux/files/usr/share/applications/pd_added/\${desktop_files_with_ext}
+        done
+    fi
 done
 rm packremove.sh
 EOF
-proot-distro login $selected_distro -- /bin/bash -c 'bash packremove.sh'
+    proot-distro login $selected_distro -- /bin/bash -c 'bash packremove.sh'
 elif [[ "\$1" = "update" ]]; then
-proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:1.0 sudo $package_manager update
+    proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:1.0 sudo $package_manager update
 fi
 
 if [[ \$1 = "install" ]] || [[ \$1 = "remove" ]] || [[ \$1 = "autoremove" ]]; then
-gtk-update-icon-cache
-update-desktop-database -q "$PREFIX/share/applications/pd_added"
+    gtk-update-icon-cache
+    update-desktop-database -q "$PREFIX/share/applications/pd_added"
 fi
 
 TOP_EOF
 }
 
 function handel_arch_based_app_installer() {
-cat <<TOP_EOF > "$PREFIX/bin/$selected_distro"
+    cat <<TOP_EOF > "$PREFIX/bin/$selected_distro"
 #!/data/data/com.termux/files/usr/bin/bash
 
 if [[ "\$#" -eq 0 ]]; then
     proot-distro login --user $final_user_name $selected_distro --shared-tmp
 elif [[ "\$1" = "install" ]]; then
-if [[ ! -d "/data/data/com.termux/files/usr/share/applications/pd_added" ]]; then
+    if [[ ! -d "/data/data/com.termux/files/usr/share/applications/pd_added" ]]; then
         mkdir -p "/data/data/com.termux/files/usr/share/applications/pd_added"
-        fi
-proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:1.0 sudo pacman -S --noconfirm "\${@:2}"
-cat <<EOF > "$save_root_path/packinstall.sh"
+    fi
+    proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:1.0 sudo pacman -S --noconfirm "\${@:2}"
+    
+    cat <<EOF > "$save_root_path/packinstall.sh"
 packages=("\${@:2}")
 EOF
-cat <<'EOF' >> "$save_root_path/packinstall.sh"
+
+    cat <<'EOF' >> "$save_root_path/packinstall.sh"
 for package_name in "\${packages[@]}"; do
-desktop_files=\$(pacman -Ql \$package_name | grep -oP "/usr/share/applications/.*\.desktop$")
-if [ -z "\$desktop_files" ]; then
-    echo "${R}[${W}-${R}]${G} No .desktop files found for package ${C}'\$package_name' ${G}in /usr/share/applications."
-else
-    for desktop_files_name in \$desktop_files; do
-        desktop_files_with_ext=\$(basename "\$desktop_files_name")
-        desktop_files_without_ext="\${desktop_files_with_ext%.desktop}"
-        echo "${R}[${W}-${R}]${G} Adding ${C}\${desktop_files_without_ext} ${G}To Termux Menu"
-        cp "/usr/share/applications/\${desktop_files_with_ext}" "/data/data/com.termux/files/usr/share/applications/pd_added/"
-        sed -i 's/Exec=/Exec=pdrun /g' "/data/data/com.termux/files/usr/share/applications/pd_added/\${desktop_files_with_ext}"
-    done
-fi
+    desktop_files=\$(pacman -Ql \$package_name | grep -oP "/usr/share/applications/.*\.desktop$")
+    if [ -z "\$desktop_files" ]; then
+        echo "${R}[${W}-${R}]${G} No .desktop files found for package ${C}'\$package_name' ${G}in /usr/share/applications."
+    else
+        for desktop_files_name in \$desktop_files; do
+            desktop_files_with_ext=\$(basename "\$desktop_files_name")
+            desktop_files_without_ext="\${desktop_files_with_ext%.desktop}"
+            echo "${R}[${W}-${R}]${G} Adding ${C}\${desktop_files_without_ext} ${G}To Termux Menu"
+            cp "/usr/share/applications/\${desktop_files_with_ext}" "/data/data/com.termux/files/usr/share/applications/pd_added/"
+            sed -i 's/Exec=/Exec=pdrun /g' "/data/data/com.termux/files/usr/share/applications/pd_added/\${desktop_files_with_ext}"
+        done
+    fi
 done
 rm packinstall.sh
 EOF
-proot-distro login $selected_distro -- /bin/bash -c 'bash packinstall.sh'
+
+    proot-distro login $selected_distro -- /bin/bash -c 'bash packinstall.sh'
 
 elif [[ "\$1" = "remove" ]]; then
-proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:1.0 sudo pacman -R --noconfirm "\${@:2}"
-cat <<EOF > "$save_root_path/packremove.sh"
+    proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:1.0 sudo pacman -R --noconfirm "\${@:2}"
+    
+    cat <<EOF > "$save_root_path/packremove.sh"
 packages=("\${@:2}")
 EOF
-cat <<'EOF' >> "$save_root_path/packremove.sh"
+
+    cat <<'EOF' >> "$save_root_path/packremove.sh"
 for package_name in "\${packages[@]}"; do
-desktop_files=\$(pacman -Ql \$package_name | grep -oP "/usr/share/applications/.*\.desktop$")
-if [ -z "\$desktop_files" ]; then
-    echo "${R}[${W}-${R}]${G} No .desktop files found for package ${C}'\$package_name' ${G}in /usr/share/applications."
-else
-    for desktop_files_name in \$desktop_files; do
-        desktop_files_with_ext=\$(basename "\$desktop_files_name")
-        desktop_files_without_ext="\${desktop_files_with_ext%.desktop}"
-        echo "${R}[${W}-${R}]${G} Removing ${C}\${desktop_files_without_ext} ${G}From Termux Menu"
-        rm /data/data/com.termux/files/usr/share/applications/pd_added/\${desktop_files_with_ext}
-    done
-fi
+    desktop_files=\$(pacman -Ql \$package_name | grep -oP "/usr/share/applications/.*\.desktop$")
+    if [ -z "\$desktop_files" ]; then
+        echo "${R}[${W}-${R}]${G} No .desktop files found for package ${C}'\$package_name' ${G}in /usr/share/applications."
+    else
+        for desktop_files_name in \$desktop_files; do
+            desktop_files_with_ext=\$(basename "\$desktop_files_name")
+            desktop_files_without_ext="\${desktop_files_with_ext%.desktop}"
+            echo "${R}[${W}-${R}]${G} Removing ${C}\${desktop_files_without_ext} ${G}From Termux Menu"
+            rm /data/data/com.termux/files/usr/share/applications/pd_added/\${desktop_files_with_ext}
+        done
+    fi
 done
 rm packremove.sh
 EOF
-proot-distro login $selected_distro -- /bin/bash -c 'bash packremove.sh'
+
+    proot-distro login $selected_distro -- /bin/bash -c 'bash packremove.sh'
+    
 elif [[ "\$1" = "update" ]]; then
-proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:1.0 sudo pacman -Su
+    proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:1.0 sudo pacman -Su
 fi
 
 if [[ \$1 = "install" ]] || [[ \$1 = "remove" ]]; then
-gtk-update-icon-cache
-update-desktop-database -q "$PREFIX/share/applications/pd_added"
+    gtk-update-icon-cache
+    update-desktop-database -q "$PREFIX/share/applications/pd_added"
 fi
 
 TOP_EOF
 }
 
 function handel_alpine_based_app_installer() {
-cat <<TOP_EOF > "$PREFIX/bin/$selected_distro"
+    cat <<TOP_EOF > "$PREFIX/bin/$selected_distro"
 #!/data/data/com.termux/files/usr/bin/bash
-    if [[ "\$#" -eq 0 ]]; then
+
+if [[ "\$#" -eq 0 ]]; then
     proot-distro login --user $final_user_name $selected_distro --shared-tmp
+
 elif [[ "\$1" = "install" ]]; then
-if [[ ! -d "/data/data/com.termux/files/usr/share/applications/pd_added" ]]; then
+    if [[ ! -d "/data/data/com.termux/files/usr/share/applications/pd_added" ]]; then
         mkdir -p "/data/data/com.termux/files/usr/share/applications/pd_added"
-        fi
-proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:1.0 sudo apk add "\${@:2}"
-cat <<EOF > "$save_root_path/packinstall.sh"
+    fi
+    proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:1.0 sudo apk add "\${@:2}"
+    
+    cat <<EOF > "$save_root_path/packinstall.sh"
 packages=("\${@:2}")
 EOF
-cat <<'EOF' >> "$save_root_path/packinstall.sh"
+
+    cat <<'EOF' >> "$save_root_path/packinstall.sh"
 for package_name in "\${packages[@]}"; do
-desktop_files=\$(ls /usr/share/applications/ | grep "\$package_name.*\.desktop$")
-if [ -z "\$desktop_files" ]; then
-    echo "${R}[${W}-${R}]${G} No .desktop files found for package ${C}'\$package_name' ${G}in /usr/share/applications."
-else
-    for desktop_files_name in \$desktop_files; do
-        desktop_files_without_ext="\${desktop_files_with_ext%.desktop}"
-        echo "${R}[${W}-${R}]${G} Adding ${C}\${desktop_files_without_ext} ${G}To Termux Menu"
-        sudo cp "/usr/share/applications/\${desktop_files_name}" "/data/data/com.termux/files/usr/share/applications/pd_added/"
-        sudo sed -i 's/Exec=/Exec=pdrun /g' "/data/data/com.termux/files/usr/share/applications/pd_added/\${desktop_files_name}"
-    done
-fi
+    desktop_files=\$(ls /usr/share/applications/ | grep "\$package_name.*\.desktop$")
+    if [ -z "\$desktop_files" ]; then
+        echo "${R}[${W}-${R}]${G} No .desktop files found for package ${C}'\$package_name' ${G}in /usr/share/applications."
+    else
+        for desktop_files_name in \$desktop_files; do
+            desktop_files_without_ext="\${desktop_files_with_ext%.desktop}"
+            echo "${R}[${W}-${R}]${G} Adding ${C}\${desktop_files_without_ext} ${G}To Termux Menu"
+            sudo cp "/usr/share/applications/\${desktop_files_name}" "/data/data/com.termux/files/usr/share/applications/pd_added/"
+            sudo sed -i 's/Exec=/Exec=pdrun /g' "/data/data/com.termux/files/usr/share/applications/pd_added/\${desktop_files_name}"
+        done
+    fi
 done
 rm packinstall.sh
 EOF
-proot-distro login $selected_distro -- /bin/bash -c 'bash packinstall.sh'
 
-elif [[ "\$1" = "remove" ]] || [[ "\$1" = "remove" ]]; then
-proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:1.0 sudo apk del "\${@:2}"
-cat <<EOF > "$save_root_path/packremove.sh"
+    proot-distro login $selected_distro -- /bin/bash -c 'bash packinstall.sh'
+
+elif [[ "\$1" = "remove" ]]; then
+    proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:1.0 sudo apk del "\${@:2}"
+    
+    cat <<EOF > "$save_root_path/packremove.sh"
 packages=("\${@:2}")
 EOF
-cat <<'EOF' >> "$save_root_path/packremove.sh"
+
+    cat <<'EOF' >> "$save_root_path/packremove.sh"
 for package_name in "\${packages[@]}"; do
-desktop_files=\$(ls /usr/share/applications/ | grep "\$package_name.*\.desktop$")
-if [ -z "\$desktop_files" ]; then
-    echo "${R}[${W}-${R}]${G} No .desktop files found for package ${C}'\$package_name' ${G}in /usr/share/applications."
-else
-    for desktop_files_name in \$desktop_files; do
-        desktop_files_without_ext="\${desktop_files_with_ext%.desktop}"
-        echo "${R}[${W}-${R}]${G} Removing ${C}\${desktop_files_without_ext} ${G}From Termux Menu"
-        sudo rm /data/data/com.termux/files/usr/share/applications/pd_added/\${desktop_files_name}
-    done
-fi
+    desktop_files=\$(ls /usr/share/applications/ | grep "\$package_name.*\.desktop$")
+    if [ -z "\$desktop_files" ]; then
+        echo "${R}[${W}-${R}]${G} No .desktop files found for package ${C}'\$package_name' ${G}in /usr/share/applications."
+    else
+        for desktop_files_name in \$desktop_files; do
+            desktop_files_without_ext="\${desktop_files_with_ext%.desktop}"
+            echo "${R}[${W}-${R}]${G} Removing ${C}\${desktop_files_without_ext} ${G}From Termux Menu"
+            sudo rm /data/data/com.termux/files/usr/share/applications/pd_added/\${desktop_files_name}
+        done
+    fi
 done
 rm packremove.sh
 EOF
-proot-distro login $selected_distro -- /bin/bash -c 'bash packremove.sh'
+
+    proot-distro login $selected_distro -- /bin/bash -c 'bash packremove.sh'
+
 elif [[ "\$1" = "update" ]]; then
-proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:1.0 sudo apk update
+    proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:1.0 sudo apk update
 fi
 
 if [[ \$1 = "install" ]] || [[ \$1 = "remove" ]]; then
-gtk-update-icon-cache
-update-desktop-database -q "$PREFIX/share/applications/pd_added"
+    gtk-update-icon-cache
+    update-desktop-database -q "$PREFIX/share/applications/pd_added"
 fi
 
 TOP_EOF
 }
 
 function handel_fedora_based_app_installer() {
-cat <<TOP_EOF > "$PREFIX/bin/$selected_distro"
+    cat <<TOP_EOF > "$PREFIX/bin/$selected_distro"
 #!/data/data/com.termux/files/usr/bin/bash
 
 if [[ "\$#" -eq 0 ]]; then
     proot-distro login --user $final_user_name $selected_distro --shared-tmp
+
 elif [[ "\$1" = "install" ]]; then
-if [[ ! -d "/data/data/com.termux/files/usr/share/applications/pd_added" ]]; then
+    if [[ ! -d "/data/data/com.termux/files/usr/share/applications/pd_added" ]]; then
         mkdir -p "/data/data/com.termux/files/usr/share/applications/pd_added"
-        fi
-proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:1.0 sudo dnf install \${@:2}
-cat <<EOF > "$save_root_path/packinstall.sh"
+    fi
+
+    proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:1.0 sudo dnf install \${@:2}
+
+    cat <<EOF > "$save_root_path/packinstall.sh"
 packages=(\${@:2})
 EOF
-cat <<'EOF' >> "$save_root_path/packinstall.sh"
+
+    cat <<'EOF' >> "$save_root_path/packinstall.sh"
 for package_name in "\${packages[@]}"; do
-package_query=\$(rpm -q "\$package_name" | sed 's/-[0-9].*//')
-desktop_files=\$(\$package_query | grep "^/usr/share/applications/.*\.desktop\$")
-if [ -z "\$desktop_files" ]; then
-    echo "${R}[${W}-${R}]${G} No .desktop files found for package ${C}'\$package_name' ${G}in /usr/share/applications."
-else
-    for desktop_files_name in \$desktop_files; do
-        desktop_files_with_ext=\$(basename "\$desktop_files_name")
-        desktop_files_without_ext="\${desktop_files_with_ext%.desktop}"
-        echo "${R}[${W}-${R}]${G} Adding ${C}\${desktop_files_without_ext} ${G}To Termux Menu"
-        cp "/usr/share/applications/\${desktop_files_with_ext}" "/data/data/com.termux/files/usr/share/applications/pd_added/"
-        sed -i 's/Exec=/Exec=pdrun /g' "/data/data/com.termux/files/usr/share/applications/pd_added/\${desktop_files_with_ext}"
-    done
-fi
+    package_query=\$(rpm -q "\$package_name" | sed 's/-[0-9].*//')
+    desktop_files=\$(\$package_query | grep "^/usr/share/applications/.*\.desktop\$")
+
+    if [ -z "\$desktop_files" ]; then
+        echo "${R}[${W}-${R}]${G} No .desktop files found for package ${C}'\$package_name' ${G}in /usr/share/applications."
+    else
+        for desktop_files_name in \$desktop_files; do
+            desktop_files_with_ext=\$(basename "\$desktop_files_name")
+            desktop_files_without_ext="\${desktop_files_with_ext%.desktop}"
+            echo "${R}[${W}-${R}]${G} Adding ${C}\${desktop_files_without_ext} ${G}To Termux Menu"
+            cp "/usr/share/applications/\${desktop_files_with_ext}" "/data/data/com.termux/files/usr/share/applications/pd_added/"
+            sed -i 's/Exec=/Exec=pdrun /g' "/data/data/com.termux/files/usr/share/applications/pd_added/\${desktop_files_with_ext}"
+        done
+    fi
 done
 rm packinstall.sh
 EOF
-proot-distro login $selected_distro -- /bin/bash -c 'bash packinstall.sh'
+
+    proot-distro login $selected_distro -- /bin/bash -c 'bash packinstall.sh'
 
 elif [[ "\$1" = "remove" ]]; then
-proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:1.0 sudo dnf remove \${@:2}
-cat <<EOF > "$save_root_path/packremove.sh"
+    proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:1.0 sudo dnf remove \${@:2}
+
+    cat <<EOF > "$save_root_path/packremove.sh"
 packages=(\${@:2})
 EOF
-cat <<'EOF' >> "$save_root_path/packremove.sh"
+
+    cat <<'EOF' >> "$save_root_path/packremove.sh"
 for package_name in "\${packages[@]}"; do
-desktop_files=\$(rpm -q "\$package_name" | grep "^/usr/share/applications/.*\.desktop\$")
-if [ -z "\$desktop_files" ]; then
-    echo "${R}[${W}-${R}]${G} No .desktop files found for package ${C}'\$package_name' ${G}in /usr/share/applications."
-else
-    for desktop_files_name in \$desktop_files; do
-        desktop_files_with_ext=\$(basename "\$desktop_files_name")
-        desktop_files_without_ext="\${desktop_files_with_ext%.desktop}"
-        echo "${R}[${W}-${R}]${G} Removing ${C}\${desktop_files_without_ext} ${G}From Termux Menu" 
-        rm /data/data/com.termux/files/usr/share/applications/pd_added/\${desktop_files_with_ext}
-    done
-fi
+    desktop_files=\$(rpm -q "\$package_name" | grep "^/usr/share/applications/.*\.desktop\$")
+
+    if [ -z "\$desktop_files" ]; then
+        echo "${R}[${W}-${R}]${G} No .desktop files found for package ${C}'\$package_name' ${G}in /usr/share/applications."
+    else
+        for desktop_files_name in \$desktop_files; do
+            desktop_files_with_ext=\$(basename "\$desktop_files_name")
+            desktop_files_without_ext="\${desktop_files_with_ext%.desktop}"
+            echo "${R}[${W}-${R}]${G} Removing ${C}\${desktop_files_without_ext} ${G}From Termux Menu"
+            rm /data/data/com.termux/files/usr/share/applications/pd_added/\${desktop_files_with_ext}
+        done
+    fi
 done
 rm packremove.sh
 EOF
-proot-distro login $selected_distro -- /bin/bash -c 'bash packremove.sh'
+
+    proot-distro login $selected_distro -- /bin/bash -c 'bash packremove.sh'
+
 else
-echo "sudo dnf \$@
+    echo "sudo dnf \$@
 rm else.sh
 " > $save_root_path/else.sh
-proot-distro login $selected_distro -- /bin/sh -c 'bash else.sh'
+    proot-distro login $selected_distro -- /bin/sh -c 'bash else.sh'
 fi
 
 if [[ \$1 = "install" ]] || [[ \$1 = "remove" ]] || [[ \$1 = "autoremove" ]]; then
-gtk-update-icon-cache
-update-desktop-database -q "$PREFIX/share/applications/pd_added"
+    gtk-update-icon-cache
+    update-desktop-database -q "$PREFIX/share/applications/pd_added"
 fi
 
 TOP_EOF
-
 }
 
 function distro_create_app_installer() {
@@ -1057,7 +1107,7 @@ list_desktop_files_with_name() {
     /^NoDisplay=/ {no_display=$2}
     END {
         if (no_display != "true") {
-            gsub(/.desktop$/,"",name);
+            gsub(/.desktop$/, "", name);
             print name ";;" FILENAME
         }
     }' {} \;
@@ -1067,7 +1117,7 @@ list_desktop_files_with_name() {
 action=$(zenity --list --title="Choose Action" --text="Select an action:" --radiolist --column="Select" --column="Action" \
     TRUE "Add Application To Termux Menu" FALSE "Remove Application From Termux Menu")
 
-# Exit if no action selected
+# Exit if no action is selected
 if [[ -z $action ]]; then
     zenity --info --text="No action selected. Quitting..." --title="Operation Cancelled"
     exit 0
@@ -1088,7 +1138,7 @@ if [[ $action == "Add Application To Termux Menu" ]]; then
     selected_names=$(zenity --list --title="Add To Termux Menu" --text="Select Applications to Add:" \
         --checklist --column="Include" --column="Name" --separator="," $files)
 
-    # Exit if no files selected
+    # Exit if no files are selected
     if [[ -z $selected_names ]]; then
         zenity --info --text="No applications selected. Quitting..." --title="Operation Cancelled"
         exit 0
@@ -1107,8 +1157,6 @@ if [[ $action == "Add Application To Termux Menu" ]]; then
 
     update-desktop-database "$PREFIX/share/applications/"
     gtk-update-icon-cache "$PREFIX/share/icons/hicolor"
-    # xdg-desktop-menu forceupdate
-    # xdg-icon-resource forceupdate
 
     zenity --info --text="Selected applications added successfully!" --title="Success"
 
@@ -1127,7 +1175,7 @@ elif [[ $action == "Remove Application From Termux Menu" ]]; then
     selected_names=$(zenity --list --title="Remove From Termux Menu" --text="Select Applications to Remove:" \
         --checklist --column="Include" --column="Name" --separator="," $files)
 
-    # Exit if no files selected
+    # Exit if no files are selected
     if [[ -z $selected_names ]]; then
         zenity --info --text="No applications selected. Quitting..." --title="Operation Cancelled"
         exit 0
@@ -1142,12 +1190,12 @@ elif [[ $action == "Remove Application From Termux Menu" ]]; then
 
     update-desktop-database "$PREFIX/share/applications/"
     gtk-update-icon-cache "$PREFIX/share/icons/hicolor"
-    # xdg-desktop-menu forceupdate
-    # xdg-icon-resource forceupdate
 
     zenity --info --text="Selected applications removed successfully!" --title="Success"
 fi
+
 EOF
+
 chmod +x "$PREFIX/bin/add2menu"
 
 check_and_create_directory "$PREFIX/share/applications/"
