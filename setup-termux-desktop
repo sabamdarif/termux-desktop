@@ -490,7 +490,7 @@ function questions_theme_select() {
     local owner="sabamdarif"
     local repo="termux-desktop"
     local main_folder="patch/$de_name"
-    local subfolder_count_value=$(count_subfolders "$owner" "$repo" "$main_folder")
+    local subfolder_count_value=$(count_subfolders "$owner" "$repo" "$main_folder" 2>/dev/null)
 	cd $HOME
 	echo "${R}[${W}-${R}]${G} Downloading list...."${W}
     wget -qO ${current_path}/styles.md https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/${de_name}_styles.md
@@ -507,28 +507,36 @@ function questions_theme_select() {
 grep -oP '## \d+\..+?(?=(\n## \d+\.|\Z))' styles.md | while read -r style; do
     echo "${Y}${style#### }${W}"
 done
-        while true; do
-		    echo
-            read -p "${R}[${W}-${R}]${Y}Type number of the style (Default 1): "${W} style_answer
-            style_answer=${style_answer:-1}
-            if [[ "$style_answer" =~ ^[0-9][0-9]*$ ]] && [[ "$style_answer" -le "$subfolder_count_value" ]]; then
-			style_name=$(grep -oP "^## $style_answer\..+?(?=(\n## \d+\.|\Z))" styles.md | sed -e "s/^## $style_answer\. //" -e "s/:$//")
-                break
-            else
-			    echo
-                echo "${R}The entered style number is incorrect."${W}
-				echo
-                echo "${R}[${W}-${R}]${Y} Please enter a number between 0 to ${subfolder_count_value}"${W}
-				echo
-				echo "${R}[${W}-${R}]${G} Check the $de_name styles section in github"${W}
-				echo
-				echo "${R}[${W}-${R}]${B} https://github.com/sabamdarif/termux-desktop/blob/main/${de_name}_styles.md"${W}
-				echo
-            fi
+	while true; do
+    	echo
+    	read -p "${R}[${W}-${R}]${Y} Type number of the style: ${W}" style_answer
+
+    	# Check if the input is empty
+    	if [[ -z "$style_answer" ]]; then
+    	    echo
+    	    echo "${R}[${W}-${R}]${R} Input cannot be empty. Please type a number."${W}
+    	    continue
+    	fi
+
+    	# Ensure the input is a valid number and within range
+    	if [[ "$style_answer" =~ ^[0-9]+$ ]] && [[ "$style_answer" -ge 1 ]] && [[ "$style_answer" -le "$subfolder_count_value" ]]; then
+    	    style_name=$(grep -oP "^## $style_answer\..+?(?=(\n## \d+\.|\Z))" styles.md | sed -e "s/^## $style_answer\. //" -e "s/:$//")
+    	    break
+    	else
+    	    echo
+    	    echo "${R}[${W}-${R}]${R} The entered style number is incorrect."${W}
+    	    echo
+    	    echo "${R}[${W}-${R}]${Y} Please enter a number between 0 to ${subfolder_count_value}"${W}
+    	    echo
+    	    echo "${R}[${W}-${R}]${G} Check the $de_name styles section in GitHub"${W}
+    	    echo
+    	    echo "${R}[${W}-${R}]${B} https://github.com/sabamdarif/termux-desktop/blob/main/${de_name}_styles.md"${W}
+    	    echo
+    	fi
 	done
 	rm ${current_path}/styles.md
 	 else
-        echo "${R}Failed to get total avilable styles value."${W}
+        echo "${R} Failed to get total avilable styles value."${W}
     fi
 }
 
