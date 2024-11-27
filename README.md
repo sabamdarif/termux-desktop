@@ -56,7 +56,7 @@
 
 ## Minimum Requirements:
 - No Root Required
-- Android 7+ phone
+- Android 8+ phone
 - [Termux](https://termux.dev/en/) From [Github](https://github.com/termux/termux-app/releases) Or [Fdroid](https://f-droid.org/en/packages/com.termux/)
 > Termux from Google Play can't poperly install x11-packages due to API limitation, so instead use the F-Droid Or Github build.
 - 2GB of RAM 3GB of RAM

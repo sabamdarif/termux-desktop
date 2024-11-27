@@ -380,6 +380,11 @@ function count_subfolders() {
     local url="https://api.github.com/repos/$owner/$repo/contents/$path"
     local response=$(curl -s "$url")
     local subfolder_count=$(echo "$response" | jq -r '.[] | select(.type == "dir") | .name' | wc -l)
+
+    if [[ -z "$subfolder_count" || "$subfolder_count" -eq 0 ]]; then
+        subfolder_count=0
+    fi
+
     echo "$subfolder_count"
 }
 
@@ -411,9 +416,9 @@ function confirmation_y_or_n() {
 function get_latest_release() {
 	local repo_woner="$1"
 	local repo_name="$2"
-  curl -s "https://api.github.com/repos/$repo_woner/$repo_name/releases/latest" |
-  grep '"tag_name":' |
-  sed -E 's/.*"([^"]+)".*/\1/'
+	curl -s "https://api.github.com/repos/$repo_woner/$repo_name/releases/latest" |
+	grep '"tag_name":' |
+	sed -E 's/.*"([^"]+)".*/\1/'
 }
 
 function install_font_for_style() {
@@ -548,15 +553,20 @@ function questions_theme_select() {
             fi
 
             # Ensure the input is a valid number and within range
-            if [[ "$style_answer" =~ ^[0-9]+$ ]] && [[ "$style_answer" -ge 1 ]] && [[ "$style_answer" -le "$subfolder_count_value" ]]; then
+            if [[ "$style_answer" =~ ^[0-9]+$ ]] && [[ "$style_answer" -ge 0 ]] && [[ "$style_answer" -le "$subfolder_count_value" ]]; then
                 style_name=$(grep -oP "^## $style_answer\..+?(?=(\n## \d+\.|\Z))" styles.md | sed -e "s/^## $style_answer\. //" -e "s/:$//")
                 break
             else
                 echo
                 echo "${R}[${W}-${R}]${R} The entered style number is incorrect."${W}
                 echo
-                echo "${R}[${W}-${R}]${Y} Please enter a number between 1 to ${subfolder_count_value}"${W}
+				if [[ "$subfolder_count_value" == "0" ]]; then
+				echo "${R}[${W}-${R}]${Y} Please enter 0 beacuse for $de_name only stock style is available"${W}
                 echo
+				else
+				echo "${R}[${W}-${R}]${Y} Please enter a number between 0 to ${subfolder_count_value}"${W}
+                echo
+				fi
                 echo "${R}[${W}-${R}]${G} Check the $de_name styles section in GitHub"${W}
                 echo
                 echo "${R}[${W}-${R}]${B} https://github.com/sabamdarif/termux-desktop/blob/main/${de_name}_styles.md"${W}
