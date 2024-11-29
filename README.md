@@ -67,13 +67,36 @@
 - [Termux-API](https://github.com/termux/termux-api/releases) _(For Openbox only)_
 
 ---
+<details>
+<summary><b style ="font-size: large">Desktop Style's Screenshots: </summary>
+</b>
 
-## Default Look (XFCE):
+#### XFCE:
 
 <center><img src="images/xfce/look_1/look.png"></center>
-<br>
 
-## See Other Desktop And Their Avilable Styles: [XFCE](xfce_styles.md),[LXQT](lxqt_styles.md),[OPENBOX](openbox_styles.md)
+#### LXQT:
+
+<center><img src="images/lxqt/look_2/start-menu.png"></center>
+
+#### OPENBOX:
+
+<center><img src="images/openbox/look_1/dashbord.png"></center>
+
+### MATE:
+
+<center><img src="images/mate/look_0/desktop.png"></center>
+
+</details>
+
+### See All Desktop And Their Avilable Styles:
+
+<b>
+
+- [XFCE](xfce_styles.md)
+- [LXQT](lxqt_styles.md)
+- [OPENBOX](openbox_styles.md)
+</b>
 
 ---
 

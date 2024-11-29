@@ -1246,7 +1246,7 @@ xhost + > /dev/null 2>&1
 case \$1 in
 --nogpu)
 proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:1.0 LIBGL_ALWAYS_SOFTWARE=1
-proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:1.0 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe \${@:2}
+proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:1.0 LIBGL_ALWAYS_SOFTWARE=1 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe \${@:2}
 ;;
 --help|-h)
 echo "${G}Type ${C}pdrun launch command ${G}to start with gpu acceleration"${W}
