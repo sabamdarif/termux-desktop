@@ -1,13 +1,20 @@
 #!/data/data/com.termux/files/usr/bin/bash
 
+function check_termux() {
+	if [[ $HOME != *termux* ]]; then
+	echo "${R}[${R}☓${R}]${R}${BOLD}Please run it inside termux"${W}
+	exit 0
+	fi
+}
+
 function hw_install_required_packages() {
     banner
-    echo "${R}[${W}-${R}]${G}${BOLD} Installing Experimental Mesa Driver..."${W}
+    echo "${R}[${C}-${R}]${G}${BOLD} Installing Experimental Mesa Driver..."${W}
     echo
 
     if [[ "$confirmation_exp_hwa" == "y" ]]; then
         if [[ "$device_gpu_model" != "1" ]]; then
-            echo "${R}[${W}-${R}]${G}${BOLD} Installing Required Packages For Hardware Acceleration"${W}
+            echo "${R}[${C}-${R}]${G}${BOLD} Installing Required Packages For Hardware Acceleration"${W}
             echo
             package_install_and_check "mesa-zink virglrenderer-mesa-zink vulkan-loader-generic angle-android virglrenderer-android"
         fi
@@ -24,7 +31,7 @@ function hw_install_required_packages() {
                 archtype="arm"
                 ;;
             *)
-                echo "${R} Unknown architecture"${W}
+                echo "${R}[${R}☓${R}]${R} Unknown architecture"${W}
                 ;;
         esac
 
@@ -37,7 +44,7 @@ function hw_install_required_packages() {
             check_and_delete "mesa.deb mesa-vulkan-icd-wrapper.deb"
         fi
     else
-        echo "${R}[${W}-${R}]${G}${BOLD} Installing Required Packages For Hardware Acceleration"${W}
+        echo "${R}[${C}-${R}]${G}${BOLD} Installing Required Packages For Hardware Acceleration"${W}
         echo
 
         # Handle different hardware configurations based on user input
@@ -98,7 +105,7 @@ if [[ "$termux_hw_answer" == "2" ]]; then
     elif [[ $pd_hw_answer == "4" ]]; then
     pd_hw_method="MESA_LOADER_DRIVER_OVERRIDE=zink TU_DEBUG=noconform"
     else
-    echo "${R}[${W}-${R}]${G} Uses The Previous Selection For Distro"${W}
+    echo "${R}[${C}-${R}]${G} Uses The Previous Selection For Distro"${W}
     echo
     fi
 else
@@ -109,7 +116,7 @@ else
     elif [[ $pd_hw_answer == "3" ]]; then
     pd_hw_method="MESA_LOADER_DRIVER_OVERRIDE=zink TU_DEBUG=noconform"
     else
-    echo "${R}[${W}-${R}]${G} Uses The Previous Selection For Distro"${W}
+    echo "${R}[${C}-${R}]${G} Uses The Previous Selection For Distro"${W}
     echo
     fi
 fi
@@ -117,7 +124,7 @@ fi
 
 function setup_turnip_proot() {
     banner
-    echo "${R}[${W}-${R}]${G}${BOLD} Setting up Turnip for $selected_distro ..."${W}
+    echo "${R}[${C}-${R}]${G}${BOLD} Setting up Turnip for $selected_distro ..."${W}
     echo
     if [[ "$selected_distro" == "debian" ]] || [[ "$selected_distro" == "ubuntu" ]]; then
     proot-distro login $selected_distro --shared-tmp -- env DISPLAY=:1.0 apt install xdg-desktop-portal libgl1 libgl1-mesa-dri libvulkan1 glmark2 -y
@@ -131,6 +138,7 @@ function setup_turnip_proot() {
     fi
 }
 
+check_termux
 hw_install_required_packages
 setup_hw_method
 if [[ ("$termux_hw_answer" == "2" && "$pd_hw_answer" == "4") || ("$termux_hw_answer" != "2" && "$pd_hw_answer" == "3") ]]; then

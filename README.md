@@ -40,7 +40,8 @@
 - [XFCE](xfce_styles.md)
 - [LXQT](lxqt_styles.md)
 - [OPENBOX](openbox_styles.md)
->Openbox keybord shortcuts :- [Here](https://github.com/sabamdarif/termux-desktop/blob/main/see-more.md#openbox-keybindings-cheat-sheet)
+- [MATE](mate_styles.md)
+>Openbox keybord shortcuts :- [Here](https://github.com/sabamdarif/termux-desktop/blob/main/see-more.md#hammer_and_wrenchopenbox-keybindings-cheat-sheet)
 </b>
 
 ### 3. Check About Hardware Acceleration : [from here](https://github.com/sabamdarif/termux-desktop?tab=readme-ov-file#hardware-acceleration-in-distro-container-and-also-in-termux)
@@ -96,6 +97,7 @@
 - [XFCE](xfce_styles.md)
 - [LXQT](lxqt_styles.md)
 - [OPENBOX](openbox_styles.md)
+- [MATE](mate_styles.md)
 </b>
 
 ---
