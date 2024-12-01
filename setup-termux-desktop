@@ -913,17 +913,17 @@ function hw_questions() {
 # distro related questions
 function choose_distro() {
 	echo "${R}[${C}-${R}]${G}${BOLD} Select Distro You Want To Add"${W}
-	echo
+	echo " "
 	echo "${Y}1. Debian"${W}
-	echo
+	echo " "
 	echo "${Y}2. Ubuntu"${W}
-	echo
+	echo " "
 	echo "${Y}3. Arch"${W}
-	echo
+	echo " "
 	echo "${Y}4. Apline"${W}
-	echo
+	echo " "
 	echo "${Y}5. Fedora"${W}
-	echo
+	echo " "
 	read -p "${Y}select an option (Default 1): "${W} distro_answer
 	distro_answer=${distro_answer:-1}
 	echo "distro_answer=\"$distro_answer\"" >> $config_file
@@ -1271,7 +1271,7 @@ function setup_folder() {
 # setup hardware acceleration, check if the enable-hw-acceleration already exist then then first check if it different from github , then ask user if they want to replace it or not, if not then continue with the lacal enable-hw-acceleration file
 function hw_config() {
     banner
-    echo "${R}[${C}-${R}]${G}${BOLD} Configuring Hardware Acceleration"${W}
+    echo "${R}[${C}-${R}]${G}${BOLD} Configuring Hardware Acceleration${W}"
     echo
 
     if [[ -f "${current_path}/enable-hw-acceleration" ]]; then
@@ -1279,31 +1279,32 @@ function hw_config() {
         local local_script_hash=$(basename $(sha256sum ${current_path}/enable-hw-acceleration | cut -d ' ' -f 1))
 
         if [[ "$local_script_hash" != "$current_script_hash" ]]; then
-            echo "${R}[${C}-${R}]${G} It looks like you already have a different hw-acceleration installer in your current directory"${W}
+            echo "${R}[${C}-${R}]${G} It looks like you already have a different hw-acceleration installer in your current directory${W}"
             echo
+
             confirmation_y_or_n "Do you want to change it with the latest installer" change_old_hw_installer
 
             if [[ "$change_old_hw_installer" == "y" ]]; then
                 check_and_backup "${current_path}/enable-hw-acceleration"
-                wget -O ${current_path}/enable-hw-acceleration https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/enable-hw-acceleration
-                chmod +x ${current_path}/enable-hw-acceleration
-                . ${current_path}/enable-hw-acceleration
+                wget -O ${current_path}/enable-hw-acceleration https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/enable-hw-acceleration \
+                    && chmod +x ${current_path}/enable-hw-acceleration \
+                    && . ${current_path}/enable-hw-acceleration
             else
-                echo "${R}[${C}-${R}]${G} Using the local hardware acceleration setup file"${W}
+                echo "${R}[${C}-${R}]${G} Using the local hardware acceleration setup file${W}"
                 chmod +x ${current_path}/enable-hw-acceleration
                 . ${current_path}/enable-hw-acceleration
             fi
 
             echo "change_old_hw_installer=\"$change_old_hw_installer\"" >> $config_file
         else
-            echo "${R}[${C}-${R}]${G} Using the local hardware acceleration setup file"${W}
+            echo "${R}[${C}-${R}]${G} Using the local hardware acceleration setup file${W}"
             chmod +x ${current_path}/enable-hw-acceleration
             . ${current_path}/enable-hw-acceleration
         fi
     else
-        wget -O ${current_path}/enable-hw-acceleration https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/enable-hw-acceleration
-        chmod +x ${current_path}/enable-hw-acceleration
-        . ${current_path}/enable-hw-acceleration
+        wget -O ${current_path}/enable-hw-acceleration https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/enable-hw-acceleration \
+            && chmod +x ${current_path}/enable-hw-acceleration \
+            && . ${current_path}/enable-hw-acceleration
         rm ${current_path}/enable-hw-acceleration
     fi
 }
@@ -1375,6 +1376,7 @@ if [[ "$confirmation_exp_hwa" == "y" ]]; then
 cat <<EOF > "$PREFIX/bin/vncstart"
 #!/data/data/com.termux/files/usr/bin/bash
 
+pulseaudio --start --exit-idle-time=-1
 case \$1 in
 --nogpu)
 env XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg LIBGL_ALWAYS_SOFTWARE=1 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe vncserver
@@ -1390,6 +1392,8 @@ esac
 EOF
 else
 cat <<EOF > "$PREFIX/bin/vncstart"
+
+pulseaudio --start --exit-idle-time=-1
 #!/data/data/com.termux/files/usr/bin/bash
 
 case \$1 in
@@ -1452,6 +1456,7 @@ if [[ "$confirmation_exp_hwa" == "y" ]]; then
 cat <<EOF > "$PREFIX/bin/tx11start"
 #!/data/data/com.termux/files/usr/bin/bash
 
+pulseaudio --start --exit-idle-time=-1
 case \$1 in
     --nogpu)
         # Start termux-x11 without GPU acceleration
@@ -1534,6 +1539,7 @@ else
 cat <<EOF > "$PREFIX/bin/tx11start"
 #!/data/data/com.termux/files/usr/bin/bash
 
+pulseaudio --start --exit-idle-time=-1
 # Main case statement to handle script arguments
 case \$1 in
 --nogpu)
@@ -2275,9 +2281,7 @@ function add_vnc_autostart() {
 	else
 cat << EOF >> "$shell_rc_file"
 # Start Vnc
-if pgrep Xvnc > /dev/null; then
-echo "${G}Vncserver is already running${W}"
-else
+if ! pgrep Xvnc > /dev/null; then
 echo "${G}Starting Vnc...${W}"
 vncstart
 fi
@@ -2293,9 +2297,7 @@ function add_tx11_autostart() {
 cat << EOF >> "$shell_rc_file"
 # Start Termux:X11
 termux_x11_pid=\$(pgrep -f "app_process -Xnoimage-dex2oat / com.termux.x11.Loader :1")
-if [[ -n "\$termux_x11_pid" ]]; then
-echo "${G}X server is already running${W}"
-else
+if [[ !-n "\$termux_x11_pid" ]]; then
 echo "${G}Starting Termux:x11...${W}"
 tx11start
 fi
@@ -2660,25 +2662,16 @@ function change_distro() {
 	else
 		echo "${R}[${C}-${R}]${G} It look like you haven't install any distro yet"${W}
 		echo
-		echo "${R}[${C}-${R}]${Y}${BOLD} Do you want to add a distro container (proot distro)"${W}
+		echo "${R}[${C}-${R}]${G}${BOLD} Do you want to add a distro container (proot distro)"${W}
 		echo
 		echo "${R}[${C}-${R}]${G} It will help you to install those app which are not avilable in termux"${W}
 		echo
-		echo "${R}[${C}-${R}]${C} You can launch those installed apps from termux like other apps"${W}
+		echo "${R}[${C}-${R}]${G} You can launch those installed apps from termux like other apps"${W}
 		echo
 		confirmation_y_or_n "Do you want to continue" distro_add_answer
 		echo "distro_add_answer=\"$distro_add_answer\"" >> $config_file
-		    if [[ "$distro_add_answer" == "y" ]] && [[ "$zsh_answer" == "y" ]]; then
-			confirmation_y_or_n "Do you want to Configuring Zsh also for distro container" distro_zsh_answer
-			echo "distro_zsh_answer=\"$distro_zsh_answer\"" >> $config_file
-			fi
-			if [[ "$distro_add_answer" == "y" ]] && [[ "$terminal_utility_setup_answer" == "y" ]]; then
-			confirmation_y_or_n "Do you want install the terminal utility also for distro container" distro_terminal_utility_setup_answer
-			echo "distro_terminal_utility_setup_answer=\"$distro_terminal_utility_setup_answer\"" >> $config_file
-			fi
 			distro_questions
 			distro_hw_questions
-			hw_config
 			distro_container_setup
 	fi
 	fi

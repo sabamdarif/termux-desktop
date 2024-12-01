@@ -375,53 +375,6 @@ fi
 
 #########################################################################
 #
-# Hardware Acceleration Setup
-#
-#########################################################################
-
-# setup hardware acceleration, check if the enable-hw-acceleration already exist then then first check if it different from github , then ask user if they want to replace it or not, if not then continue with the lacal enable-hw-acceleration file
-function hw_config() {
-    banner
-    echo "${R}[${C}-${R}]${G}${BOLD} Configuring Hardware Acceleration${W}"
-    echo
-
-    if [[ -f "${current_path}/enable-hw-acceleration" ]]; then
-        local current_script_hash=$(curl -sL https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/enable-hw-acceleration | sha256sum | cut -d ' ' -f 1)
-        local local_script_hash=$(basename $(sha256sum ${current_path}/enable-hw-acceleration | cut -d ' ' -f 1))
-
-        if [[ "$local_script_hash" != "$current_script_hash" ]]; then
-            echo "${R}[${C}-${R}]${G} It looks like you already have a different hw-acceleration installer in your current directory${W}"
-            echo
-
-            confirmation_y_or_n "Do you want to change it with the latest installer" change_old_hw_installer
-
-            if [[ "$change_old_hw_installer" == "y" ]]; then
-                check_and_backup "${current_path}/enable-hw-acceleration"
-                wget -O ${current_path}/enable-hw-acceleration https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/enable-hw-acceleration \
-                    && chmod +x ${current_path}/enable-hw-acceleration \
-                    && . ${current_path}/enable-hw-acceleration
-            else
-                echo "${R}[${C}-${R}]${G} Using the local hardware acceleration setup file${W}"
-                chmod +x ${current_path}/enable-hw-acceleration
-                . ${current_path}/enable-hw-acceleration
-            fi
-
-            echo "change_old_hw_installer=\"$change_old_hw_installer\"" >> $config_file
-        else
-            echo "${R}[${C}-${R}]${G} Using the local hardware acceleration setup file${W}"
-            chmod +x ${current_path}/enable-hw-acceleration
-            . ${current_path}/enable-hw-acceleration
-        fi
-    else
-        wget -O ${current_path}/enable-hw-acceleration https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/enable-hw-acceleration \
-            && chmod +x ${current_path}/enable-hw-acceleration \
-            && . ${current_path}/enable-hw-acceleration
-        rm ${current_path}/enable-hw-acceleration
-    fi
-}
-
-#########################################################################
-#
 # Setup Zsh And Terminal Utility
 #
 #########################################################################
@@ -1320,6 +1273,7 @@ proot-distro login --user $final_user_name $selected_distro -- /bin/sh -c 'bash 
 #
 #########################################################################
 function disro_container_install_check() {
+    termux-reload-settings
     if [[ -d "$PREFIX/bin/$selected_distro" ]] && [[ -d "$PREFIX/var/lib/proot-distro/installed-rootfs/$selected_distro" ]]; then
     echo
     echo "${R}[${G}✓${R}]${G}${BOLD} $selected_distro container setup successfully"${W}
