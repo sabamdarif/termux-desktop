@@ -153,7 +153,7 @@
 
 <b>
 
-The experimental drivers only support a few GPUs and currently use Vulkan only
+The experimental drivers only support a few GPUs and currently use Vulkan only (But opengl will be enabled using another way)
 
 In my tests, I achieved 1000+ FPS in vkmark on all my devices. I tried it on an Adreno 619 (best everything work fine), Adreno 750 (usable but some apps don't launch), Adreno 720 (good overall but with few issues), and Mali G76 (similar issue like Adreno 720).
 

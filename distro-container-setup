@@ -1199,28 +1199,6 @@ bash ~/.pd-sound-service
 EOF
     fi
 
-if [[ "$confirmation_exp_hwa" == "y" ]]; then
-cat <<EOF >> "$PREFIX/bin/pdrun"
-initialize_server="${initialize_server_method}"
-
-xhost + > /dev/null 2>&1
-case \$1 in
---nogpu)
-proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:1.0 LIBGL_ALWAYS_SOFTWARE=1
-proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:1.0 LIBGL_ALWAYS_SOFTWARE=1 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe \${@:2}
-;;
---help|-h)
-echo "${G}Type ${C}pdrun launch command ${G}to start with gpu acceleration"${W}
-echo "${G}Type ${C}pdrun ---nogpu launch command ${G}to start without gpu acceleration"${W}
-;;
-*)
-eval "\${initialize_server}" > /dev/null 2>&1 &
-proot-distro login --user $final_user_name $selected_distro --shared-tmp -- eval "env DISPLAY=:1.0 XDG_RUNTIME_DIR=\${TMPDIR} \$selected_pd_hw_method \$@"
-;;
-esac
-EOF
-
-else
 cat <<EOF >> "$PREFIX/bin/pdrun"
 xhost + > /dev/null 2>&1
 case \$1 in
@@ -1236,7 +1214,6 @@ proot-distro login --user $final_user_name $selected_distro --shared-tmp -- eval
 ;;
 esac
 EOF
-fi
 chmod +x "$PREFIX/bin/pdrun"
 }
 
