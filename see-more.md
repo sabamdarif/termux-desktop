@@ -124,4 +124,8 @@ This document provides a list of keybindings used in Openbox for quick reference
 
 ##### or, run `setup-termux-desktop --update icon/theme /path/to/archive_file_name` (will be added soon...)
 
+## :hammer_and_wrench:How to enable Vulkan in Chromium Browswer
+
+- `chrome://flags/#enable-vulkan` Enable this then relaunch chromium
+
 ---

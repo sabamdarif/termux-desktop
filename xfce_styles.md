@@ -1,3 +1,6 @@
+### After installing any style, the desktop might be set on the default wallpaper
+#### Here how you  can fix that
+
 ## 0. Stock:
 
 <center><img src="images/xfce/look_0/desktop.png"></center>

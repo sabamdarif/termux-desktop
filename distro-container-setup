@@ -664,6 +664,7 @@ function handel_debian_based_app_installer() {
     cat <<TOP_EOF > "$PREFIX/bin/$selected_distro"
 #!/data/data/com.termux/files/usr/bin/bash
 
+xhost + > /dev/null 2>&1
 if [[ "\$#" -eq 0 ]]; then
     proot-distro login --user $final_user_name $selected_distro --shared-tmp
 elif [[ "\$1" = "install" ]]; then
@@ -692,7 +693,7 @@ for package_name in "\${packages[@]}"; do
 done
 rm packinstall.sh
 EOF
-    proot-distro login $selected_distro -- /bin/bash -c 'bash packinstall.sh'
+        proot-distro login $selected_distro --shared-tmp -- /bin/bash -c 'export DISPLAY=:1.0; export XDG_RUNTIME_DIR=$TMPDIR; bash packinstall.sh'
 
 elif [[ "\$1" = "remove" ]] || [[ "\$1" = "autoremove" ]]; then
     proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:1.0 sudo $package_manager \$1 \${@:2}
@@ -715,7 +716,7 @@ for package_name in "\${packages[@]}"; do
 done
 rm packremove.sh
 EOF
-    proot-distro login $selected_distro -- /bin/bash -c 'bash packremove.sh'
+        proot-distro login $selected_distro --shared-tmp -- /bin/bash -c 'export DISPLAY=:1.0; export XDG_RUNTIME_DIR=$TMPDIR; bash packremove.sh'
 elif [[ "\$1" = "update" ]]; then
     proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:1.0 sudo $package_manager update
 fi
@@ -732,6 +733,7 @@ function handel_arch_based_app_installer() {
     cat <<TOP_EOF > "$PREFIX/bin/$selected_distro"
 #!/data/data/com.termux/files/usr/bin/bash
 
+xhost + > /dev/null 2>&1
 if [[ "\$#" -eq 0 ]]; then
     proot-distro login --user $final_user_name $selected_distro --shared-tmp
 elif [[ "\$1" = "install" ]]; then
@@ -762,7 +764,7 @@ done
 rm packinstall.sh
 EOF
 
-    proot-distro login $selected_distro -- /bin/bash -c 'bash packinstall.sh'
+        proot-distro login $selected_distro --shared-tmp -- /bin/bash -c 'export DISPLAY=:1.0; export XDG_RUNTIME_DIR=$TMPDIR; bash packinstall.sh'
 
 elif [[ "\$1" = "remove" ]]; then
     proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:1.0 sudo pacman -R --noconfirm "\${@:2}"
@@ -788,7 +790,7 @@ done
 rm packremove.sh
 EOF
 
-    proot-distro login $selected_distro -- /bin/bash -c 'bash packremove.sh'
+        proot-distro login $selected_distro --shared-tmp -- /bin/bash -c 'export DISPLAY=:1.0; export XDG_RUNTIME_DIR=$TMPDIR; bash packremove.sh'
     
 elif [[ "\$1" = "update" ]]; then
     proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:1.0 sudo pacman -Su
@@ -806,6 +808,7 @@ function handel_alpine_based_app_installer() {
     cat <<TOP_EOF > "$PREFIX/bin/$selected_distro"
 #!/data/data/com.termux/files/usr/bin/bash
 
+xhost + > /dev/null 2>&1
 if [[ "\$#" -eq 0 ]]; then
     proot-distro login --user $final_user_name $selected_distro --shared-tmp
 
@@ -836,7 +839,7 @@ done
 rm packinstall.sh
 EOF
 
-    proot-distro login $selected_distro -- /bin/bash -c 'bash packinstall.sh'
+        proot-distro login $selected_distro --shared-tmp -- /bin/bash -c 'export DISPLAY=:1.0; export XDG_RUNTIME_DIR=$TMPDIR; bash packinstall.sh'
 
 elif [[ "\$1" = "remove" ]]; then
     proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:1.0 sudo apk del "\${@:2}"
@@ -847,7 +850,7 @@ EOF
 
     cat <<'EOF' >> "$save_root_path/packremove.sh"
 for package_name in "\${packages[@]}"; do
-    desktop_files=\$(ls /usr/share/applications/ | grep "\$package_name.*\.desktop$")
+    desktop_files=\$(ls /usr/share/applications/ | grep "\$package_name.*\.desktop\$")
     if [ -z "\$desktop_files" ]; then
         echo "${R}[${R}☓${R}]${G} No .desktop files found for package ${C}'\$package_name' ${G}in /usr/share/applications."
     else
@@ -861,7 +864,7 @@ done
 rm packremove.sh
 EOF
 
-    proot-distro login $selected_distro -- /bin/bash -c 'bash packremove.sh'
+        proot-distro login $selected_distro --shared-tmp -- /bin/bash -c 'export DISPLAY=:1.0; export XDG_RUNTIME_DIR=$TMPDIR; bash packremove.sh'
 
 elif [[ "\$1" = "update" ]]; then
     proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:1.0 sudo apk update
@@ -879,6 +882,7 @@ function handel_fedora_based_app_installer() {
     cat <<TOP_EOF > "$PREFIX/bin/$selected_distro"
 #!/data/data/com.termux/files/usr/bin/bash
 
+xhost + > /dev/null 2>&1
 if [[ "\$#" -eq 0 ]]; then
     proot-distro login --user $final_user_name $selected_distro --shared-tmp
 
@@ -896,8 +900,7 @@ EOF
     cat <<'EOF' >> "$save_root_path/packinstall.sh"
 for package_name in "\${packages[@]}"; do
     package_query=\$(rpm -q "\$package_name" | sed 's/-[0-9].*//')
-    desktop_files=\$(\$package_query | grep "^/usr/share/applications/.*\.desktop\$")
-
+    desktop_files=\$(ls /usr/share/applications/ | grep "\$package_query.*\.desktop\$")
     if [ -z "\$desktop_files" ]; then
         echo "${R}[${R}☓${R}]${G} No .desktop files found for package ${C}'\$package_name' ${G}in /usr/share/applications."
     else
@@ -913,7 +916,7 @@ done
 rm packinstall.sh
 EOF
 
-    proot-distro login $selected_distro -- /bin/bash -c 'bash packinstall.sh'
+    proot-distro login $selected_distro --shared-tmp -- /bin/bash -c 'export DISPLAY=:1.0; export XDG_RUNTIME_DIR=$TMPDIR; bash packinstall.sh'
 
 elif [[ "\$1" = "remove" ]]; then
     proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:1.0 sudo dnf remove \${@:2}
@@ -924,8 +927,8 @@ EOF
 
     cat <<'EOF' >> "$save_root_path/packremove.sh"
 for package_name in "\${packages[@]}"; do
-    desktop_files=\$(rpm -q "\$package_name" | grep "^/usr/share/applications/.*\.desktop\$")
-
+    package_query=\$(rpm -q "\$package_name" | sed 's/-[0-9].*//')
+    desktop_files=\$(ls /usr/share/applications/ | grep "\$package_query.*\.desktop\$")
     if [ -z "\$desktop_files" ]; then
         echo "${R}[${R}☓${R}]${G} No .desktop files found for package ${C}'\$package_name' ${G}in /usr/share/applications."
     else
@@ -940,13 +943,8 @@ done
 rm packremove.sh
 EOF
 
-    proot-distro login $selected_distro -- /bin/bash -c 'bash packremove.sh'
+    proot-distro login $selected_distro --shared-tmp -- /bin/bash -c 'export DISPLAY=:1.0; export XDG_RUNTIME_DIR=$TMPDIR; bash packremove.sh'
 
-else
-    echo "sudo dnf \$@
-rm else.sh
-" > $save_root_path/else.sh
-    proot-distro login $selected_distro -- /bin/sh -c 'bash else.sh'
 fi
 
 if [[ \$1 = "install" ]] || [[ \$1 = "remove" ]] || [[ \$1 = "autoremove" ]]; then

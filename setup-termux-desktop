@@ -854,7 +854,7 @@ function exp_termux_gl_hw_support() {
 function exp_hwa_support() {
 	if [[ "$confirmation_exp_hwa" == "y" ]]; then
 	echo "${R}[${C}-${R}]${G} Experimental Hardware Acceleration Will Use The mesa-vulkan-icd-wrapper Package"${W}
-	echo "${R}[${C}-${R}]${C} For other GPUs, Experimental Driver might not work and could break the desktop environment"${W}
+	echo "${R}[${C}-${R}]${G} For other GPUs, Experimental Driver might not work and could break the desktop environment"${W}
 	echo "${R}[${C}-${R}]${G}${BOLD} Select Your Device GPU"${W}
     echo
 	echo "${Y}1. Adreno"${W}
@@ -941,6 +941,7 @@ function distro_questions() {
 	echo "pd_pass_type=\"$pd_pass_type\"" >> $config_file
 	    if [[ "$pd_pass_type" == "1" ]]; then
 	    while true; do
+		echo " "
 		echo "${R}[${C}-${R}]${G} Default Password Will Be Set, Because Sometime It Might Ask You For Password"${W}
 		echo
 		echo "${R}[${C}-${R}]${G} Password:-${C}root"${W}
@@ -1709,7 +1710,7 @@ Version=1.0
 Type=Application
 Name=Stop Desktop
 Comment=Kill or stop termux desktop
-Exec=add2menu --nogpu
+Exec=gui --kill
 Icon=system-shutdown
 Categories=System;
 Path=
