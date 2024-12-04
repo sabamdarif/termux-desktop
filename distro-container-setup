@@ -1059,8 +1059,7 @@ distro_path="$distro_path"
 
 cat <<'EOF' >> $PREFIX/bin/add2menu
 
-#!/bin/bash
-
+function add2menu_f() {
 # Function to list displayable .desktop files
 list_desktop_files_with_name() {
     find "$1" -name "*.desktop" -type f -exec awk -F '=' '
@@ -1154,6 +1153,20 @@ elif [[ $action == "Remove Application From Termux Menu" ]]; then
 
     zenity --info --text="Selected applications removed successfully!" --title="Success"
 fi
+}
+
+case $1 in
+    --nogpu)
+        LIBGL_ALWAYS_SOFTWARE=1 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe add2menu_f
+        ;;
+    --help|-h)
+        echo "${C}add2menu launch command ${G}to start with gpu acceleration"${W}
+        echo "${C}pdrun ---nogpu launch command ${G}to start without gpu acceleration"${W}
+        ;;
+    *)
+        add2menu_f
+        ;;
+esac
 
 EOF
 
@@ -1165,15 +1178,15 @@ cat <<EOF > "$PREFIX/share/applications/add2menu.desktop"
 Version=1.0
 Type=Application
 Name=Add To Menu
-Comment=Add proot-distro's apps to termux menu
-Exec=LIBGL_ALWAYS_SOFTWARE=1 add2menu
+Comment=Add proot-distro's apps to Termux menu
+Exec=add2menu --nogpu
 Icon=edit-move
 Categories=System;
 Path=
 Terminal=false
 StartupNotify=false
 EOF
-chmod +x $PREFIX/share/applications/add2menu.desktop
+chmod 644 $PREFIX/share/applications/add2menu.desktop
 cp $PREFIX/share/applications/add2menu.desktop $HOME/Desktop/
 }
 
@@ -1203,7 +1216,7 @@ cat <<EOF >> "$PREFIX/bin/pdrun"
 xhost + > /dev/null 2>&1
 case \$1 in
 --nogpu)
-proot-distro login --user $final_user_name $selected_distro --shared-tmp -- eval "env DISPLAY=:1.0 XDG_RUNTIME_DIR=\${TMPDIR} \${@:2}"
+proot-distro login --user $final_user_name $selected_distro --shared-tmp -- eval "env DISPLAY=:1.0 XDG_RUNTIME_DIR=\${TMPDIR} LIBGL_ALWAYS_SOFTWARE=1 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe \${@:2}"
 ;;
 --help|-h)
 echo "${G}Type ${C}pdrun launch command ${G}to start with gpu acceleration"${W}
