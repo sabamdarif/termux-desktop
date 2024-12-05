@@ -843,7 +843,7 @@ function exp_termux_gl_hw_support() {
 	else
 	    if [[ "$distro_add_answer" == "y" ]]; then
 			if [[ "$exp_termux_gl_hw_answer" == "2" ]]; then
-			pd_hw_answer="2"
+			pd_hw_answer="1"
 			else
 			distro_hw_questions
 			fi

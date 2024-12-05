@@ -1,5 +1,16 @@
 ### After installing any style, the desktop might be set on the default wallpaper
-#### Here how you  can fix that
+
+<details style ="font-size: larger">
+<summary><b style ="font-size: larger">Here how you  can fix that: </b></summary>
+
+| Step | Image                        |
+|------|------------------------------|
+| 1st  | ![img](images/xfce/1.png)    |
+| 2nd  | ![img](images/xfce/2.png)    |
+| 3rd  | ![img](images/xfce/3.png)    |
+
+</details>
+<br>
 
 ## 0. Stock:
 
