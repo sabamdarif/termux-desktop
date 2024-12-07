@@ -7,6 +7,7 @@ function check_termux() {
 	fi
 }
 
+call_from_change_d="n"
 
 function setup_distro() {
     case "$distro_answer" in
@@ -1273,7 +1274,9 @@ function disro_container_install_check() {
 check_termux
 setup_distro
 distro_basic_task
+if [[ "$call_from_change_d" != "y" ]]; then
 hw_config
+fi
 distro_zsh_answer
 distro_terminal_utility_setup
 distro_create_app_installer

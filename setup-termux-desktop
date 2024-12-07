@@ -102,14 +102,17 @@ function check_and_restore() {
 
     if [[ -z "$latest_backup" ]]; then
         echo "${R}[${R}☓${R}]${R}No backup file found for ${target_path}.${W}"
+		echo
         return 1
     fi
 
     if [[ -e "$target_path" ]]; then
         echo "${R}[${R}☓${R}]${C}Original file or directory ${target_path} already exists.${W}"
+		echo
     else
         mv "$latest_backup" "$target_path"
         echo "${R}[${G}✓${R}]${G}Restored ${latest_backup} to ${target_path}.${W}"
+		echo
     fi
 }
 
@@ -398,16 +401,19 @@ function confirmation_y_or_n() {
             [yY]* )
 				echo
                 echo "${R}[${G}✓${R}]${G} Continuing with answer: $response"${W}
+				echo
 				sleep 0.2
                 break;;
             [nN]* )
 				echo
                 echo "${R}[${C}-${R}]${C} Skipping this setp"${W}
+				echo
 				sleep 0.2
                 break;;
             * )
 				echo
                	echo "${R}[${R}☓${R}]${R} Invalid input. Please enter 'y' or 'n'."${W}
+				echo
                 ;;
         esac
     done
@@ -1047,22 +1053,22 @@ function install_desktop() {
     if [[ "$desktop_answer" == "1" ]]; then
         echo "${R}[${C}-${R}]${G}${BOLD} Installing Xfce4 Desktop"${W}
         echo
-        package_install_and_check "xfce4 xfce4-goodies xwayland kvantum"
+        package_install_and_check "xfce4 xfce4-goodies"
     elif [[ "$desktop_answer" == "2" ]]; then
         echo "${R}[${C}-${R}]${G}${BOLD} Installing Lxqt Desktop"${W}
         echo
-        package_install_and_check "lxqt openbox gtk3 papirus-icon-theme xorg-xsetroot xwayland kvantum"
+        package_install_and_check "lxqt openbox gtk3 papirus-icon-theme xorg-xsetroot"
     elif [[ "$desktop_answer" == "3" ]]; then
         echo "${R}[${C}-${R}]${G}${BOLD} Installing Openbox WM"${W}
         echo
-        package_install_and_check "openbox polybar xorg-xsetroot lxappearance wmctrl feh xwayland kvantum termux-api thunar firefox mpd rofi bmon xcompmgr xfce4-settings gtk3 gedit"
+        package_install_and_check "openbox polybar xorg-xsetroot lxappearance wmctrl feh termux-api thunar firefox mpd rofi bmon xcompmgr xfce4-settings gtk3 gedit"
     elif [[ "$desktop_answer" == "4" ]]; then
         echo "${R}[${C}-${R}]${G}${BOLD} Installing MATE"${W}
         echo
         package_install_and_check "mate*"
-        package_install_and_check "marco galculator mousepad xfce4-taskmanager file-roller"
+        package_install_and_check "marco mousepad xfce4-taskmanager lximage-qt"
     fi
-
+	package_install_and_check "kvantum xwayland file-roller pavucontrol gnome-font-viewer atril galculator"
     # Uncomment if additional package installation is needed
     # if [[ "$distro_add_answer" == "y" ]]; then
     #     package_install_and_check "xdg-utils"
@@ -1312,6 +1318,9 @@ function distro_container_setup() {
                 if [[ "$change_old_distro_installer" == "y" ]]; then
                     check_and_backup "${current_path}/distro-container-setup"
                     wget -O ${current_path}/distro-container-setup https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/distro-container-setup
+					if [[ ("$1" == "--change" || "$1" == "-c") && ("$2" == "distro" || "$2" == "pd") ]]; then
+					sed -i 's/\(call_from_change_d="\)[^"]*/\1y/' "${current_path}/distro-container-setup"
+					fi					
                     chmod +x ${current_path}/distro-container-setup
                     . ${current_path}/distro-container-setup
                 else
@@ -1328,6 +1337,9 @@ function distro_container_setup() {
             fi
         else
             wget -O ${current_path}/distro-container-setup https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/distro-container-setup
+			if [[ ("$1" == "--change" || "$1" == "-c") && ("$2" == "distro" || "$2" == "pd") ]]; then
+			sed -i 's/\(call_from_change_d="\)[^"]*/\1y/' "${current_path}/distro-container-setup"
+			fi
             chmod +x ${current_path}/distro-container-setup
             . ${current_path}/distro-container-setup
             rm ${current_path}/distro-container-setup
@@ -2522,7 +2534,7 @@ function change_distro() {
 	banner
 	if [[ "$distro_add_answer" == "y" ]]; then
 	    if [[ -d "$PREFIX/var/lib/proot-distro/installed-rootfs/$selected_distro" ]] ;then
-		echo "${R}[${C}-${R}]${G} Your currently installed distro is is :${C}${BOLD}${selected_distro}${W}"
+		echo "${R}[${C}-${R}]${G} Your currently installed distro is :${C}${BOLD}${selected_distro}${W}"
 		echo
 		echo "${R}[${C}-${R}]${R} Changing distro will delete all the data from your previous distro"${W}
 		echo
@@ -2534,7 +2546,9 @@ function change_distro() {
 			rm -rf $PREFIX/share/applications/pd_added
 			rm $PREFIX/bin/$selected_distro
 			pd_hw_method=$(grep 'selected_pd_hw_method=' $PREFIX/bin/pdrun | sed -e 's/.*selected_pd_hw_method="\([^"]*\)".*/\1/')
+			if [[ "$pd_audio_config_answer" == "y" ]]; then
 			rm $HOME/.${selected_distro}-sound-access
+			fi
 			echo
 			distro_container_setup
 			else
