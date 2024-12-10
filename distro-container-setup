@@ -1263,7 +1263,7 @@ proot-distro login --user $final_user_name $selected_distro -- /bin/sh -c 'bash 
 #########################################################################
 function disro_container_install_check() {
     termux-reload-settings
-    if [[ -d "$PREFIX/bin/$selected_distro" ]] && [[ -d "$PREFIX/var/lib/proot-distro/installed-rootfs/$selected_distro" ]]; then
+    if [[ -d "$PREFIX/bin/$selected_distro" ]] || [[ -d "$PREFIX/var/lib/proot-distro/installed-rootfs/$selected_distro" ]]; then
     echo
     echo "${R}[${G}✓${R}]${G}${BOLD} $selected_distro container setup successfully"${W}
     else

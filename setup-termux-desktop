@@ -300,35 +300,57 @@ function extract_zip_with_progress() {
 
 function extract_archive() {
     local archive="$1"
-    
-    # Check if the archive exists
     if [[ ! -f "$archive" ]]; then
-        echo "${R}[${R}☓${R}]${R}$archive doesn't exist${W}"
-        return
+        echo -e "${R}[☓]${R} $archive doesn't exist${W}"
+        return 1
     fi
 
-    # Get the total size of the archive
+    local total_size
     total_size=$(stat -c '%s' "$archive")
-    
-    # Handle different archive formats
+
     case "$archive" in
-        *.tar.gz)
-            pv -s "$total_size" -p -r "$archive" | tar xzf - || { echo "${R}Failed to extract ${C}$archive${W}"; return; }
+        *.tar.gz|*.tgz)
+            echo -e "${G}[✔] Extracting ${C}$archive${W}"
+            pv -s "$total_size" -p -r "$archive" | tar xzf - || { echo -e "${R}[☓] Failed to extract ${C}$archive${W}"; return 1; }
             ;;
         *.tar.xz)
-            pv -s "$total_size" -p -r "$archive" | tar xJf - || { echo "${R}Failed to extract ${C}$archive${W}"; return; }
+            echo -e "${G}[✔] Extracting ${C}$archive${W}"
+            pv -s "$total_size" -p -r "$archive" | tar xJf - || { echo -e "${R}[☓] Failed to extract ${C}$archive${W}"; return 1; }
+            ;;
+        *.tar.bz2|*.tbz2)
+            echo -e "${G}[✔] Extracting ${C}$archive${W}"
+            pv -s "$total_size" -p -r "$archive" | tar xjf - || { echo -e "${R}[☓] Failed to extract ${C}$archive${W}"; return 1; }
             ;;
         *.tar)
-            pv -s "$total_size" -p -r "$archive" | tar xf - || { echo "${R}Failed to extract ${C}$archive${W}"; return; }
+            echo -e "${G}[✔] Extracting ${C}$archive${W}"
+            pv -s "$total_size" -p -r "$archive" | tar xf - || { echo -e "${R}[☓] Failed to extract ${C}$archive${W}"; return 1; }
             ;;
-        *.zip)
+        *.bz2)
+            echo -e "${G}[✔] Extracting ${C}$archive${W}"
+            pv -s "$total_size" -p -r "$archive" | bunzip2 > "${archive%.bz2}" || { echo -e "${R}[☓] Failed to extract ${C}$archive${W}"; return 1; }
+            ;;
+        *.gz)
+            echo -e "${G}[✔] Extracting ${C}$archive${W}"
+            pv -s "$total_size" -p -r "$archive" | gunzip > "${archive%.gz}" || { echo -e "${R}[☓] Failed to extract ${C}$archive${W}"; return 1; }
+            ;;
+        *.7z)
+            echo -e "${G}[✔] Extracting ${C}$archive${W}"
+            pv -s "$total_size" -p -r "$archive" | 7z x -si -y > /dev/null || { echo -e "${R}[☓] Failed to extract ${C}$archive${W}"; return 1; }
+            ;;
+		*.zip)
             extract_zip_with_progress "${archive}"
             ;;
+        *.rar)
+            echo -e "${G}[✔] Extracting ${C}$archive${W}"
+            unrar x "$archive" || { echo -e "${R}[☓] Failed to extract ${C}$archive${W}"; return 1; }
+            ;;
         *)
-            echo "${R}[${R}☓${R}]${R}Unsupported archive format: ${C}$archive${W}"
+            echo -e "${R}[☓] Unsupported archive format: ${C}$archive${W}"
             return 1
             ;;
     esac
+
+    echo -e "${G}[✔] Successfully extracted ${C}$archive${W}"
 }
 
 # download a archive file and extract it in a folder
@@ -719,7 +741,7 @@ function questions() {
 	echo
 	echo "${R}[${C}-${R}]${B} Know More About Mobox:- https://github.com/olegos2/mobox/"${W}
 	echo
-	echo "${Y}3. Wine Hangover"${W}
+	echo "${Y}3. Wine Hangover (Best)"${W}
 	echo
 	echo "${Y}4. Skip"${W}
 	echo
@@ -742,7 +764,7 @@ function questions() {
 	echo
 	echo "${Y}1. Termux:x11"${W}
 	echo
-	echo "${Y}2. Vnc"${W}
+	echo "${Y}2. Vnc (Not Recomended)"${W}
 	echo
 	echo "${Y}3. Both"${W}
 	echo
@@ -859,9 +881,7 @@ function exp_termux_gl_hw_support() {
 
 function exp_hwa_support() {
 	if [[ "$confirmation_exp_hwa" == "y" ]]; then
-	echo "${R}[${C}-${R}]${G} Experimental Hardware Acceleration Will Use The mesa-vulkan-icd-wrapper Package"${W}
-	echo "${R}[${C}-${R}]${G} For other GPUs, Experimental Driver might not work and could break the desktop environment"${W}
-	echo "${R}[${C}-${R}]${G}${BOLD} Select Your Device GPU"${W}
+	echo -e "${R}[${C}-${R}]${G} Experimental Hardware Acceleration Will Use The mesa-vulkan-icd-wrapper Package\n For other GPUs, Experimental Driver might not work and could break the desktop environment\n Select Your Device GPU"${W}
     echo
 	echo "${Y}1. Adreno"${W}
 	echo
@@ -1422,23 +1442,24 @@ cat <<EOF > "$PREFIX/bin/tx11start"
 #!/data/data/com.termux/files/usr/bin/bash
 
 pulseaudio --start --exit-idle-time=-1
-# Main case statement to handle script arguments
-case \$1 in
+
+if [[ "\$1" == "--debug" ]]; then
+case \$2 in
 --nogpu)
     # Start Termux X11 without GPU acceleration
     XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :1.0 &
     sleep 1
     am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1
     sleep 1
-    env DISPLAY=:1.0 XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg LIBGL_ALWAYS_SOFTWARE=1 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe dbus-launch --exit-with-session $de_startup > /dev/null 2>&1 &
+    env DISPLAY=:1.0 XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg LIBGL_ALWAYS_SOFTWARE=1 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe dbus-launch --exit-with-session $de_startup
 
     # Check if the second argument is --legacy
-    if [[ "\$2" == "--legacy" ]]; then
+    if [[ "\$3" == "--legacy" ]]; then
         XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :1.0 -legacy-drawing &
         sleep 1
         am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1
         sleep 1
-        env DISPLAY=:1.0 XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg dbus-launch --exit-with-session $de_startup > /dev/null 2>&1 &
+        env DISPLAY=:1.0 XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg dbus-launch --exit-with-session $de_startup
     fi
     ;;
 
@@ -1449,11 +1470,11 @@ case \$1 in
     exit 0
 
     # Nested case to check for additional options
-    case \$2 in
+    case \$3 in
     --nogpu)
         env DISPLAY=:1.0 LIBGL_ALWAYS_SOFTWARE=1 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :1 -xstartup "$de_startup"
 
-        if [[ "\$3" == "--legacy" ]]; then
+        if [[ "\$4" == "--legacy" ]]; then
             env DISPLAY=:1.0 XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :1 -legacy-drawing -xstartup "$de_startup"
         fi
         ;;
@@ -1477,18 +1498,87 @@ case \$1 in
     sleep 1
     am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1 &
     sleep 1
-    env DISPLAY=:1.0 XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${hw_method} dbus-launch --exit-with-session $de_startup > /dev/null 2>&1 &
+    env DISPLAY=:1.0 XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${hw_method} dbus-launch --exit-with-session $de_startup
     ;;
 
---help|-h)
+*)
+    # Default behavior: start Termux X11 with GPU acceleration and dbus
+    ${initialize_server_method} &
+    sleep 1
+    XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :1 &
+    sleep 1
+    am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1 &
+    sleep 1
+    env DISPLAY=:1.0 XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${hw_method} dbus-launch --exit-with-session $de_startup
+    ;;
+esac
+
+elif [[ "\$1" == "--help" ]]; then
     # Display help information
     echo -e "${C}tx11start ${G}to start termux:x11 with GPU acceleration${W}"
     echo -e "${C}tx11start --nogpu ${G}to start termux:x11 without GPU acceleration${W}"
     echo -e "${C}tx11start --nodbus ${G}to start termux:x11 without dbus${W}"
     echo -e "${C}tx11start --legacy ${G}to start termux:x11 with -legacy-drawing${W}"
+	echo -e "${C}tx11start --debug ${G}at the start to see debug log${W}"
     exit 0
+else
+# Main case statement to handle script arguments
+case \$1 in
+--nogpu)
+    # Start Termux X11 without GPU acceleration
+    XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :1.0 &
+    sleep 1
+    am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1
+    sleep 1
+    env DISPLAY=:1.0 XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg LIBGL_ALWAYS_SOFTWARE=1 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe dbus-launch --exit-with-session $de_startup > /dev/null 2>&1 &
+
+    # Check if the second argument is --legacy
+    if [[ "\$2" == "--legacy" ]]; then
+        XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :1.0 -legacy-drawing &
+        sleep 1
+        am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1
+        sleep 1
+        env DISPLAY=:1.0 XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg dbus-launch --exit-with-session $de_startup > /dev/null 2>&1 &
+    fi
     ;;
 
+--nodbus)
+    # Start Termux X11 without dbus-launch
+    ${initialize_server_method} &
+    env DISPLAY=:1.0 XDG_RUNTIME_DIR=\${TMPDIR} ${hw_method} termux-x11 :1 -xstartup "$de_startup" > /dev/null 2>&1 &
+    exit 0
+
+    # Nested case to check for additional options
+    case \$2 in
+    --nogpu)
+        env DISPLAY=:1.0 LIBGL_ALWAYS_SOFTWARE=1 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :1 -xstartup "$de_startup" > /dev/null 2>&1 &
+
+        if [[ "\$3" == "--legacy" ]]; then
+            env DISPLAY=:1.0 XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :1 -legacy-drawing -xstartup "$de_startup" > /dev/null 2>&1 &
+        fi
+        ;;
+    --legacy)
+        ${initialize_server_method} &
+        env DISPLAY=:1.0 XDG_RUNTIME_DIR=\${TMPDIR} ${hw_method} termux-x11 :1 -legacy-drawing -xstartup "$de_startup" > /dev/null 2>&1 &
+        ;;
+    *)
+        echo -e "${C}--legacy ${G}to start termux:x11 with -legacy-drawing${W}"
+        echo -e "${C}--nogpu ${G}to start termux:x11 without GPU acceleration${W}"
+        exit 0
+        ;;
+    esac
+    ;;
+
+--legacy)
+    # Start Termux X11 with legacy drawing mode
+    ${initialize_server_method} &
+    sleep 1
+    XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :1 -legacy-drawing &
+    sleep 1
+    am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1 &
+    sleep 1
+    env DISPLAY=:1.0 XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${hw_method} dbus-launch --exit-with-session $de_startup > /dev/null 2>&1 &
+    ;;
 *)
     # Default behavior: start Termux X11 with GPU acceleration and dbus
     ${initialize_server_method} &
@@ -1500,6 +1590,7 @@ case \$1 in
     env DISPLAY=:1.0 XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${hw_method} dbus-launch --exit-with-session $de_startup > /dev/null 2>&1 &
     ;;
 esac
+fi
 EOF
 
 if [[ "$de_name" == "xfce" ]]; then
@@ -1951,29 +2042,51 @@ alias stopssh='termux-ssh stop'
 #######################################################
 # SPECIAL FUNCTIONS
 #######################################################
-# Extracts any archive(s) (if unp isn't installed)
+# Extracts any archive(s)
 extract() {
 	for archive in "$@"; do
-		if [ -f "$archive" ]; then
-			case $archive in
-			*.tar.bz2) tar xvjf $archive ;;
-                        *.tar.xz) tar -xvf $archive ;;
-                        *.tar.gz) tar -xzvf $archive ;;
-			*.tar.gz) tar xvzf $archive ;;
-			*.bz2) bunzip2 $archive ;;
-			*.rar) rar x $archive ;;
-			*.gz) gunzip $archive ;;
-			*.tar) tar xvf $archive ;;
-			*.tbz2) tar xvjf $archive ;;
-			*.tgz) tar xvzf $archive ;;
-			*.zip) unzip $archive ;;
-			*.Z) uncompress $archive ;;
-			*.7z) 7z x $archive ;;
-			*) echo "don't know how to extract '$archive'..." ;;
-			esac
-		else
-			echo "'$archive' is not a valid file!"
-		fi
+    if [[ ! -f "$archive" ]]; then
+        echo "Error: '$archive' does not exist!"
+        continue
+    fi
+
+    total_size=$(stat -c '%s' "$archive")
+
+    case "$archive" in
+        *.tar.gz|*.tgz)
+            pv -s "$total_size" "$archive" | tar xzf -
+            ;;
+        *.tar.xz)
+            pv -s "$total_size" "$archive" | tar xJf -
+            ;;
+        *.tar.bz2|*.tbz2)
+            pv -s "$total_size" "$archive" | tar xjf -
+            ;;
+        *.tar)
+            pv -s "$total_size" "$archive" | tar xf -
+            ;;
+        *.bz2)
+            pv -s "$total_size" "$archive" | bunzip2 > "${archive%.bz2}"
+            ;;
+        *.gz)
+            pv -s "$total_size" "$archive" | gunzip > "${archive%.gz}"
+            ;;
+        *.7z)
+            pv -s "$total_size" "$archive" | 7z x -si -y > /dev/null
+            ;;
+        *.rar)
+            pv -s "$total_size" "$archive" | unrar x -
+            ;;
+        *.zip)
+            pv -s "$total_size" "$archive" | unzip -
+            ;;
+        *.Z)
+            pv -s "$total_size" "$archive" | uncompress -
+            ;;
+        *)
+            echo "Unsupported archive format: $archive"
+            ;;
+    esac
 	done
 }
 # Searches for text in all files in the current folder
@@ -2200,7 +2313,7 @@ function add_tx11_autostart() {
 cat << EOF >> "$shell_rc_file"
 # Start Termux:X11
 termux_x11_pid=\$(pgrep -f "app_process -Xnoimage-dex2oat / com.termux.x11.Loader :1")
-if [[ !-n "\$termux_x11_pid" ]]; then
+if [ !-n "\$termux_x11_pid" ]; then
 echo "${G}Starting Termux:x11...${W}"
 tx11start
 fi
@@ -2887,6 +3000,7 @@ check_termux
 check_and_add_installer
 current_path=$(pwd)
 function install_termux_desktop() {
+cleanup_cache
 update_sys
 sleep 2
 termux-wake-lock
