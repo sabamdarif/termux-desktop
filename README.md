@@ -1,195 +1,92 @@
-
 <br>
 <center><img src="images/xfce/look_1/desktop.png"></center>
 <br>
-<p align="center"><b style ="font-size: x-large">Easily Install Termux Gui Desktop </b></p>
+
+<p align="center"><b style="font-size: x-large">Easily Install Termux GUI Desktop</b></p>
 
 <div align="center">
 
-![GitHub stars](https://img.shields.io/github/stars/sabamdarif/termux-desktop)
-![GitHub issues](https://img.shields.io/github/issues/sabamdarif/termux-desktop)
+![GitHub stars](https://img.shields.io/github/stars/sabamdarif/termux-desktop?style=for-the-badge) ![GitHub forks](https://img.shields.io/github/forks/sabamdarif/termux-desktop?color=teal&style=for-the-badge) ![GitHub issues](https://img.shields.io/github/issues/sabamdarif/termux-desktop?color=violet&style=for-the-badge) ![GitHub repo size](https://img.shields.io/github/repo-size/sabamdarif/termux-desktop?style=for-the-badge) ![GitHub License](https://img.shields.io/github/license/sabamdarif/termux-desktop?style=for-the-badge)
 
 </div>
 
-## Features:
+---
 
-- :books: Easy To Setup
-- :desktop_computer: XFCE, LXQt, and OPENBOX supported
-- :art: New Beautiful Theme And Styles
-- :wine_glass: Wine To Run Windows Apps _(x86_64 in arm64 device)_
-- :mechanical_arm: Hardware Acceleration Enabled
-- :paperclips: Termux:X11 / Vnc For Gui Access
-- :package: Work with both APT , [PACMAN](https://youtu.be/ditNvG5Nxj0)
--  :jigsaw: One Click To Install Some useful Apps
-   - :globe_with_meridians: Browser: Firefox / Chromium
-   - :man_technologist: Code Editor: VS Code / Geany
-   - :camera: Image Editor: Gimp / Inkscape
-   - :link: More...
-- :package: Install apps like libreoffice _(apps that are not avilable in termux by default)_
-- :link: And Much More...
+## Key Features:
+
+- **Quick Setup:** Easy-to-follow installation process.
+- **Desktop Styles:** Supports **XFCE**, **LXQt**, and **OPENBOX** with beautiful themes.
+- **Windows App Support:** Run Windows apps using Wine (x86_64 on ARM64 devices).
+- **Hardware Acceleration:** Enhances performance for supported hardware.
+- **GUI Access:** Supports Termux:X11 and VNC.
+- **Package Management:** Compatible with both APT and [PACMAN](https://youtu.be/ditNvG5Nxj0).
+- **One-Click App Installation:**
+  - Browsers: Firefox, Chromium
+  - Code Editors: VS Code, Geany
+  - Image Editors: GIMP, Inkscape
+  - And more...
+- **Additional Apps:** Install apps like LibreOffice not available by default in Termux.
+- **Customizations:** Extensive configuration options to suit user preferences.
 
 ---
 
-## :warning: Follow This Steps :point_down:
+## Getting Started:
 
-### 1. Check Basic Requirment: [from here](#requirements)
-### 2. Check All Avilable Desktop Styles:
+##### 1. Ensure Requirements Are Met:
+   - Android 8+ device
+   - [Termux](https://termux.dev/en/) (download from [GitHub](https://github.com/termux/termux-app/releases) or [F-Droid](https://f-droid.org/en/packages/com.termux/))
+      >NOTE: This Only Works Only On Termux From Github Or Fdroid
 
-<b>
+     > Avoid using Termux from Google Play due to API limitations.
+   - Minimum 2GB of RAM (3GB recommended)
+   - 1.5-2GB of Internet data
+   - 3-4GB of free storage
+   - VNC Client ([RealVNC](https://play.google.com/store/apps/details?id=com.realvnc.viewer.android) or [NetHunter Kex](https://store.nethunter.com/en/packages/com.offsec.nethunter.kex/))
+   - [Termux:X11](https://github.com/termux/termux-x11/releases) and [Termux-API](https://github.com/termux/termux-api/releases) (Openbox only)
 
-- [XFCE](xfce_styles.md)
-- [LXQT](lxqt_styles.md)
-- [OPENBOX](openbox_styles.md)
-- [MATE](mate_styles.md)
->Openbox keybord shortcuts :- [Here](https://github.com/sabamdarif/termux-desktop/blob/main/see-more.md#hammer_and_wrenchopenbox-keybindings-cheat-sheet)
-</b>
+##### 2. Explore Desktop Styles:
+   - **[XFCE](xfce_styles.md)**
+   - **[LXQt](lxqt_styles.md)**
+   - **[OPENBOX](openbox_styles.md)**
+   - **[MATE](mate_styles.md)**
 
-### 3. Check About Hardware Acceleration : [from here](https://github.com/sabamdarif/termux-desktop?tab=readme-ov-file#hardware-acceleration-in-distro-container-and-also-in-termux)
-### 4. Check About Distro Container: [from here](https://github.com/sabamdarif/termux-desktop?tab=readme-ov-file#want-to-install-more-apps-like-libreoffice-which-are-not-avilable-in-termux) [[Video Tutorial](https://youtu.be/KiUTyGZ2grE)]
-### 5. Check Natively Supported Apps list: [from here](applist.md)
-### 6. Installation: [from here](#installation) [[Video Tutorial](https://youtu.be/SlR9f9hl5CQ)]
-### 7. Uses: [from here](#uses)
-### 8. See More: [from here](see-more.md)
+##### 3. Hardware Acceleration and Distro Container:
+   - Learn more about [hardware acceleration](hw-acceleration.md).
+   - Check out [distro container usage](proot-caontainer.md).
 
----
+##### 4. View Supported Apps:
+   - Full list available [here](applist.md).
 
-<a name="requirements"></a>
+##### 5. Start Installation:
 
-## Minimum Requirements:
-- No Root Required
-- Android 8+ phone
-- [Termux](https://termux.dev/en/) From [Github](https://github.com/termux/termux-app/releases) Or [Fdroid](https://f-droid.org/en/packages/com.termux/)
-> Termux from Google Play can't poperly install x11-packages due to API limitation, so instead use the F-Droid Or Github build.
-- 2GB of RAM 3GB of RAM
-- 1.5 - 2 GB Of Internet
-- 3 - 4 GB Of Free Storage
-- VNC Client [RealVnc](https://play.google.com/store/apps/details?id=com.realvnc.viewer.android) Or [Nethunter Kex](https://store.nethunter.com/en/packages/com.offsec.nethunter.kex/)
-- [Termux:X11](https://github.com/termux/termux-x11/releases)
-- [Termux-API](https://github.com/termux/termux-api/releases) _(For Openbox only)_
+> **Note:** Fresh installations are recommended for best results.
 
----
-<details>
-<summary><b style ="font-size: large">Desktop Style's Screenshots: </summary>
-</b>
+> **Note:** If you are in android 12 or higher then first disable *Phantom Process Killer*
+   **Guide:-** [Here](https://github.com/atamshkai/Phantom-Process-Killer)
+   ```bash
+   curl -Lf https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop -o setup-termux-desktop && chmod +x setup-termux-desktop && ./setup-termux-desktop
+   ```
 
-#### XFCE:
-
-<center><img src="images/xfce/look_1/look.png"></center>
-
-#### LXQT:
-
-<center><img src="images/lxqt/look_2/start-menu.png"></center>
-
-#### OPENBOX:
-
-<center><img src="images/openbox/look_1/dashbord.png"></center>
-
-### MATE:
-
-<center><img src="images/mate/look_0/desktop.png"></center>
-
-</details>
-
-### See All Desktop And Their Avilable Styles:
-
-<b>
-
-- [XFCE](xfce_styles.md)
-- [LXQT](lxqt_styles.md)
-- [OPENBOX](openbox_styles.md)
-- [MATE](mate_styles.md)
-</b>
+##### 6. Usage Instructions:
+   - Commands for starting and stopping Termux:X11 and VNC sessions are provided below.
 
 ---
 
-## Screenshots:
-> All gui apps screenshot
+## Command Reference:
 
-### Browsers:
-
-<center><img src="images/apps/firefox-chromium.png"></center>
-
-### Image Editors:
-
-<center><img src="images/apps/inkscape-gimp.png"></center>
-
-### Code Editors:
-
-<center><img src="images/apps/geany-vscode.png"></center>
-
-### Media Players:
-
-<center><img src="images/apps/parole-vlc.png"></center>
-
-## See More Natively Supported Apps: [Here](applist.md)
-
----
-
-### Wine: [See More](https://github.com/sabamdarif/termux-desktop/blob/main/wine.md#about-wine)
-
-<center><img src="images/apps/wine.png"></center>
-
----
-
-## Want To Install More Apps (Like: Libreoffice) Which Are Not Avilable In Termux:
-
-### See How To Use Distro Container: [Click Here](proot-caontainer.md)
-
-#### Libre Office:
-
-<center><img src="images/apps/container-libreoffice-2.png"></center>
-
----
-
-## Hardware Acceleration In Distro Container And Also In Termux:
-
-<center><img src="images/pdrun-glmark2.png"></center>
-
-
-## Know More About Hardware Acceleration: [Here](hw-acceleration.md)
-
----
-## :warning: About The New The Experimental GPU Drivers (mesa-vulkan-icd-wrapper)
-
-<b>
-
-The experimental drivers only support a few GPUs and currently use Vulkan only (But opengl will be enabled using another way)
-
-In my tests, I achieved 1000+ FPS in vkmark on all my devices. I tried it on an Adreno 619 (best everything work fine), Adreno 750 (usable but some apps don't launch), Adreno 720 (good overall but with few issues), and Mali G76 (similar issue like Adreno 720).
-
-Also if you have Adreno GPU then please select ubuntu or debian as distro container so it can use ternip in the distro container.
-Sadly for other then adreno, GPU might not work on the distro container.
-
-If you type 'n/N' then it will use the old way to setup Hardware Acceleration.
-</b>
-
----
-
-<a name="installation"></a>
-
-# Installation:
-
->NOTE: This Only Works On Termux From Github Or Fdroid
-
->NOTE: A Fresh Install Is Always Recommended
-
-
+### Start Termux:X11
 ```bash
-curl -Lf https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop -o setup-termux-desktop && chmod +x setup-termux-desktop && ./setup-termux-desktop
+tx11start [options]
 ```
+Options:
+- `--nogpu`: Disable GPU acceleration.
+- `--legacy`: Enable legacy drawing.
+- `--nodbus`: Disable DBus.
+- Combine options for specific configurations (e.g., `tx11start --nogpu --legacy`).
 
----
+<details>
+<summary>Example:</summary>
 
-## :warning:If you are in android 12 or higher then first disable `Phantom Process Killer`
-### Guide:- [Here](https://github.com/atamshkai/Phantom-Process-Killer)
-
----
-
-<a name="uses"></a>
-
-## Uses:
-
-### Command:- `tx11start`
 - `tx11start` *to star Termux:11 with gpu acceleration*
 - `tx11start --nogpu` *to star Termux:11 without gpu acceleration*
 - `tx11start --nogpu --legacy` *to star Termux:11 without gpu acceleration and _-legacy-drawing_*
@@ -199,70 +96,129 @@ curl -Lf https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-
 - `tx11start --nodbus --legacy` *to star Termux:11 without dbus and use _-legacy-drawing_ (nodbus and gpu)*
 - `tx11start --legacy` *to star Termux:11 with _-legacy-drawing_ (with dbus and gpu)*
 - `tx11start --debug --OTHER-PARAMETERS` *To see log of that commmand*
->tx11start --debug --nogpu *To See --nogpu's log*
+  >tx11start --debug --nogpu *To See tx11start --nogpu's log*
 
-### Command:- `tx11stop`
-- `tx11stop` *to stop Termux:11*
-- `tx11stop -f` *to kill Termux:11*
+</details>
 
-### Command:- `vncstart`
-- `vncstart` *to start vncserver*
-- `vncstart ---nogpu` *to start vncserver without gpu acceleration*
-### Command:- `vncstop`
-- `vncstop` *to stop vncserver*
-- `vncstop -f` *to kill vncserver*
+### Stop Termux:X11
+```bash
+tx11stop [-f]
+```
+Options:
+- `-f`: Force stop.
 
-### Command:- `gui`
-#### If you select only one of them to access gui
+### Start VNC
+```bash
+vncstart [options]
+```
+Options:
+- `--nogpu`: Disable GPU acceleration.
+
+### Stop VNC
+```bash
+vncstop [-f]
+```
+Options:
+- `-f`: Force stop.
+
+### GUI Commands
+```bash
+gui [options]
+```
+Options:
+- `--start`: Start GUI (use `vnc` or `tx11` as arguments).
+- `--stop`: Stop GUI.
+- `--kill`: Stop all GUI sessions.
+
+<details>
+<summary>Example:</summary>
+
+##### If you select only one of them to access gui
 - `gui --start / gui -l` *to start Termux gui*
 - `gui --stop / gui -s` *to stop gui*
 
-#### If you select both for gui access
+##### If you select both for gui access
 - `gui -l / --start` `vnc` *to start VNC*
 - `gui -l / --start` `tx11` *to start Termux:X11*
 - `gui -s / --stop` `vnc` *to stop VNC*
 - `gui -s / --stop` `tx11` *to stop Termux:X11*
 - `gui -k / --kill / -kill` *to kill both vncserver and Termux:x11 At Once*
-<br>
 
-### Command:- `setup-termux-desktop`
-- `setup-termux-desktop --change style` *To Change Desktop Style*
-- `setup-termux-desktop --change hw` *To Change Hardware Acceleration Method*
-- `setup-termux-desktop --change pd` *To Change Installed Proot-Distro*
-- `setup-termux-desktop --change autostart` *To change autostart behaviour*
-<br>
+</details>
 
-- `setup-termux-desktop --reinstall icons / themes /config` *To Reinstall Icons / Themes / Config*
-- `setup-termux-desktop --reinstall icons,themes,..etc` *To Reinstall Them At Once*
-<br>
+### Setup Commands
+```bash
+setup-termux-desktop [options]
+```
+Options:
+- `--change style`: Change desktop style.
+- `--change hw`: Modify hardware acceleration settings.
+- `--reset`: Reset all changes.
+- `--remove`: Uninstall Termux Desktop.
 
-- `setup-termux-desktop --reset` *To Reset All Changes Made By This Script Without Uninstalling The Packages*
-<br>
+<details>
+<summary>Example:</summary>
 
-- `setup-termux-desktop --remove / -r` *To Remove Termux Desktop*
-<br>
+- `tx11start` *to star Termux:11 with gpu acceleration*
+- `tx11start --nogpu` *to star Termux:11 without gpu acceleration*
+- `tx11start --nogpu --legacy` *to star Termux:11 without gpu acceleration and _-legacy-drawing_*
+- `tx11start --nodbus` *to star Termux:11 without dbus*
+- `tx11start --nodbus --nogpu` *to star Termux:11 without gpu acceleration and dbus*
+- `tx11start --nodbus --nogpu --legacy` *to star Termux:11 without gpu acceleration and dbus and with _-legacy-drawing_*
+- `tx11start --nodbus --legacy` *to star Termux:11 without dbus and use _-legacy-drawing_ (nodbus and gpu)*
+- `tx11start --legacy` *to star Termux:11 with _-legacy-drawing_ (with dbus and gpu)*
+- `tx11start --debug --OTHER-PARAMETERS` *To see log of that commmand*
+  >tx11start --debug --nogpu *To See tx11start --nogpu's log*
 
-- `setup-termux-desktop --debug` **(At The Start)** *To generate a log file for any of the above command*
-
-  - `setup-termux-desktop --debug --install` *To create a log of whole installation process*
-
----
-
-### Join in chat
-
-<a href="https://t.me/hello_android_0">
-<img src="https://img.icons8.com/?size=100&id=oWiuH0jFiU0R&format=png&color=000000">
-</a>
+</details>
 
 ---
 
-### Thank's To
-<b>
+## Screenshots:
 
+### Demo Looks
+
+|XFCE|LXQT|
+|--|--|
+|![img](images/xfce/look_1/look.png)|![img](images/lxqt/look_2/start-menu.png)|
+|OPENBOX|MATE|
+|![img](images/openbox/look_1/desktop.png)|![img](images/mate/look_1/desktop.png)|
+
+### Browsers:
+![Firefox and Chromium](images/apps/firefox-chromium.png)
+
+### Image Editors:
+![Inkscape and GIMP](images/apps/inkscape-gimp.png)
+
+### Code Editors:
+![Geany and VS Code](images/apps/geany-vscode.png)
+
+### Media Players:
+![Parole and VLC](images/apps/parole-vlc.png)
+
+---
+
+## Advanced Topics:
+
+### Wine:
+Run Windows applications seamlessly. Learn more [here](https://github.com/sabamdarif/termux-desktop/blob/main/wine.md#wine_glasslearn-about-wine).
+
+### Distro Containers:
+Install additional apps like LibreOffice. Details [here](proot-caontainer.md).
+
+### Hardware Acceleration:
+Enhance performance with GPU acceleration. Learn more [here](hw-acceleration.md).
+
+---
+
+## Acknowledgments:
+Special thanks to:
 - [LinuxDroidMaster/Termux-Desktops](https://github.com/LinuxDroidMaster/Termux-Desktops)
 - [phoenixbyrd/Termux_XFCE](https://github.com/phoenixbyrd/Termux_XFCE)
 - [Yisus7u7/termux-desktop-xfce](https://github.com/Yisus7u7/termux-desktop-xfce)
 - [adi1090x/termux-desktop](https://github.com/adi1090x/termux-desktop)
-</b>
+---
 
-## If you like my work then don't forget to give a Star :blush:
+**If you enjoy this project, consider giving it a star!** :star2:
+
+Join the conversation: [Telegram Chat](https://t.me/hello_android_0).

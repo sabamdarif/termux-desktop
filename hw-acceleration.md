@@ -1,331 +1,132 @@
-# :mechanical_arm:Hardware Acceleration in Termux
+# :mechanical_arm: Hardware Acceleration in Termux
 
-- <b>When You Run The Installer Script Just Chose The Hardware Acceleration Method</b>
-- <b>If You Type Yes For Distro Container Setup So You Need To Chose A Method For The Distro Too</b>
-- <b>Then Everything Will Be Configured Automaticly</b>
+When setting up hardware acceleration in Termux, follow these steps for optimal configuration:
 
-### Use [Cpu Z](https://play.google.com/store/apps/details?id=com.cpuid.cpu_z&pcampaignid=web_share) To Know About Your GPU
+## Installation
+- **Run the Installer Script:** Choose your preferred hardware acceleration method during the installation.
+- **Distro Container Setup:** If you opt for a distro container, select the hardware acceleration method for the distro as well.
+  >For Adreno GPU you don't nedd to chose, it will automatically use turnip if you use ubuntu/debian 
+- **Automatic Configuration:** Once selected, everything will be configured automatically.
 
-<center><img src="images/cpu-z.png"></center>
+> Use [CPU-Z](https://play.google.com/store/apps/details?id=com.cpuid.cpu_z&pcampaignid=web_share) to identify your GPU. Research your GPU online to determine whether `virpipe` or `zink` works best; Reddit or similar forums often have useful insights.
 
-<b>Search On Google About Your Gpu , Which Supprot Best With It virpipe or zink (you will probably find any reddit post about it)
+![CPU-Z Screenshot](images/cpu-z.png)
 
-### How To use Hardware Acceleration in Termux ?
+## Using Hardware Acceleration in Termux
+1. **Start Termux Desktop** via VNC or Termux:x11 (recommended).
+2. **Run Your Programs** as needed.
 
-- <b>Start Termux Desktop Using Vnc Or Termux:x11</b>(Best Way To Do That)
-- <b>Run Any Program</b>
+## Using Hardware Acceleration in Proot Distro (Distro Container)
 
-### :nerd_face:How To use Hardware Acceleration in Proot Distro (Distro Container) ?
+### Method 1: Terminal Commands
+1. Launch Termux Desktop.
+2. Run programs in Termux terminal:
+   ```bash
+   pdrun program
+   ```
+   - By default, this runs with GPU acceleration.
+   ```bash
+   pdrun --nogpu program
+   ```
+   - To run without GPU acceleration.
 
-#### 1st Method
-- <b>Launch Termux Desktop</b>
-- <b>In Termux Terminal Just Run</b>
+![GLMark2 Results](images/pdrun-glmark2.png)
+
+### Method 2: Termux Menu
+1. Add the desired program to the Termux menu.
+2. Launch the program directly from the Termux menu.
+
+## Changing Hardware Acceleration Drivers
+
+### Manual Configuration
+1. **Install Required Packages.**
+2. Navigate to `$PREFIX/bin` and edit the following files using `nano` or `vim`:
+   - `vncstart`
+   - `tx11start`
+   - `pdrun`
+3. Look for the line:
+   ```bash
+   GALLIUM_DRIVER=
+   ```
+   Replace the value after `=` with either `zink` or `virpipe` as desired.
+
+### Automatic Configuration
+Run the following command to change drivers:
+```bash
+setup-termux-desktop --change hw
 ```
-pdrun program
-```
-> By Default it run with gpu acceleration
-
-```
-pdrun --no--gpu program
-```
-> To run program without gpu acceleration
-
-<center><img src="images/pdrun-glmark2.png"></center>
-
-#### 2nd Method 
-- <b>Add The Program To Termux Menu</b>
-- <b>Run The Program From Termux Menu</b>
-
-<br>
-
-## Hardware Acceleration In Termux:
-
-<center><img src="images/termux-glmark2.png"></center>
-
-## How to Change Hardware Acceleration drivers ? (not applicable to the experimental driver)
-
-- Install the reuired packages
-
-- <b>Go To `$PREFIX/bin`</b>
-
-- <b>type `nano / vim vncstart` and `nano / vim tx11start` and `nano / vim pdrun`</b>
-
-- <b>Here You Find A Line Called `GALLIUM_DRIVER=`</b>
-
-- <b>Change The Word After `=` with `zink / virpipe` Which You Want And Save It</b>
-
-#### or, change the drivers automatically 
-> :warning: might break the desktop sometime
-- <b>run `setup-termux-desktop --change hw` and select the new drivers</b>
-
-<br>
-
-# :mechanical_arm:Performance results:
-
-<!-- #### If you want to use TURNIP you have to install the drivers for it in the proot-distro you installed
-
-- <b>You will get the driver here:- [Reddit Post](https://www.reddit.com/r/termux/comments/19dpqas/proot_linux_only_dri3_patch_mesa_turnip_driver/)
-
-- ubuntu ppa :- [MastaG/mesa-turnip-ppa](https://github.com/MastaG/mesa-turnip-ppa)
-
-- Latest Drivers:- [K11MCH1/AdrenoToolsDrivers](https://github.com/K11MCH1/AdrenoToolsDrivers/releases)
-- Some More Links:-
-  - [Pre-Compiled-Mesa-Turnip-Zink](https://github.com/Herick75/Pre-Compiled-Mesa-Turnip-Zink/releases/tag/Turnip-zink-stable)
-  - [xDoge26/proot-setup](https://github.com/xDoge26/proot-setup/tree/main/Packages) -->
-
-## Experimental Driver Performance:
-
-##### Adreno with mesa-vulkan-icd-wrapper and Turnip
-![Experimental Driver Performance Adreno](./images/exp-hwa-adreno.png)
-
-##### Mali with mesa-vulkan-icd-wrapper
-![Experimental Driver Performance Mali](./images/exp-hwa-mali.png)
+> **Warning:** Sometime this may occasionally cause desktop break issues.
 
 ---
 
-### This Test Was Made By [DroidMaster](https://github.com/LinuxDroidMaster)
+# :chart_with_upwards_trend: Performance Results
 
-> Device used: Lenovo Legion Y700 2022 model (Snapdragon 870 - Adreno 650)
+## Experimental Driver Performance
 
-### GLMARK2 
+### Adreno with `mesa-vulkan-icd-wrapper` and Turnip
+![Adreno Experimental Performance](./images/exp-hwa-adreno.png)
 
-> [!IMPORTANT]  
-> The following tests were done in a proot distro environment with Debian and a XFCE4 desktop.
+### Mali with `mesa-vulkan-icd-wrapper`
+![Mali Experimental Performance](./images/exp-hwa-mali.png)
 
-<table>
-  <thead>
-    <tr>
-      <th scope="col" colspan="6">DEBIAN PROOT (GLMARK2 SCORE - the higher the number the better the performance)</th>
-    </tr>
-    <tr>
-        <th scope="col">RUN</th>
-        <th scope="col">LLVMPIPE</th>
-        <th scope="col">VIRGL</th>
-        <th scope="col">VIRGL ZINK</th>
-        <th scope="col">TURNIP</th>
-        <th scope="col">ZINK</th>
-    </tr>
-  </thead>
+### Test Environment
+> These tests and results were conducted by [LinuxDroidMaster](https://github.com/LinuxDroidMaster).
 
-  <tbody>
-    <tr>
-      <td>1</td>
-      <td>93</td>
-      <td>70</td>
-      <td>66</td>
-      <td>198</td>
-      <td>Error</td>
-    </tr>
-    <tr>
-      <td>2</td>
-      <td>93</td>
-      <td>77</td>
-      <td>66</td>
-      <td>198</td>
-      <td>Error</td>
-    </tr>
-    <tr>
-      <td>3</td>
-      <td>72</td>
-      <td>70</td>
-      <td>71</td>
-      <td>198</td>
-      <td>Error</td>
-    </tr>
-    <tr>
-      <td>4</td>
-      <td>94</td>
-      <td>76</td>
-      <td>66</td>
-      <td>197</td>
-      <td>Error</td>
-    </tr>
-    <tr>
-      <td>5</td>
-      <td>93</td>
-      <td>75</td>
-      <td>67</td>
-      <td>198</td>
-      <td>Error</td>
-    </tr>
-  </tbody>
-  <tfoot>
-    <tr>
-      <th scope="row">Initialize server</th>
-      <td>Not needed</td>
-      <td><code>virgl_test_server_android &</td>
-      <td><code>MESA_NO_ERROR=1 MESA_GL_VERSION_OVERRIDE=4.3COMPAT MESA_GLES_VERSION_OVERRIDE=3.2 GALLIUM_DRIVER=zink ZINK_DESCRIPTORS=lazy virgl_test_server --use-egl-surfaceless --use-gles &</code></td>
-      <td>Not needed</td>
-      <td><code>MESA_NO_ERROR=1 MESA_GL_VERSION_OVERRIDE=4.3COMPAT MESA_GLES_VERSION_OVERRIDE=3.2 GALLIUM_DRIVER=zink ZINK_DESCRIPTORS=lazy virgl_test_server --use-egl-surfaceless --use-gles &</code></td>
-    </tr>
-    <tr>
-      <th scope="row">Command used</th>
-      <td><code>glmkar2</td>
-      <td><code>GALLIUM_DRIVER=virpipe MESA_GL_VERSION_OVERRIDE=4.0 glmark2</td>
-      <td><code>GALLIUM_DRIVER=virpipe MESA_GL_VERSION_OVERRIDE=4.0 glmark2</td>
-      <td><code>MESA_LOADER_DRIVER_OVERRIDE=zink TU_DEBUG=noconform glmark2</td>
-      <td><code>GALLIUM_DRIVER=zink MESA_GL_VERSION_OVERRIDE=4.0 glmark2</td>
-    </tr>
-    <tr>
-      <th scope="row">GLMARK GPU Info</th>
-      <td>llvmpipe</td>
-      <td>virgl (Adreno)</td>
-      <td>virgl (zink Adreno)</td>
-      <td>virgl (Turnip Adreno)</td>
-      <td>zink (Adreno)</td>
-    </tr>
-  </tfoot>
-</table>
+- **Device:** Lenovo Legion Y700 (Snapdragon 870, Adreno 650)
+- **Distro:** Debian in Proot with XFCE4 Desktop
+- **GLMark2**: Used to evaluate GPU performance.
+
+### GLMark2 Scores: Proot Distro
+
+| Run | LLVMPIPE | VIRGL | VIRGL ZINK | TURNIP | ZINK |
+|-----|----------|-------|------------|--------|------|
+| 1   | 93       | 70    | 66         | 198    | Error|
+| 2   | 93       | 77    | 66         | 198    | Error|
+| 3   | 72       | 70    | 71         | 198    | Error|
+| 4   | 94       | 76    | 66         | 197    | Error|
+| 5   | 93       | 75    | 67         | 198    | Error|
+
+#### Commands Used:
+
+| Driver        | Command                                      |
+|---------------|----------------------------------------------|
+| LLVMPIPE      | `glmark2`                                   |
+| VIRGL         | `GALLIUM_DRIVER=virpipe MESA_GL_VERSION_OVERRIDE=4.0 glmark2` |
+| VIRGL ZINK    | `GALLIUM_DRIVER=virpipe MESA_GL_VERSION_OVERRIDE=4.0 glmark2` |
+| TURNIP        | `MESA_LOADER_DRIVER_OVERRIDE=zink TU_DEBUG=noconform glmark2` |
+| ZINK          | `GALLIUM_DRIVER=zink MESA_GL_VERSION_OVERRIDE=4.0 glmark2`   |
 
 ---
 
-> [!IMPORTANT]  
-> The following tests were done in Termux (NOT in proot-distro) and a XFCE4 desktop.
+### GLMark2 Scores: Termux (No Proot)
 
-<table>
-  <thead>
-    <tr>
-      <th scope="col" colspan="6">TERMUX NO PROOT (GLMARK2 SCORE - the higher the number the better the performance)</th>
-    </tr>
-    <tr>
-        <th scope="col">RUN</th>
-        <th scope="col">LLVMPIPE</th>
-        <th scope="col">VIRGL</th>
-        <th scope="col">VIRGL ZINK</th>
-        <th scope="col">ZINK</th>
-        <th scope="col">TURNIP</th>
-    </tr>
-  </thead>
-
-  <tbody>
-    <tr>
-      <td>1</td>
-      <td>69</td>
-      <td>Error</td>
-      <td>92</td>
-      <td>121</td>
-      <td>Doesn't apply</td>
-    </tr>
-    <tr>
-      <td>2</td>
-      <td>70</td>
-      <td>Error</td>
-      <td>92</td>
-      <td>122</td>
-      <td>Doesn't apply</td>
-    </tr>
-    <tr>
-      <td>3</td>
-      <td>69</td>
-      <td>Error</td>
-      <td>93</td>
-      <td>121</td>
-      <td>Doesn't apply</td>
-    </tr>
-    <tr>
-      <td>4</td>
-      <td>69</td>
-      <td>Error</td>
-      <td>93</td>
-      <td>124</td>
-      <td>Doesn't apply</td>
-    </tr>
-    <tr>
-      <td>5</td>
-      <td>69</td>
-      <td>Error</td>
-      <td>93</td>
-      <td>123</td>
-      <td>Doesn't apply</td>
-    </tr>
-  </tbody>
-  <tfoot>
-    <tr>
-      <th scope="row">Initialize server</th>
-      <td>Not needed</td>
-      <td><code>virgl_test_server_android &</td>
-      <td><code>MESA_NO_ERROR=1 MESA_GL_VERSION_OVERRIDE=4.3COMPAT MESA_GLES_VERSION_OVERRIDE=3.2 GALLIUM_DRIVER=zink ZINK_DESCRIPTORS=lazy virgl_test_server --use-egl-surfaceless --use-gles &</code></td>
-      <td><code>MESA_NO_ERROR=1 MESA_GL_VERSION_OVERRIDE=4.3COMPAT MESA_GLES_VERSION_OVERRIDE=3.2 GALLIUM_DRIVER=zink ZINK_DESCRIPTORS=lazy virgl_test_server --use-egl-surfaceless --use-gles &</code></td>
-      <td>Doesn't apply</td>
-    </tr>
-    <tr>
-      <th scope="row">Command used</th>
-      <td><code>glmkar2</td>
-      <td><code>GALLIUM_DRIVER=virpipe MESA_GL_VERSION_OVERRIDE=4.0 glmark2</td>
-      <td><code>GALLIUM_DRIVER=virpipe MESA_GL_VERSION_OVERRIDE=4.0 glmark2</td>
-      <td><code>GALLIUM_DRIVER=zink MESA_GL_VERSION_OVERRIDE=4.0 glmark2</td>
-      <td>Doesn't apply</td>
-    </tr>
-    <tr>
-      <th scope="row">GLMARK GPU Info</th>
-      <td>llvmpipe</td>
-      <td>virgl (Adreno)</td>
-      <td>virgl (zink Adreno)</td>
-      <td>zink (Adreno)</td>
-      <td>Doesn't apply</td>
-    </tr>
-  </tfoot>
-</table>
-
+| Run | LLVMPIPE | VIRGL | VIRGL ZINK | ZINK | TURNIP |
+|-----|----------|-------|------------|------|--------|
+| 1   | 69       | Error | 92         | 121  | N/A    |
+| 2   | 70       | Error | 92         | 122  | N/A    |
+| 3   | 69       | Error | 93         | 121  | N/A    |
+| 4   | 69       | Error | 93         | 124  | N/A    |
+| 5   | 69       | Error | 93         | 123  | N/A    |
 
 ---
-### [Firefox Aquarium WebGL Benchmark](https://webglsamples.org/aquarium/aquarium.html)
 
-> [!NOTE]  
-> You need to [enable WebGL in Firefox](https://otechworld.com/webgl-in-firefox/) to use the GPU
+### Firefox Aquarium WebGL Benchmark
 
-<table>
-  <thead>
-    <tr>
-      <th scope="col" colspan="4">DEBIAN PROOT (FIREFOX-ESR WEBGL AQUARIUM FPS - the higher the number the better the performance)</th>
-    </tr>
-    <tr>
-        <th scope="col">LLVMPIPE</th>
-        <th scope="col">VIRGL</th>
-        <th scope="col">VIRGL ZINK</th>
-        <th scope="col">TURNIP</th>
-    </tr>
-  </thead>
+#### Proot Distro Results (Firefox-ESR WebGL Aquarium FPS)
+| LLVMPIPE | VIRGL | VIRGL ZINK | TURNIP        |
+|----------|-------|------------|---------------|
+| 4        | 20    | 17         | Web page crash|
 
-  <tbody>
-    <tr>
-      <td>4</td>
-      <td>20</td>
-      <td>17</td>
-      <td>Web page crash</td>
-    </tr>
-  </tbody>
-</table>
+#### Termux Results (Firefox-ESR WebGL Aquarium FPS)
+| LLVMPIPE | VIRGL | VIRGL ZINK | ZINK | TURNIP |
+|----------|-------|------------|------|--------|
+| 2        | Error | 24         | 40   | N/A    |
 
-<table>
-  <thead>
-    <tr>
-      <th scope="col" colspan="5">TERMUX NOT PROOT (FIREFOX-ESR WEBGL AQUARIUM FPS - the higher the number the better the performance)</th>
-    </tr>
-    <tr>
-        <th scope="col">LLVMPIPE</th>
-        <th scope="col">VIRGL</th>
-        <th scope="col">VIRGL ZINK</th>
-        <th scope="col">ZINK</th>
-        <th scope="col">TURNIP</th>
-    </tr>
-  </thead>
-
-  <tbody>
-    <tr>
-      <td>2</td>
-      <td>Error</td>
-      <td>24</td>
-      <td>40</td>
-      <td>Doesn't apply</td>
-    </tr>
-  </tbody>
-</table>
-
-![WEB GL Aquarium on Firefox](./images/webglaquarium.png)
+![WebGL Aquarium on Firefox](./images/webglaquarium.png)
 
 ---
-Other tests I did: 
 
-* SuperTuxKart tested during 30 seconds
-![SUPERTUXKART comparison](./images/supertuxkart_comparison.png)
+### Additional Testing
+- **SuperTuxKart:** Benchmarked over 30 seconds.
+
+![SuperTuxKart Comparison](./images/supertuxkart_comparison.png)

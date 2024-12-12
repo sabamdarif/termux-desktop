@@ -41,6 +41,8 @@ make install
 ```
 
 ## :wine_glass:Learn about Wine:
+
+<center><img src="images/apps/wine.png"></center>
     
 #### There is three type of wine intallation options
 
