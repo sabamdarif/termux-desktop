@@ -1,87 +1,139 @@
-## More Natively Working Apps:
+## Natively Working Apps:
 
->Most of the apps are available in tur(termux user repo) or in x11 repo
+> Many additional applications are available for Termux via the **tur (Termux User Repository)** or the **x11 repository**.
 
-### Audacity (Audio Editor):
+---
 
-> pkg install audacity -y
+### Audio and Video Editing Tools
 
-<center><img src="images/apps/audacity.png"></center>
+#### Audacity (Audio Editor)
+Audacity is a versatile audio editing tool for recording, editing, and mastering audio files.
+```bash
+pkg install audacity -y
+```
+<div style="text-align: center;">
+  <img src="images/apps/audacity.png" alt="Audacity Screenshot">
+</div>
 
-### Blender:
+#### Blender (3D Modeling and Animation)
+Blender is a comprehensive tool for 3D modeling, animation, and rendering.
+```bash
+pkg install blender -y
+```
+<div style="text-align: center;">
+  <img src="images/apps/blender.png" alt="Blender Screenshot">
+</div>
 
-> pkg install blender -y
+#### Handbrake (Video Compressor)
+Handbrake is an open-source tool for compressing and converting video files.
+```bash
+pkg install handbrake -y
+```
+<div style="text-align: center;">
+  <img src="images/apps/handbrake.png" alt="Handbrake Screenshot">
+</div>
 
-<center><img src="images/apps/blender.png"></center>
+#### Shotcut (Video Editor)
+Shotcut is a feature-rich video editor supporting various formats and advanced editing features.
+```bash
+pkg install shotcut jack jack2 jack-example-tools -y
+```
+<div style="text-align: center;">
+  <img src="images/apps/shotcut.png" alt="Shotcut Screenshot">
+</div>
 
-### Thunderbird (mail client):
+#### Kdenlive (Video Editor)
+Kdenlive is a robust, open-source video editor suitable for professionals and beginners.
+```bash
+pkg install kdenlive -y
+```
+<div style="text-align: center;">
+  <img src="images/apps/kdenlive.png" alt="Kdenlive Screenshot">
+</div>
 
-> pkg install thunderbird -y
+---
 
-<center><img src="images/apps/thunderbird.png"></center>
+### Communication and Productivity Tools
 
-### Handbrake (video compressor):
+#### Thunderbird (Email Client)
+Thunderbird is a powerful and customizable email client.
+```bash
+pkg install thunderbird -y
+```
+<div style="text-align: center;">
+  <img src="images/apps/thunderbird.png" alt="Thunderbird Screenshot">
+</div>
 
-> pkg install handbrake -y
+#### Gedit (Text Editor)
+Gedit is a simple yet powerful text editor with syntax highlighting.
+```bash
+pkg install gedit -y
+```
+<div style="text-align: center;">
+  <img src="images/apps/gedit.png" alt="Gedit Screenshot">
+</div>
 
-<center><img src="images/apps/handbrake.png"></center>
+#### Leafpad (Text Editor)
+Leafpad is a lightweight text editor perfect for quick edits.
+```bash
+pkg install leafpad -y
+```
+<div style="text-align: center;">
+  <img src="images/apps/leafpad.png" alt="Leafpad Screenshot">
+</div>
 
-### Darktable (RAW Image Editor):
+---
 
-> pkg install darktable -y
+### Multimedia and Internet Tools
 
-<center><img src="images/apps/darktable.png"></center>
+#### Darktable (RAW Image Editor)
+Darktable is an advanced tool for editing and managing RAW image files.
+```bash
+pkg install darktable -y
+```
+<div style="text-align: center;">
+  <img src="images/apps/darktable.png" alt="Darktable Screenshot">
+</div>
 
-### Transmission (Bittorrent Client):
+#### Transmission (Bittorrent Client)
+Transmission is a lightweight and efficient torrent client.
+```bash
+pkg install transmission-gtk -y
+```
+<div style="text-align: center;">
+  <img src="images/apps/transmission.png" alt="Transmission Screenshot">
+</div>
 
-> pkg install transmission-gtk -y
+#### Rhythmbox (Music Player)
+Rhythmbox is a music management and playback application.
+```bash
+pkg install rhythmbox -y
+```
+<div style="text-align: center;">
+  <img src="images/apps/rhythmbox.png" alt="Rhythmbox Screenshot">
+</div>
 
-<center><img src="images/apps/transmission.png"></center>
+#### Xpdf Reader
+Xpdf is a lightweight PDF reader for viewing documents.
+```bash
+pkg install xpdf -y
+```
+<div style="text-align: center;">
+  <img src="images/apps/xpdf.png" alt="Xpdf Screenshot">
+</div>
 
-### Shotcut (Video Editor):
+#### Otter Browser (Web Browser)
+Otter Browser is a lightweight browser designed with simplicity and efficiency in mind.
+```bash
+pkg install otter-browser -y
+```
 
-> pkg install shotcut jack jack2 jack-example-tools -y
+#### Netsurf (Web Browser)
+Netsurf is a compact and resource-friendly web browser.
+```bash
+pkg install netsurf -y
+```
 
-<center><img src="images/apps/shotcut.png"></center>
+---
 
-### Kdenlive (Video Editor):
-
-> pkg install kdenlive -y
-
-<center><img src="images/apps/kdenlive.png"></center>
-
-### Rhythmbox (Music Player):
-
-> pkg install rhythmbox -y
-
-<center><img src="images/apps/rhythmbox.png"></center>
-
-### Gedit (Text Editor):
-
-> pkg install gedit -y
-
-<center><img src="images/apps/gedit.png"></center>
-
-### Leaf Pad (Text Editor):
-
-> pkg install leafpad -y
-
-<center><img src="images/apps/leafpad.png"></center>
-
-### Xpdf Reader:
-
-> pkg install xpdf -y
-
-<center><img src="images/apps/xpdf.png"></center>
-
-### Otter Browser (Browser):
-
-> pkg install otter-browser -y
-
-<center><img src="images/apps/otter-browser.png"></center>
-
-### Netsurf (Browser):
-
-> pkg install netsurf -y
-
-<center><img src="images/apps/netsurf.png"></center>
+### List Keep Growing ...

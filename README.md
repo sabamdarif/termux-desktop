@@ -159,16 +159,25 @@ Options:
 <details>
 <summary>Example:</summary>
 
-- `tx11start` *to star Termux:11 with gpu acceleration*
-- `tx11start --nogpu` *to star Termux:11 without gpu acceleration*
-- `tx11start --nogpu --legacy` *to star Termux:11 without gpu acceleration and _-legacy-drawing_*
-- `tx11start --nodbus` *to star Termux:11 without dbus*
-- `tx11start --nodbus --nogpu` *to star Termux:11 without gpu acceleration and dbus*
-- `tx11start --nodbus --nogpu --legacy` *to star Termux:11 without gpu acceleration and dbus and with _-legacy-drawing_*
-- `tx11start --nodbus --legacy` *to star Termux:11 without dbus and use _-legacy-drawing_ (nodbus and gpu)*
-- `tx11start --legacy` *to star Termux:11 with _-legacy-drawing_ (with dbus and gpu)*
-- `tx11start --debug --OTHER-PARAMETERS` *To see log of that commmand*
-  >tx11start --debug --nogpu *To See tx11start --nogpu's log*
+- `setup-termux-desktop --change style` *To Change Desktop Style*
+- `setup-termux-desktop --change hw` *To Change Hardware Acceleration Method*
+- `setup-termux-desktop --change pd` *To Change Installed Proot-Distro*
+- `setup-termux-desktop --change autostart` *To change autostart behaviour*
+<br>
+
+- `setup-termux-desktop --reinstall icons / themes /config` *To Reinstall Icons / Themes / Config*
+- `setup-termux-desktop --reinstall icons,themes,..etc` *To Reinstall Them At Once*
+<br>
+
+- `setup-termux-desktop --reset` *To Reset All Changes Made By This Script Without Uninstalling The Packages*
+<br>
+
+- `setup-termux-desktop --remove / -r` *To Remove Termux Desktop*
+<br>
+
+- `setup-termux-desktop --debug` **(At The Start)** *To generate a log file for any of the above command*
+
+  - `setup-termux-desktop --debug --install` *To create a log of whole installation process*
 
 </details>
 
