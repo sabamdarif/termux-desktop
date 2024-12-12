@@ -256,4 +256,13 @@ curl -Lf https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-
 
 ---
 
+### Thank's To
+<b>
+
+- [LinuxDroidMaster/Termux-Desktops](https://github.com/LinuxDroidMaster/Termux-Desktops)
+- [phoenixbyrd/Termux_XFCE](https://github.com/phoenixbyrd/Termux_XFCE)
+- [Yisus7u7/termux-desktop-xfce](https://github.com/Yisus7u7/termux-desktop-xfce)
+- [adi1090x/termux-desktop](https://github.com/adi1090x/termux-desktop)
+</b>
+
 ## If you like my work then don't forget to give a Star :blush:
