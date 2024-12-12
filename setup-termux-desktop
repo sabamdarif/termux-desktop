@@ -1088,7 +1088,7 @@ function install_desktop() {
         package_install_and_check "mate*"
         package_install_and_check "marco mousepad xfce4-taskmanager lximage-qt"
     fi
-	package_install_and_check "kvantum xwayland file-roller pavucontrol gnome-font-viewer atril galculator"
+	package_install_and_check "kvantum xwayland file-roller pavucontrol gnome-font-viewer atril galculator gdk-pixbuf"
     # Uncomment if additional package installation is needed
     # if [[ "$distro_add_answer" == "y" ]]; then
     #     package_install_and_check "xdg-utils"
@@ -2768,6 +2768,7 @@ function reinstall_icons() {
 	tmp_icons_folder="$PREFIX/tmp/icons"
 	check_and_create_directory "$tmp_icons_folder"
 	. $config_file
+	package_install_and_check "gdk-pixbuf"
 	if [[ "$style_answer" == "2" ]]; then
 	package_install_and_check "fluent-icon-theme"
 	else

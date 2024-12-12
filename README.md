@@ -4,12 +4,6 @@
 
 <p align="center"><b style="font-size: x-large">Easily Install Termux GUI Desktop</b></p>
 
-<div align="center">
-
-![GitHub stars](https://img.shields.io/github/stars/sabamdarif/termux-desktop?style=for-the-badge) ![GitHub forks](https://img.shields.io/github/forks/sabamdarif/termux-desktop?color=teal&style=for-the-badge) ![GitHub issues](https://img.shields.io/github/issues/sabamdarif/termux-desktop?color=violet&style=for-the-badge) ![GitHub repo size](https://img.shields.io/github/repo-size/sabamdarif/termux-desktop?style=for-the-badge) ![GitHub License](https://img.shields.io/github/license/sabamdarif/termux-desktop?style=for-the-badge)
-
-</div>
-
 ---
 
 ## Key Features:
