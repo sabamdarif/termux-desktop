@@ -13,7 +13,7 @@ C="$(printf '\033[1;36m')"
 W="$(printf '\033[0m')"
 BOLD="$(printf '\033[1m')"
 termux_desktop_path="$PREFIX/etc/termux-desktop"
-config_file="$termux_desktop_path/configuration"
+config_file="$termux_desktop_path/configuration.conf"
 cd $HOME
 
 # create log
@@ -23,13 +23,18 @@ function debug() {
 }
 
 function banner() {
-clear
-echo "${Y} ▀█▀ █▀▀ █▀█ █▀▄▀█ █ █ ▀▄▀   █▀▄ █▀▀ █▀ █▄▀ ▀█▀ █▀█ █▀█ "${W}
-echo "${Y}  █  ██▄ █▀▄ █   █ █▄█ █ █   █▄▀ ██▄ ▄█ █ █  █  █▄█ █▀▀ "${W}
-echo
-echo "${C}${BOLD} Install Gui Desktop In Termux"${W}
-echo "${C}${BOLD} code by @sabamdrif"${W}
-echo
+    clear
+
+    # Banner text with minimal lines
+    echo -e "${C}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~${W}"
+    echo -e "${Y}~   ░▀█▀░█▀▀░█▀▄░█▄█░█░█░█░█░░░░   ~${W}"
+    echo -e "${Y}~   ░░█░░█▀▀░█▀▄░█░█░█░█░▄▀▄░░░░   ~${W}"
+    echo -e "${Y}~   ░░▀░░▀▀▀░▀░▀░▀░▀░▀▀▀░▀░▀░░░░   ~${W}"
+    echo -e "${Y}~   ░█▀▄░█▀▀░█▀▀░█░█░▀█▀░█▀█░█▀█   ~${W}"
+    echo -e "${Y}~   ░█░█░█▀▀░▀▀█░█▀▄░░█░░█░█░█▀▀   ~${W}"
+    echo -e "${Y}~   ░▀▀░░▀▀▀░▀▀▀░▀░▀░░▀░░▀▀▀░▀░░   ~${W}"
+    echo -e "${C}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~${W}"
+	echo " "
 }
 
 # check if the script is running on termux or not
@@ -124,7 +129,7 @@ function package_install_and_check() {
         
         if type -p pacman >/dev/null 2>&1; then
             if pacman -Qi "$package_name" >/dev/null 2>&1; then
-                echo "${package_name}=\"already_exist\"" >> "$config_file"
+                echo "\"${package_name}\"=\"already_exist\"" >> "$config_file"
                 continue
             fi
             
@@ -148,7 +153,7 @@ function package_install_and_check() {
                 for pkgs in $packages; do
                     echo "${R}[${C}-${R}]${G}${BOLD} Installing matched package: ${C}$pkgs ${W}"
                     if dpkg -s "$pkgs" >/dev/null 2>&1; then
-                        echo "${pkgs}=\"already_exist\"" >> "$config_file"
+                        echo "\"${pkgs}\"=\"already_exist\"" >> "$config_file"
                         pkg reinstall "$pkgs" -y
                     else
                         pkg install "$pkgs" -y
@@ -156,7 +161,7 @@ function package_install_and_check() {
                 done
             else
                 if dpkg -s "$package_name" >/dev/null 2>&1; then
-                    echo "${package_name}=\"already_exist\"" >> "$config_file"
+                    echo "\"${package_name}\"=\"already_exist\"" >> "$config_file"
                     pkg reinstall "$package_name" -y
                 else
                     pkg install "$package_name" -y
@@ -214,7 +219,7 @@ function package_check_and_remove() {
 
             for pkg in $packages; do
                 echo "${R}[${C}-${R}]${G}${BOLD} Removing matched package: ${C}$pkg ${W}"
-
+				if [[ "$pkg" != "already_exist" ]]; then
                 if type -p pacman >/dev/null 2>&1; then
                     if pacman -Qi "$pkg" >/dev/null 2>&1; then
                         pacman -Rnds --noconfirm "$pkg"
@@ -234,8 +239,10 @@ function package_check_and_remove() {
                         fi
                     fi
                 fi
+				fi
             done
         else
+			if [[ "$package_name" != "already_exist" ]]; then
             if type -p pacman >/dev/null 2>&1; then
                 if pacman -Qi "$package_name" >/dev/null 2>&1; then
                     echo "${R}[${C}-${R}]${G}${BOLD} Removing package: ${C}$package_name ${W}"
@@ -258,6 +265,7 @@ function package_check_and_remove() {
                 fi
             fi
         fi
+		fi
     done
     echo ""
 }
@@ -557,6 +565,72 @@ function select_an_option() {
             echo "${R}[${R}☓${R}]${R} Invalid input. Please enter a number between 1 and $max_options.${W}"
         fi
     done
+}
+
+# temp_config_file="$PREFIX/tmp/processed_config.conf"
+# function preprocess_conf() {
+#     cp "$config_file" "$temp_config_file"
+
+#     # Preprocess configuration file:
+#     # 1. Replace all dashes in keys with underscores.
+#     # 2. Remove quotes from keys and values.
+#     sed -i -E 's/^([[:space:]]*[^#=]+)-/\1_/g; s/-/_/g; s/^([[:space:]]*[^#=]+)="([^"]*)"/\1=\2/g' "$temp_config_file"
+# }
+
+# function read_conf() {
+#     if [[ ! -f "$temp_config_file" ]]; then
+#         echo "Preprocessed configuration file not found."
+#         exit 1
+#     fi
+
+#     # Safely source the preprocessed configuration file
+#     while IFS='=' read -r key value; do
+#         # Trim whitespace from key and value
+#         key=$(echo "$key" | xargs)
+#         value=$(echo "$value" | xargs)
+
+#         # Skip comments and empty lines
+#         if [[ -z "$key" || "$key" =~ ^# ]]; then
+#             continue
+#         fi
+
+#         # Export the key-value pair as a variable
+#         export "$key"="$value"
+#     done < "$temp_config_file"
+# }
+
+function preprocess_conf() {
+    # Preprocess configuration file:
+    # 1. Remove lines where keys contain dashes (-).
+    # 2. Remove quotes from keys and values.
+	echo "${R}[${C}-${R}]${G} Prepering config file..."${W}
+    sed -i -E '/^[[:space:]]*[^#=]+-.*=/d; s/^([[:space:]]*[^#=]+)="([^"]*)"/\1=\2/g' "$config_file"
+}
+
+function read_conf() {
+    if [[ ! -f "$config_file" ]]; then
+        echo "${R}[${R}☓${R}]${R} Configuration file $config_file not found."${W}
+		exit 0
+    fi
+
+	# source "$config_file"
+
+    # Process each line of the file
+    while IFS='=' read -r key value; do
+        # Trim whitespace and surrounding quotes from key and value
+        key=$(echo "$key" | xargs | sed 's/"//g')
+        value=$(echo "$value" | xargs | sed 's/"//g')
+
+        # Skip empty lines and comments
+        if [[ -z "$key" || "$key" =~ ^# ]]; then
+            continue
+        fi
+
+        # Dynamically create variables
+        export "$key"="$value"
+    done < "$config_file"
+
+    echo "${R}[${C}✓${R}]${G} Configuration variables loaded."${W}
 }
 
 #########################################################################
@@ -881,7 +955,8 @@ function exp_termux_gl_hw_support() {
 
 function exp_hwa_support() {
 	if [[ "$confirmation_exp_hwa" == "y" ]]; then
-	echo -e "${R}[${C}-${R}]${G} Experimental Hardware Acceleration Will Use The mesa-vulkan-icd-wrapper Package\n For other GPUs, Experimental Driver might not work and could break the desktop environment\n Select Your Device GPU"${W}
+	echo -e "${R}[${C}-${R}]${G} Experimental Hardware Acceleration Will Use The mesa-vulkan-icd-wrapper Package\nFor option 4 other GPUs, Experimental Driver might not work and could break the desktop environment\n "${W}
+	echo "${R}[${C}-${R}]${G}${BOLD} Select Your Device GPU"${W}
     echo
 	echo "${Y}1. Adreno"${W}
 	echo
@@ -1062,8 +1137,6 @@ function install_required_packages() {
     else
         package_install_and_check "wget pv jq curl pulseaudio tar xz-utils gzip termux-am x11-repo tur-repo"
     fi
-
-    sed -i 's/termux-am="already_exist"/ /' $config_file
     update_sys
 }
 
@@ -1088,7 +1161,7 @@ function install_desktop() {
         package_install_and_check "mate*"
         package_install_and_check "marco mousepad xfce4-taskmanager lximage-qt"
     fi
-	package_install_and_check "kvantum xwayland file-roller pavucontrol gnome-font-viewer atril galculator gdk-pixbuf"
+	package_install_and_check "kvantum xwayland file-roller pavucontrol gnome-font-viewer atril galculator gdk-pixbuf xorg-xrdb"
     # Uncomment if additional package installation is needed
     # if [[ "$distro_add_answer" == "y" ]]; then
     #     package_install_and_check "xdg-utils"
@@ -1339,7 +1412,7 @@ function distro_container_setup() {
                     check_and_backup "${current_path}/distro-container-setup"
                     wget -O ${current_path}/distro-container-setup https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/distro-container-setup
 					if [[ ("$1" == "--change" || "$1" == "-c") && ("$2" == "distro" || "$2" == "pd") ]]; then
-					sed -i 's/\(call_from_change_d="\)[^"]*/\1y/' "${current_path}/distro-container-setup"
+					sed -i 's/\(call_from_change_pd="\)[^"]*/\1y/' "${current_path}/distro-container-setup"
 					fi					
                     chmod +x ${current_path}/distro-container-setup
                     . ${current_path}/distro-container-setup
@@ -1466,21 +1539,21 @@ case \$2 in
 --nodbus)
     # Start Termux X11 without dbus-launch
     ${initialize_server_method} &
-    env DISPLAY=:1.0 XDG_RUNTIME_DIR=\${TMPDIR} ${hw_method} termux-x11 :1 -xstartup "$de_startup"
+    env DISPLAY=:1.0 XDG_RUNTIME_DIR=\${TMPDIR} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${hw_method} termux-x11 :1 -xstartup "$de_startup"
     exit 0
 
     # Nested case to check for additional options
     case \$3 in
     --nogpu)
-        env DISPLAY=:1.0 LIBGL_ALWAYS_SOFTWARE=1 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :1 -xstartup "$de_startup"
+        env DISPLAY=:1.0 LIBGL_ALWAYS_SOFTWARE=1 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe XDG_RUNTIME_DIR=\${TMPDIR} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg termux-x11 :1 -xstartup "$de_startup"
 
         if [[ "\$4" == "--legacy" ]]; then
-            env DISPLAY=:1.0 XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :1 -legacy-drawing -xstartup "$de_startup"
+            env DISPLAY=:1.0 XDG_RUNTIME_DIR=\${TMPDIR} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg termux-x11 :1 -legacy-drawing -xstartup "$de_startup"
         fi
         ;;
     --legacy)
         ${initialize_server_method} &
-        env DISPLAY=:1.0 XDG_RUNTIME_DIR=\${TMPDIR} ${hw_method} termux-x11 :1 -legacy-drawing -xstartup "$de_startup"
+        env DISPLAY=:1.0 XDG_RUNTIME_DIR=\${TMPDIR} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${hw_method} termux-x11 :1 -legacy-drawing -xstartup "$de_startup"
         ;;
     *)
         echo -e "${C}--legacy ${G}to start termux:x11 with -legacy-drawing${W}"
@@ -1545,21 +1618,21 @@ case \$1 in
 --nodbus)
     # Start Termux X11 without dbus-launch
     ${initialize_server_method} &
-    env DISPLAY=:1.0 XDG_RUNTIME_DIR=\${TMPDIR} ${hw_method} termux-x11 :1 -xstartup "$de_startup" > /dev/null 2>&1 &
+    env DISPLAY=:1.0 XDG_RUNTIME_DIR=\${TMPDIR} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${hw_method} termux-x11 :1 -xstartup "$de_startup" > /dev/null 2>&1 &
     exit 0
 
     # Nested case to check for additional options
     case \$2 in
     --nogpu)
-        env DISPLAY=:1.0 LIBGL_ALWAYS_SOFTWARE=1 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :1 -xstartup "$de_startup" > /dev/null 2>&1 &
+        env DISPLAY=:1.0 LIBGL_ALWAYS_SOFTWARE=1 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe XDG_RUNTIME_DIR=\${TMPDIR} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg termux-x11 :1 -xstartup "$de_startup" > /dev/null 2>&1 &
 
         if [[ "\$3" == "--legacy" ]]; then
-            env DISPLAY=:1.0 XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :1 -legacy-drawing -xstartup "$de_startup" > /dev/null 2>&1 &
+            env DISPLAY=:1.0 XDG_RUNTIME_DIR=\${TMPDIR} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg termux-x11 :1 -legacy-drawing -xstartup "$de_startup" > /dev/null 2>&1 &
         fi
         ;;
     --legacy)
         ${initialize_server_method} &
-        env DISPLAY=:1.0 XDG_RUNTIME_DIR=\${TMPDIR} ${hw_method} termux-x11 :1 -legacy-drawing -xstartup "$de_startup" > /dev/null 2>&1 &
+        env DISPLAY=:1.0 XDG_RUNTIME_DIR=\${TMPDIR} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${hw_method} termux-x11 :1 -legacy-drawing -xstartup "$de_startup" > /dev/null 2>&1 &
         ;;
     *)
         echo -e "${C}--legacy ${G}to start termux:x11 with -legacy-drawing${W}"
@@ -2425,9 +2498,8 @@ function remove_termux_desktop() {
 	else
 	echo "${R}[${C}-${R}]${R}${BOLD} Removeing Termux Desktop"${W}
 	sleep 3
-	. $config_file
+	read_conf
 	#remove basic packages
-	echo "${package_name}=\"already_exist\"" >> $config_file
 	package_check_and_remove "pulseaudio x11-repo tur-repo"
 	#remove desktop related packages
 	if [[ "$de_name" == "xfce" ]]; then
@@ -2564,7 +2636,7 @@ function change_style() {
 	exit 0
 	else
 	gui_check_up
-	. $config_file
+	read_conf
 	banner
 	echo "${R}[${C}-${R}]${G} Your currently installed style is ${C}${BOLD}$style_name "${W}
 	echo
@@ -2575,7 +2647,7 @@ function change_style() {
 	banner
 	echo "${R}[${C}-${R}]${G} Style changed successfully"${W}
 	echo
-	. $config_file
+	read_conf
 	echo "${R}[${C}-${R}]${G} Your currently installed style is ${C}${BOLD}$style_name "${W}
 	fi
 }
@@ -2643,7 +2715,7 @@ function change_distro() {
 	echo -e "${C} It look like you haven't install the desktop yet\n Please install the desktop first"${W}
 	exit 0
 	else
-	. $config_file
+	read_conf
 	banner
 	if [[ "$distro_add_answer" == "y" ]]; then
 	    if [[ -d "$PREFIX/var/lib/proot-distro/installed-rootfs/$selected_distro" ]] ;then
@@ -2729,8 +2801,8 @@ function change_autostart() {
 		echo "${Y}2. Vnc"${W}
 		echo
 		select_an_option 2 1 autostart_gui_mode
+		fi
 		add_to_autostart
-		fi 
     fi
 }
 
@@ -2745,7 +2817,7 @@ function reinstall_themes() {
 	gui_check_up
 	tmp_themes_folder="$PREFIX/tmp/themes"
 	check_and_create_directory "$tmp_themes_folder"
-	. $config_file
+	read_conf
 	echo "${R}[${C}-${R}]${G} Reinstalling Themes..."${W}
 	download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/${de_name}/look_${style_answer}/theme.tar.gz" "$tmp_themes_folder"
 	local theme_names=$(ls $tmp_themes_folder)
@@ -2767,7 +2839,7 @@ function reinstall_icons() {
 	gui_check_up
 	tmp_icons_folder="$PREFIX/tmp/icons"
 	check_and_create_directory "$tmp_icons_folder"
-	. $config_file
+	read_conf
 	package_install_and_check "gdk-pixbuf"
 	if [[ "$style_answer" == "2" ]]; then
 	package_install_and_check "fluent-icon-theme"
@@ -2799,7 +2871,7 @@ function reinstall_config() {
 	gui_check_up
 	tmp_config_folder="$PREFIX/tmp/config"
 	check_and_create_directory "$tmp_config_folder"
-	. $config_file
+	read_conf
 	echo "${R}[${C}-${R}]${G} Reinstalling Config..."${W}
 	download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/${de_name}/look_${style_answer}/config.tar.gz" "$tmp_config_folder"
 	local config_file_names=$(ls $tmp_config_folder)
@@ -2847,7 +2919,6 @@ function print_basic_details() {
 	net_condition="$(getprop gsm.network.type)"
 	country="$(getprop gsm.sim.operator.iso-country)"
 cat <<EOF > $config_file
-
 ####################################
 ########## Termux Desktop ##########
 ####################################
@@ -2940,25 +3011,20 @@ function reset_changes() {
         echo -e "${C} It looks like you haven't installed the desktop yet.\n Please install the desktop first.${W}"
         exit 0
     else
-        . $config_file
+        read_conf
         banner
         echo "${R}[${C}-${R}]${G} Removing $de_name Config..."${W}
         set_config_dir
-        check_and_delete "$config_dirs"
-
-        shell_name=$($basename "$SHELL")
-        get_shellrc_path
-        check_and_backup "$config_file"
-        touch $config_file
-        print_basic_details
-        chmod +x $config_file
-
-        if [[ "$distro_add_answer" == "y" ]]; then
+		check_and_delete "$config_dirs"
+		if [[ "$distro_add_answer" == "y" ]]; then
             confirmation_y_or_n "Do you want to reset the distro container as well?" conf_distro_reset
             if [[ "$conf_distro_reset" == "y" ]]; then
                 check_and_restore "$save_path/.${pd_shell_name}rc"
             fi
         fi
+
+        shell_name=$($basename "$SHELL")
+        get_shellrc_path
 
         if [[ "$terminal_utility_setup_answer" == "y" ]]; then
             check_and_delete "$PREFIX/etc/motd.sh $HOME/.termux $HOME/.fonts/font.ttf $HOME/.termux/colors.properties"
@@ -2987,6 +3053,9 @@ function reset_changes() {
 
         check_and_delete "$shell_rc_file"
         check_and_restore "$shell_rc_file"
+		check_and_backup "$config_file"
+        touch $config_file
+        print_basic_details
 
         echo -e "${R}[${C}-${R}]${G}${BOLD} Reset successful.\n Now restart Termux.${W}"
     fi
@@ -3008,7 +3077,6 @@ termux-wake-lock
 sleep 2
 check_and_create_directory "$PREFIX/etc/termux-desktop"
 touch $config_file
-chmod +x $config_file
 print_basic_details
 install_required_packages
 questions
@@ -3045,6 +3113,7 @@ gui_launcher
 terminal_utility_setup
 add_to_autostart
 some_fixes
+preprocess_conf
 cleanup_cache
 termux-wake-unlock
 notes

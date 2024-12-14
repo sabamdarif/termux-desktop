@@ -7,7 +7,7 @@ function check_termux() {
 	fi
 }
 
-call_from_change_d="n"
+call_from_change_pd="n"
 
 function setup_distro() {
     case "$distro_answer" in
@@ -1256,30 +1256,50 @@ proot-distro login --user $final_user_name $selected_distro -- /bin/sh -c 'bash 
 
 }
 
+function install_distro_container() {
+    setup_distro
+    distro_basic_task
+    if [[ "$call_from_change_pd" != "y" ]]; then
+    hw_config
+    fi
+    distro_zsh_answer
+    distro_terminal_utility_setup
+    distro_create_app_installer
+    distro_app_launch_setup
+    distro_folders_link
+}
+
 #########################################################################
 #
 # Check Installation
 #
 #########################################################################
 function disro_container_install_check() {
-    termux-reload-settings
     if [[ -d "$PREFIX/bin/$selected_distro" ]] || [[ -d "$PREFIX/var/lib/proot-distro/installed-rootfs/$selected_distro" ]]; then
     echo
     echo "${R}[${G}✓${R}]${G}${BOLD} $selected_distro container setup successfully"${W}
     else
-    echo "${R}[${R}☓${R}]${R} Some problem occurrs in $selected_distro setup${W}"
+    max_retries=2
+    retry_count=0
+        while [[ "$retry_count" -lt "$max_retries" ]]; do
+        echo "${R}[${R}☓${R}]${R} Some problem occurred in $selected_distro setup${W}"
+        echo
+        echo "${R}[${C}-${R}]${G} Trying again... (Attempt $((retry_count + 1)) of $max_retries)${W}"
+        install_distro_container
+            if [[ -d "$PREFIX/bin/$selected_distro" ]] || [[ -d "$PREFIX/var/lib/proot-distro/installed-rootfs/$selected_distro" ]]; then
+            echo
+            echo "${R}[${G}✓${R}]${G}${BOLD} $selected_distro container setup successfully"${W}
+            break
+            fi
+            ((retry_count++))
+            if [[ "$retry_count" == "$max_retries" ]]; then
+            echo "${R}[${R}☓${R}]${R} Failed to set up $selected_distro container after multiple attempts. Skipping...${W}"
+            break
+            fi
+        done
     fi
 }
 
 check_termux
-setup_distro
-distro_basic_task
-if [[ "$call_from_change_d" != "y" ]]; then
-hw_config
-fi
-distro_zsh_answer
-distro_terminal_utility_setup
-distro_create_app_installer
-distro_app_launch_setup
-distro_folders_link
+install_distro_container
 disro_container_install_check
