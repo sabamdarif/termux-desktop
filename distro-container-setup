@@ -388,11 +388,8 @@ function distro_zsh_answer() {
     elif [[ "$pd_useradd_answer" == "n" ]]; then
     save_path="$distro_path/root"
     fi
-    if [[ "$distro_zsh_answer" == "n" ]]; then
-	echo "${R}[${C}-${R}]${C} Canceling Distro Zsh Setup..."${W}
-    sleep 1.5
-	pd_shell_name="bash"
-    else
+
+    if [[ "$distro_zsh_answer" == "y" ]]; then
     pd_shell_name="zsh"
 	echo "${R}[${C}-${R}]${G}${BOLD} Configuring Zsh for ${selected_distro}${G}.."${W}
 	echo
@@ -412,9 +409,9 @@ declare -f banner get_latest_release pd_root_package_install_and_check >> $distr
 cat <<'EOF' >> $distro_path/root/pd_zsh_install.sh
 banner
 pd_root_package_install_and_check "git zsh wget"
-wget https://raw.githubusercontent.com/sabamdarif/short-linux-scripts/main/install-zsh.sh && bash install-zsh.sh
-clear
-rm pd_zsh_install.sh
+# wget https://raw.githubusercontent.com/sabamdarif/short-linux-scripts/main/install-zsh.sh && bash install-zsh.sh # may create some issue
+# clear
+# rm pd_zsh_install.sh
 EOF
 proot-distro login $selected_distro -- /bin/bash -c 'bash pd_zsh_install.sh'
 cat <<'EOF' > $save_path/pd_zsh_setup.sh
@@ -435,6 +432,10 @@ clear
 rm pd_zsh_setup.sh
 EOF
     proot-distro login --user $final_user_name $selected_distro -- /bin/bash -c 'bash pd_zsh_setup.sh'
+else
+    echo "${R}[${C}-${R}]${C} Canceling Distro Zsh Setup..."${W}
+    sleep 1.5
+	pd_shell_name="bash"
 fi
 echo "pd_shell_name=\"$pd_shell_name\"" >> $config_file
 }

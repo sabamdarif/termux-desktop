@@ -233,6 +233,7 @@ Special thanks to:
 - [phoenixbyrd/Termux_XFCE](https://github.com/phoenixbyrd/Termux_XFCE)
 - [Yisus7u7/termux-desktop-xfce](https://github.com/Yisus7u7/termux-desktop-xfce)
 - [adi1090x/termux-desktop](https://github.com/adi1090x/termux-desktop)
+- [Generator/termux-motd](https://github.com/Generator/termux-motd)
 ---
 
 **If you enjoy this project, consider giving it a star!** :star2:
