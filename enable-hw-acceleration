@@ -12,10 +12,7 @@ function hw_install_required_packages() {
     echo "${R}[${C}-${R}]${G}${BOLD} Installing Experimental Mesa Driver..."${W}
     echo
 
-    if [[ "$confirmation_exp_hwa" == "y" ]]; then
-        # Uncomment to install OpenCL
-        # package_install_and_check "clvk opencl-vendor-driver"
-
+    if [[ "$confirmation_mesa_vulkan_icd_wrapper" == "y" ]]; then
         # Determine device architecture
         device_arch=$(uname -m)
         case "$device_arch" in
@@ -38,13 +35,16 @@ function hw_install_required_packages() {
         fi
 
         case "$exp_termux_gl_hw_answer" in
+            5)
+                package_install_and_check "mesa-zink virglrenderer-mesa-zink vulkan-loader-generic angle-android virglrenderer-android"
+                ;;
             4)
-                if [[ "$archtype" == "aarch64" || "$archtype" == "arm" ]]; then
-                    wget -O mesa.deb https://github.com/sabamdarif/termux-desktop/releases/download/mesa-vulkan/mesa_24.2.6-1_${archtype}.deb
-                    apt install ./mesa.deb -y
-                    check_and_delete "mesa.deb"
-                fi
-                package_install_and_check "virglrenderer-mesa-zink vulkan-loader-generic angle-android virglrenderer-android"
+                # if [[ "$archtype" == "aarch64" || "$archtype" == "arm" ]]; then
+                #     wget -O mesa.deb https://github.com/sabamdarif/termux-desktop/releases/download/mesa-vulkan/mesa_24.2.6-1_${archtype}.deb
+                #     apt install ./mesa.deb -y
+                #     check_and_delete "mesa.deb"
+                # fi
+                package_install_and_check "mesa virglrenderer-mesa-zink vulkan-loader-generic angle-android virglrenderer-android"
                 ;;
             2)
                 package_install_and_check "angle-android virglrenderer-android"
@@ -53,7 +53,8 @@ function hw_install_required_packages() {
                 package_install_and_check "mesa-zink virglrenderer-mesa-zink vulkan-loader-generic angle-android virglrenderer-android"
                 ;;
         esac
-
+            package_install_and_check "clvk"
+            # package_install_and_check "opencl-vendor-driver"
     else
         echo "${R}[${C}-${R}]${G}${BOLD} Installing Required Packages For Hardware Acceleration"${W}
         echo
@@ -90,11 +91,11 @@ function hw_install_required_packages() {
 
 #########################################################################
 #
-# Add HW Server Initialize Method
+# Set HW Environment Variables
 #
 #########################################################################
 
-function setup_hw_method() {
+function setup_hw_environment_variables() {
    if [[ $termux_hw_answer == "1" ]]; then
     initialize_server_method="MESA_NO_ERROR=1 MESA_GL_VERSION_OVERRIDE=4.3COMPAT MESA_GLES_VERSION_OVERRIDE=3.2 GALLIUM_DRIVER=zink ZINK_DESCRIPTORS=lazy virgl_test_server --use-egl-surfaceless --use-gles"
     hw_method="GALLIUM_DRIVER=zink MESA_GL_VERSION_OVERRIDE=4.0"
@@ -108,7 +109,7 @@ elif [[ $termux_hw_answer == "3" ]]; then
     hw_method="GALLIUM_DRIVER=virpipe MESA_GL_VERSION_OVERRIDE=4.0"
     pd_hw_method="${hw_method}"
 elif [[ $termux_hw_answer == "4" ]]; then
-    if [[ "$confirmation_exp_hwa" == "y" ]]; then
+    if [[ "$confirmation_mesa_vulkan_icd_wrapper" == "y" ]]; then
     initialize_server_method="MESA_NO_ERROR=1 MESA_GL_VERSION_OVERRIDE=4.3COMPAT MESA_GLES_VERSION_OVERRIDE=3.2 GALLIUM_DRIVER=zink ZINK_DESCRIPTORS=lazy virgl_test_server --use-egl-surfaceless --use-gles"
     hw_method="GALLIUM_DRIVER=zink MESA_GL_VERSION_OVERRIDE=4.0"
     else
@@ -143,6 +144,26 @@ else
 fi
 }
 
+function setup_gpu_specific_environment_variables() {
+	if [[ "$confirmation_mesa_vulkan_icd_wrapper" == "y" ]]; then
+		if [[ "$device_gpu_model_name" == "adreno" ]]; then
+			gpu_environment_variable="VK_ICD_FILENAMES=$PREFIX/share/vulkan/icd.d/wrapper_icd.aarch64.json MESA_SHADER_CACHE=512MB MESA_SHADER_CACHE_DISABLE=false vblank_mode=0"
+		elif [[ "$device_gpu_model_name" == "mali" ]]; then
+			gpu_environment_variable="VK_ICD_FILENAMES=$PREFIX/share/vulkan/icd.d/wrapper_icd.aarch64.json MESA_VK_WSI_PRESENT_MODE=mailbox MESA_VK_WSI_DEBUG=blit MESA_SHADER_CACHE=512MB MESA_SHADER_CACHE_DISABLE=false vblank_mode=0"
+		elif [[ "$device_gpu_model_name" == "xclipse" ]]; then
+			gpu_environment_variable="VK_ICD_FILENAMES=$PREFIX/share/vulkan/icd.d/wrapper_icd.aarch64.json vblank_mode=0"
+		else
+			gpu_environment_variable="VK_ICD_FILENAMES=$PREFIX/share/vulkan/icd.d/wrapper_icd.aarch64.json MESA_SHADER_CACHE=512MB MESA_SHADER_CACHE_DISABLE=false vblank_mode=0"
+		fi
+	fi
+}
+
+#########################################################################
+#
+# Setup Turnip
+#
+#########################################################################
+
 function setup_turnip_proot() {
     banner
     echo "${R}[${C}-${R}]${G}${BOLD} Setting up Turnip for $selected_distro ..."${W}
@@ -161,7 +182,8 @@ function setup_turnip_proot() {
 
 check_termux
 hw_install_required_packages
-setup_hw_method
+setup_hw_environment_variables
+setup_gpu_specific_environment_variables
 if [[ ("$termux_hw_answer" == "2" && "$pd_hw_answer" == "4") || ("$termux_hw_answer" != "2" && "$pd_hw_answer" == "3") ]]; then
     setup_turnip_proot
 fi

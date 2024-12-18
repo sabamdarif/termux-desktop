@@ -24,16 +24,12 @@ function debug() {
 
 function banner() {
     clear
-
-    # Banner text with minimal lines
-    echo -e "${C}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~${W}"
-    echo -e "${Y}~   ░▀█▀░█▀▀░█▀▄░█▄█░█░█░█░█░░░░   ~${W}"
-    echo -e "${Y}~   ░░█░░█▀▀░█▀▄░█░█░█░█░▄▀▄░░░░   ~${W}"
-    echo -e "${Y}~   ░░▀░░▀▀▀░▀░▀░▀░▀░▀▀▀░▀░▀░░░░   ~${W}"
-    echo -e "${Y}~   ░█▀▄░█▀▀░█▀▀░█░█░▀█▀░█▀█░█▀█   ~${W}"
-    echo -e "${Y}~   ░█░█░█▀▀░▀▀█░█▀▄░░█░░█░█░█▀▀   ~${W}"
-    echo -e "${Y}~   ░▀▀░░▀▀▀░▀▀▀░▀░▀░░▀░░▀▀▀░▀░░   ~${W}"
-    echo -e "${C}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~${W}"
+	printf "${C}############################################################\n"
+	printf "${C}#                                                          #\n"
+	printf "${C}#  ▀█▀ █▀▀ █▀█ █▀▄▀█ █ █ ▀▄▀   █▀▄ █▀▀ █▀ █▄▀ ▀█▀ █▀█ █▀█  #\n"
+	printf "${C}#   █  ██▄ █▀▄ █   █ █▄█ █ █   █▄▀ ██▄ ▄█ █ █  █  █▄█ █▀▀  #\n"
+	printf "${C}#                                                          #\n"
+	printf "${C}######################### Termux Gui #######################${W}\n"
 	echo " "
 }
 
@@ -126,13 +122,13 @@ function package_install_and_check() {
     packs_list=($@)
     for package_name in "${packs_list[@]}"; do
         echo "${R}[${C}-${R}]${G}${BOLD} Processing package: ${C}$package_name ${W}"
-        
+
         if type -p pacman >/dev/null 2>&1; then
             if pacman -Qi "$package_name" >/dev/null 2>&1; then
                 echo "\"${package_name}\"=\"already_exist\"" >> "$config_file"
                 continue
             fi
-            
+
             if [[ $package_name == *"*"* ]]; then
                 echo "${R}[${C}-${R}]${C} Processing wildcard pattern: $package_name ${W}"
                 packages=$(pacman -Ssq "${package_name%*}" 2>/dev/null)
@@ -143,7 +139,7 @@ function package_install_and_check() {
             else
                 pacman -Sy --noconfirm --overwrite '*' "$package_name"
             fi
-            
+
         else
             if [[ $package_name == *"*"* ]]; then
                 echo "${R}[${C}-${R}]${C} Processing wildcard pattern: $package_name ${W}"
@@ -502,7 +498,6 @@ function download_github_action_artifact() {
 
     # Get the workflow ID using the workflow name
     WORKFLOW_ID=$(gh api repos/$GITHUB_USER/$REPO/actions/workflows --jq ".workflows[] | select(.name == \"$WORKFLOW_NAME\") | .id")
-    
     # Check if WORKFLOW_ID is found
     if [ -z "$WORKFLOW_ID" ]; then
         echo "${R}[${R}☓${R}]${R} Workflow '$WORKFLOW_NAME' not found."${W}
@@ -514,7 +509,6 @@ function download_github_action_artifact() {
 
     # Get the latest workflow run ID with the specific display title
     WORKFLOW_RUN_ID=$(gh api repos/$GITHUB_USER/$REPO/actions/workflows/$WORKFLOW_ID/runs --paginate --jq ".workflow_runs[] | select(.display_title == \"$RUN_NAME\") | .id" | head -n 1)
-    
     # Check if WORKFLOW_RUN_ID is obtained
     if [ -z "$WORKFLOW_RUN_ID" ]; then
         echo "${R}[${R}☓${R}]${R} No workflow run found with the name '$RUN_NAME' for workflow '$WORKFLOW_NAME'."${W}
@@ -523,7 +517,6 @@ function download_github_action_artifact() {
 
     # List artifacts for the found run
     ARTIFACT_URL=$(gh api repos/$GITHUB_USER/$REPO/actions/runs/$WORKFLOW_RUN_ID/artifacts --jq ".artifacts[] | select(.name == \"$ARTIFACT_NAME\") | .archive_download_url")
-    
     # If no exact match, look for an artifact starting with ARTIFACT_NAME
     if [ -z "$ARTIFACT_URL" ]; then
         echo "${R}[${C}-${R}]${C} Artifact with the exact name '$ARTIFACT_NAME' not found. Looking for artifacts starting with '$ARTIFACT_NAME'..."${W}
@@ -646,12 +639,11 @@ function questions_theme_select() {
     local repo="termux-desktop"
     local main_folder="patch/$de_name"
     local subfolder_count_value=$(count_subfolders "$owner" "$repo" "$main_folder" 2>/dev/null)
-    
     cd $HOME
     echo "${R}[${C}-${R}]${G} Downloading list...."${W}
     wget -qO ${current_path}/styles.md https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/${de_name}_styles.md
     clear
-
+	banner
     # Check if the subfolder count value is obtained
     if [[ -n "$subfolder_count_value" ]]; then
         echo "${R}[${C}-${R}]${G} Check the $de_name styles section in GitHub"${W}
@@ -662,7 +654,6 @@ function questions_theme_select() {
         echo
         echo "${R}[${C}-${R}]${G} Available Styles:${W}"
         echo
-        
         # Display available styles from the styles.md file
         grep -oP '## \d+\..+?(?=(\n## \d+\.|\Z))' styles.md | while read -r style; do
             echo "${Y}${style#### }${W}"
@@ -701,7 +692,6 @@ function questions_theme_select() {
                 echo
             fi
         done
-        
         # Remove the styles.md file after use
         rm ${current_path}/styles.md
     else
@@ -838,7 +828,7 @@ function questions() {
 	echo
 	echo "${Y}1. Termux:x11"${W}
 	echo
-	echo "${Y}2. Vnc (Not Recomended)"${W}
+	echo "${Y}2. Vnc (Not Recommended | Some features might not work)"${W}
 	echo
 	echo "${Y}3. Both"${W}
 	echo
@@ -869,17 +859,19 @@ function questions() {
 	if ! type -p pacman >/dev/null 2>&1; then
 	echo "${R}[${C}-${R}]${R}${BOLD} Read This Carefully"${W}
 	echo -e "
-The experimental drivers only support a few GPUs\n
-
-In my tests, I achieved 1000+ FPS in vkmark on all my devices. I tried it on an Adreno 619 (best everything work fine), Adreno 750 (usable but some apps don't launch), Adreno 720 (good overall but with few issues), and Mali G76 (similar issue like Adreno 720). But in Mali G57 everything work with this driver\n
+In my tests, I achieved 1000+ FPS in vkmark on all my devices. I tried it on an 
+- Adreno 619 (everything work fine)
+- Adreno 750 (good overall but with few issues)
+- Mali G76 (similar issue like Adreno 750).
+- Mali G57 everything work with this driver\n
 
 Also if you have Adreno GPU then please select ubuntu or debian as distro container so it can use ternip in the distro container.\n
-Sadly for other then adreno, GPU might not work on the distro container./n
+Sadly for other then adreno, GPU might / might not work on the distro container./n
 
-If you type 'n/N' then it will use the old way to setup Hardware Acceleration./n
+If you type 'n/N' then it will use the old virtualizing way to setup Hardware Acceleration./n
 	"
-	confirmation_y_or_n "Do you want to enable the new Experimental Hardware Acceleration support" confirmation_exp_hwa
-	echo "confirmation_exp_hwa=\"$confirmation_exp_hwa\"" >> $config_file
+	confirmation_y_or_n "Do you want to install the new mesa-vulkan-icd-wrapper Driver" confirmation_mesa_vulkan_icd_wrapper
+	echo "confirmation_mesa_vulkan_icd_wrapper=\"$confirmation_mesa_vulkan_icd_wrapper\"" >> $config_file
 	fi
 }
 
@@ -930,12 +922,18 @@ function exp_termux_gl_hw_support() {
 	echo
 	echo "${Y}3. OpenGL ES (ZINK VIRGL)"${W}
 	echo
-	echo "${Y}4. Use The Experimental Driver"${W}
+	echo "${Y}4. The New Driver With Mesa"${W}
 	echo
-	select_an_option 4 1 exp_termux_gl_hw_answer
+	echo "${Y}5. The New Driver With Mesa-Zink"${W}
+	echo
+	select_an_option 5 1 exp_termux_gl_hw_answer
 	exp_termux_gl_hw_answer=${exp_termux_gl_hw_answer:-1}
-	termux_hw_answer="${exp_termux_gl_hw_answer}"
 	echo "exp_termux_gl_hw_answer=\"$exp_termux_gl_hw_answer\"" >> $config_file
+	if [[ "$exp_termux_gl_hw_answer" == "5" ]]; then
+	termux_hw_answer="4"
+	else
+	termux_hw_answer="${exp_termux_gl_hw_answer}"
+	fi
 	echo "termux_hw_answer=\"$exp_termux_gl_hw_answer\"" >> $config_file
 
 	if [[ "$device_gpu_model" == "1" ]]; then
@@ -954,8 +952,8 @@ function exp_termux_gl_hw_support() {
 }
 
 function exp_hwa_support() {
-	if [[ "$confirmation_exp_hwa" == "y" ]]; then
-	echo -e "${R}[${C}-${R}]${G} Experimental Hardware Acceleration Will Use The mesa-vulkan-icd-wrapper Package\nFor option 4 other GPUs, Experimental Driver might not work and could break the desktop environment\n "${W}
+	if [[ "$confirmation_mesa_vulkan_icd_wrapper" == "y" ]]; then
+	echo -e "${R}[${C}-${R}]${G} The new Hardware Acceleration Will Use The mesa-vulkan-icd-wrapper Package\nFor option 4 other GPUs, this driver might / might not work\n "${W}
 	echo "${R}[${C}-${R}]${G}${BOLD} Select Your Device GPU"${W}
     echo
 	echo "${Y}1. Adreno"${W}
@@ -968,11 +966,23 @@ function exp_hwa_support() {
 	echo
 	select_an_option 4 1 device_gpu_model
 	echo "device_gpu_model=\"$device_gpu_model\"" >> $config_file
+	if [[ "$device_gpu_model" == "1" ]]; then
+		device_gpu_model_name="adreno"
+	elif [[ "$device_gpu_model" == "2" ]]; then
+		device_gpu_model_name="mali"
+	elif [[ "$device_gpu_model" == "3" ]]; then
+		device_gpu_model_name="xclipse"
+	elif [[ "$device_gpu_model" == "4" ]]; then
+		device_gpu_model_name="others"
+	fi
 	exp_termux_gl_hw_support
 	fi
 }
 
 function hw_questions() {
+	if [[ "$confirmation_mesa_vulkan_icd_wrapper" == "y" ]]; then
+	exp_hwa_support
+	else
     echo "${R}[${C}-${R}]${G}${BOLD} First Read This"${W}
     echo
     echo "${R}[${C}-${R}]${B} This:- https://github.com/sabamdarif/termux-desktop/blob/main/hw-acceleration.md"${W}
@@ -990,6 +1000,7 @@ function hw_questions() {
 	select_an_option 4 1 termux_hw_answer
 	echo "termux_hw_answer=\"$termux_hw_answer\"" >> $config_file
 	distro_hw_questions
+	fi
 }
 
 # distro related questions
@@ -1413,7 +1424,7 @@ function distro_container_setup() {
                     wget -O ${current_path}/distro-container-setup https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/distro-container-setup
 					if [[ ("$1" == "--change" || "$1" == "-c") && ("$2" == "distro" || "$2" == "pd") ]]; then
 					sed -i 's/\(call_from_change_pd="\)[^"]*/\1y/' "${current_path}/distro-container-setup"
-					fi					
+					fi
                     chmod +x ${current_path}/distro-container-setup
                     . ${current_path}/distro-container-setup
                 else
@@ -1444,7 +1455,7 @@ function distro_container_setup() {
 
 #########################################################################
 #
-# Add Vnc And Termux:x11 Launch Scripts
+# Vnc | Termux:x11 | Launch Scripts
 #
 #########################################################################
 
@@ -1520,40 +1531,40 @@ if [[ "\$1" == "--debug" ]]; then
 case \$2 in
 --nogpu)
     # Start Termux X11 without GPU acceleration
-    XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :1.0 &
+    XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :0 &
     sleep 1
     am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1
     sleep 1
-    env DISPLAY=:1.0 XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg LIBGL_ALWAYS_SOFTWARE=1 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe dbus-launch --exit-with-session $de_startup
+    env DISPLAY=:0 XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} LIBGL_ALWAYS_SOFTWARE=1 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe dbus-launch --exit-with-session $de_startup
 
     # Check if the second argument is --legacy
     if [[ "\$3" == "--legacy" ]]; then
-        XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :1.0 -legacy-drawing &
+        XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :0 -legacy-drawing &
         sleep 1
         am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1
         sleep 1
-        env DISPLAY=:1.0 XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg dbus-launch --exit-with-session $de_startup
+        env DISPLAY=:0 XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} dbus-launch --exit-with-session $de_startup
     fi
     ;;
 
 --nodbus)
     # Start Termux X11 without dbus-launch
     ${initialize_server_method} &
-    env DISPLAY=:1.0 XDG_RUNTIME_DIR=\${TMPDIR} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${hw_method} termux-x11 :1 -xstartup "$de_startup"
+    env XDG_RUNTIME_DIR=\${TMPDIR} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} ${hw_method} termux-x11 :0 -xstartup "$de_startup"
     exit 0
 
     # Nested case to check for additional options
     case \$3 in
     --nogpu)
-        env DISPLAY=:1.0 LIBGL_ALWAYS_SOFTWARE=1 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe XDG_RUNTIME_DIR=\${TMPDIR} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg termux-x11 :1 -xstartup "$de_startup"
+        env LIBGL_ALWAYS_SOFTWARE=1 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe XDG_RUNTIME_DIR=\${TMPDIR} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} termux-x11 :0 -xstartup "$de_startup"
 
         if [[ "\$4" == "--legacy" ]]; then
-            env DISPLAY=:1.0 XDG_RUNTIME_DIR=\${TMPDIR} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg termux-x11 :1 -legacy-drawing -xstartup "$de_startup"
+            env XDG_RUNTIME_DIR=\${TMPDIR} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} termux-x11 :0 -legacy-drawing -xstartup "$de_startup"
         fi
         ;;
     --legacy)
         ${initialize_server_method} &
-        env DISPLAY=:1.0 XDG_RUNTIME_DIR=\${TMPDIR} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${hw_method} termux-x11 :1 -legacy-drawing -xstartup "$de_startup"
+        env XDG_RUNTIME_DIR=\${TMPDIR} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} ${hw_method} termux-x11 :0 -legacy-drawing -xstartup "$de_startup"
         ;;
     *)
         echo -e "${C}--legacy ${G}to start termux:x11 with -legacy-drawing${W}"
@@ -1567,24 +1578,26 @@ case \$2 in
     # Start Termux X11 with legacy drawing mode
     ${initialize_server_method} &
     sleep 1
-    XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :1 -legacy-drawing &
+    XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :0 -legacy-drawing &
     sleep 1
     am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1 &
     sleep 1
-    env DISPLAY=:1.0 XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${hw_method} dbus-launch --exit-with-session $de_startup
+    env DISPLAY=:0 XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} ${hw_method} dbus-launch --exit-with-session $de_startup
     ;;
 
 *)
     # Default behavior: start Termux X11 with GPU acceleration and dbus
     ${initialize_server_method} &
     sleep 1
-    XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :1 &
+    XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :0 &
     sleep 1
     am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1 &
     sleep 1
-    env DISPLAY=:1.0 XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${hw_method} dbus-launch --exit-with-session $de_startup
+    env DISPLAY=:0 XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} ${hw_method} dbus-launch --exit-with-session $de_startup
     ;;
 esac
+
+# End Debug
 
 elif [[ "\$1" == "--help" ]]; then
     # Display help information
@@ -1599,40 +1612,40 @@ else
 case \$1 in
 --nogpu)
     # Start Termux X11 without GPU acceleration
-    XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :1.0 &
+    XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :0 &
     sleep 1
     am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1
     sleep 1
-    env DISPLAY=:1.0 XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg LIBGL_ALWAYS_SOFTWARE=1 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe dbus-launch --exit-with-session $de_startup > /dev/null 2>&1 &
+    env DISPLAY=:0 XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} LIBGL_ALWAYS_SOFTWARE=1 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe dbus-launch --exit-with-session $de_startup > /dev/null 2>&1 &
 
     # Check if the second argument is --legacy
     if [[ "\$2" == "--legacy" ]]; then
-        XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :1.0 -legacy-drawing &
+        XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :0 -legacy-drawing &
         sleep 1
         am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1
         sleep 1
-        env DISPLAY=:1.0 XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg dbus-launch --exit-with-session $de_startup > /dev/null 2>&1 &
+        env DISPLAY=:0 XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} dbus-launch --exit-with-session $de_startup > /dev/null 2>&1 &
     fi
     ;;
 
 --nodbus)
     # Start Termux X11 without dbus-launch
     ${initialize_server_method} &
-    env DISPLAY=:1.0 XDG_RUNTIME_DIR=\${TMPDIR} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${hw_method} termux-x11 :1 -xstartup "$de_startup" > /dev/null 2>&1 &
+    env XDG_RUNTIME_DIR=\${TMPDIR} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} ${hw_method} termux-x11 :0 -xstartup "$de_startup" > /dev/null 2>&1 &
     exit 0
 
     # Nested case to check for additional options
     case \$2 in
     --nogpu)
-        env DISPLAY=:1.0 LIBGL_ALWAYS_SOFTWARE=1 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe XDG_RUNTIME_DIR=\${TMPDIR} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg termux-x11 :1 -xstartup "$de_startup" > /dev/null 2>&1 &
+        env LIBGL_ALWAYS_SOFTWARE=1 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe XDG_RUNTIME_DIR=\${TMPDIR} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} termux-x11 :0 -xstartup "$de_startup" > /dev/null 2>&1 &
 
         if [[ "\$3" == "--legacy" ]]; then
-            env DISPLAY=:1.0 XDG_RUNTIME_DIR=\${TMPDIR} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg termux-x11 :1 -legacy-drawing -xstartup "$de_startup" > /dev/null 2>&1 &
+            env XDG_RUNTIME_DIR=\${TMPDIR} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} termux-x11 :0 -legacy-drawing -xstartup "$de_startup" > /dev/null 2>&1 &
         fi
         ;;
     --legacy)
         ${initialize_server_method} &
-        env DISPLAY=:1.0 XDG_RUNTIME_DIR=\${TMPDIR} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${hw_method} termux-x11 :1 -legacy-drawing -xstartup "$de_startup" > /dev/null 2>&1 &
+        env XDG_RUNTIME_DIR=\${TMPDIR} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} ${hw_method} termux-x11 :0 -legacy-drawing -xstartup "$de_startup" > /dev/null 2>&1 &
         ;;
     *)
         echo -e "${C}--legacy ${G}to start termux:x11 with -legacy-drawing${W}"
@@ -1646,21 +1659,21 @@ case \$1 in
     # Start Termux X11 with legacy drawing mode
     ${initialize_server_method} &
     sleep 1
-    XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :1 -legacy-drawing &
+    XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :0 -legacy-drawing &
     sleep 1
     am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1 &
     sleep 1
-    env DISPLAY=:1.0 XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${hw_method} dbus-launch --exit-with-session $de_startup > /dev/null 2>&1 &
+    env DISPLAY=:0 XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} ${hw_method} dbus-launch --exit-with-session $de_startup > /dev/null 2>&1 &
     ;;
 *)
     # Default behavior: start Termux X11 with GPU acceleration and dbus
     ${initialize_server_method} &
     sleep 1
-    XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :1 &
+    XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :0 &
     sleep 1
     am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1 &
     sleep 1
-    env DISPLAY=:1.0 XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${hw_method} dbus-launch --exit-with-session $de_startup > /dev/null 2>&1 &
+    env DISPLAY=:0 XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} ${hw_method} dbus-launch --exit-with-session $de_startup > /dev/null 2>&1 &
     ;;
 esac
 fi
@@ -2206,7 +2219,7 @@ echo -e "
 # print your current termux-desktop configuration
 alias 'tdconfig'='cat $config_file'
 # open the folder where all the apps added by proot-distro are located
-alias 'pdapps'='cd /data/data/com.termux/files/usr/share/applications/pd_added'
+alias 'pdapps'='cd /data/data/com.termux/files/usr/share/applications/pd_added && ls'
 " >> $HOME/.${shell_name}rc
 echo "terminal_utility_setup_answer=\"$terminal_utility_setup_answer\"" >> $config_file
 }
@@ -2664,18 +2677,10 @@ function change_hw() {
 	    echo -e "${C} It looks like you haven't installed the desktop yet\n Please install the desktop first${W}"
 	    exit 0
 	else
-	    . "$config_file"
-
+	    read_conf
 	    banner
 	    echo "${R}[${C}-${R}]${G} Your current hardware acceleration method for Termux is: ${C}${BOLD}${termux_hw_answer}${W}"
 	    echo
-	    if [[ "$distro_add_answer" == "y" ]]; then
-	        echo "${R}[${C}-${R}]${G} Your current hardware acceleration method for $selected_distro is: ${C}${BOLD}${pd_hw_answer}${W}"
-	        echo
-	        exp_distro_hw_support
-	        hw_config
-	        sed -i "s|selected_pd_hw_method=\"[^\"]*\"|selected_pd_hw_method=\"$pd_hw_method\"|" "$PREFIX/bin/pdrun"
-	    fi
 	    echo "${R}[${C}-${R}]${G} Changing drivers might break the desktop environment sometimes${W}"
 	    confirmation_y_or_n "Do you want to continue" confirmation_break_de
 	    if [[ "$confirmation_break_de" == "y" ]]; then
@@ -2767,7 +2772,7 @@ function change_distro() {
 #########################################################################
 
 function change_autostart() {
-    . "$config_file"
+    read_conf
 
     if [[ $SHELL = *zsh ]]; then
         current_shell="zsh"
@@ -2890,21 +2895,34 @@ function reinstall_config() {
 #########################################################################
 
 function some_fixes() {
+	termux-reload-settings
+
 	# samsung oneui-6 audio fixes
 	local device_brand_name=$(getprop ro.product.brand | cut -d ' ' -f 1)
 	if [[ $device_brand_name == samsung* && $android_version -ge 14 ]]; then
     echo "LD_PRELOAD=/system/lib64/libskcodec.so" >> $shell_rc_file
 	fi
+
 	# tx11start and vncstart
 	if [[ $termux_hw_answer == "4" ]]; then
 	sed -i 's/^[[:space:]]*&[[:space:]]*$/ /' "$PREFIX/bin/tx11start"
 	sed -i 's/^[[:space:]]*&[[:space:]]*$/ /' "$PREFIX/bin/vncstart"
 	fi
-	if [[ "$confirmation_exp_hwa" == "y" ]]; then
-	sed -i 's|<property name="vblank_mode" type="string" value="auto"/>|<property name="vblank_mode" type="string" value="off"/>|' "$HOME/.config/xfce4/xfconf/xfce-perchannel-xml/xfwm4.xml"
+
+	if [[ "$confirmation_mesa_vulkan_icd_wrapper" == "y" ]]; then
+		sed -i 's|<property name="vblank_mode" type="string" value="auto"/>|<property name="vblank_mode" type="string" value="off"/>|' "$HOME/.config/xfce4/xfconf/xfce-perchannel-xml/xfwm4.xml"
+
 		if [[ "$device_gpu_model" == "1" ]]; then
 		sed -i 's|eval "\${initialize_server}" > /dev/null 2>&1 &| |' $PREFIX/bin/pdrun
 		sed -i 's/^[[:space:]]*initialize_server="\s*"/ /' "$PREFIX/bin/pdrun"
+		fi
+
+		if [[ "$browser_answer" == "2" ]] || [[ "$browser_answer" == "3" ]]; then
+		sed -i 's|Exec=/data/data/com.termux/files/usr/bin/chromium-browser %U|Exec=/data/data/com.termux/files/usr/bin/chromium-browser --enable-features=Vulkan %U|' /data/data/com.termux/files/usr/share/applications/chromium.desktop
+		fi
+
+		if [[ "$ide_answer" == "2" ]] || [[ "$ide_answer" == "3" ]]; then
+		sed -i 's|/data/data/com.termux/files/usr/bin/code-oss|/data/data/com.termux/files/usr/bin/code-oss --enable-features=Vulkan|g' /data/data/com.termux/files/usr/share/applications/code-oss*
 		fi
 	fi
 }
@@ -3016,6 +3034,8 @@ function reset_changes() {
         echo "${R}[${C}-${R}]${G} Removing $de_name Config..."${W}
         set_config_dir
 		check_and_delete "$config_dirs"
+		shell_name=$($basename "$SHELL")
+        get_shellrc_path
 		if [[ "$distro_add_answer" == "y" ]]; then
             confirmation_y_or_n "Do you want to reset the distro container as well?" conf_distro_reset
             if [[ "$conf_distro_reset" == "y" ]]; then
@@ -3023,21 +3043,18 @@ function reset_changes() {
             fi
         fi
 
-        shell_name=$($basename "$SHELL")
-        get_shellrc_path
-
         if [[ "$terminal_utility_setup_answer" == "y" ]]; then
-            check_and_delete "$PREFIX/etc/motd.sh $HOME/.termux $HOME/.fonts/font.ttf $HOME/.termux/colors.properties"
-            check_and_restore "$PREFIX/etc/motd"
+            check_and_delete "$PREFIX/etc/motd.sh $HOME/.termux $HOME/.fonts/font.ttf $HOME/.termux/colors.properties" ; termux-reload-settings
+            check_and_restore "$PREFIX/etc/motd" ; termux-reload-settings
             check_and_restore "$PREFIX/etc/motd-playstore"
-            check_and_restore "$PREFIX/etc/motd.sh"
+            check_and_restore "$PREFIX/etc/motd.sh" ; termux-reload-settings
             check_and_restore "$HOME/.termux/colors.properties"
             if grep -q "motd.sh$" "$PREFIX/etc/termux-login.sh"; then
-                sed -i "s|.*motd\.sh$|# |" "$PREFIX/etc/termux-login.sh"
+                sed -i "s|.*motd\.sh$|# |" "$PREFIX/etc/termux-login.sh" ; termux-reload-settings
             fi
-            rm $PREFIX/share/applications/wine-*.desktop >/dev/null 2>&1
+            rm "$PREFIX/share/applications/wine-*.desktop" >/dev/null 2>&1
             check_and_delete "$termux_desktop_path"
-            check_and_delete "$PREFIX/bin/tx11start $PREFIX/bin/tx11stop $PREFIX/bin/vncstop $PREFIX/bin/vncstart $PREFIX/bin/gui"
+            check_and_delete "$PREFIX/bin/tx11start $PREFIX/bin/tx11stop $PREFIX/bin/vncstop $PREFIX/bin/vncstart $PREFIX/bin/gui $PREFIX/bin/pdrun"
         fi
 
         check_and_delete "$HOME/Music"
@@ -3067,7 +3084,9 @@ function reset_changes() {
 #
 #########################################################################
 check_termux
+if [[ -z "$1" ]] || [[ "$1" = "--install" ]] || [[ "$1" = "-i" ]]; then
 check_and_add_installer
+fi
 current_path=$(pwd)
 function install_termux_desktop() {
 cleanup_cache
@@ -3084,11 +3103,7 @@ if [[ "$distro_add_answer" == "y" ]]; then
 distro_questions
 fi
 banner
-if [[ "$confirmation_exp_hwa" == "y" ]]; then
-exp_hwa_support
-else
 hw_questions
-fi
 setup_folder
 setup_zsh
 setup_fonts
