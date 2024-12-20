@@ -126,10 +126,10 @@ esac
 
 case "$pd_hw_answer" in
     "zink")
-    pd_hw_method="MESA_LOADER_DRIVER_OVERRIDE=zink TU_DEBUG=noconform"
+    pd_hw_method="GALLIUM_DRIVER=zink MESA_GL_VERSION_OVERRIDE=4.0"
     ;;
     virgl|zink_virgl)
-    pd_hw_method="MESA_LOADER_DRIVER_OVERRIDE=virpipe TU_DEBUG=noconform"
+    pd_hw_method="GALLIUM_DRIVER=virpipe MESA_GL_VERSION_OVERRIDE=4.0"
     ;;
     "turnip")
     pd_hw_method="MESA_LOADER_DRIVER_OVERRIDE=zink TU_DEBUG=noconform"

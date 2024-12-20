@@ -1066,7 +1066,13 @@ function hw_questions() {
 	termux_hw_answer="freeadreno"
 	fi
 
-	distro_hw_questions
+	if [[ "$termux_hw_answer" == "freeadreno" ]]; then
+		pd_hw_answer="turnip"
+    	echo "pd_hw_answer=\"$pd_hw_answer\"" >> $config_file
+	else
+		distro_hw_questions
+	fi
+
 	fi
 }
 
