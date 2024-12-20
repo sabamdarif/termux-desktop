@@ -234,6 +234,7 @@ Special thanks to:
 - [Yisus7u7/termux-desktop-xfce](https://github.com/Yisus7u7/termux-desktop-xfce)
 - [adi1090x/termux-desktop](https://github.com/adi1090x/termux-desktop)
 - [Generator/termux-motd](https://github.com/Generator/termux-motd)
+- [virgl-angle-termux](https://github.com/ar37-rs/virgl-angle-termux)
 ---
 
 **If you enjoy this project, consider giving it a star!** :star2:

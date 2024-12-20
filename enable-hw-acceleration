@@ -12,7 +12,6 @@ function hw_install_required_packages() {
     echo "${R}[${C}-${R}]${G}${BOLD} Installing Experimental Mesa Driver..."${W}
     echo
 
-    if [[ "$confirmation_mesa_vulkan_icd_wrapper" == "y" ]]; then
         # Determine device architecture
         device_arch=$(uname -m)
         case "$device_arch" in
@@ -23,7 +22,7 @@ function hw_install_required_packages() {
                 archtype="arm"
                 ;;
             *)
-                echo "${R}[${R}☓${R}]${R} Unknown architecture"${W}
+                echo "${R}[${R}☓${R}]${R} Unsupported architecture"${W}
                 return
                 ;;
         esac
@@ -34,59 +33,55 @@ function hw_install_required_packages() {
             check_and_delete "mesa-vulkan-icd-wrapper.deb"
         fi
 
-        case "$exp_termux_gl_hw_answer" in
-            5)
+        # Remove existing conflicting packages if using pacman
+        if [[ "$PACKAGE_MANAGER" == "pacman" ]]; then
+            package_check_and_remove "mesa vulkan-loader"
+        fi
+
+        case "$termux_hw_answer" in
+            "zink"|"zink_virgl")
                 package_install_and_check "mesa-zink virglrenderer-mesa-zink vulkan-loader-generic angle-android virglrenderer-android"
                 ;;
-            4)
+            "zink_with_mesa")
                 # if [[ "$archtype" == "aarch64" || "$archtype" == "arm" ]]; then
                 #     wget -O mesa.deb https://github.com/sabamdarif/termux-desktop/releases/download/mesa-vulkan/mesa_24.2.6-1_${archtype}.deb
                 #     apt install ./mesa.deb -y
                 #     check_and_delete "mesa.deb"
                 # fi
-                package_install_and_check "mesa virglrenderer-mesa-zink vulkan-loader-generic angle-android virglrenderer-android"
+                package_install_and_check "mesa virglrenderer vulkan-loader-generic angle-android virglrenderer-android"
                 ;;
-            2)
+            "virgl")
                 package_install_and_check "angle-android virglrenderer-android"
+                ;;
+            "virgl_vulkan")
+                package_install_and_check "virglrenderer virglrenderer-android angle-android"
+                ;;
+            "freeadreno")
+                package_install_and_check "mesa-zink mesa-zink-vulkan-icd-freedreno mesa-vulkan-icd-freedreno-dri3"
                 ;;
             *)
                 package_install_and_check "mesa-zink virglrenderer-mesa-zink vulkan-loader-generic angle-android virglrenderer-android"
                 ;;
         esac
+
+        if [[ "$confirmation_mesa_vulkan_icd_wrapper" == "y" ]]; then
             package_install_and_check "clvk"
             # package_install_and_check "opencl-vendor-driver"
-    else
-        echo "${R}[${C}-${R}]${G}${BOLD} Installing Required Packages For Hardware Acceleration"${W}
-        echo
-
-        # Handle different hardware configurations based on user input
-        case "$termux_hw_answer" in
-            1)
-                hw_package_list="mesa-zink vulkan-loader-android angle-android virglrenderer"
-                ;;
-            2)
-                hw_package_list="angle-android virglrenderer-android"
-                ;;
-            3)
-                hw_package_list="mesa-zink virglrenderer-mesa-zink vulkan-loader-android angle-android virglrenderer-android"
-                ;;
-            4)
-                hw_package_list="mesa-zink mesa-zink-vulkan-icd-freedreno mesa-vulkan-icd-freedreno-dri3"
-                ;;
-            *)
-                echo "${R}[${R}☓${R}]${R} Invalid hardware configuration selected"${W}
-                return
-                ;;
-        esac
-
-        # Remove existing conflicting packages if using pacman
-        if type -p pacman >/dev/null 2>&1; then
-            package_check_and_remove "mesa vulkan-loader"
         fi
 
-        # Install hardware acceleration packages
-        package_install_and_check "${hw_package_list}"
-    fi
+        if [[ "$termux_hw_answer" == "virgl_vulkan" ]]; then
+            if [[ ! -f /data/data/com.termux/files/usr/opt/angle-android/vulkan/libEGL.so.1 ]]; then
+                ln -s /data/data/com.termux/files/usr/opt/angle-android/vulkan/libEGL_angle.so /data/data/com.termux/files/usr/opt/angle-android/vulkan/libEGL.so.1
+            fi
+
+            if [[ ! -f /data/data/com.termux/files/usr/opt/angle-android/vulkan/libGLESv1_CM.so.1 ]]; then
+                ln -s /data/data/com.termux/files/usr/opt/angle-android/vulkan/libGLESv1_CM_angle.so /data/data/com.termux/files/usr/opt/angle-android/vulkan/libGLESv1_CM.so.1
+            fi
+
+            if [[ ! -f /data/data/com.termux/files/usr/opt/angle-android/vulkan/libGLESv2.so.2 ]]; then
+                ln -s /data/data/com.termux/files/usr/opt/angle-android/vulkan/libGLESv2_angle.so /data/data/com.termux/files/usr/opt/angle-android/vulkan/libGLESv2.so.2
+            fi
+        fi
 }
 
 #########################################################################
@@ -96,52 +91,55 @@ function hw_install_required_packages() {
 #########################################################################
 
 function setup_hw_environment_variables() {
-   if [[ $termux_hw_answer == "1" ]]; then
-    initialize_server_method="MESA_NO_ERROR=1 MESA_GL_VERSION_OVERRIDE=4.3COMPAT MESA_GLES_VERSION_OVERRIDE=3.2 GALLIUM_DRIVER=zink ZINK_DESCRIPTORS=lazy virgl_test_server --use-egl-surfaceless --use-gles"
+case "$termux_hw_answer" in
+    "zink")
+    set_to_export="MESA_NO_ERROR=1 MESA_GL_VERSION_OVERRIDE=4.3COMPAT MESA_GLES_VERSION_OVERRIDE=3.2 ZINK_DESCRIPTORS=lazy"
     hw_method="GALLIUM_DRIVER=zink MESA_GL_VERSION_OVERRIDE=4.0"
+    initialize_server_method="virgl_test_server --use-egl-surfaceless --use-gles"
     pd_hw_method="${hw_method}"
-elif [[ $termux_hw_answer == "2" ]]; then
+    ;;
+    "virgl")
+    set_to_export="MESA_NO_ERROR=1 MESA_GL_VERSION_OVERRIDE=4.1COMPAT MESA_GLES_VERSION_OVERRIDE=3.2"
+    hw_method="GALLIUM_DRIVER=virpipe"
     initialize_server_method="virgl_test_server_android --angle-gl"
+    pd_hw_method="${hw_method}"
+    ;;
+    "virgl_vulkan")
+    set_to_export="MESA_NO_ERROR=1 MESA_GL_VERSION_OVERRIDE=4.1COMPAT MESA_GLES_VERSION_OVERRIDE=3.2 MESA_GLSL_VERSION_OVERRIDE=410 LIBGL_DRI3_DISABLE=1 EPOXY_USE_ANGLE=1 LD_LIBRARY_PATH=/data/data/com.termux/files/usr/opt/angle-android/vulkan"
+    hw_method="GALLIUM_DRIVER=virpipe"
+    initialize_server_method="virgl_test_server --use-egl-surfaceless --use-gles"
+    pd_hw_method="${hw_method}"
+    ;;
+    "zink_virgl")
+    set_to_export="MESA_NO_ERROR=1 MESA_GL_VERSION_OVERRIDE=4.3COMPAT MESA_GLES_VERSION_OVERRIDE=3.2 GALLIUM_DRIVER=zink ZINK_DESCRIPTORS=lazy"
+    initialize_server_method="virgl_test_server --use-egl-surfaceless --use-gles"
     hw_method="GALLIUM_DRIVER=virpipe MESA_GL_VERSION_OVERRIDE=4.0"
     pd_hw_method="${hw_method}"
-elif [[ $termux_hw_answer == "3" ]]; then
-    initialize_server_method="MESA_NO_ERROR=1 MESA_GL_VERSION_OVERRIDE=4.3COMPAT MESA_GLES_VERSION_OVERRIDE=3.2 GALLIUM_DRIVER=zink ZINK_DESCRIPTORS=lazy virgl_test_server --use-egl-surfaceless --use-gles"
-    hw_method="GALLIUM_DRIVER=virpipe MESA_GL_VERSION_OVERRIDE=4.0"
-    pd_hw_method="${hw_method}"
-elif [[ $termux_hw_answer == "4" ]]; then
-    if [[ "$confirmation_mesa_vulkan_icd_wrapper" == "y" ]]; then
-    initialize_server_method="MESA_NO_ERROR=1 MESA_GL_VERSION_OVERRIDE=4.3COMPAT MESA_GLES_VERSION_OVERRIDE=3.2 GALLIUM_DRIVER=zink ZINK_DESCRIPTORS=lazy virgl_test_server --use-egl-surfaceless --use-gles"
-    hw_method="GALLIUM_DRIVER=zink MESA_GL_VERSION_OVERRIDE=4.0"
-    else
+    ;;
+    "freeadreno")
+    set_to_export="MESA_NO_ERROR=1 MESA_GL_VERSION_OVERRIDE=4.3COMPAT MESA_GLES_VERSION_OVERRIDE=3.2"
     initialize_server_method=" "
     hw_method="MESA_LOADER_DRIVER_OVERRIDE=zink"
     pd_hw_method="MESA_LOADER_DRIVER_OVERRIDE=zink TU_DEBUG=noconform"
-    fi
-else
-    initialize_server_method="MESA_NO_ERROR=1 MESA_GL_VERSION_OVERRIDE=4.3COMPAT MESA_GLES_VERSION_OVERRIDE=3.2 GALLIUM_DRIVER=zink ZINK_DESCRIPTORS=lazy virgl_test_server --use-egl-surfaceless --use-gles"
-    hw_method="GALLIUM_DRIVER=virpipe MESA_GL_VERSION_OVERRIDE=4.0"
-fi
-if [[ "$termux_hw_answer" == "2" ]]; then
-    if [[ $pd_hw_answer == "1" ]]; then
-    pd_hw_method="GALLIUM_DRIVER=virpipe MESA_GL_VERSION_OVERRIDE=4.0"
-    elif [[ $pd_hw_answer == "2" ]]; then
+    ;;
+esac
+
+case "$pd_hw_answer" in
+    "zink")
     pd_hw_method="MESA_LOADER_DRIVER_OVERRIDE=zink TU_DEBUG=noconform"
-    else
+    ;;
+    virgl|zink_virgl)
+    pd_hw_method="MESA_LOADER_DRIVER_OVERRIDE=virpipe TU_DEBUG=noconform"
+    ;;
+    "turnip")
+    pd_hw_method="MESA_LOADER_DRIVER_OVERRIDE=zink TU_DEBUG=noconform"
+    ;;
+    *)
     echo "${R}[${C}-${R}]${G} Uses The Previous Selection For Distro"${W}
     echo
-    fi
-else
-    if [[ $pd_hw_answer == "1" ]]; then
-    pd_hw_method="GALLIUM_DRIVER=zink MESA_GL_VERSION_OVERRIDE=4.0"
-    elif [[ $pd_hw_answer == "2" ]]; then
-    pd_hw_method="GALLIUM_DRIVER=virpipe MESA_GL_VERSION_OVERRIDE=4.0"
-    elif [[ $pd_hw_answer == "3" ]]; then
-    pd_hw_method="MESA_LOADER_DRIVER_OVERRIDE=zink TU_DEBUG=noconform"
-    else
-    echo "${R}[${C}-${R}]${G} Uses The Previous Selection For Distro"${W}
-    echo
-    fi
-fi
+    ;;
+esac
+
 }
 
 function setup_gpu_specific_environment_variables() {
@@ -157,6 +155,15 @@ function setup_gpu_specific_environment_variables() {
 		fi
 	fi
 }
+
+
+# function set_mesa_extension() {
+#     if [[ virgl d3d ]]; then
+#     export MESA_EXTENSION_OVERRIDE="+GL_3DFX_texture_compression_FXT1 +GL_AMD_vertex_shader_viewport_index +GL_AMD_vertex_shader_layer +GL_ARB_vertex_type_10f_11f_11f_rev +GL_ARB_texture_view +GL_ARB_texture_query_lod +GL_ARB_texture_filter_minmax  +GL_ARB_shading_language_100 +GL_ARB_shader_viewport_layer_array +GL_ARB_shader_texture_image_samples +GL_ARB_shader_stencil_export +GL_ARB_shader_group_vote +GL_ARB_compute_shader +GL_ARB_compute_variable_group_size +GL_ARB_shader_draw_parameters +GL_ARB_seamless_cubemap_per_texture +GL_ARB_depth_clamp +GL_ARB_blend_func_extended +GL_ARB_ES3_1_compatibility +GL_ARB_ES3_compatibility +GL_ARM_shader_framebuffer_fetch_depth_stencil +GL_ARB_shader_atomic_counters +GL_ARB_shader_atomic_counter_ops"
+#     else
+#     export MESA_EXTENSION_OVERRIDE="+GL_3DFX_texture_compression_FXT1 +GL_AMD_vertex_shader_viewport_index +GL_AMD_vertex_shader_layer +GL_ARB_vertex_type_10f_11f_11f_rev +GL_ARB_texture_view +GL_ARB_texture_query_lod +GL_ARB_texture_filter_minmax +GL_ARB_shading_language_100 +GL_ARB_shader_viewport_layer_array +GL_ARB_shader_texture_image_samples +GL_ARB_shader_stencil_export +GL_ARB_shader_group_vote +GL_ARB_compute_shader +GL_ARB_compute_variable_group_size +GL_ARB_shader_draw_parameters +GL_ARB_seamless_cubemap_per_texture +GL_ARB_depth_clamp +GL_ARB_blend_func_extended +GL_ARB_ES3_1_compatibility +GL_ARB_ES3_compatibility -GL_EXT_texture_sRGB -GL_EXT_texture_sRGB_R8 -GL_EXT_texture_sRGB_RG8 +GL_ARM_shader_framebuffer_fetch_depth_stencil +GL_ARB_shader_atomic_counters +GL_ARB_shader_atomic_counter_ops" 
+#     fi
+# }
 
 #########################################################################
 #
@@ -184,6 +191,6 @@ check_termux
 hw_install_required_packages
 setup_hw_environment_variables
 setup_gpu_specific_environment_variables
-if [[ ("$termux_hw_answer" == "2" && "$pd_hw_answer" == "4") || ("$termux_hw_answer" != "2" && "$pd_hw_answer" == "3") ]]; then
+if [[ "$pd_hw_answer" == "turnip" ]] || [[ "$device_gpu_model_name" == "adreno" && "$pd_hw_answer" == "turnip" ]]; then
     setup_turnip_proot
 fi
