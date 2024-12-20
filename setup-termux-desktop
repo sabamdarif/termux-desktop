@@ -896,7 +896,7 @@ function distro_hw_questions() {
        echo "${R}[${C}-${R}]${G} If You Are Not Sure So Skip It It Will Use The Previous One"${W}
        echo
 	   if [[ "$termux_hw_answer" == "virgl" ]] || [[ "$termux_hw_answer" == "virgl_vulkan" ]]; then
-	   echo "${Y}1. OpenGL (VIRGL)"${W}
+	   echo "${Y}1. OpenGL (VIRGL ANGLE)"${W}
 	   echo
 	   echo "${Y}2. Turnip (Adreno GPU Only)"${W}
 	   echo
@@ -1248,7 +1248,7 @@ function install_desktop() {
         package_install_and_check "mate*"
         package_install_and_check "marco mousepad xfce4-taskmanager lximage-qt"
     fi
-	package_install_and_check "kvantum xwayland file-roller pavucontrol gnome-font-viewer atril galculator gdk-pixbuf xorg-xrdb"
+	package_install_and_check "kvantum xwayland file-roller pavucontrol gnome-font-viewer atril galculator gdk-pixbuf libwayland-protocols xorg-xrdb"
     # Uncomment if additional package installation is needed
     # if [[ "$distro_add_answer" == "y" ]]; then
     #     package_install_and_check "xdg-utils"
@@ -2194,15 +2194,16 @@ function terminal_utility_setup() {
 	cp $shell_rc_file ${shell_rc_file}-2
 	check_and_backup "$shell_rc_file"
 	mv ${shell_rc_file}-2 ${shell_rc_file}
-	if [[ "$PACKAGE_MANAGER" == "pacman" ]]; then
 	package_install_and_check "bat eza zoxide fastfetch"
-	else
-	package_install_and_check "aptitude bat eza zoxide fastfetch"
-cat <<'EOF' >> "$shell_rc_file"
-alias apt='aptitude $@'
-alias pkg='aptitude $@'
-EOF
-	fi
+# 	if [[ "$PACKAGE_MANAGER" == "pacman" ]]; then
+# 	package_install_and_check "bat eza zoxide fastfetch"
+# 	else
+# 	package_install_and_check "aptitude bat eza zoxide fastfetch"
+# cat <<'EOF' >> "$shell_rc_file"
+# alias apt='aptitude $@'
+# alias pkg='aptitude $@'
+# EOF
+# 	fi
 cat <<'EOF' >> "$shell_rc_file"
 alias cat='bat $@'
 alias ls='eza --icons $@'
@@ -2622,7 +2623,7 @@ function remove_termux_desktop() {
 	if grep -q "motd.sh$" "$PREFIX/etc/termux-login.sh"; then
 	sed -i "s|.*motd\.sh$|# |" "$PREFIX/etc/termux-login.sh"
 	fi
-	package_check_and_remove "nerdfix fontconfig-utils aptitude bat eza"
+	package_check_and_remove "nerdfix fontconfig-utils bat eza"
 	fi
 	#remove browser
 	if [[ "$installed_browser" == "firefox" ]]; then
