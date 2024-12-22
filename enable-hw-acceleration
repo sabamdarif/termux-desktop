@@ -54,7 +54,7 @@ function hw_install_required_packages() {
                 package_install_and_check "angle-android virglrenderer-android"
                 ;;
             "virgl_vulkan")
-                package_install_and_check "virglrenderer virglrenderer-android angle-android"
+                package_install_and_check "mesa virglrenderer vulkan-loader-generic angle-android virglrenderer-android"
                 ;;
             "freeadreno")
                 package_install_and_check "mesa-zink mesa-zink-vulkan-icd-freedreno mesa-vulkan-icd-freedreno-dri3"

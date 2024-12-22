@@ -859,7 +859,7 @@ function questions() {
 	select_an_option 2 1 autostart_gui_mode
 	fi
 	banner
-	echo "${R}[${C}-${R}]${Y}${BOLD} Do you want to add a distro container (proot distro)"${W}
+	echo "${R}[${C}-${R}]${Y}${BOLD} Do you want to add a Linux container (proot distro)"${W}
 	echo
 	echo "${R}[${C}-${R}]${G} It will help you to install those app which are not avilable in termux"${W}
 	echo
@@ -877,8 +877,8 @@ In my tests, I achieved 1000+ FPS in vkmark on all my devices. I tried it on an
 - Mali G76 (similar issue like Adreno 750).
 - Mali G57 everything work with this driver\n
 
-Also if you have Adreno GPU then please select ubuntu or debian as distro container so it can use ternip in the distro container.\n
-Sadly for other then adreno, GPU might / might not work on the distro container./n
+Also if you have Adreno GPU then please select ubuntu or debian as Linux container so it can use ternip in the Linux container.\n
+Sadly for other then adreno, GPU might / might not work on the Linux container./n
 
 If you type 'n/N' then it will use the old virtualizing way to setup Hardware Acceleration./n
 	"
@@ -891,7 +891,7 @@ If you type 'n/N' then it will use the old virtualizing way to setup Hardware Ac
 function distro_hw_questions() {
 	if [[ "$distro_add_answer" == "y" ]]; then
        echo
-       echo "${R}[${C}-${R}]${G}${BOLD} Select Hardware Acceleration API For Distro Container"${W}
+       echo "${R}[${C}-${R}]${G}${BOLD} Select Hardware Acceleration Driver For Linux Container"${W}
        echo
        echo "${R}[${C}-${R}]${G} If You Are Not Sure So Skip It It Will Use The Previous One"${W}
        echo
@@ -1078,7 +1078,7 @@ function hw_questions() {
 
 # distro related questions
 function choose_distro() {
-	echo "${R}[${C}-${R}]${G}${BOLD} Select Distro You Want To Add"${W}
+	echo "${R}[${C}-${R}]${G}${BOLD} Select Linux Distro You Want To Add"${W}
 	echo " "
 	echo "${Y}1. Debian"${W}
 	echo " "
@@ -1098,11 +1098,11 @@ function distro_questions() {
 	banner
 	choose_distro
 	banner
-	confirmation_y_or_n "Do you want to configure audio support for distro container" pd_audio_config_answer
+	confirmation_y_or_n "Do you want to configure audio support for Linux distro container" pd_audio_config_answer
 
 	if [[ "$distro_add_answer" == "y" ]] && [[ "$zsh_answer" == "y" ]]; then
 	banner
-	confirmation_y_or_n "Do you want to Configuring Zsh also for distro container ${C}(take longer time to login into distro)" distro_zsh_answer
+	confirmation_y_or_n "Do you want to Configuring Zsh also for Linux distro container ${C}(take longer time to login into distro)" distro_zsh_answer
 	else
 	distro_zsh_answer="$zsh_answer"
 	fi
@@ -1110,7 +1110,7 @@ function distro_questions() {
 
 	if [[ "$distro_add_answer" == "y" ]] && [[ "$terminal_utility_setup_answer" == "y" ]]; then
 	banner
-	confirmation_y_or_n "Do you want install the terminal utility also for distro container" distro_terminal_utility_setup_answer
+	confirmation_y_or_n "Do you want install the terminal utility also for Linux distro container" distro_terminal_utility_setup_answer
 	else
 	distro_terminal_utility_setup_answer="$terminal_utility_setup_answer"
 	fi
@@ -1484,12 +1484,12 @@ function hw_config() {
 function distro_container_setup() {
     if [[ "$distro_add_answer" == "n" ]]; then
         banner
-        echo "${R}[${C}-${R}]${C} Skipping Distro Container Setup..."${W}
+        echo "${R}[${C}-${R}]${C} Skipping Linux Distro Container Setup..."${W}
         echo
 		hw_config
     else
         banner
-        echo "${R}[${C}-${R}]${G}${BOLD} Configuring Distro Container"${W}
+        echo "${R}[${C}-${R}]${G}${BOLD} Configuring Linux Distro Container"${W}
         echo
 
         if [[ -f "${current_path}/distro-container-setup" ]]; then
@@ -2576,7 +2576,7 @@ function notes() {
 	echo "${R}[${C}-${R}]${C} URL:- ${B}https://github.com/sabamdarif/termux-desktop/blob/main/README.md#uses"${W}
 	echo
 	if [[ "$distro_add_answer" == "y" ]]; then
-	echo "${R}[${C}-${R}]${C}${BOLD} See how to use distro container"${W}
+	echo "${R}[${C}-${R}]${C}${BOLD} See how to use Linux distro container"${W}
 	echo
 	echo "${R}[${C}-${R}]${C} URL:- ${B}https://github.com/sabamdarif/termux-desktop/blob/main/proot-caontainer.md"${W}
 	fi
@@ -2842,7 +2842,7 @@ function change_distro() {
 	else
 		echo "${R}[${C}-${R}]${G} It look like you haven't install any distro yet"${W}
 		echo
-		echo "${R}[${C}-${R}]${G}${BOLD} Do you want to add a distro container (proot distro)"${W}
+		echo "${R}[${C}-${R}]${G}${BOLD} Do you want to add a Linux distro container (proot distro)"${W}
 		echo
 		echo "${R}[${C}-${R}]${G} It will help you to install those app which are not avilable in termux"${W}
 		echo
@@ -3129,7 +3129,7 @@ function reset_changes() {
 		shell_name=$($basename "$SHELL")
         get_shellrc_path
 		if [[ "$distro_add_answer" == "y" ]]; then
-            confirmation_y_or_n "Do you want to reset the distro container as well?" conf_distro_reset
+            confirmation_y_or_n "Do you want to reset the Linux distro container as well?" conf_distro_reset
             if [[ "$conf_distro_reset" == "y" ]]; then
                 check_and_restore "$save_path/.${pd_shell_name}rc"
             fi
@@ -3244,7 +3244,7 @@ function show_change_help() {
 echo "options you can use with --change"
 echo -e "
 style      to change installed style
-pd,distro  to change installed distro container
+pd,distro  to change installed linux distro container
 hw,hwa     to change hardware acceleration method
 autostart  to change autostart behaviour
 h,help     to show help

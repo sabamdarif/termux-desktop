@@ -88,7 +88,7 @@ Icon Used:
 </details>
 <br>
 
-## 3. Minimalist Setup 1:
+## 3. Minimalist Setup 1 (unstable):
 
 <details>
 <summary><b style ="font-size: small">Style Details: </summary>

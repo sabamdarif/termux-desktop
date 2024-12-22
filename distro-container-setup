@@ -29,7 +29,7 @@ function setup_distro() {
     package_install_and_check "proot-distro"
 
     banner
-    echo "${R}[${C}-${R}]${G}${BOLD} Setting up Selected Distro: ${C}${selected_distro}"${W}
+    echo "${R}[${C}-${R}]${G}${BOLD} Setting up Selected Linux Distro: ${C}${selected_distro}"${W}
     echo
 
     pd install "$selected_distro"
@@ -1024,9 +1024,9 @@ function help_distro_container() {
 echo -e "
 $selected_distro install packagename     to install packages and add them to termux desktop\n
 $selected_distro remove packagename      to remove packages and also remove them to termux desktop\n
-$selected_distro update                  to update the distro\n
+$selected_distro update                  to update the Linux distro\n
 $selected_distro -r                      to login as root\n
-$selected_distro --remove                to complitely remove the distro and delete all files and data related to it\n
+$selected_distro --remove                to complitely remove the Linux distro and delete all files and data related to it\n
 "
 }
 case \$1 in
