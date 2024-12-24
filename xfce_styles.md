@@ -54,7 +54,7 @@ Icon Used:
 
 <br>
 
-## 2. Modern Style:
+## 2. Modern Style (unstable):
 
 <details>
 <summary><b style ="font-size: small">Style Details: </summary>
@@ -88,7 +88,7 @@ Icon Used:
 </details>
 <br>
 
-## 3. Minimalist Setup 1 (unstable):
+## 3. Minimalist Setup 1:
 
 <details>
 <summary><b style ="font-size: small">Style Details: </summary>
@@ -157,7 +157,7 @@ Cursor Theme:
 </details>
 <br>
 
-## 5. MacOS Inspired-1 Style:
+## 5. MacOS Inspired-1 Style (might unstable):
 
 <details>
 <summary><b style ="font-size: small">Style Details: </summary>
@@ -195,7 +195,7 @@ Cursor Theme:
 </details>
 <br>
 
-## 6. MacOS Inspired-2 Style:
+## 6. MacOS Inspired-2 Style (might unstable):
 
 <details>
 <summary><b style ="font-size: small">Style Details: </summary>
