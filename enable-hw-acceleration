@@ -9,30 +9,30 @@ function check_termux() {
 
 function hw_install_required_packages() {
     banner
-    echo "${R}[${C}-${R}]${G}${BOLD} Installing Experimental Mesa Driver..."${W}
-    echo
+    # Determine device architecture
+    device_arch=$(uname -m)
+    case "$device_arch" in
+        aarch64|arm64)
+            archtype="aarch64"
+            ;;
+        arm|armhf|armv7l)
+            archtype="arm"
+            ;;
+        *)
+            echo "${R}[${R}☓${R}]${R} Unsupported architecture"${W}
+            return
+            ;;
+    esac
 
-        # Determine device architecture
-        device_arch=$(uname -m)
-        case "$device_arch" in
-            aarch64|arm64)
-                archtype="aarch64"
-                ;;
-            arm|armhf)
-                archtype="arm"
-                ;;
-            *)
-                echo "${R}[${R}☓${R}]${R} Unsupported architecture"${W}
-                return
-                ;;
-        esac
-
+    if [[ "$confirmation_mesa_vulkan_icd_wrapper" == "y" ]]; then
         if [[ "$archtype" == "aarch64" || "$archtype" == "arm" ]]; then
+            echo "${R}[${C}-${R}]${G}${BOLD} Installing mesa-vulkan-icd-wrapper Driver..."${W}
+            echo
             wget -O mesa-vulkan-icd-wrapper.deb https://github.com/sabamdarif/termux-desktop/releases/download/mesa-vulkan-24.3.1-3/mesa-vulkan-icd-wrapper_24.3.1-3_${archtype}.deb
             apt install ./mesa-vulkan-icd-wrapper.deb -y
             check_and_delete "mesa-vulkan-icd-wrapper.deb"
         fi
-
+    fi
         # Remove existing conflicting packages if using pacman
         if [[ "$PACKAGE_MANAGER" == "pacman" ]]; then
             package_check_and_remove "mesa vulkan-loader"
@@ -56,8 +56,19 @@ function hw_install_required_packages() {
             "virgl_vulkan")
                 package_install_and_check "mesa virglrenderer vulkan-loader-generic angle-android virglrenderer-android"
                 ;;
-            "freeadreno")
-                package_install_and_check "mesa-zink mesa-zink-vulkan-icd-freedreno mesa-vulkan-icd-freedreno-dri3"
+            "freedreno")
+                # package_install_and_check "mesa-zink mesa-zink-vulkan-icd-freedreno mesa-vulkan-icd-freedreno-dri3"
+                if [[ "$archtype" == "aarch64" || "$archtype" == "arm" ]]; then
+                    echo "${R}[${C}-${R}]${G}${BOLD} Installing mesa-vulkan-icd-freedreno Driver..."${W}
+                    echo
+                    wget -O mesa-freedreno.deb https://github.com/sabamdarif/termux-desktop/releases/download/mesa-vulkan/mesa-vulkan-icd-freedreno_24.3.1-1_${archtype}.deb
+                    apt install ./mesa-freedreno.deb -y
+                    check_and_delete "mesa-freedreno.deb"
+                    wget -O mesa-vulkan-icd-swrast.deb https://github.com/sabamdarif/termux-desktop/releases/download/mesa-vulkan/mesa-vulkan-icd-swrast_24.3.1-1_${archtype}.deb
+                    apt install ./mesa-vulkan-icd-swrast.deb -y
+                    check_and_delete "mesa-vulkan-icd-swrast.deb"
+                fi
+                package_install_and_check "mesa mesa-dev osmesa"
                 ;;
             *)
                 package_install_and_check "mesa-zink virglrenderer-mesa-zink vulkan-loader-generic angle-android virglrenderer-android"
@@ -116,11 +127,11 @@ case "$termux_hw_answer" in
     hw_method="GALLIUM_DRIVER=virpipe MESA_GL_VERSION_OVERRIDE=4.0"
     pd_hw_method="${hw_method}"
     ;;
-    "freeadreno")
-    set_to_export="MESA_NO_ERROR=1 MESA_GL_VERSION_OVERRIDE=4.3COMPAT MESA_GLES_VERSION_OVERRIDE=3.2"
+    "freedreno")
+    set_to_export="MESA_NO_ERROR=1 vblank_mode=0"
     initialize_server_method=" "
-    hw_method="MESA_LOADER_DRIVER_OVERRIDE=zink"
-    pd_hw_method="MESA_LOADER_DRIVER_OVERRIDE=zink TU_DEBUG=noconform"
+    hw_method="MESA_LOADER_DRIVER_OVERRIDE=kgsl MESA_GL_VERSION_OVERRIDE=3.3"
+    pd_hw_method="${hw_method}"
     ;;
 esac
 
@@ -133,6 +144,9 @@ case "$pd_hw_answer" in
     ;;
     "turnip")
     pd_hw_method="MESA_LOADER_DRIVER_OVERRIDE=zink TU_DEBUG=noconform"
+    ;;
+    "freedreno")
+    pd_hw_method="MESA_LOADER_DRIVER_OVERRIDE=kgsl MESA_GL_VERSION_OVERRIDE=3.3"
     ;;
     *)
     echo "${R}[${C}-${R}]${G} Uses The Previous Selection For Distro"${W}

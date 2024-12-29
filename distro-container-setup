@@ -10,17 +10,6 @@ function check_termux() {
 call_from_change_pd="n"
 
 function setup_distro() {
-    case "$distro_answer" in
-        1) selected_distro="debian" ;;
-        2) selected_distro="ubuntu" ;;
-        3) selected_distro="archlinux" ;;
-        4) selected_distro="alpine" ;;
-        5) selected_distro="fedora" ;;
-        *) selected_distro="debian" ;;
-    esac
-
-    echo "selected_distro=\"$selected_distro\"" >> $config_file
-
     banner
     echo "${R}[${C}-${R}]${G}${BOLD} Setting up ${C}proot-distro"${W}
     echo
