@@ -260,8 +260,8 @@ function distro_basic_task() {
     elif [[ "$selected_distro" == "fedora" ]]; then
     proot-distro login $selected_distro --shared-tmp -- env DISPLAY=:0 dnf update -y
     proot-distro login $selected_distro --shared-tmp -- env DISPLAY=:0 dnf upgrade -y
-    chmod -R +w $distro_path/
     fi
+    chmod -R +w $distro_path/
     # Set proot timezone
     timezone=$(getprop persist.sys.timezone)
     proot-distro login $selected_distro --shared-tmp -- env DISPLAY=:0 rm /etc/localtime

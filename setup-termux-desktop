@@ -1546,7 +1546,7 @@ function setup_vncstart_cmd() {
 cat <<EOF > "$PREFIX/bin/vncstart"
 #!/data/data/com.termux/files/usr/bin/bash
 
-termux-weak-lock
+termux-wake-lock
 
 pulseaudio --start --exit-idle-time=-1
 
@@ -1611,7 +1611,7 @@ function setup_tx11start_cmd() {
 cat <<EOF > "$PREFIX/bin/tx11start"
 #!/data/data/com.termux/files/usr/bin/bash
 
-termux-weak-lock
+termux-wake-lock
 
 pulseaudio --start --exit-idle-time=-1
 
