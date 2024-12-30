@@ -881,7 +881,8 @@ Also if you have Adreno GPU then please select ubuntu or debian as Linux contain
 Sadly for other then adreno, GPU might / might not work on the Linux container./n
 
 If you type 'n/N' then it will use the old virtualizing way to setup Hardware Acceleration
-Type 'n/N' for better Freedreno KGSL (Adreno GPU Only)./n
+
+Also type 'n/N' for Freedreno KGSL (Adreno GPU Only)./n
 "
 	confirmation_y_or_n "Do you want to install the new mesa-vulkan-icd-wrapper Driver" confirmation_mesa_vulkan_icd_wrapper
 	echo "confirmation_mesa_vulkan_icd_wrapper=\"$confirmation_mesa_vulkan_icd_wrapper\"" >> $config_file
@@ -891,29 +892,33 @@ Type 'n/N' for better Freedreno KGSL (Adreno GPU Only)./n
 # distro hardware accelrration related questions
 function distro_hw_questions() {
 	if [[ "$distro_add_answer" == "y" ]]; then
-       echo
-       echo "${R}[${C}-${R}]${G}${BOLD} Select Hardware Acceleration Driver For Linux Container"${W}
-       echo
-       echo "${R}[${C}-${R}]${G} If You Are Not Sure So Skip It It Will Use The Previous One"${W}
-       echo
 	   if [[ "$termux_hw_answer" == "virgl" ]] || [[ "$termux_hw_answer" == "virgl_vulkan" ]]; then
-	   echo "${Y}1. OpenGL (VIRGL ANGLE)"${W}
-	   echo
-	   echo "${Y}2. Turnip (Adreno GPU Only)"${W}
-	   echo
-	   select_an_option 2 1 pd_hw_answer_num
-
-	   # set gpu api
-	   if [[ "$pd_hw_answer_num" == "1" ]]; then
-	   pd_hw_answer="virgl"
-	   elif [[ "$pd_hw_answer_num" == "2" ]]; then
-	   pd_hw_answer="turnip"
-	   fi
-
+	   	if [[ "$device_gpu_model_name" != "adreno" ]]; then
+	   		pd_hw_answer="virgl"
+	   	else
+	   		banner
+	   		echo "${R}[${C}-${R}]${G}${BOLD} Select Hardware Acceleration Driver For Linux Container"${W}
+	   		echo "${Y}1. OpenGL (VIRGL ANGLE)"${W}
+	   		echo
+	   		echo "${Y}2. Turnip (Adreno GPU Only)"${W}
+	   		echo
+	   		select_an_option 2 1 pd_hw_answer_n
+	   		# set gpu api
+	   		if [[ "$pd_hw_answer_num" == "1" ]]; then
+	   		pd_hw_answer="virgl"
+	   		elif [[ "$pd_hw_answer_num" == "2" ]]; then
+	   		pd_hw_answer="turnip"
+	   		fi
+	   	fi
 	   elif [[ "$termux_hw_answer" == "freedreno" ]]; then
 	   # set gpu api
 	   pd_hw_answer="freedreno"
 	   else
+	   banner
+	   echo "${R}[${C}-${R}]${G}${BOLD} Select Hardware Acceleration Driver For Linux Container"${W}
+	   echo
+	   echo "${R}[${C}-${R}]${G} If You Skip It, It Will Use The Previous Selection"${W}
+       echo
 	   echo "${Y}1. Vulkan (ZINK)"${W}
 	   echo
 	   echo "${Y}2. OpenGL ES (ZINK VIRGL)"${W}
@@ -924,14 +929,14 @@ function distro_hw_questions() {
 	   echo
 	   select_an_option 4 1 pd_hw_answer_num
 
-	   # set gpu api
-	   if [[ "$pd_hw_answer_num" == "1" ]]; then
-	   pd_hw_answer="zink"
-	   elif [[ "$pd_hw_answer_num" == "2" ]]; then
-	   pd_hw_answer="zink_virgl"
-	   elif [[ "$pd_hw_answer_num" == "3" ]]; then
-	   pd_hw_answer="turnip"
-	   fi
+	   	# set gpu api
+	   	if [[ "$pd_hw_answer_num" == "1" ]]; then
+	   	pd_hw_answer="zink"
+	   	elif [[ "$pd_hw_answer_num" == "2" ]]; then
+	   	pd_hw_answer="zink_virgl"
+	   	elif [[ "$pd_hw_answer_num" == "3" ]]; then
+	   	pd_hw_answer="turnip"
+	   	fi
 
 	   fi
 	   echo "pd_hw_answer_num=\"$pd_hw_answer_num\"" >> $config_file
@@ -980,18 +985,15 @@ function exp_termux_gl_hw_support() {
 	termux_hw_answer="${exp_termux_gl_hw_answer}"
 	echo "termux_hw_answer=\"$exp_termux_gl_hw_answer\"" >> $config_file
 
-	if [[ "$device_gpu_model_name" == "adreno" ]] && [[ "$distro_add_answer" == "y" ]]; then
-    	if [[ "$distro_answer" == "1" || "$distro_answer" == "2" ]]; then
-    	    pd_hw_answer="turnip"
-    	    echo "pd_hw_answer=\"$pd_hw_answer\"" >> $config_file
-    	fi
-	fi
-
     if [[ "$distro_add_answer" == "y" ]]; then
         case "$exp_termux_gl_hw_answer" in
             "virgl"|"virgl_vulkan")
-                pd_hw_answer="virgl"
-                echo "pd_hw_answer=\"$pd_hw_answer\"" >> $config_file
+				if [[ "$device_gpu_model_name" == "adreno" ]]; then
+					distro_hw_questions
+				else
+                	pd_hw_answer="virgl"
+                	echo "pd_hw_answer=\"$pd_hw_answer\"" >> $config_file
+				fi
                 ;;
             *)
                 distro_hw_questions
@@ -2702,7 +2704,7 @@ function remove_termux_desktop() {
 	check_and_delete "$HOME/.config/$the_config_dir"
 	check_and_delete "$HOME/Desktop $HOME/Downloads $HOME/Videos $HOME/Pictures $HOME/Music"
 	#remove hw packages
-	package_check_and_remove "mesa-zink virglrenderer-mesa-zink vulkan-loader-android angle-android virglrenderer-android mesa-vulkan-icd-freedreno mesa-zink"
+	package_check_and_remove "mesa-zink virglrenderer-mesa-zink vulkan-loader-android angle-android virglrenderer-android mesa-vulkan-icd-freedreno mesa-vulkan-icd-wrapper mesa-zink"
 	#remove distro container
 	if [[ "$distro_add_answer" == "y" ]]; then
 	proot-distro remove $selected_distro
@@ -3005,7 +3007,7 @@ function some_fixes() {
 	fi
 
 	# tx11start and vncstart
-	if [[ $termux_hw_answer == "4" ]]; then
+	if [[ $termux_hw_answer == "freedreno" ]]; then
 	sed -i 's/^[[:space:]]*&[[:space:]]*$/ /' "$PREFIX/bin/tx11start"
 	sed -i 's/^[[:space:]]*&[[:space:]]*$/ /' "$PREFIX/bin/vncstart"
 	fi
