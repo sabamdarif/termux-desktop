@@ -1573,7 +1573,7 @@ function setup_vncstop_cmd() {
 cat <<'EOF' > "$PREFIX/bin/vncstop"
 #!/data/data/com.termux/files/usr/bin/bash
 
-termux-weak-unlock
+termux-wake-unlock
 
 if [[ "$1" == "-f" ]]; then
 pkill -9 Xtigervnc > /dev/null 2>&1
@@ -1791,7 +1791,7 @@ if [[ "$de_name" == "openbox" ]]; then
 cat <<EOF > "$PREFIX/bin/tx11stop"
 #!/data/data/com.termux/files/usr/bin/bash
 
-termux-weak-unlock
+termux-wake-unlock
 
 termux_x11_pid=\$(pgrep -f "/system/bin/app_process / com.termux.x11.Loader :1.0")
 de_pid=\$(pgrep -f "$de_startup")
@@ -1822,7 +1822,7 @@ else
 cat <<EOF > "$PREFIX/bin/tx11stop"
 #!/data/data/com.termux/files/usr/bin/bash
 
-termux-weak-unlock
+termux-wake-unlock
 
 termux_x11_pid=\$(pgrep -f "/system/bin/app_process / com.termux.x11.Loader :1.0")
 de_pid=\$(pgrep -f "$de_startup")
