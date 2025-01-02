@@ -24,6 +24,11 @@
 - **pdappps** Open the folder where all the apps added by proot-distro are located
 - **startssh** To start a ssh server (after starting ssh, it will print the ip and port which you need for the connection)
 - **stopssh** To stop the ssh server
+- **listfont** To list all font
+- **largefile** To list large files
+- **preview** use fzf to search file and preview text file
+
+##### For more cat $HOME/.aliases
 ---
 
 ## :hammer_and_wrench:Openbox Keybindings Cheat Sheet

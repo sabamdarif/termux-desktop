@@ -235,6 +235,7 @@ Special thanks to:
 - [adi1090x/termux-desktop](https://github.com/adi1090x/termux-desktop)
 - [Generator/termux-motd](https://github.com/Generator/termux-motd)
 - [virgl-angle-termux](https://github.com/ar37-rs/virgl-angle-termux)
+- [myTermux](https://github.com/mayTermux/myTermux)
 ---
 
 **If you enjoy this project, consider giving it a star!** :star2:

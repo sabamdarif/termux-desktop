@@ -28,7 +28,7 @@ function hw_install_required_packages() {
         if [[ "$archtype" == "aarch64" || "$archtype" == "arm" ]]; then
             echo "${R}[${C}-${R}]${G}${BOLD} Installing mesa-vulkan-icd-wrapper Driver..."${W}
             echo
-            wget -O mesa-vulkan-icd-wrapper.deb https://github.com/sabamdarif/termux-desktop/releases/download/mesa-vulkan-24.3.1-3/mesa-vulkan-icd-wrapper_24.3.1-3_${archtype}.deb
+            wget --tries=5 --retry-connrefused -O mesa-vulkan-icd-wrapper.deb https://github.com/sabamdarif/termux-desktop/releases/download/mesa-vulkan-24.3.1-3/mesa-vulkan-icd-wrapper_24.3.1-3_${archtype}.deb
             apt install ./mesa-vulkan-icd-wrapper.deb -y
             check_and_delete "mesa-vulkan-icd-wrapper.deb"
         fi
@@ -61,10 +61,10 @@ function hw_install_required_packages() {
                 if [[ "$archtype" == "aarch64" || "$archtype" == "arm" ]]; then
                     echo "${R}[${C}-${R}]${G}${BOLD} Installing mesa-vulkan-icd-freedreno Driver..."${W}
                     echo
-                    wget -O mesa-freedreno.deb https://github.com/sabamdarif/termux-desktop/releases/download/mesa-vulkan/mesa-vulkan-icd-freedreno_24.3.1-1_${archtype}.deb
+                    wget --tries=5 --retry-connrefused -O mesa-freedreno.deb https://github.com/sabamdarif/termux-desktop/releases/download/mesa-vulkan/mesa-vulkan-icd-freedreno_24.3.1-1_${archtype}.deb
                     apt install ./mesa-freedreno.deb -y
                     check_and_delete "mesa-freedreno.deb"
-                    wget -O mesa-vulkan-icd-swrast.deb https://github.com/sabamdarif/termux-desktop/releases/download/mesa-vulkan/mesa-vulkan-icd-swrast_24.3.1-1_${archtype}.deb
+                    wget --tries=5 --retry-connrefused -O mesa-vulkan-icd-swrast.deb https://github.com/sabamdarif/termux-desktop/releases/download/mesa-vulkan/mesa-vulkan-icd-swrast_24.3.1-1_${archtype}.deb
                     apt install ./mesa-vulkan-icd-swrast.deb -y
                     check_and_delete "mesa-vulkan-icd-swrast.deb"
                 fi
@@ -194,7 +194,7 @@ function setup_turnip_proot() {
         if [[ "$selected_distro" == "ubuntu" ]]; then
         proot-distro login $selected_distro --shared-tmp -- env DISPLAY=:1.0 apt install mesa-vulkan-drivers libllvm15t64 -y
         fi
-    wget -O mesa-vulkan-kgsl_arm64.deb https://github.com/sabamdarif/termux-desktop/releases/download/mesa-vulkan/mesa-vulkan-kgsl_24.1.0-devel-20240120_arm64.deb
+    wget --tries=5 --retry-connrefused -O mesa-vulkan-kgsl_arm64.deb https://github.com/sabamdarif/termux-desktop/releases/download/mesa-vulkan/mesa-vulkan-kgsl_24.1.0-devel-20240120_arm64.deb
     mv mesa-vulkan-kgsl_arm64.deb $distro_path/root/
     proot-distro login $selected_distro --shared-tmp -- env DISPLAY=:1.0 dpkg -i mesa-vulkan-kgsl_arm64.deb
     proot-distro login $selected_distro --shared-tmp -- env DISPLAY=:1.0 rm mesa-vulkan-kgsl_arm64.deb

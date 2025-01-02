@@ -1,0 +1,41 @@
+# fzf
+alias preview="fzf --preview='bat --color=always --style=numbers --theme OneHalfDark {}' --preview-window=down"
+
+#System    
+alias q="exit"
+alias c="clear"
+alias sd="cd /sdcard"
+alias pf="cd $PREFIX"
+alias mkdir='mkdir -p'
+alias startssh='termux-ssh'
+alias stopssh='termux-ssh stop'
+
+#Photos
+alias ss="cd /sdcard/Pictures/Screenshots/"
+
+#Movies
+alias ms="cd /sdcard/Movies"
+
+#Downloads
+alias dl="cd /sdcard/Download"
+
+#Documents
+alias ds="cd /sdcard/Documents"
+
+#Largest Files
+alias largefile="du -h -x -s -- * | sort -r -h | head -20"
+
+#System Information
+alias ls="eza --icons"
+alias la="eza --icons -lgha --group-directories-first"
+alias lt="eza --icons --tree"
+alias lta="eza --icons --tree -lgha"
+alias bat="bat --theme OneHalfDark"
+alias cat="bat --theme OneHalfDark -p $@"
+alias neofetch='fastfetch'
+
+#Magick
+alias listfont="magick convert -list font | grep -iE 'font:.*'"
+
+#termux-reload
+alias reload="termux-reload-settings"

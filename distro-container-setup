@@ -416,7 +416,7 @@ BOLD="$(printf '\033[1m')"
 
 EOF
 cat <<'EOF' >> $save_path/pd_zsh_setup.sh
-wget https://raw.githubusercontent.com/sabamdarif/short-linux-scripts/main/install-zsh.sh && bash install-zsh.sh
+wget --tries=5 --retry-connrefused https://raw.githubusercontent.com/sabamdarif/short-linux-scripts/main/install-zsh.sh && bash install-zsh.sh
 clear
 rm pd_zsh_setup.sh
 EOF
@@ -503,11 +503,11 @@ device_arch=$(uname -m)
             ;;
     esac
     version=$(get_latest_release "fastfetch-cli" "fastfetch")
-    wget -O $distro_path/root/fastfetch.deb https://github.com/fastfetch-cli/fastfetch/releases/download/${version}/fastfetch-linux-${archtype}.deb
+    wget --tries=5 --retry-connrefused -O $distro_path/root/fastfetch.deb https://github.com/fastfetch-cli/fastfetch/releases/download/${version}/fastfetch-linux-${archtype}.deb
     apt install ./fastfetch.deb -y
     rm fastfetch.deb
 mkdir -p /etc/apt/keyrings
-wget -qO- https://raw.githubusercontent.com/eza-community/eza/main/deb.asc | sudo gpg --dearmor -o /etc/apt/keyrings/gierens.gpg
+wget --tries=5 --retry-connrefused -qO- https://raw.githubusercontent.com/eza-community/eza/main/deb.asc | sudo gpg --dearmor -o /etc/apt/keyrings/gierens.gpg
 echo "deb [signed-by=/etc/apt/keyrings/gierens.gpg] http://deb.gierens.de stable main" | sudo tee /etc/apt/sources.list.d/gierens.list
 chmod 644 /etc/apt/keyrings/gierens.gpg /etc/apt/sources.list.d/gierens.list
 apt update

@@ -653,7 +653,8 @@ function questions_theme_select() {
     local subfolder_count_value=$(count_subfolders "$owner" "$repo" "$main_folder" 2>/dev/null)
     cd $HOME
     echo "${R}[${C}-${R}]${G} Downloading list...."${W}
-    wget -qO ${current_path}/styles.md https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/${de_name}_styles.md
+	check_and_backup "${current_path}/styles.md"
+    wget --tries=5 --retry-connrefused -qO ${current_path}/styles.md https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/${de_name}_styles.md
     clear
 	banner
     # Check if the subfolder count value is obtained
@@ -1452,9 +1453,15 @@ function hw_config() {
 
             if [[ "$change_old_hw_installer" == "y" ]]; then
                 check_and_backup "${current_path}/enable-hw-acceleration"
-                wget -O ${current_path}/enable-hw-acceleration https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/enable-hw-acceleration \
-                    && chmod +x ${current_path}/enable-hw-acceleration \
-                    && . ${current_path}/enable-hw-acceleration
+                wget --tries=5 --retry-connrefused -O ${current_path}/enable-hw-acceleration https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/enable-hw-acceleration
+					if [[ -f "${current_path}/enable-hw-acceleration" ]]; then
+                    	chmod +x ${current_path}/enable-hw-acceleration
+                    	. ${current_path}/enable-hw-acceleration
+					else
+						wget --tries=5 --retry-connrefused -O ${current_path}/enable-hw-acceleration https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/enable-hw-acceleration
+						chmod +x ${current_path}/enable-hw-acceleration
+                    	. ${current_path}/enable-hw-acceleration
+					fi
             else
                 echo "${R}[${C}-${R}]${G} Using the local hardware acceleration setup file${W}"
                 chmod +x ${current_path}/enable-hw-acceleration
@@ -1468,11 +1475,17 @@ function hw_config() {
             . ${current_path}/enable-hw-acceleration
         fi
     else
-        wget -O ${current_path}/enable-hw-acceleration https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/enable-hw-acceleration \
-            && chmod +x ${current_path}/enable-hw-acceleration \
-            && . ${current_path}/enable-hw-acceleration
-        rm ${current_path}/enable-hw-acceleration
+        wget --tries=5 --retry-connrefused -O ${current_path}/enable-hw-acceleration https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/enable-hw-acceleration
+			if [[ -f "${current_path}/enable-hw-acceleration" ]]; then
+                chmod +x ${current_path}/enable-hw-acceleration
+                . ${current_path}/enable-hw-acceleration
+			else
+				wget --tries=5 --retry-connrefused -O ${current_path}/enable-hw-acceleration https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/enable-hw-acceleration
+				chmod +x ${current_path}/enable-hw-acceleration
+            	. ${current_path}/enable-hw-acceleration
+			fi
     fi
+        check_and_delete "${current_path}/enable-hw-acceleration"
 }
 
 #########################################################################
@@ -1504,7 +1517,7 @@ function distro_container_setup() {
 
                 if [[ "$change_old_distro_installer" == "y" ]]; then
                     check_and_backup "${current_path}/distro-container-setup"
-                    wget -O ${current_path}/distro-container-setup https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/distro-container-setup
+                    wget --tries=5 --retry-connrefused -O ${current_path}/distro-container-setup https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/distro-container-setup
 					if [[ ("$1" == "--change" || "$1" == "-c") && ("$2" == "distro" || "$2" == "pd") ]]; then
 					sed -i 's/\(call_from_change_pd="\)[^"]*/\1y/' "${current_path}/distro-container-setup"
 					fi
@@ -1523,7 +1536,7 @@ function distro_container_setup() {
                 . ${current_path}/distro-container-setup
             fi
         else
-            wget -O ${current_path}/distro-container-setup https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/distro-container-setup
+            wget --tries=5 --retry-connrefused -O ${current_path}/distro-container-setup https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/distro-container-setup
 			if [[ ("$1" == "--change" || "$1" == "-c") && ("$2" == "distro" || "$2" == "pd") ]]; then
 			sed -i 's/\(call_from_change_d="\)[^"]*/\1y/' "${current_path}/distro-container-setup"
 			fi
@@ -1868,7 +1881,7 @@ function setup_termux_x11() {
 		local assets
 		assets=$(curl -s "https://api.github.com/repos/$repo_owner/$repo_name/releases/latest" | grep -oP '(?<="name": ")[^"]*')
 		deb_assets=$(echo "$assets" | grep termux-x11.*all.deb)
-		wget -O $current_path/termux-x11.deb $termux_x11_url/$deb_assets
+		wget --tries=5 --retry-connrefused -O $current_path/termux-x11.deb $termux_x11_url/$deb_assets
 		apt install $current_path/termux-x11.deb -y
 		rm $current_path/termux-x11.deb
 		sed -i '12s/^#//' $HOME/.termux/termux.properties
@@ -2171,7 +2184,7 @@ function setup_zsh() {
 	echo "${R}[${C}-${R}]${G}${BOLD} Configuring Zsh.."${W}
 	echo
 	package_install_and_check "zsh git"
-	wget https://raw.githubusercontent.com/sabamdarif/simple-linux-scripts/main/install-zsh.sh
+	wget --tries=5 --retry-connrefused https://raw.githubusercontent.com/sabamdarif/simple-linux-scripts/main/install-zsh.sh
 	if [[ "$distro_add_answer" == "y" ]]; then
 	bash install-zsh.sh -u "$user_name"
 	else
@@ -2193,41 +2206,27 @@ function terminal_utility_setup() {
 	banner
 	echo "${R}[${C}-${R}]${C}${BOLD} Configuring Terminal Utility For Termux..."${W}
 	echo
+	package_install_and_check "bat eza zoxide fastfetch openssh fzf"
 	check_and_backup "$PREFIX/etc/motd"
 	check_and_backup "$PREFIX/etc/motd-playstore"
     check_and_backup "$PREFIX/etc/motd.sh"
-	wget -O $PREFIX/etc/motd.sh https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/other/motd.sh
+	wget --tries=5 --retry-connrefused -O $PREFIX/etc/motd.sh https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/other/motd.sh
 	if grep -q "motd.sh$" "$PREFIX/etc/termux-login.sh"; then
 	sed -i "s|.*motd\.sh$|bash $PREFIX/etc/motd.sh|" "$PREFIX/etc/termux-login.sh"
     else
 	echo "bash $PREFIX/etc/motd.sh" >> "$PREFIX/etc/termux-login.sh"
     fi
 	check_and_create_directory "$HOME/.termux"
-	check_and_backup "$HOME/.termux/colors.properties"
-	wget -O $HOME/.termux/colors.properties https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/other/colors.properties
-	package_install_and_check "openssh"
-	wget -O $PREFIX/bin/termux-ssh https://raw.githubusercontent.com/sabamdarif/simple-linux-scripts/main/termux-ssh
-	chmod +x $PREFIX/bin/termux-ssh
+	check_and_backup "$HOME/.termux/colors.properties $HOME/.termux/termux.properties $HOME/.aliases"
+	wget --tries=5 --retry-connrefused -O $HOME/.termux/termux.properties https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/other/termux.properties
+	wget --tries=5 --retry-connrefused -O $HOME/.aliases https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/other/.aliases
+	wget --tries=5 --retry-connrefused -O $HOME/.termux/colors.properties https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/other/colors.properties
+	wget --tries=5 --retry-connrefused -O $PREFIX/bin/termux-ssh https://raw.githubusercontent.com/sabamdarif/simple-linux-scripts/main/termux-ssh \
+		&& chmod +x $PREFIX/bin/termux-ssh
 	cp $shell_rc_file ${shell_rc_file}-2
 	check_and_backup "$shell_rc_file"
 	mv ${shell_rc_file}-2 ${shell_rc_file}
-	package_install_and_check "bat eza zoxide fastfetch"
-# 	if [[ "$PACKAGE_MANAGER" == "pacman" ]]; then
-# 	package_install_and_check "bat eza zoxide fastfetch"
-# 	else
-# 	package_install_and_check "aptitude bat eza zoxide fastfetch"
-# cat <<'EOF' >> "$shell_rc_file"
-# alias apt='aptitude $@'
-# alias pkg='aptitude $@'
-# EOF
-# 	fi
 cat <<'EOF' >> "$shell_rc_file"
-alias cat='bat $@'
-alias ls='eza --icons $@'
-alias mkdir='mkdir -p'
-alias neofetch='fastfetch'
-alias startssh='termux-ssh'
-alias stopssh='termux-ssh stop'
 #######################################################
 # SPECIAL FUNCTIONS
 #######################################################
@@ -2315,15 +2314,17 @@ cat <<EOF >> "$shell_rc_file"
 # set zoxide as cd
 eval "\$(zoxide init --cmd cd ${shell_name})"
 EOF
-termux-reload-settings
-sleep 2
 	fi
-echo -e "
+cat <<EOF >> "$shell_rc_file"
 # print your current termux-desktop configuration
 alias 'tdconfig'='cat $config_file'
+EOF
+if [[ "$distro_add_answer" == "y" ]]; then
+cat <<EOF >> "$shell_rc_file"
 # open the folder where all the apps added by proot-distro are located
 alias 'pdapps'='cd /data/data/com.termux/files/usr/share/applications/pd_added && ls'
-" >> $HOME/.${shell_name}rc
+EOF
+fi
 echo "terminal_utility_setup_answer=\"$terminal_utility_setup_answer\"" >> $config_file
 }
 
@@ -2347,7 +2348,7 @@ function setup_fonts() {
 	cp $HOME/.fonts/0xProtoNerdFont-Regular.ttf $HOME/.termux/font.ttf
 	fc-cache -f
 	check_and_create_directory "$HOME/.config/fastfetch"
-	wget -O $HOME/.config/fastfetch/config.jsonc https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/other/config.jsonc 
+	wget --tries=5 --retry-connrefused -O $HOME/.config/fastfetch/config.jsonc https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/other/config.jsonc 
 	fi
 }
 
@@ -2452,7 +2453,7 @@ function setup_wine() {
 	echo "${R}[${C}-${R}]${G}${BOLD} Mobox:- ${C}https://github.com/olegos2/mobox"${W}
 	echo
 	sleep 4
-	wget -O $PREFIX/bin/wine https://raw.githubusercontent.com/LinuxDroidMaster/Termux-Desktops/main/scripts/termux_native/mobox_run.sh
+	wget --tries=5 --retry-connrefused -O $PREFIX/bin/wine https://raw.githubusercontent.com/LinuxDroidMaster/Termux-Desktops/main/scripts/termux_native/mobox_run.sh
 	chmod +x $PREFIX/bin/wine
 	wine_shortcut
 	cp $PREFIX/share/applications/wine-explorer.desktop $HOME/Desktop/MoboxExplorer.desktop
