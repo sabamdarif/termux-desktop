@@ -2,7 +2,7 @@
 
 function check_termux() {
 	if [[ $HOME != *termux* ]]; then
-	echo "${R}[${R}☓${R}]${R}${BOLD}Please run it inside termux"${W}
+	echo "${R}[${R}☓${R}]${R}${BOLD}Please run it inside termux${W}"
 	exit 0
 	fi
 }
@@ -11,14 +11,14 @@ call_from_change_pd="n"
 
 function setup_distro() {
     banner
-    echo "${R}[${C}-${R}]${G}${BOLD} Setting up ${C}proot-distro"${W}
+    echo "${R}[${C}-${R}]${G}${BOLD} Setting up ${C}proot-distro${W}"
     echo
 
     update_sys
     package_install_and_check "proot-distro"
 
     banner
-    echo "${R}[${C}-${R}]${G}${BOLD} Setting up Selected Linux Distro: ${C}${selected_distro}"${W}
+    echo "${R}[${C}-${R}]${G}${BOLD} Setting up Selected Linux Distro: ${C}${selected_distro}${W}"
     echo
 
     pd install "$selected_distro"
@@ -34,7 +34,7 @@ function setup_distro() {
 
 function distro_fix_sound_issue() {
     banner
-    echo "${R}[${C}-${R}]${G}${BOLD} Fixing Proot Distro Sound Problem..."${W}
+    echo "${R}[${C}-${R}]${G}${BOLD} Fixing Proot Distro Sound Problem...${W}"
     echo
     echo "export PULSE_SERVER=127.0.0.1" >> "$distro_path/etc/profile"
 cat <<EOF > "$HOME/.pd-sound-service"
@@ -52,12 +52,12 @@ EOF
 function pd_package_install_and_check() {
     packs_list=($@)
 
-    #get distro id
+    # Get distro id
     if [ -f /etc/os-release ]; then
         . /etc/os-release
     fi
 
-    #instll package
+    # Install package
     for package_name in "${packs_list[@]}"; do
         echo "${R}[${C}-${R}]${G}${BOLD} Installing package: ${C}$package_name ${W}"
         if [[ "$ID" == "debian" ]] || [[ "$ID" == "ubuntu" ]]; then
@@ -70,7 +70,7 @@ function pd_package_install_and_check() {
             sudo dnf install "$package_name" -y
         fi
 
-        #handel error in installation
+        # Handle error in installation
         if [ $? -ne 0 ]; then
             echo "${R}[${R}☓${R}]${R}${BOLD} Error detected during installation of: ${C}$package_name ${W}"
             if [[ "$ID" == "debian" ]] || [[ "$ID" == "ubuntu" ]]; then
@@ -90,7 +90,7 @@ function pd_package_install_and_check() {
             fi
         fi
 
-        #reinstall
+        # Reinstall if necessary
         if [[ "$ID" == "debian" ]] || [[ "$ID" == "ubuntu" ]]; then
             if ! dpkg -s "$package_name" >/dev/null 2>&1; then
                 sudo apt install "$package_name" -y
@@ -109,12 +109,12 @@ function pd_package_install_and_check() {
             fi
         fi
 
-        #check installation
+        # Check installation
         if [[ "$ID" == "debian" ]] || [[ "$ID" == "ubuntu" ]]; then
             if dpkg -s "$package_name" >/dev/null 2>&1; then
                 echo "${R}[${G}✓${R}]${G} $package_name installed successfully ${W}"
             else
-                if type -p "$package_name" &>/dev/null || [ -e "$PREFIX/bin/$package_name"* ] || [ -e "$PREFIX/bin/"*"$package_name" ]; then
+                if type -p "$package_name" &>/dev/null || ls "$PREFIX/bin/"*"$package_name"* >/dev/null 2>&1; then
                     echo "${R}[${G}✓${R}]${C} $package_name ${G}installed successfully ${W}"
                 fi
             fi
@@ -122,7 +122,7 @@ function pd_package_install_and_check() {
             if pacman -Qi "$package_name" >/dev/null 2>&1; then
                 echo "${R}[${G}✓${R}]${G} $package_name installed successfully ${W}"
             else
-                if type -p "$package_name" &>/dev/null || [ -e "$PREFIX/bin/$package_name"* ] || [ -e "$PREFIX/bin/"*"$package_name" ]; then
+                if type -p "$package_name" &>/dev/null || ls "$PREFIX/bin/"*"$package_name"* >/dev/null 2>&1; then
                     echo "${R}[${G}✓${R}]${C} $package_name ${G}installed successfully ${W}"
                 fi
             fi
@@ -130,7 +130,7 @@ function pd_package_install_and_check() {
             if apk info -e "$package_name"; then
                 echo "${R}[${G}✓${R}]${G} $package_name installed successfully ${W}"
             else
-                if type -p "$package_name" &>/dev/null || [ -e "$PREFIX/bin/$package_name"* ] || [ -e "$PREFIX/bin/"*"$package_name" ]; then
+                if type -p "$package_name" &>/dev/null || ls "$PREFIX/bin/"*"$package_name"* >/dev/null 2>&1; then
                     echo "${R}[${G}✓${R}]${C} $package_name ${G}installed successfully ${W}"
                 fi
             fi
@@ -138,7 +138,7 @@ function pd_package_install_and_check() {
             if rpm -q "$package_name" >/dev/null 2>&1; then
                 echo "${R}[${G}✓${R}]${G} $package_name installed successfully ${W}"
             else
-                if type -p "$package_name" &>/dev/null || [ -e "$PREFIX/bin/$package_name"* ] || [ -e "$PREFIX/bin/"*"$package_name" ]; then
+                if type -p "$package_name" &>/dev/null || ls "$PREFIX/bin/"*"$package_name"* >/dev/null 2>&1; then
                     echo "${R}[${G}✓${R}]${C} $package_name ${G}installed successfully ${W}"
                 fi
             fi
@@ -148,14 +148,15 @@ function pd_package_install_and_check() {
 }
 
 function pd_root_package_install_and_check() {
-    packs_list=($@)
+    local packs_list
+    mapfile -d ' ' -t packs_list <<< "$1"
 
-    #get distro id
+    # Get distro id
     if [ -f /etc/os-release ]; then
         . /etc/os-release
     fi
 
-    #install package
+    # Install package
     for package_name in "${packs_list[@]}"; do
         echo "${R}[${C}-${R}]${G}${BOLD} Installing package: ${C}$package_name ${W}"
         if [[ "$ID" == "debian" ]] || [[ "$ID" == "ubuntu" ]]; then
@@ -168,7 +169,7 @@ function pd_root_package_install_and_check() {
             dnf install "$package_name" -y
         fi
 
-        #handle error in installation
+        # Handle error in installation
         if [ $? -ne 0 ]; then
             echo "${R}[${R}☓${R}]${R}${BOLD} Error detected during installation of: ${C}$package_name ${W}"
             if [[ "$ID" == "debian" ]] || [[ "$ID" == "ubuntu" ]]; then
@@ -188,7 +189,7 @@ function pd_root_package_install_and_check() {
             fi
         fi
 
-        #reinstall
+        # Reinstall if necessary
         if [[ "$ID" == "debian" ]] || [[ "$ID" == "ubuntu" ]]; then
             if ! dpkg -s "$package_name" >/dev/null 2>&1; then
                 apt install "$package_name" -y
@@ -207,12 +208,12 @@ function pd_root_package_install_and_check() {
             fi
         fi
 
-        #check installation
+        # Check installation
         if [[ "$ID" == "debian" ]] || [[ "$ID" == "ubuntu" ]]; then
             if dpkg -s "$package_name" >/dev/null 2>&1; then
                 echo "${R}[${G}✓${R}]${G} $package_name installed successfully ${W}"
             else
-                if type -p "$package_name" &>/dev/null || [ -e "$PREFIX/bin/$package_name"* ] || [ -e "$PREFIX/bin/"*"$package_name" ]; then
+                if type -p "$package_name" &>/dev/null || ls "$PREFIX/bin/"*"$package_name"* >/dev/null 2>&1; then
                     echo "${R}[${G}✓${R}]${C} $package_name ${G}installed successfully ${W}"
                 fi
             fi
@@ -220,7 +221,7 @@ function pd_root_package_install_and_check() {
             if pacman -Qi "$package_name" >/dev/null 2>&1; then
                 echo "${R}[${G}✓${R}]${G} $package_name installed successfully ${W}"
             else
-                if type -p "$package_name" &>/dev/null || [ -e "$PREFIX/bin/$package_name"* ] || [ -e "$PREFIX/bin/"*"$package_name" ]; then
+                if type -p "$package_name" &>/dev/null || ls "$PREFIX/bin/"*"$package_name"* >/dev/null 2>&1; then
                     echo "${R}[${G}✓${R}]${C} $package_name ${G}installed successfully ${W}"
                 fi
             fi
@@ -228,7 +229,7 @@ function pd_root_package_install_and_check() {
             if apk info -e "$package_name"; then
                 echo "${R}[${G}✓${R}]${G} $package_name installed successfully ${W}"
             else
-                if type -p "$package_name" &>/dev/null || [ -e "$PREFIX/bin/$package_name"* ] || [ -e "$PREFIX/bin/"*"$package_name" ]; then
+                if type -p "$package_name" &>/dev/null || ls "$PREFIX/bin/"*"$package_name"* >/dev/null 2>&1; then
                     echo "${R}[${G}✓${R}]${C} $package_name ${G}installed successfully ${W}"
                 fi
             fi
@@ -236,7 +237,7 @@ function pd_root_package_install_and_check() {
             if rpm -q "$package_name" >/dev/null 2>&1; then
                 echo "${R}[${G}✓${R}]${G} $package_name installed successfully ${W}"
             else
-                if type -p "$package_name" &>/dev/null || [ -e "$PREFIX/bin/$package_name"* ] || [ -e "$PREFIX/bin/"*"$package_name" ]; then
+                if type -p "$package_name" &>/dev/null || ls "$PREFIX/bin/"*"$package_name"* >/dev/null 2>&1; then
                     echo "${R}[${G}✓${R}]${C} $package_name ${G}installed successfully ${W}"
                 fi
             fi
@@ -247,33 +248,33 @@ function pd_root_package_install_and_check() {
 
 function distro_basic_task() {
     banner
-    echo "${R}[${C}-${R}]${G}${BOLD} Updating ${C}$selected_distro ${G}And Installing Required Packages"${W}
+    echo "${R}[${C}-${R}]${G}${BOLD} Updating ${C}$selected_distro ${G}And Installing Required Packages${W}"
     echo
     if [[ "$selected_distro" == "debian" ]] || [[ "$selected_distro" == "ubuntu" ]]; then
-    proot-distro login $selected_distro --shared-tmp -- env DISPLAY=:0 apt update
-    proot-distro login $selected_distro --shared-tmp -- env DISPLAY=:0 apt upgrade -y
+    proot-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:0 apt update
+    proot-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:0 apt upgrade -y
     elif [[ "$selected_distro" == "archlinux" ]]; then
-    proot-distro login $selected_distro --shared-tmp -- env DISPLAY=:0 pacman -Syu --noconfirm
+    proot-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:0 pacman -Syu --noconfirm
     elif [[ "$selected_distro" == "alpine" ]]; then
-    proot-distro login $selected_distro --shared-tmp -- env DISPLAY=:0 apk update
-    proot-distro login $selected_distro --shared-tmp -- env DISPLAY=:0 apk upgrade
+    proot-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:0 apk update
+    proot-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:0 apk upgrade
     elif [[ "$selected_distro" == "fedora" ]]; then
-    proot-distro login $selected_distro --shared-tmp -- env DISPLAY=:0 dnf update -y
-    proot-distro login $selected_distro --shared-tmp -- env DISPLAY=:0 dnf upgrade -y
+    proot-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:0 dnf update -y
+    proot-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:0 dnf upgrade -y
     fi
-    chmod -R +w $distro_path/
+    chmod -R +w "$distro_path/"
     # Set proot timezone
     timezone=$(getprop persist.sys.timezone)
-    proot-distro login $selected_distro --shared-tmp -- env DISPLAY=:0 rm /etc/localtime
-    proot-distro login $selected_distro --shared-tmp -- env DISPLAY=:0 cp /usr/share/zoneinfo/$timezone /etc/localtime
+    proot-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:0 rm /etc/localtime
+    proot-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:0 cp "/usr/share/zoneinfo/$timezone /etc/localtime"
     if [[ "$pd_audio_config_answer" == "y" ]]; then
     distro_packs="sudo pulseaudio"
     distro_fix_sound_issue
     elif [[ "$pd_audio_config_answer" == "n" ]]; then
     distro_packs="sudo"
     fi
-    echo "pd_audio_config_answer=\"${pd_audio_config_answer}\"" >> $config_file
-cat <<'EOF' > $distro_path/root/pd_basic_setup.sh
+    echo "pd_audio_config_answer=\"${pd_audio_config_answer}\"" >> "$config_file"
+cat <<'EOF' > "$distro_path/root/pd_basic_setup.sh"
 #!/bin/bash
 
 R="$(printf '\033[1;31m')"
@@ -285,19 +286,19 @@ W="$(printf '\033[0m')"
 BOLD="$(printf '\033[1m')"
 
 EOF
-declare -f banner pd_root_package_install_and_check >> $distro_path/root/pd_basic_setup.sh
-cat <<EOF >> $distro_path/root/pd_basic_setup.sh
+declare -f banner pd_root_package_install_and_check >> "$distro_path/root/pd_basic_setup.sh"
+cat <<EOF >> "$distro_path/root/pd_basic_setup.sh"
 banner
 pd_root_package_install_and_check "${distro_packs}"
 rm pd_basic_setup.sh
 EOF
-proot-distro login $selected_distro -- /bin/bash -c 'bash pd_basic_setup.sh'
+proot-distro login "$selected_distro" -- /bin/bash -c 'bash pd_basic_setup.sh'
     if [[ "$pd_useradd_answer" == "n" ]]; then
     final_user_name="root"
     elif [[ "$pd_useradd_answer" == "y" ]]; then
     final_user_name="${user_name}"
     fi
-    echo "final_user_name=\"$final_user_name\"" >> $config_file
+    echo "final_user_name=\"$final_user_name\"" >> "$config_file"
     if [[ "$pd_pass_type" == "2" ]]; then
     final_pass="${pass}"
     else
@@ -306,7 +307,7 @@ proot-distro login $selected_distro -- /bin/bash -c 'bash pd_basic_setup.sh'
 if [[ "$pd_useradd_answer" == "y" ]]; then
 if [[ "$selected_distro" == "alpine" ]]; then
 
-cat <<EOF > $distro_path/root/useradd.sh
+cat <<EOF > "$distro_path/root/useradd.sh"
 #!/bin/bash
 
 groupadd storage
@@ -320,7 +321,7 @@ EOF
 
 else
 
-cat <<EOF > $distro_path/root/useradd.sh
+cat <<EOF > "$distro_path/root/useradd.sh"
 #!/bin/bash
 
 groupadd storage
@@ -333,11 +334,11 @@ EOF
 
 fi
 
-proot-distro login $selected_distro -- /bin/sh -c 'bash useradd.sh'
+proot-distro login "$selected_distro" -- /bin/sh -c 'bash useradd.sh'
 
 if [[ "$pd_pass_type" == "1" ]];then
 
-cat <<EOF > $distro_path/root/user_permission.sh
+cat <<EOF > "$distro_path/root/user_permission.sh"
 #!/bin/bash
 
 chmod u+rw /etc/sudoers
@@ -348,7 +349,7 @@ EOF
 
 elif [[ "$pd_pass_type" == "2" ]];then
 
-cat <<EOF > $distro_path/root/user_permission.sh
+cat <<EOF > "$distro_path/root/user_permission.sh"
 #!/bin/bash
 
 chmod u+rw /etc/sudoers
@@ -359,8 +360,8 @@ EOF
 
 fi
 
-proot-distro login $selected_distro -- /bin/sh -c 'bash user_permission.sh'
-proot-distro login $selected_distro -- /bin/sh -c 'sudo -k'
+proot-distro login "$selected_distro" -- /bin/sh -c 'bash user_permission.sh'
+proot-distro login "$selected_distro" -- /bin/sh -c 'sudo -k'
 fi
 }
 
@@ -380,9 +381,9 @@ function distro_zsh_answer() {
 
     if [[ "$distro_zsh_answer" == "y" ]]; then
     pd_shell_name="zsh"
-	echo "${R}[${C}-${R}]${G}${BOLD} Configuring Zsh for ${selected_distro}${G}.."${W}
+	echo "${R}[${C}-${R}]${G}${BOLD} Configuring Zsh for ${selected_distro}${G}..${W}"
 	echo
-cat <<'EOF' > $distro_path/root/pd_zsh_install.sh
+cat <<'EOF' > "$distro_path/root/pd_zsh_install.sh"
 #!/bin/bash
 
 R="$(printf '\033[1;31m')"
@@ -394,16 +395,16 @@ W="$(printf '\033[0m')"
 BOLD="$(printf '\033[1m')"
 
 EOF
-declare -f banner get_latest_release pd_root_package_install_and_check >> $distro_path/root/pd_zsh_install.sh
-cat <<'EOF' >> $distro_path/root/pd_zsh_install.sh
+declare -f banner get_latest_release pd_root_package_install_and_check >> "$distro_path/root/pd_zsh_install.sh"
+cat <<'EOF' >> "$distro_path/root/pd_zsh_install.sh"
 banner
 pd_root_package_install_and_check "git zsh wget"
 # wget https://raw.githubusercontent.com/sabamdarif/short-linux-scripts/main/install-zsh.sh && bash install-zsh.sh # may create some issue
 # clear
 # rm pd_zsh_install.sh
 EOF
-proot-distro login $selected_distro -- /bin/bash -c 'bash pd_zsh_install.sh'
-cat <<'EOF' > $save_path/pd_zsh_setup.sh
+proot-distro login "$selected_distro" -- /bin/bash -c 'bash pd_zsh_install.sh'
+cat <<'EOF' > "$save_path/pd_zsh_setup.sh"
 #!/bin/bash
 
 R="$(printf '\033[1;31m')"
@@ -415,29 +416,29 @@ W="$(printf '\033[0m')"
 BOLD="$(printf '\033[1m')"
 
 EOF
-cat <<'EOF' >> $save_path/pd_zsh_setup.sh
+cat <<'EOF' >> "$save_path/pd_zsh_setup.sh"
 wget --tries=5 --retry-connrefused https://raw.githubusercontent.com/sabamdarif/short-linux-scripts/main/install-zsh.sh && bash install-zsh.sh
 clear
 rm pd_zsh_setup.sh
 EOF
-    proot-distro login --user $final_user_name $selected_distro -- /bin/bash -c 'bash pd_zsh_setup.sh'
+    proot-distro login --user "$final_user_name" "$selected_distro" -- /bin/bash -c 'bash pd_zsh_setup.sh'
 else
-    echo "${R}[${C}-${R}]${C} Canceling Distro Zsh Setup..."${W}
+    echo "${R}[${C}-${R}]${C} Canceling Distro Zsh Setup...${W}"
     sleep 1.5
 	pd_shell_name="bash"
 fi
-echo "pd_shell_name=\"$pd_shell_name\"" >> $config_file
+echo "pd_shell_name=\"$pd_shell_name\"" >> "$config_file"
 }
 
 function distro_terminal_utility_setup() {
     if [[ "$distro_terminal_utility_setup_answer" == "n" ]];then
     banner
-	echo "${R}[${C}-${R}]${C} Skipping Terminal Utility Setup For ${selected_distro}..."${W}
+	echo "${R}[${C}-${R}]${C} Skipping Terminal Utility Setup For ${selected_distro}...${W}"
 	echo
     if [[ "$pd_useradd_answer" == "y" ]]; then
-    cp $distro_path/home/$final_user_name/.${pd_shell_name}rc $distro_path/home/$final_user_name/.${pd_shell_name}rc-2
+    cp "$distro_path/home/$final_user_name/.${pd_shell_name}rc" "$distro_path/home/$final_user_name/.${pd_shell_name}rc-2"
     check_and_backup "$distro_path/home/$final_user_name/.${pd_shell_name}rc"
-    mv $distro_path/home/$final_user_name/.${pd_shell_name}rc-2 $distro_path/home/$final_user_name/.${pd_shell_name}rc
+    mv "$distro_path/home/$final_user_name/.${pd_shell_name}rc-2" "$distro_path/home/$final_user_name/.${pd_shell_name}rc"
 cat <<'EOF' >> "$distro_path/home/$final_user_name/.${pd_shell_name}rc"
 case $1 in
     tx11start|tx11stop|vncstart|vncstop)
@@ -450,9 +451,9 @@ esac
 
 EOF
     fi
-    cp $distro_path/root/.${pd_shell_name}rc $distro_path/root/.${pd_shell_name}rc-2
+    cp "$distro_path/root/.${pd_shell_name}rc" "$distro_path/root/.${pd_shell_name}rc-2"
     check_and_backup "$distro_path/root/.${pd_shell_name}rc"
-    mv $distro_path/root/.${pd_shell_name}rc-2 $distro_path/root/.${pd_shell_name}rc
+    mv "$distro_path/root/.${pd_shell_name}rc-2" "$distro_path/root/.${pd_shell_name}rc"
 cat <<'EOF' >> "$distro_path/root/.${pd_shell_name}rc"
 case $1 in
     tx11start|tx11stop|vncstart|vncstop)
@@ -466,10 +467,10 @@ esac
 EOF
 	elif [[ "$distro_terminal_utility_setup_answer" == "y" ]];then
 	banner
-    echo "${R}[${C}-${R}]${C}${BOLD} Configuring Terminal Utility For $selected_distro ..."${W}
+    echo "${R}[${C}-${R}]${C}${BOLD} Configuring Terminal Utility For $selected_distro ...${W}"
     echo
     if [[ "$selected_distro" == "debian" ]] || [[ "$selected_distro" == "ubuntu" ]]; then
-cat <<'EOF' > $distro_path/root/pd_setup.sh
+cat <<'EOF' > "$distro_path/root/pd_setup.sh"
 #!/bin/bash
 
 R="$(printf '\033[1;31m')"
@@ -480,8 +481,8 @@ C="$(printf '\033[1;36m')"
 W="$(printf '\033[0m')"
 BOLD="$(printf '\033[1m')"
 EOF
-declare -f banner get_latest_release pd_package_install_and_check >> $distro_path/root/pd_setup.sh
-cat <<'EOF' >> $distro_path/root/pd_setup.sh
+declare -f banner get_latest_release pd_package_install_and_check >> "$distro_path/root/pd_setup.sh"
+cat <<'EOF' >> "$distro_path/root/pd_setup.sh"
 banner
 pd_package_install_and_check "nala zoxide bat wget gpg"
 device_arch=$(uname -m)
@@ -499,7 +500,7 @@ device_arch=$(uname -m)
             archtype="i386"
             ;;
         *)
-            echo "${R} unknown architecture"${W}
+            echo "${R} unknown architecture${W}"
             ;;
     esac
     version=$(get_latest_release "fastfetch-cli" "fastfetch")
@@ -515,7 +516,7 @@ pd_package_install_and_check "eza"
 rm pd_setup.sh
 EOF
 else
-cat <<'EOF' > $distro_path/root/pd_setup.sh
+cat <<'EOF' > "$distro_path/root/pd_setup.sh"
 #!/bin/bash
 
 R="$(printf '\033[1;31m')"
@@ -526,12 +527,12 @@ C="$(printf '\033[1;36m')"
 W="$(printf '\033[0m')"
 BOLD="$(printf '\033[1m')"
 EOF
-declare -f banner pd_package_install_and_check >> $distro_path/root/pd_setup.sh
-cat <<'EOF' >> $distro_path/root/pd_setup.sh
+declare -f banner pd_package_install_and_check >> "$distro_path/root/pd_setup.sh"
+cat <<'EOF' >> "$distro_path/root/pd_setup.sh"
 pd_package_install_and_check "eza zoxide bat fastfetch"
 EOF
 fi
-proot-distro login $selected_distro -- /bin/bash -c 'bash pd_setup.sh'
+proot-distro login "$selected_distro" -- /bin/bash -c 'bash pd_setup.sh'
 
 shell_rc_content=$(cat <<'EOF'
 alias cat='bat $@'
@@ -610,9 +611,9 @@ fi
 
 if [[ "$distro_terminal_utility_setup_answer" == "y" ]];then
     if [[ "$pd_useradd_answer" == "y" ]]; then
-    cp $distro_path/home/$final_user_name/.${pd_shell_name}rc $distro_path/home/$final_user_name/.${pd_shell_name}rc-2
+    cp "$distro_path/home/$final_user_name/.${pd_shell_name}rc" "$distro_path/home/$final_user_name/.${pd_shell_name}rc-2"
     check_and_backup "$distro_path/home/$final_user_name/.${pd_shell_name}rc"
-    mv $distro_path/home/$final_user_name/.${pd_shell_name}rc-2 $distro_path/home/$final_user_name/.${pd_shell_name}rc
+    mv "$distro_path/home/$final_user_name/.${pd_shell_name}rc-2" "$distro_path/home/$final_user_name/.${pd_shell_name}rc"
     echo "$shell_rc_content" >> "$distro_path/home/$final_user_name/.${pd_shell_name}rc"
     fi
     echo "$shell_rc_content" >> "$distro_path/root/.${pd_shell_name}rc"
@@ -648,6 +649,7 @@ fi
 #########################################################################
 
 function handel_debian_based_app_installer() {
+
     if [[ "$distro_terminal_utility_setup_answer" == "y" ]]; then
         local package_manager="nala"
     else
@@ -659,12 +661,12 @@ function handel_debian_based_app_installer() {
 
 xhost + > /dev/null 2>&1
 if [[ "\$#" -eq 0 ]]; then
-    proot-distro login --user $final_user_name $selected_distro --shared-tmp
+    proot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp
 elif [[ "\$1" = "install" ]]; then
     if [[ ! -d "/data/data/com.termux/files/usr/share/applications/pd_added" ]]; then
         mkdir -p "/data/data/com.termux/files/usr/share/applications/pd_added"
     fi
-    proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:0 sudo $package_manager install \${@:2}
+    proot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp -- env DISPLAY=:0 sudo "$package_manager" install \${@:2}
 
     cat <<EOF > "$save_root_path/packinstall.sh"
 packages=(\${@:2})
@@ -686,10 +688,10 @@ for package_name in "\${packages[@]}"; do
 done
 rm packinstall.sh
 EOF
-        proot-distro login $selected_distro --shared-tmp -- /bin/bash -c 'export DISPLAY=:0; export XDG_RUNTIME_DIR=$TMPDIR; bash packinstall.sh'
+        proot-distro login "$selected_distro" --shared-tmp -- /bin/bash -c 'export DISPLAY=:0; export XDG_RUNTIME_DIR=$TMPDIR; bash packinstall.sh'
 
 elif [[ "\$1" = "remove" ]] || [[ "\$1" = "autoremove" ]]; then
-    proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:0 sudo $package_manager \$1 \${@:2}
+    proot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp -- env DISPLAY=:0 sudo "$package_manager" \$1 \${@:2}
     cat <<EOF > "$save_root_path/packremove.sh"
 packages=(\${@:2})
 EOF
@@ -709,9 +711,9 @@ for package_name in "\${packages[@]}"; do
 done
 rm packremove.sh
 EOF
-        proot-distro login $selected_distro --shared-tmp -- /bin/bash -c 'export DISPLAY=:0; export XDG_RUNTIME_DIR=$TMPDIR; bash packremove.sh'
+        proot-distro login "$selected_distro" --shared-tmp -- /bin/bash -c 'export DISPLAY=:0; export XDG_RUNTIME_DIR=$TMPDIR; bash packremove.sh'
 elif [[ "\$1" = "update" ]]; then
-    proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:0 sudo $package_manager update
+    proot-distro login --user $final_user_name "$selected_distro" --shared-tmp -- env DISPLAY=:0 sudo $package_manager update
 fi
 
 if [[ \$1 = "install" ]] || [[ \$1 = "remove" ]] || [[ \$1 = "autoremove" ]]; then
@@ -728,7 +730,7 @@ function handel_arch_based_app_installer() {
 
 xhost + > /dev/null 2>&1
 if [[ "\$#" -eq 0 ]]; then
-    proot-distro login --user $final_user_name $selected_distro --shared-tmp
+    proot-distro login --user $final_user_name "$selected_distro" --shared-tmp
 elif [[ "\$1" = "install" ]]; then
     if [[ ! -d "/data/data/com.termux/files/usr/share/applications/pd_added" ]]; then
         mkdir -p "/data/data/com.termux/files/usr/share/applications/pd_added"
@@ -784,7 +786,7 @@ EOF
 
         proot-distro login $selected_distro --shared-tmp -- /bin/bash -c 'export DISPLAY=:0; export XDG_RUNTIME_DIR=$TMPDIR; bash packremove.sh'
 elif [[ "\$1" = "update" ]]; then
-    proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:0 sudo pacman -Su
+    proot-distro login --user $final_user_name "$selected_distro" --shared-tmp -- env DISPLAY=:0 sudo pacman -Su
 fi
 
 if [[ \$1 = "install" ]] || [[ \$1 = "remove" ]]; then
@@ -832,7 +834,7 @@ EOF
         proot-distro login $selected_distro --shared-tmp -- /bin/bash -c 'export DISPLAY=:0; export XDG_RUNTIME_DIR=$TMPDIR; bash packinstall.sh'
 
 elif [[ "\$1" = "remove" ]]; then
-    proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:0 sudo apk del "\${@:2}"
+    proot-distro login --user $final_user_name "$selected_distro" --shared-tmp -- env DISPLAY=:0 sudo apk del "\${@:2}"
 
     cat <<EOF > "$save_root_path/packremove.sh"
 packages=("\${@:2}")
@@ -947,11 +949,8 @@ TOP_EOF
 
 function distro_create_app_installer() {
     banner
-    echo "${R}[${C}-${R}]${G}${BOLD} Creating App Launcher"${W}
+    echo "${R}[${C}-${R}]${G}${BOLD} Creating App Launcher${W}"
 
-if [[ "$pd_useradd_answer" == "y" ]]; then
-save_user_path="$distro_path/home/$final_user_name"
-fi
 save_root_path="$distro_path/root"
 
 if [[ "$selected_distro" == "debian" ]] || [[ "$selected_distro" == "ubuntu" ]]; then
@@ -967,19 +966,19 @@ fi
 cat <<EOF >> "$PREFIX/bin/$selected_distro"
 function remove_distro_container() {
      while true; do
-        read -p "${R}[${C}-${R}]${Y}${BOLD} Do you want to remove the distro${R}(it can't be undone) ${Y}(y/n) ${W}" ans_remove_distro
+        read -p "${R}[${C}-${R}]${Y}${BOLD} Do you want to remove the distro${R}it can't be undone ${Y}(y/n) ${W}" ans_remove_distro
         case \$ans_remove_distro in
             [yY]* )
                 echo "${R}[${G}✓${R}]${G} Continuing with answer: \$ans_remove_distro${W}"
                 sleep 0.2
                 if [[ -d $distro_path ]]; then
-                proot-distro remove $selected_distro
+                proot-distro remove "$selected_distro"
                 distro_file_list=(
                     "$PREFIX/bin/pdrun"
                     "$PREFIX/share/applications/pd_added"
                     "$PREFIX/bin/add2menu"
                     "$PREFIX/share/applications/add2menu.desktop"
-                    "$PREFIX/bin/$selected_distro"
+                    "$PREFIX/bin/"$selected_distro""
                 )
                     for distro_file in "${distro_file_list[@]}"; do
                     if [[ -e "$distro_file" ]]; then
@@ -989,21 +988,21 @@ function remove_distro_container() {
                         rm $distro_file
                         fi
                     else
-                    echo "${R}[${R}☓${R}]${R}File does not exist: $distro_file"${W}
+                    echo "${R}[${R}☓${R}]${R}File does not exist: $distro_file${W}"
                     fi
                     done
-                echo "${R}[${G}✓${R}]${G}$$selected_distro removed successfully"${W}
+                echo "${R}[${G}✓${R}]${G}$"$selected_distro" removed successfully${W}"
                 echo "distro_add_answer=\"n\"" >> $config_file
                 else
-                echo "${R}[${R}☓${R}]${R}$selected_distro does not exist"
+                echo "${R}[${R}☓${R}]${R}"$selected_distro" does not exist"
                 fi
                 break;;
             [nN]* )
-                echo "${R}[${C}-${R}]${C} Skipping distro remove"${W}
+                echo "${R}[${C}-${R}]${C} Skipping distro remove${W}"
                 sleep 0.2
                 break;;
             * )
-                echo "${R}[${R}☓${R}]${R} Invalid input. Please enter 'y' or 'n'."${W}
+                echo "${R}[${R}☓${R}]${R} Invalid input. Please enter 'y' or 'n'.${W}"
                 ;;
         esac
     done
@@ -1011,16 +1010,16 @@ function remove_distro_container() {
 
 function help_distro_container() {
 echo -e "
-$selected_distro install packagename     to install packages and add them to termux desktop\n
-$selected_distro remove packagename      to remove packages and also remove them to termux desktop\n
-$selected_distro update                  to update the Linux distro\n
-$selected_distro -r                      to login as root\n
-$selected_distro --remove                to complitely remove the Linux distro and delete all files and data related to it\n
+"$selected_distro" install packagename     to install packages and add them to termux desktop\n
+"$selected_distro" remove packagename      to remove packages and also remove them to termux desktop\n
+"$selected_distro" update                  to update the Linux distro\n
+"$selected_distro" -r                      to login as root\n
+"$selected_distro" --remove                to complitely remove the Linux distro and delete all files and data related to it\n
 "
 }
 case \$1 in
 --root|-r)
-proot-distro sh $selected_distro
+proot-distro sh "$selected_distro"
 ;;
 --remove)
 remove_distro_container
@@ -1042,10 +1041,10 @@ package_install_and_check "zenity"
 check_and_create_directory "$PREFIX/share/applications/pd_added"
 
 echo "#!/data/data/com.termux/files/usr/bin/bash
-distro_path="$distro_path"
-" > $PREFIX/bin/add2menu
+distro_path=$distro_path
+" > "$PREFIX/bin/add2menu"
 
-cat <<'EOF' >> $PREFIX/bin/add2menu
+cat <<'EOF' >> "$PREFIX/bin/add2menu"
 
 function add2menu_f() {
 # Function to list displayable .desktop files
@@ -1148,8 +1147,8 @@ case $1 in
         LIBGL_ALWAYS_SOFTWARE=1 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe add2menu_f
         ;;
     --help|-h)
-        echo "${C}add2menu launch command ${G}to start with gpu acceleration"${W}
-        echo "${C}pdrun ---nogpu launch command ${G}to start without gpu acceleration"${W}
+        echo "${C}add2menu launch command ${G}to start with gpu acceleration${W}"
+        echo "${C}pdrun ---nogpu launch command ${G}to start without gpu acceleration${W}"
         ;;
     *)
         add2menu_f
@@ -1174,8 +1173,8 @@ Path=
 Terminal=false
 StartupNotify=false
 EOF
-chmod 644 $PREFIX/share/applications/add2menu.desktop
-cp $PREFIX/share/applications/add2menu.desktop $HOME/Desktop/
+chmod 644 "$PREFIX/share/applications/add2menu.desktop"
+cp "$PREFIX/share/applications/add2menu.desktop" "$HOME/Desktop/"
 }
 
 #########################################################################
@@ -1204,14 +1203,14 @@ cat <<EOF >> "$PREFIX/bin/pdrun"
 xhost + > /dev/null 2>&1
 case \$1 in
 --nogpu)
-proot-distro login --user $final_user_name $selected_distro --shared-tmp -- eval "env DISPLAY=:0 XDG_RUNTIME_DIR=\${TMPDIR} LIBGL_ALWAYS_SOFTWARE=1 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe \${@:2}"
+proot-distro login --user $final_user_name "$selected_distro" --shared-tmp -- eval "env DISPLAY=:0 XDG_RUNTIME_DIR=\${TMPDIR} LIBGL_ALWAYS_SOFTWARE=1 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe \${@:2}"
 ;;
 --help|-h)
-echo "${G}Type ${C}pdrun launch command ${G}to start with gpu acceleration"${W}
-echo "${G}Type ${C}pdrun ---nogpu launch command ${G}to start without gpu acceleration"${W}
+echo "${G}Type ${C}pdrun launch command ${G}to start with gpu acceleration${W}"
+echo "${G}Type ${C}pdrun ---nogpu launch command ${G}to start without gpu acceleration${W}"
 ;;
 *)
-proot-distro login --user $final_user_name $selected_distro --shared-tmp -- eval "env DISPLAY=:0 XDG_RUNTIME_DIR=\${TMPDIR} \$selected_pd_hw_method \$@"
+proot-distro login --user $final_user_name "$selected_distro" --shared-tmp -- eval "env DISPLAY=:0 XDG_RUNTIME_DIR=\${TMPDIR} \$selected_pd_hw_method \$@"
 ;;
 esac
 EOF
@@ -1225,7 +1224,7 @@ chmod +x "$PREFIX/bin/pdrun"
 #########################################################################
 
 function distro_folders_link() {
-    echo "${R}[${C}-${R}]${G}${BOLD} Link Distro Directories With Internal Storage"${W}
+    echo "${R}[${C}-${R}]${G}${BOLD} Link Distro Directories With Internal Storage${W}"
 cat <<EOF > "$save_path/setup-folders.sh"
 #!/bin/bash
 
@@ -1236,13 +1235,13 @@ done
 rm setup-folders.sh
 EOF
 proot-distro login --user $final_user_name $selected_distro -- /bin/sh -c 'bash setup-folders.sh'
-    echo "${R}[${C}-${R}]${G}${BOLD} Link Distro Termux Themes And Icons With $selected_distro "${W}
+    echo "${R}[${C}-${R}]${G}${BOLD} Link Distro Termux Themes And Icons With $selected_distro ${W}"
     sleep 0.5
     check_and_create_directory "$HOME/.icons"
-    ln -s $icons_folder $save_path
+    ln -s "$icons_folder" "$save_path"
     check_and_create_directory "$HOME/.themes"
-    ln -s $themes_folder $save_path
-    ln -s /data/data/com.termux/files/home/.fonts $save_path
+    ln -s "$themes_folder" "$save_path"
+    ln -s /data/data/com.termux/files/home/.fonts "$save_path"
 
 }
 
@@ -1267,7 +1266,7 @@ function install_distro_container() {
 function disro_container_install_check() {
     if [[ -d "$PREFIX/bin/$selected_distro" ]] || [[ -d "$PREFIX/var/lib/proot-distro/installed-rootfs/$selected_distro" ]]; then
     echo
-    echo "${R}[${G}✓${R}]${G}${BOLD} $selected_distro container setup successfully"${W}
+    echo "${R}[${G}✓${R}]${G}${BOLD} $selected_distro container setup successfully${W}"
     else
     max_retries=2
     retry_count=0
@@ -1278,7 +1277,7 @@ function disro_container_install_check() {
         install_distro_container
             if [[ -d "$PREFIX/bin/$selected_distro" ]] || [[ -d "$PREFIX/var/lib/proot-distro/installed-rootfs/$selected_distro" ]]; then
             echo
-            echo "${R}[${G}✓${R}]${G}${BOLD} $selected_distro container setup successfully"${W}
+            echo "${R}[${G}✓${R}]${G}${BOLD} $selected_distro container setup successfully${W}"
             break
             fi
             ((retry_count++))

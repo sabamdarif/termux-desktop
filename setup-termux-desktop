@@ -14,7 +14,7 @@ W="$(printf '\033[0m')"
 BOLD="$(printf '\033[1m')"
 termux_desktop_path="$PREFIX/etc/termux-desktop"
 config_file="$termux_desktop_path/configuration.conf"
-cd $HOME
+cd "$HOME" || exit
 
 # create log
 function debug() {
@@ -23,20 +23,21 @@ function debug() {
 }
 
 function banner() {
-    clear
-	printf "${C}############################################################\n"
-	printf "${C}#                                                          #\n"
-	printf "${C}#  ▀█▀ █▀▀ █▀█ █▀▄▀█ █ █ ▀▄▀   █▀▄ █▀▀ █▀ █▄▀ ▀█▀ █▀█ █▀█  #\n"
-	printf "${C}#   █  ██▄ █▀▄ █   █ █▄█ █ █   █▄▀ ██▄ ▄█ █ █  █  █▄█ █▀▀  #\n"
-	printf "${C}#                                                          #\n"
-	printf "${C}######################### Termux Gui #######################${W}\n"
-	echo " "
+clear
+printf "%s############################################################\n" "$C"
+printf "%s#                                                          #\n" "$C"
+printf "%s#  ▀█▀ █▀▀ █▀█ █▀▄▀█ █ █ ▀▄▀   █▀▄ █▀▀ █▀ █▄▀ ▀█▀ █▀█ █▀█  #\n" "$C"
+printf "%s#   █  ██▄ █▀▄ █   █ █▄█ █ █   █▄▀ ██▄ ▄█ █ █  █  █▄█ █▀▀  #\n" "$C"
+printf "%s#                                                          #\n" "$C"
+printf "%s######################### Termux Gui #######################%s\n" "$C" "$W"
+
+echo " "
 }
 
 # check if the script is running on termux or not
 function check_termux() {
 	if [[ $HOME != *termux* ]]; then
-	echo "${R}[${R}☓${R}]${R}${BOLD}Please run it inside termux"${W}
+	echo "${R}[${R}☓${R}]${R}${BOLD}Please run it inside termux${W}"
 	exit 0
 	fi
 }
@@ -76,13 +77,14 @@ function check_and_backup() {
     for files_folders in "$@"; do
         for file in $files_folders; do
             if [[ -e "$file" ]]; then
-            local date_str=$(date +"%d-%m-%Y")
+            local date_str
+			date_str=$(date +"%d-%m-%Y")
 			local backup="${file}-${date_str}.bak"
 			    if [[ -e "$backup" ]]; then
-				echo "${R}[${C}-${R}]${G}Backup file ${C}${backup} ${G}already exists"${W}
+				echo "${R}[${C}-${R}]${G}Backup file ${C}${backup} ${G}already exists${W}"
 				echo
 				fi
-		    echo "${R}[${C}-${R}]${G}backing up file ${C}$file"${W}
+		    echo "${R}[${C}-${R}]${G}backing up file ${C}$file${W}"
 			mv "$1" "$backup"
             fi
         done
@@ -99,7 +101,7 @@ function check_and_restore() {
     base_name=$(basename "$target_path")
 
     local latest_backup
-    latest_backup=$(ls -1 "$dir/$base_name"-[0-9][0-9]-[0-9][0-9]-[0-9][0-9][0-9][0-9].bak 2>/dev/null | sort | tail -n 1)
+   latest_backup=$(find "$dir" -maxdepth 1 -type f -name "$base_name-[0-9][0-9]-[0-9][0-9]-[0-9][0-9][0-9][0-9].bak" 2>/dev/null | sort | tail -n 1)
 
     if [[ -z "$latest_backup" ]]; then
         echo "${R}[${R}☓${R}]${R}No backup file found for ${target_path}.${W}"
@@ -294,7 +296,8 @@ function extract_zip_with_progress() {
         return 1
     fi
 
-    local total_files=$(unzip -l "$archive" | grep -E '^\s+[0-9]+' | wc -l)
+    local total_files
+    total_files=$(unzip -l "$archive" | grep -c -E '^\s+[0-9]+')
 
     if [[ "$total_files" -eq 0 ]]; then
         echo "${R}[${R}☓${R}]${R}No files found in the archive${W}"
@@ -303,15 +306,15 @@ function extract_zip_with_progress() {
 
     echo "Total files to extract: $total_files"
     local extracted_files=0
-    unzip -o "$archive" -d "$target_dir" | while read line; do
+    unzip -o "$archive" -d "$target_dir" | while read -r line; do
         if [[ "$line" =~ inflating: ]]; then
             ((extracted_files++))
             progress=$((extracted_files * 100 / total_files))
-            echo -ne "${G}Extracting: ${C}$progress% ($extracted_files/$total_files) \r"${W}
+            echo -ne "${G}Extracting: ${C}$progress% ($extracted_files/$total_files) \r${W}"
         fi
     done
 
-    echo "${R}[${G}✓${R}]${G}${archive} Extraction complete!"${W}
+    echo "${R}[${G}✓${R}]${G}${archive} Extraction complete!${W}"
 }
 
 function extract_archive() {
@@ -419,8 +422,10 @@ function count_subfolders() {
     local repo="$2"
     local path="$3"
     local url="https://api.github.com/repos/$owner/$repo/contents/$path"
-    local response=$(curl -s "$url")
-    local subfolder_count=$(echo "$response" | jq -r '.[] | select(.type == "dir") | .name' | wc -l)
+    local response
+	response=$(curl -s "$url")
+    local subfolder_count
+	subfolder_count=$(echo "$response" | jq -r '.[] | select(.type == "dir") | .name' | wc -l)
 
     if [[ -z "$subfolder_count" || "$subfolder_count" -eq 0 ]]; then
         subfolder_count=0
@@ -432,25 +437,25 @@ function count_subfolders() {
 # create a yes / no confirmation prompt
 function confirmation_y_or_n() {
 	 while true; do
-        read -p "${R}[${C}-${R}]${Y}${BOLD} $1 ${Y}(y/n) "${W} response
+        read -r -p "${R}[${C}-${R}]${Y}${BOLD} $1 ${Y}(y/n) ${W}" response
         response="${response:-y}"
         eval "$2='$response'"
         case $response in
             [yY]* )
 				echo
-                echo "${R}[${G}✓${R}]${G} Continuing with answer: $response"${W}
+                echo "${R}[${G}✓${R}]${G} Continuing with answer: $response${W}"
 				echo
 				sleep 0.2
                 break;;
             [nN]* )
 				echo
-                echo "${R}[${C}-${R}]${C} Skipping this setp"${W}
+                echo "${R}[${C}-${R}]${C} Skipping this setp${W}"
 				echo
 				sleep 0.2
                 break;;
             * )
 				echo
-               	echo "${R}[${R}☓${R}]${R} Invalid input. Please enter 'y' or 'n'."${W}
+               	echo "${R}[${R}☓${R}]${R} Invalid input. Please enter 'y' or 'n'.${W}"
 				echo
                 ;;
         esac
@@ -470,11 +475,11 @@ function get_latest_release() {
 
 function install_font_for_style() {
 	local style_number="$1"
-	echo "${R}[${C}-${R}]${G} Installing Fonts..."${W}
+	echo "${R}[${C}-${R}]${G} Installing Fonts...${W}"
 	check_and_create_directory "$HOME/.fonts"
 	download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/$de_name/look_${style_number}/font.tar.gz" "$HOME/.fonts"
 	fc-cache -f
-	cd
+	cd "$HOME" || return
 }
 
 function download_github_action_artifact() {
@@ -502,7 +507,7 @@ function download_github_action_artifact() {
                 shift 2
                 ;;
             *)
-                echo "${R}[${R}☓${R}]Unknown option: $1"${W}
+                echo "${R}[${R}☓${R}]Unknown option: $1${W}"
                 shift
                 ;;
         esac
@@ -512,7 +517,7 @@ function download_github_action_artifact() {
     WORKFLOW_ID=$(gh api repos/$GITHUB_USER/$REPO/actions/workflows --jq ".workflows[] | select(.name == \"$WORKFLOW_NAME\") | .id")
     # Check if WORKFLOW_ID is found
     if [ -z "$WORKFLOW_ID" ]; then
-        echo "${R}[${R}☓${R}]${R} Workflow '$WORKFLOW_NAME' not found."${W}
+        echo "${R}[${R}☓${R}]${R} Workflow '$WORKFLOW_NAME' not found.${W}"
         exit 1
     fi
 
@@ -523,7 +528,7 @@ function download_github_action_artifact() {
     WORKFLOW_RUN_ID=$(gh api repos/$GITHUB_USER/$REPO/actions/workflows/$WORKFLOW_ID/runs --paginate --jq ".workflow_runs[] | select(.display_title == \"$RUN_NAME\") | .id" | head -n 1)
     # Check if WORKFLOW_RUN_ID is obtained
     if [ -z "$WORKFLOW_RUN_ID" ]; then
-        echo "${R}[${R}☓${R}]${R} No workflow run found with the name '$RUN_NAME' for workflow '$WORKFLOW_NAME'."${W}
+        echo "${R}[${R}☓${R}]${R} No workflow run found with the name '$RUN_NAME' for workflow '$WORKFLOW_NAME'.${W}"
         exit 1
     fi
 
@@ -531,18 +536,18 @@ function download_github_action_artifact() {
     ARTIFACT_URL=$(gh api repos/$GITHUB_USER/$REPO/actions/runs/$WORKFLOW_RUN_ID/artifacts --jq ".artifacts[] | select(.name == \"$ARTIFACT_NAME\") | .archive_download_url")
     # If no exact match, look for an artifact starting with ARTIFACT_NAME
     if [ -z "$ARTIFACT_URL" ]; then
-        echo "${R}[${C}-${R}]${C} Artifact with the exact name '$ARTIFACT_NAME' not found. Looking for artifacts starting with '$ARTIFACT_NAME'..."${W}
+        echo "${R}[${C}-${R}]${C} Artifact with the exact name '$ARTIFACT_NAME' not found. Looking for artifacts starting with '$ARTIFACT_NAME'...${W}"
         ARTIFACT_URL=$(gh api repos/$GITHUB_USER/$REPO/actions/runs/$WORKFLOW_RUN_ID/artifacts --jq ".artifacts[] | select(.name | startswith(\"$ARTIFACT_NAME\")) | .archive_download_url" | head -n 1)
     fi
 
     # Check if ARTIFACT_URL is found
     if [ -z "$ARTIFACT_URL" ]; then
-        echo "${R}[${R}☓${R}]${R} No artifact found starting with '$ARTIFACT_NAME'."${W}
+        echo "${R}[${R}☓${R}]${R} No artifact found starting with '$ARTIFACT_NAME'.${W}"
         exit 1
     fi
 
     # Download the artifact using the URL
-    echo "${R}[${G}✓${R}]${G} Downloading artifact from run '$RUN_NAME'..."${W}
+    echo "${R}[${G}✓${R}]${G} Downloading artifact from run '$RUN_NAME'...${W}"
     curl -# -L -H "Authorization: Bearer $(gh auth token)" -o artifact.zip "$ARTIFACT_URL"
 
     # Extract the artifact
@@ -556,7 +561,7 @@ function select_an_option() {
     local response
 
     while true; do
-        read -p "${Y}select an option (Default ${default_option}): ${W}" response
+        read -r -p "${Y}select an option (Default ${default_option}): ${W}" response
         response=${response:-$default_option}
 
         if [[ $response =~ ^[0-9]+$ ]] && ((response >= 1 && response <= max_options)); then
@@ -608,13 +613,13 @@ function preprocess_conf() {
     # Preprocess configuration file:
     # 1. Remove lines where keys contain dashes (-).
     # 2. Remove quotes from keys and values.
-	echo "${R}[${C}-${R}]${G} Prepering config file..."${W}
+	echo "${R}[${C}-${R}]${G} Prepering config file...${W}"
     sed -i -E '/^[[:space:]]*[^#=]+-.*=/d; s/^([[:space:]]*[^#=]+)="([^"]*)"/\1=\2/g' "$config_file"
 }
 
 function read_conf() {
     if [[ ! -f "$config_file" ]]; then
-        echo "${R}[${R}☓${R}]${R} Configuration file $config_file not found."${W}
+        echo "${R}[${R}☓${R}]${R} Configuration file "$config_file" not found.${W}"
 		exit 0
     fi
 
@@ -635,7 +640,7 @@ function read_conf() {
         export "$key"="$value"
     done < "$config_file"
 
-    echo "${R}[${C}✓${R}]${G} Configuration variables loaded."${W}
+    echo "${R}[${C}✓${R}]${G} Configuration variables loaded.${W}"
 }
 
 #########################################################################
@@ -650,20 +655,22 @@ function questions_theme_select() {
     local owner="sabamdarif"
     local repo="termux-desktop"
     local main_folder="patch/$de_name"
-    local subfolder_count_value=$(count_subfolders "$owner" "$repo" "$main_folder" 2>/dev/null)
-    cd $HOME
-    echo "${R}[${C}-${R}]${G} Downloading list...."${W}
+    local subfolder_count_value
+	subfolder_count_value=$(count_subfolders "$owner" "$repo" "$main_folder" 2>/dev/null)
+    cd "$HOME" || return
+    echo "${R}[${C}-${R}]${G} Downloading list....${W}"
 	check_and_backup "${current_path}/styles.md"
-    wget --tries=5 --retry-connrefused -qO ${current_path}/styles.md https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/${de_name}_styles.md
+    wget --tries=5 --retry-connrefused -qO "${current_path}/styles.md" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/${de_name}_styles.md"
+
     clear
 	banner
     # Check if the subfolder count value is obtained
     if [[ -n "$subfolder_count_value" ]]; then
-        echo "${R}[${C}-${R}]${G} Check the $de_name styles section in GitHub"${W}
+        echo "${R}[${C}-${R}]${G} Check the $de_name styles section in GitHub${W}"
         echo
-        echo "${R}[${C}-${R}]${B} https://github.com/sabamdarif/termux-desktop/blob/main/${de_name}_styles.md"${W}
+        echo "${R}[${C}-${R}]${B} https://github.com/sabamdarif/termux-desktop/blob/main/${de_name}_styles.md${W}"
         echo
-        echo "${R}[${C}-${R}]${G} Number of available custom styles for $de_name is: ${C}${subfolder_count_value}"${W}
+        echo "${R}[${C}-${R}]${G} Number of available custom styles for $de_name is: ${C}${subfolder_count_value}${W}"
         echo
         echo "${R}[${C}-${R}]${G} Available Styles:${W}"
         echo
@@ -675,12 +682,12 @@ function questions_theme_select() {
         # Prompt user to select a style
         while true; do
             echo
-            read -p "${R}[${C}-${R}]${Y} Type number of the style: ${W}" style_answer
+            read -r -p "${R}[${C}-${R}]${Y} Type number of the style: ${W}" style_answer
 
             # Check if the input is empty
             if [[ -z "$style_answer" ]]; then
                 echo
-                echo "${R}[${R}☓${R}]${R} Input cannot be empty. Please type a number."${W}
+                echo "${R}[${R}☓${R}]${R} Input cannot be empty. Please type a number.${W}"
                 continue
             fi
 
@@ -690,39 +697,39 @@ function questions_theme_select() {
                 break
             else
                 echo
-                echo "${R}[${R}☓${R}]${R} The entered style number is incorrect."${W}
+                echo "${R}[${R}☓${R}]${R} The entered style number is incorrect.${W}"
                 echo
 				if [[ "$subfolder_count_value" == "0" ]]; then
-				echo "${R}[${C}-${R}]${Y} Please enter 0 beacuse for $de_name only stock style is available"${W}
+				echo "${R}[${C}-${R}]${Y} Please enter 0 beacuse for $de_name only stock style is available${W}"
                 echo
 				else
-				echo "${R}[${C}-${R}]${Y} Please enter a number between 0 to ${subfolder_count_value}"${W}
+				echo "${R}[${C}-${R}]${Y} Please enter a number between 0 to ${subfolder_count_value}${W}"
                 echo
 				fi
-                echo "${R}[${C}-${R}]${G} Check the $de_name styles section in GitHub"${W}
+                echo "${R}[${C}-${R}]${G} Check the $de_name styles section in GitHub${W}"
                 echo
-                echo "${R}[${C}-${R}]${B} https://github.com/sabamdarif/termux-desktop/blob/main/${de_name}_styles.md"${W}
+                echo "${R}[${C}-${R}]${B} https://github.com/sabamdarif/termux-desktop/blob/main/${de_name}_styles.md${W}"
                 echo
             fi
         done
         # Remove the styles.md file after use
-        rm ${current_path}/styles.md
+        rm "${current_path}/styles.md"
     else
-        echo "${R}[${R}☓${R}]${R} Failed to get total available styles value."${W}
+        echo "${R}[${R}☓${R}]${R} Failed to get total available styles value.${W}"
     fi
 }
 
 function questions() {
 	banner
-	echo "${R}[${C}-${R}]${G} Select Desktop Environment"${W}
+	echo "${R}[${C}-${R}]${G} Select Desktop Environment${W}"
 	echo " "
-	echo "${Y}1. XFCE"${W}
+	echo "${Y}1. XFCE${W}"
 	echo
-	echo "${Y}2. LXQT"${W}
+	echo "${Y}2. LXQT${W}"
 	echo
-	echo "${Y}3. OPENBOX WM"${W}
+	echo "${Y}3. OPENBOX WM${W}"
 	echo
-	echo "${Y}4. MATE (Unstable)"${W}
+	echo "${Y}4. MATE (Unstable)${W}"
 	echo
 	select_an_option 4 1 desktop_answer
 	# set the variables based on chosen de
@@ -749,128 +756,128 @@ function questions() {
 	icons_folder="$HOME/.icons"
 	de_startup="mate-session"
 	fi
-	echo "de_startup=\"$de_startup\"" >> $config_file
-	echo "de_name=\"$de_name\"" >> $config_file
-	echo "themes_folder=\"$themes_folder\"" >> $config_file
-	echo "icons_folder=\"$icons_folder\"" >> $config_file
+	echo "de_startup=\"$de_startup\"" >> "$config_file"
+	echo "de_name=\"$de_name\"" >> "$config_file"
+	echo "themes_folder=\"$themes_folder\"" >> "$config_file"
+	echo "icons_folder=\"$icons_folder\"" >> "$config_file"
 
 	banner
 	questions_theme_select
 	echo
-	echo "${R}[${G}✓${R}]${G} Continuing with answer: ${style_answer}.$style_name"${W}
-	echo "style_answer=\"$style_answer\"" >> $config_file
-	echo "style_name=\"$style_name\"" >> $config_file
+	echo "${R}[${G}✓${R}]${G} Continuing with answer: ${style_answer}.$style_name${W}"
+	echo "style_answer=\"$style_answer\"" >> "$config_file"
+	echo "style_name=\"$style_name\"" >> "$config_file"
 	sleep 0.2
 	banner
-	echo "${R}[${C}-${R}]${G}${BOLD} Select browser you want to install"${W}
+	echo "${R}[${C}-${R}]${G}${BOLD} Select browser you want to install${W}"
 	echo
-	echo "${Y}1. firefox"${W}
+	echo "${Y}1. firefox${W}"
 	echo
-	echo "${Y}2. chromium"${W}
+	echo "${Y}2. chromium${W}"
 	echo
-	echo "${Y}3. firefox & chromium (both)"${W}
+	echo "${Y}3. firefox & chromium (both)${W}"
 	echo
-	echo "${Y}4. Skip"${W}
+	echo "${Y}4. Skip${W}"
 	echo
 	select_an_option 4 1 browser_answer
 	banner
-	echo "${R}[${C}-${R}]${G}${BOLD} Select IDE you want to install"${W}
+	echo "${R}[${C}-${R}]${G}${BOLD} Select IDE you want to install${W}"
 	echo
-	echo "${Y}1. VS Code"${W}
+	echo "${Y}1. VS Code${W}"
 	echo
-	echo "${Y}2. Geany (lightweight IDE)"${W}
+	echo "${Y}2. Geany (lightweight IDE)${W}"
 	echo
-	echo "${Y}3. VS Code & Geany (both)"${W}
+	echo "${Y}3. VS Code & Geany (both)${W}"
 	echo
-	echo "${Y}4. Skip"${W}
+	echo "${Y}4. Skip${W}"
 	echo
 	select_an_option 4 1 ide_answer
 	banner
-	echo "${R}[${C}-${R}]${G}${BOLD} Select Media Player you want to install"${W}
+	echo "${R}[${C}-${R}]${G}${BOLD} Select Media Player you want to install${W}"
 	echo
-	echo "${Y}1. Vlc"${W}
+	echo "${Y}1. Vlc${W}"
 	echo
-	echo "${Y}2. Audacious"${W}
+	echo "${Y}2. Audacious${W}"
 	echo
-	echo "${Y}3. Vlc & Audacious (both)"${W}
+	echo "${Y}3. Vlc & Audacious (both)${W}"
 	echo
-	echo "${Y}4. Skip"${W}
+	echo "${Y}4. Skip${W}"
 	echo
 	select_an_option 4 1 player_answer
 	banner
-	echo "${R}[${C}-${R}]${G}${BOLD} Select Photo Editor"${W}
+	echo "${R}[${C}-${R}]${G}${BOLD} Select Photo Editor${W}"
 	echo
-	echo "${Y}1. Gimp"${W}
+	echo "${Y}1. Gimp${W}"
 	echo
-	echo "${Y}2. Inkscape"${W}
+	echo "${Y}2. Inkscape${W}"
 	echo
-	echo "${Y}3. Gimp & Inkscape (both)"${W}
+	echo "${Y}3. Gimp & Inkscape (both)${W}"
 	echo
-	echo "${Y}4. Skip"${W}
+	echo "${Y}4. Skip${W}"
 	echo
 	select_an_option 4 1 photo_editor_answer
 	banner
-	echo "${R}[${C}-${R}]${G}${BOLD} Do you want to install wine in termux ${C}(without proot-distro)"${W}
+	echo "${R}[${C}-${R}]${G}${BOLD} Do you want to install wine in termux ${C}(without proot-distro)${W}"
 	echo
-	echo "${Y}1. Natively ${C}(can run only arm64 based exe)"${W}
+	echo "${Y}1. Natively ${C}(can run only arm64 based exe)${W}"
 	echo
-	echo "${Y}2. Using Mobox ${C}"${W}
+	echo "${Y}2. Using Mobox ${C}${W}"
 	echo
-	echo "${R}[${C}-${R}]${B} Know More About Mobox:- https://github.com/olegos2/mobox/"${W}
+	echo "${R}[${C}-${R}]${B} Know More About Mobox:- https://github.com/olegos2/mobox/${W}"
 	echo
-	echo "${Y}3. Wine Hangover (Best)"${W}
+	echo "${Y}3. Wine Hangover (Best)${W}"
 	echo
-	echo "${Y}4. Skip"${W}
+	echo "${Y}4. Skip${W}"
 	echo
 	select_an_option 4 1 wine_answer
 	banner
 	confirmation_y_or_n "Do you want to install a graphical package manager [Synaptic]" synaptic_answer
 	banner
-	echo "${R}[${C}-${R}]${G} By Default it only add 4 - 5 wallpaper"${W}
+	echo "${R}[${C}-${R}]${G} By Default it only add 4 - 5 wallpaper${W}"
 	echo
 	confirmation_y_or_n "Do you want to add some more wallpaper" ext_wall_answer
 	banner
 	confirmation_y_or_n "Do you want to Configuring Zsh" zsh_answer
 	banner
 	echo
-	echo "${R}[${C}-${R}]${B} Know More About Terminal Utility:- https://github.com/sabamdarif/termux-desktop/blob/main/see-more.md#hammer_and_wrenchlearn-about-terminal-utilities"${W}
+	echo "${R}[${C}-${R}]${B} Know More About Terminal Utility:- https://github.com/sabamdarif/termux-desktop/blob/main/see-more.md#hammer_and_wrenchlearn-about-terminal-utilities${W}"
 	echo
 	confirmation_y_or_n "Do you want install some terminal utility to make better terminal exprience" terminal_utility_setup_answer
 	banner
-	echo "${R}[${C}-${R}]${G}${BOLD} Select Gui Mode"${W}
+	echo "${R}[${C}-${R}]${G}${BOLD} Select Gui Mode${W}"
 	echo
-	echo "${Y}1. Termux:x11"${W}
+	echo "${Y}1. Termux:x11${W}"
 	echo
-	echo "${Y}2. Vnc (Not Recommended | Some features might not work)"${W}
+	echo "${Y}2. Vnc (Not Recommended | Some features might not work)${W}"
 	echo
-	echo "${Y}3. Both"${W}
+	echo "${Y}3. Both${W}"
 	echo
 	select_an_option 3 1 gui_mode
 	banner
 	confirmation_y_or_n "Do you want to start the desktop at Termux startup" de_on_startup
 	if [[ "$de_on_startup" == "y" && "$gui_mode" == "3" ]]; then
-	echo "${R}[${C}-${R}]${G} You chose both vnc and termux:x11 to access gui mode"${W}
+	echo "${R}[${C}-${R}]${G} You chose both vnc and termux:x11 to access gui mode${W}"
 	echo
-	echo "${R}[${C}-${R}]${G} Which will be your default"${W}
+	echo "${R}[${C}-${R}]${G} Which will be your default${W}"
 	echo
-	echo "${Y}1. Termux:x11"${W}
+	echo "${Y}1. Termux:x11${W}"
 	echo
-	echo "${Y}2. Vnc"${W}
+	echo "${Y}2. Vnc${W}"
 	echo
 	select_an_option 2 1 autostart_gui_mode
 	fi
 	banner
-	echo "${R}[${C}-${R}]${Y}${BOLD} Do you want to add a Linux container (proot distro)"${W}
+	echo "${R}[${C}-${R}]${Y}${BOLD} Do you want to add a Linux container (proot distro)${W}"
 	echo
-	echo "${R}[${C}-${R}]${G} It will help you to install those app which are not avilable in termux"${W}
+	echo "${R}[${C}-${R}]${G} It will help you to install those app which are not avilable in termux${W}"
 	echo
-	echo "${R}[${C}-${R}]${C} You can launch those installed apps from termux like other apps"${W}
+	echo "${R}[${C}-${R}]${C} You can launch those installed apps from termux like other apps${W}"
 	echo
 	confirmation_y_or_n "Do you want to continue" distro_add_answer
-	echo "distro_add_answer=\"$distro_add_answer\"" >> $config_file
+	echo "distro_add_answer=\"$distro_add_answer\"" >> "$config_file"
 	clear
 	if ! type -p pacman >/dev/null 2>&1; then
-	echo "${R}[${C}-${R}]${R}${BOLD} Read This Carefully"${W}
+	echo "${R}[${C}-${R}]${R}${BOLD} Read This Carefully${W}"
 	echo -e "
 In my tests, I achieved 1000+ FPS in vkmark on all my devices. I tried it on an 
 - Adreno 619 (everything work fine)
@@ -886,7 +893,7 @@ If you type 'n/N' then it will use the old virtualizing way to setup Hardware Ac
 Also type 'n/N' for Freedreno KGSL (Adreno GPU Only)./n
 "
 	confirmation_y_or_n "Do you want to install the new mesa-vulkan-icd-wrapper Driver" confirmation_mesa_vulkan_icd_wrapper
-	echo "confirmation_mesa_vulkan_icd_wrapper=\"$confirmation_mesa_vulkan_icd_wrapper\"" >> $config_file
+	echo "confirmation_mesa_vulkan_icd_wrapper=\"$confirmation_mesa_vulkan_icd_wrapper\"" >> "$config_file"
 	fi
 }
 
@@ -898,10 +905,10 @@ function distro_hw_questions() {
 	   		pd_hw_answer="virgl"
 	   	else
 	   		banner
-	   		echo "${R}[${C}-${R}]${G}${BOLD} Select Hardware Acceleration Driver For Linux Container"${W}
-	   		echo "${Y}1. OpenGL (VIRGL ANGLE)"${W}
+	   		echo "${R}[${C}-${R}]${G}${BOLD} Select Hardware Acceleration Driver For Linux Container${W}"
+	   		echo "${Y}1. OpenGL (VIRGL ANGLE)${W}"
 	   		echo
-	   		echo "${Y}2. Turnip (Adreno GPU Only)"${W}
+	   		echo "${Y}2. Turnip (Adreno GPU Only)${W}"
 	   		echo
 	   		select_an_option 2 1 pd_hw_answer_n
 	   		# set gpu api
@@ -916,17 +923,17 @@ function distro_hw_questions() {
 	   pd_hw_answer="freedreno"
 	   else
 	   banner
-	   echo "${R}[${C}-${R}]${G}${BOLD} Select Hardware Acceleration Driver For Linux Container"${W}
+	   echo "${R}[${C}-${R}]${G}${BOLD} Select Hardware Acceleration Driver For Linux Container${W}"
 	   echo
-	   echo "${R}[${C}-${R}]${G} If You Skip It, It Will Use The Previous Selection"${W}
+	   echo "${R}[${C}-${R}]${G} If You Skip It, It Will Use The Previous Selection${W}"
        echo
-	   echo "${Y}1. Vulkan (ZINK)"${W}
+	   echo "${Y}1. Vulkan (ZINK)${W}"
 	   echo
-	   echo "${Y}2. OpenGL ES (ZINK VIRGL)"${W}
+	   echo "${Y}2. OpenGL ES (ZINK VIRGL)${W}"
 	   echo
-	   echo "${Y}3. Turnip (Adreno GPU Only)"${W}
+	   echo "${Y}3. Turnip (Adreno GPU Only)${W}"
 	   echo
-	   echo "${Y}4. Skip"${W}
+	   echo "${Y}4. Skip${W}"
 	   echo
 	   select_an_option 4 1 pd_hw_answer_num
 
@@ -940,8 +947,8 @@ function distro_hw_questions() {
 	   	fi
 
 	   fi
-	   echo "pd_hw_answer_num=\"$pd_hw_answer_num\"" >> $config_file
-	   echo "pd_hw_answer=\"$pd_hw_answer\"" >> $config_file
+	   echo "pd_hw_answer_num=\"$pd_hw_answer_num\"" >> "$config_file"
+	   echo "pd_hw_answer=\"$pd_hw_answer\"" >> "$config_file"
     fi
 }
 
@@ -949,28 +956,28 @@ function distro_hw_questions() {
 
 function exp_termux_gl_hw_support() {
 	banner
-	echo "${R}[${C}-${R}]${G}${BOLD} First Read This"${W}
+	echo "${R}[${C}-${R}]${G}${BOLD} First Read This${W}"
 	echo
-	echo "${R}[${C}-${R}]${B} This:- https://github.com/sabamdarif/termux-desktop/blob/main/hw-acceleration.md"${W}
+	echo "${R}[${C}-${R}]${B} This:- https://github.com/sabamdarif/termux-desktop/blob/main/hw-acceleration.md${W}"
 	echo
-	echo "${R}[${C}-${R}]${G}${BOLD} It will be used to enable opengl support"${W}
+	echo "${R}[${C}-${R}]${G}${BOLD} It will be used to enable opengl support${W}"
 	echo
-	echo "${Y}1. Vulkan (ZINK)"${W}
+	echo "${Y}1. Vulkan (ZINK)${W}"
 	echo
-	echo "${Y}2. OpenGL (VIRGL ANGLE)"${W}
+	echo "${Y}2. OpenGL (VIRGL ANGLE)${W}"
 	echo
-	echo "${Y}3. Vulkan (VIRGL ANGLE)"${W}
+	echo "${Y}3. Vulkan (VIRGL ANGLE)${W}"
 	echo
-	echo "${Y}4. OpenGL ES (ZINK VIRGL)"${W}
+	echo "${Y}4. OpenGL ES (ZINK VIRGL)${W}"
 	echo
-	echo "${Y}5. The New Driver With Mesa"${W}
+	echo "${Y}5. The New Driver With Mesa${W}"
 	echo
-	echo "${Y}6. The New Driver With Mesa-Zink"${W}
+	echo "${Y}6. The New Driver With Mesa-Zink${W}"
 	echo
-	echo "${Y}7. Freedreno KGSL (Unstable | Adreno GPU Only)"${W}
+	echo "${Y}7. Freedreno KGSL (Unstable | Adreno GPU Only)${W}"
 	echo
 	select_an_option 7 1 exp_termux_gl_hw_answer_num
-	echo "exp_termux_gl_hw_answer_num=\"$exp_termux_gl_hw_answer_num\"" >> $config_file
+	echo "exp_termux_gl_hw_answer_num=\"$exp_termux_gl_hw_answer_num\"" >> "$config_file"
 
 	# set gpu api name
 	case "$exp_termux_gl_hw_answer_num" in
@@ -982,9 +989,9 @@ function exp_termux_gl_hw_support() {
 	    6) exp_termux_gl_hw_answer="zink" ;;
 	    7) exp_termux_gl_hw_answer="freedreno" ;;
 	esac
-	echo "exp_termux_gl_hw_answer=\"$exp_termux_gl_hw_answer\"" >> $config_file
+	echo "exp_termux_gl_hw_answer=\"$exp_termux_gl_hw_answer\"" >> "$config_file"
 	termux_hw_answer="${exp_termux_gl_hw_answer}"
-	echo "termux_hw_answer=\"$exp_termux_gl_hw_answer\"" >> $config_file
+	echo "termux_hw_answer=\"$exp_termux_gl_hw_answer\"" >> "$config_file"
 
     if [[ "$distro_add_answer" == "y" ]]; then
         case "$exp_termux_gl_hw_answer" in
@@ -993,7 +1000,7 @@ function exp_termux_gl_hw_support() {
 					distro_hw_questions
 				else
                 	pd_hw_answer="virgl"
-                	echo "pd_hw_answer=\"$pd_hw_answer\"" >> $config_file
+                	echo "pd_hw_answer=\"$pd_hw_answer\"" >> "$config_file"
 				fi
                 ;;
             *)
@@ -1005,19 +1012,19 @@ function exp_termux_gl_hw_support() {
 
 function exp_hwa_support() {
 	if [[ "$confirmation_mesa_vulkan_icd_wrapper" == "y" ]]; then
-	echo -e "${R}[${C}-${R}]${G} The new Hardware Acceleration Will Use The mesa-vulkan-icd-wrapper Package\nFor option 4 other GPUs, this driver might / might not work\n "${W}
-	echo "${R}[${C}-${R}]${G}${BOLD} Select Your Device GPU"${W}
+	echo -e "${R}[${C}-${R}]${G} The new Hardware Acceleration Will Use The mesa-vulkan-icd-wrapper Package\nFor option 4 other GPUs, this driver might / might not work\n ${W}"
+	echo "${R}[${C}-${R}]${G}${BOLD} Select Your Device GPU${W}"
     echo
-	echo "${Y}1. Adreno"${W}
+	echo "${Y}1. Adreno${W}"
 	echo
-    echo "${Y}2. Mali"${W}
+    echo "${Y}2. Mali${W}"
 	echo
-	echo "${Y}3. Xclipse"${W}
+	echo "${Y}3. Xclipse${W}"
 	echo
-	echo "${Y}4. Others"${W}
+	echo "${Y}4. Others${W}"
 	echo
 	select_an_option 4 1 device_gpu_model
-	echo "device_gpu_model=\"$device_gpu_model\"" >> $config_file
+	echo "device_gpu_model=\"$device_gpu_model\"" >> "$config_file"
 
 	# set gpu model name
 	case "$device_gpu_model" in
@@ -1026,7 +1033,7 @@ function exp_hwa_support() {
     3) device_gpu_model_name="xclipse" ;;
     4) device_gpu_model_name="others" ;;
 	esac
-	echo "device_gpu_model_name=\"$device_gpu_model_name\"" >> $config_file
+	echo "device_gpu_model_name=\"$device_gpu_model_name\"" >> "$config_file"
 
 	exp_termux_gl_hw_support
 	fi
@@ -1036,24 +1043,24 @@ function hw_questions() {
 	if [[ "$confirmation_mesa_vulkan_icd_wrapper" == "y" ]]; then
 	exp_hwa_support
 	else
-    echo "${R}[${C}-${R}]${G}${BOLD} First Read This"${W}
+    echo "${R}[${C}-${R}]${G}${BOLD} First Read This${W}"
     echo
-    echo "${R}[${C}-${R}]${B} This:- https://github.com/sabamdarif/termux-desktop/blob/main/hw-acceleration.md"${W}
+    echo "${R}[${C}-${R}]${B} This:- https://github.com/sabamdarif/termux-desktop/blob/main/hw-acceleration.md${W}"
     echo
-    echo "${R}[${C}-${R}]${G}${BOLD} Select Hardware Acceleration API"${W}
+    echo "${R}[${C}-${R}]${G}${BOLD} Select Hardware Acceleration API${W}"
     echo
-	echo "${Y}1. Vulkan (ZINK)"${W}
+	echo "${Y}1. Vulkan (ZINK)${W}"
 	echo
-    echo "${Y}2. OpenGL (VIRGL ANGLE)"${W}
+    echo "${Y}2. OpenGL (VIRGL ANGLE)${W}"
 	echo
-	echo "${Y}3. Vulkan (VIRGL ANGLE)"${W}
+	echo "${Y}3. Vulkan (VIRGL ANGLE)${W}"
 	echo
-	echo "${Y}4. OpenGL ES (ZINK VIRGL)"${W}
+	echo "${Y}4. OpenGL ES (ZINK VIRGL)${W}"
 	echo
-	echo "${Y}5. Freedreno KGSL (Unstable | Adreno GPU Only)"${W}
+	echo "${Y}5. Freedreno KGSL (Unstable | Adreno GPU Only)${W}"
 	echo
 	select_an_option 5 1 termux_hw_answer_num
-	echo "termux_hw_answer_num=\"$termux_hw_answer_num\"" >> $config_file
+	echo "termux_hw_answer_num=\"$termux_hw_answer_num\"" >> "$config_file"
 
 	# set gpu api name
 	case "$termux_hw_answer_num" in
@@ -1069,20 +1076,20 @@ function hw_questions() {
 
 # distro related questions
 function choose_distro() {
-	echo "${R}[${C}-${R}]${G}${BOLD} Select Linux Distro You Want To Add"${W}
+	echo "${R}[${C}-${R}]${G}${BOLD} Select Linux Distro You Want To Add${W}"
 	echo " "
-	echo "${Y}1. Debian"${W}
+	echo "${Y}1. Debian${W}"
 	echo " "
-	echo "${Y}2. Ubuntu"${W}
+	echo "${Y}2. Ubuntu${W}"
 	echo " "
-	echo "${Y}3. Arch (Unstable)"${W}
+	echo "${Y}3. Arch (Unstable)${W}"
 	echo " "
-	echo "${Y}4. Apline"${W}
+	echo "${Y}4. Apline${W}"
 	echo " "
-	echo "${Y}5. Fedora"${W}
+	echo "${Y}5. Fedora${W}"
 	echo " "
 	select_an_option 5 1 distro_answer
-	echo "distro_answer=\"$distro_answer\"" >> $config_file
+	echo "distro_answer=\"$distro_answer\"" >> "$config_file"
 
 	case "$distro_answer" in
         1) selected_distro="debian" ;;
@@ -1092,7 +1099,7 @@ function choose_distro() {
         5) selected_distro="fedora" ;;
         *) selected_distro="debian" ;;
     esac
-    echo "selected_distro=\"$selected_distro\"" >> $config_file
+    echo "selected_distro=\"$selected_distro\"" >> "$config_file"
 
 }
 
@@ -1108,7 +1115,7 @@ function distro_questions() {
 	else
 	distro_zsh_answer="$zsh_answer"
 	fi
-	echo "distro_zsh_answer=\"$distro_zsh_answer\"" >> $config_file
+	echo "distro_zsh_answer=\"$distro_zsh_answer\"" >> "$config_file"
 
 	if [[ "$distro_add_answer" == "y" ]] && [[ "$terminal_utility_setup_answer" == "y" ]]; then
 	banner
@@ -1116,84 +1123,84 @@ function distro_questions() {
 	else
 	distro_terminal_utility_setup_answer="$terminal_utility_setup_answer"
 	fi
-	echo "distro_terminal_utility_setup_answer=\"$distro_terminal_utility_setup_answer\"" >> $config_file
+	echo "distro_terminal_utility_setup_answer=\"$distro_terminal_utility_setup_answer\"" >> "$config_file"
 
 	banner
 	confirmation_y_or_n "Do you want to create a normal user account ${C}(Recomended)" pd_useradd_answer
-	echo "pd_useradd_answer=\"$pd_useradd_answer\"" >> $config_file
+	echo "pd_useradd_answer=\"$pd_useradd_answer\"" >> "$config_file"
 	echo
 
 	if [[ "$pd_useradd_answer" == "n" ]]; then
-	echo "${R}[${C}-${R}]${G} Skiping User Account Setup"${W}
+	echo "${R}[${C}-${R}]${G} Skiping User Account Setup${W}"
 	else
-	echo "${R}[${C}-${R}]${G}${BOLD} Select user account type"${W}
+	echo "${R}[${C}-${R}]${G}${BOLD} Select user account type${W}"
 	echo
-	echo "${Y}1. User with no password confirmation"${W}
+	echo "${Y}1. User with no password confirmation${W}"
 	echo
-	echo "${Y}2. User with password confirmation"${W}
+	echo "${Y}2. User with password confirmation${W}"
 	echo
 	select_an_option 2 1 pd_pass_type
-	echo "pd_pass_type=\"$pd_pass_type\"" >> $config_file
+	echo "pd_pass_type=\"$pd_pass_type\"" >> "$config_file"
 	    if [[ "$pd_pass_type" == "1" ]]; then
 	    while true; do
 		echo " "
-		echo "${R}[${C}-${R}]${G} Default Password Will Be Set, Because Sometime It Might Ask You For Password"${W}
+		echo "${R}[${C}-${R}]${G} Default Password Will Be Set, Because Sometime It Might Ask You For Password${W}"
 		echo
-		echo "${R}[${C}-${R}]${G} Password:-${C}root"${W}
+		echo "${R}[${C}-${R}]${G} Password:-${C}root${W}"
 		echo
-	    read -p "${R}[${C}-${R}]${G} Input username [Lowercase]: "${W} user_name
+	    read -r -p "${R}[${C}-${R}]${G} Input username [Lowercase]: ${W}" user_name
 	    echo
-	    read -p "${R}[${C}-${R}]${Y} Do you want to continue with username ${C}$user_name ${Y}? (y/n) : "${W} choice
+	    read -r -p "${R}[${C}-${R}]${Y} Do you want to continue with username ${C}$user_name ${Y}? (y/n) : ${W}" choice
 	    echo
 	    choice="${choice:-y}"
 	    echo
-	    echo "${R}[${G}✓${R}]${G} Continuing with answer: $choice"${W}
+	    echo "${R}[${G}✓${R}]${G} Continuing with answer: $choice${W}"
 	    sleep 0.2
 	    case $choice in
 	    [yY]* )
-	    echo "${R}[${G}✓${R}]${G} Continuing with username ${C}$user_name "${W}
+	    echo "${R}[${G}✓${R}]${G} Continuing with username ${C}$user_name ${W}"
 	    break;;
 	    [nN]* )
-	    echo "${R}[${C}-${R}]${G}Please provide username again."${W}
+	    echo "${R}[${C}-${R}]${G}Please provide username again.${W}"
 	    echo
 	    ;;
 	    * )
-	    echo "${R}[${R}☓${R}]${R}Invalid input. Please enter 'y' or 'n'."${W}
+	    echo "${R}[${R}☓${R}]${R}Invalid input. Please enter 'y' or 'n'.${W}"
 	    ;;
 	    esac
 	    done
-	    echo "user_name=\"$user_name\"" >> $config_file
+	    echo "user_name=\"$user_name\"" >> "$config_file"
 	    elif [[ "$pd_pass_type" == "2" ]]; then
 	    echo
-	    echo "${R}[${C}-${R}]${G}${BOLD} Create user account"${W}
+	    echo "${R}[${C}-${R}]${G}${BOLD} Create user account${W}"
 	    echo
 	    while true; do
-	    read -p "${R}[${C}-${R}]${G}Input username [Lowercase]: "${W} user_name
+	    read -r -p "${R}[${C}-${R}]${G}Input username [Lowercase]: ${W}" user_name
 	    echo
-	    read -p "${R}[${C}-${R}]${G}Input Password: "${W} pass
+	    read -r -p "${R}[${C}-${R}]${G}Input Password: ${W}" pass
 	    echo
-	    read -p "${R}[${C}-${R}]${Y}Do you want to continue with username ${C}$user_name ${Y}and password ${C}$pass${Y} ? (y/n) : "${W} choice
+	    read -r -p "${R}[${C}-${R}]${Y}Do you want to continue with username ${C}$user_name ${Y}and password ${C}$pass${Y} ? (y/n) : ${W}" choice
 	    echo
 	    choice="${choice:-y}"
 	    echo
-	    echo "${R}[${G}✓${R}]${G} Continuing with answer: $choice"${W}
+	    echo "${R}[${G}✓${R}]${G} Continuing with answer: $choice${W}"
 	    echo ""
 	    sleep 0.2
 	    case $choice in
 	    [yY]* )
-	    echo "${R}[${G}✓${R}]${G} Continuing with username ${C}$user_name ${G}and password ${C}$pass"${W}
+	    echo "${R}[${G}✓${R}]${G} Continuing with username ${C}$user_name ${G}and password ${C}$pass${W}"
 	    break;;
 	    [nN]* )
-	    echo "${R}[${C}-${R}]${G}Please provide username and password again."${W}
+	    echo "${R}[${C}-${R}]${G}Please provide username and password again.${W}"
 	    echo
 	    ;;
 	    * )
-	    echo "${R}[${R}☓${R}]${R}Invalid input. Please enter 'y' or 'n'."${W}
+	    echo "${R}[${R}☓${R}]${R}Invalid input. Please enter 'y' or 'n'.${W}"
 	    ;;
 	    esac
 	    done
-	    echo "user_name=\"$user_name\"" >> $config_file
-	    echo "pass=\"$pass\"" >> $config_file
+	    echo "user_name=\"$user_name\"" >> "$config_file"
+	    echo "pass=\"$pass\"" >> "$config_file"
 	    fi
 
 	fi
@@ -1207,13 +1214,13 @@ function distro_questions() {
 
 function update_sys() {
     banner
-    echo "${R}[${C}-${R}]${G}${BOLD} Updating System...."${W}
+    echo "${R}[${C}-${R}]${G}${BOLD} Updating System....${W}"
     echo
 
     if [[ "$PACKAGE_MANAGER" == "pacman" ]]; then
         pacman -Syu --noconfirm
     else
-        echo "${R}[${C}-${R}]${G}${BOLD}Selecting best termux packages mirror please wait"${W}
+        echo "${R}[${C}-${R}]${G}${BOLD}Selecting best termux packages mirror please wait${W}"
         unlink "$PREFIX/etc/termux/chosen_mirrors" &>/dev/null
         ln -s "$PREFIX/etc/termux/mirrors/all" "$PREFIX/etc/termux/chosen_mirrors" &>/dev/null
         pkg --check-mirror update
@@ -1224,7 +1231,7 @@ function update_sys() {
 
 function install_required_packages() {
     banner
-    echo "${R}[${C}-${R}]${Y}${BOLD} Installing required packages..."${W}
+    echo "${R}[${C}-${R}]${Y}${BOLD} Installing required packages...${W}"
     echo
 
     if [[ "$PACKAGE_MANAGER" == "pacman" ]]; then
@@ -1239,19 +1246,19 @@ function install_desktop() {
     banner
 
     if [[ "$desktop_answer" == "1" ]]; then
-        echo "${R}[${C}-${R}]${G}${BOLD} Installing Xfce4 Desktop"${W}
+        echo "${R}[${C}-${R}]${G}${BOLD} Installing Xfce4 Desktop${W}"
         echo
         package_install_and_check "xfce4 xfce4-goodies"
     elif [[ "$desktop_answer" == "2" ]]; then
-        echo "${R}[${C}-${R}]${G}${BOLD} Installing Lxqt Desktop"${W}
+        echo "${R}[${C}-${R}]${G}${BOLD} Installing Lxqt Desktop${W}"
         echo
         package_install_and_check "lxqt openbox gtk3 papirus-icon-theme xorg-xsetroot"
     elif [[ "$desktop_answer" == "3" ]]; then
-        echo "${R}[${C}-${R}]${G}${BOLD} Installing Openbox WM"${W}
+        echo "${R}[${C}-${R}]${G}${BOLD} Installing Openbox WM${W}"
         echo
         package_install_and_check "openbox polybar xorg-xsetroot lxappearance wmctrl feh termux-api thunar firefox mpd rofi bmon xcompmgr xfce4-settings gtk3 gedit"
     elif [[ "$desktop_answer" == "4" ]]; then
-        echo "${R}[${C}-${R}]${G}${BOLD} Installing MATE"${W}
+        echo "${R}[${C}-${R}]${G}${BOLD} Installing MATE${W}"
         echo
         package_install_and_check "mate*"
         package_install_and_check "marco mousepad xfce4-taskmanager lximage-qt"
@@ -1280,7 +1287,7 @@ function set_config_dir() {
 
 function theme_installer() {
     banner
-    echo "${R}[${C}-${R}]${G}${BOLD} Configuring Theme: ${C}${style_name}"${W}
+    echo "${R}[${C}-${R}]${G}${BOLD} Configuring Theme: ${C}${style_name}${W}"
     echo
 
     if [[ "$de_name" == "xfce" ]] || [[ "$de_name" == "openbox" ]]; then
@@ -1289,7 +1296,7 @@ function theme_installer() {
 
     sleep 3
     banner
-    echo "${R}[${C}-${R}]${G}${BOLD} Configuring Wallpapers..."${W}
+    echo "${R}[${C}-${R}]${G}${BOLD} Configuring Wallpapers...${W}"
     echo
     check_and_create_directory "$PREFIX/share/backgrounds"
     download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/${de_name}/look_${style_answer}/wallpaper.tar.gz" "$PREFIX/share/backgrounds/"
@@ -1299,31 +1306,33 @@ function theme_installer() {
     download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/${de_name}/look_${style_answer}/icon.tar.gz" "$icons_folder"
 
     if [[ "$de_name" == "xfce" ]]; then
-        local icons_themes_names=$(ls $icons_folder)
+        local icons_themes_names
+		icons_themes_names=$(ls "$icons_folder")
         local icons_theme
         for icons_theme in $icons_themes_names; do
             if [[ -d "$icons_folder/$icons_theme" ]]; then
-                echo "${R}[${C}-${R}]${G} Creating icon cache..."${W}
-                gtk-update-icon-cache -f -t $icons_folder/$icons_theme
+                echo "${R}[${C}-${R}]${G} Creating icon cache...${W}"
+                gtk-update-icon-cache -f -t "$icons_folder/$icons_theme"
             fi
         done
     fi
 
-    local sys_icons_themes_names=$(ls $sys_icons_folder)
+    local sys_icons_themes_names
+	sys_icons_themes_names=$(ls "$sys_icons_folder")
     local sys_icons_theme
     for sys_icons_theme in $sys_icons_themes_names; do
         if [[ -d "$sys_icons_folder/$sys_icons_theme" ]]; then
-            echo "${R}[${C}-${R}]${G} Creating icon cache..."${W}
-            gtk-update-icon-cache -f -t $sys_icons_folder/$sys_icons_theme
+            echo "${R}[${C}-${R}]${G} Creating icon cache...${W}"
+            gtk-update-icon-cache -f -t "$sys_icons_folder/$sys_icons_theme"
         fi
     done
 
-    echo "${R}[${C}-${R}]${G}${BOLD} Installing Theme..."${W}
+    echo "${R}[${C}-${R}]${G}${BOLD} Installing Theme...${W}"
     echo
     check_and_create_directory "$themes_folder"
     download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/${de_name}/look_${style_answer}/theme.tar.gz" "$themes_folder"
 
-    echo "${R}[${C}-${R}]${G} Making Additional Configuration..."${W}
+    echo "${R}[${C}-${R}]${G} Making Additional Configuration...${W}"
     echo
     check_and_create_directory "$HOME/.config"
     set_config_dir
@@ -1348,7 +1357,7 @@ function theme_installer() {
 function additional_required_package_installler() {
     banner
 	if [[ "$de_name" == "xfce" ]]; then
-    echo "${R}[${C}-${R}]${G}${BOLD} Installing Additional Packages If Required..."${W}
+    echo "${R}[${C}-${R}]${G}${BOLD} Installing Additional Packages If Required...${W}"
 	echo
 	if [[ "$style_answer" == "2" ]] || [[ "$style_answer" == "5" ]] || [[ "$style_answer" == "6" ]]; then
 	package_install_and_check "cairo-dock-core"
@@ -1359,18 +1368,18 @@ function additional_required_package_installler() {
 	elif [[ "$style_answer" == "4" ]]; then
     package_install_and_check "gtk2-engines-murrine"
 	elif [[ "$style_answer" == "5" ]] || [[ "$style_answer" == "6" ]]; then
-	cp $HOME/.config/xpple_menu/applications/* $PREFIX/share/applications/
+	cp "$HOME/.config/xpple_menu/applications/*" "$PREFIX/share/applications/"
 	elif [[ "$style_answer" == "7" ]]; then
 	install_font_for_style "7"
 	else
-	echo "${R}[${C}-${R}]${G} No Additional Packages Required For Theme: ${style_answer}"${W}
+	echo "${R}[${C}-${R}]${G} No Additional Packages Required For Theme: ${style_answer}${W}"
 	sleep 1
 	fi
 	elif [[ "$de_name" == "openbox" ]]; then
 	    if [[ "$style_answer" == "1" ]]; then
 	    install_font_for_style "1"
 		else
-		echo "${R}[${C}-${R}]${G} No Additional Packages Required For Theme: ${style_answer}"${W}
+		echo "${R}[${C}-${R}]${G} No Additional Packages Required For Theme: ${style_answer}${W}"
 	    sleep 1
 	    fi
 	fi
@@ -1383,18 +1392,18 @@ function additional_required_package_installler() {
 #########################################################################
 
 function setup_config() {
-	cd ~
+	cd "$HOME" || return
 	if [[ ${style_answer} =~ ^[1-9][0-9]*$ ]]; then
 	banner
-	echo "${R}[${C}-${R}]${G}${BOLD} Installing $de_name Style: ${C}${style_answer}"${W}
+	echo "${R}[${C}-${R}]${G}${BOLD} Installing $de_name Style: ${C}${style_answer}${W}"
 	theme_installer
 	additional_required_package_installler
 	fi
 	if [[ "$ext_wall_answer" == "n" ]]; then
-	echo "${R}[${C}-${R}]${C} Skipping Extra Wallpapers Setup..."${W}
+	echo "${R}[${C}-${R}]${C} Skipping Extra Wallpapers Setup...${W}"
 	echo
 	elif [[ "$ext_wall_answer" == "y" ]]; then
-	echo "${R}[${C}-${R}]${G}${BOLD} Installing Some Extra Wallpapers..."${W}
+	echo "${R}[${C}-${R}]${G}${BOLD} Installing Some Extra Wallpapers...${W}"
 	echo
 	check_and_create_directory "$PREFIX/share/backgrounds"
 	download_and_extract "https://archive.org/download/wallpaper-extra.tar/wallpaper-extra.tar.gz" "$PREFIX/share/backgrounds/"
@@ -1403,7 +1412,7 @@ function setup_config() {
 
 function setup_folder() {
 	banner
-	echo "${R}[${C}-${R}]${G}${BOLD} Configuring Storage..."${W}
+	echo "${R}[${C}-${R}]${G}${BOLD} Configuring Storage...${W}"
 	echo
 	while true; do
 	termux-setup-storage
@@ -1411,11 +1420,11 @@ function setup_folder() {
     if [[ -d ~/storage ]]; then
 	break
     else
-	echo "${R}[${R}☓${R}]${R} Storage permission denied"${W}
+	echo "${R}[${R}☓${R}]${R} Storage permission denied${W}"
     fi
     sleep 3
 	done
-	cd $HOME
+	cd "$HOME" || return
 	termux-reload-settings
 	directories=(Desktop Music Download Pictures Videos)
 	for dir in "${directories[@]}"; do
@@ -1442,8 +1451,10 @@ function hw_config() {
     echo
 
     if [[ -f "${current_path}/enable-hw-acceleration" ]]; then
-        local current_script_hash=$(curl -sL https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/enable-hw-acceleration | sha256sum | cut -d ' ' -f 1)
-        local local_script_hash=$(basename $(sha256sum ${current_path}/enable-hw-acceleration | cut -d ' ' -f 1))
+        local current_script_hash
+		current_script_hash=$(curl -sL https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/enable-hw-acceleration | sha256sum | cut -d ' ' -f 1)
+  		local local_script_hash
+		local_script_hash=$(basename "$(sha256sum "${current_path}/enable-hw-acceleration" | cut -d ' ' -f 1)")
 
         if [[ "$local_script_hash" != "$current_script_hash" ]]; then
             echo "${R}[${C}-${R}]${G} It looks like you already have a different hw-acceleration installer in your current directory${W}"
@@ -1453,36 +1464,36 @@ function hw_config() {
 
             if [[ "$change_old_hw_installer" == "y" ]]; then
                 check_and_backup "${current_path}/enable-hw-acceleration"
-                wget --tries=5 --retry-connrefused -O ${current_path}/enable-hw-acceleration https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/enable-hw-acceleration
+                wget --tries=5 --retry-connrefused -O "${current_path}/enable-hw-acceleration" https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/enable-hw-acceleration
 					if [[ -f "${current_path}/enable-hw-acceleration" ]]; then
-                    	chmod +x ${current_path}/enable-hw-acceleration
-                    	. ${current_path}/enable-hw-acceleration
+                    	chmod +x "${current_path}/enable-hw-acceleration"
+                    	. "${current_path}/enable-hw-acceleration"
 					else
-						wget --tries=5 --retry-connrefused -O ${current_path}/enable-hw-acceleration https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/enable-hw-acceleration
-						chmod +x ${current_path}/enable-hw-acceleration
-                    	. ${current_path}/enable-hw-acceleration
+						wget --tries=5 --retry-connrefused -O "${current_path}/enable-hw-acceleration https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/enable-hw-acceleration"
+						chmod +x "${current_path}/enable-hw-acceleration"
+                    	. "${current_path}/enable-hw-acceleration"
 					fi
             else
                 echo "${R}[${C}-${R}]${G} Using the local hardware acceleration setup file${W}"
-                chmod +x ${current_path}/enable-hw-acceleration
-                . ${current_path}/enable-hw-acceleration
+                chmod +x "${current_path}/enable-hw-acceleration"
+                . "${current_path}/enable-hw-acceleration"
             fi
 
-            echo "change_old_hw_installer=\"$change_old_hw_installer\"" >> $config_file
+            echo "change_old_hw_installer=\"$change_old_hw_installer\"" >> "$config_file"
         else
             echo "${R}[${C}-${R}]${G} Using the local hardware acceleration setup file${W}"
-            chmod +x ${current_path}/enable-hw-acceleration
-            . ${current_path}/enable-hw-acceleration
+            chmod +x "${current_path}/enable-hw-acceleration"
+            . "${current_path}/enable-hw-acceleration"
         fi
     else
-        wget --tries=5 --retry-connrefused -O ${current_path}/enable-hw-acceleration https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/enable-hw-acceleration
+        wget --tries=5 --retry-connrefused -O "${current_path}/enable-hw-acceleration https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/enable-hw-acceleration"
 			if [[ -f "${current_path}/enable-hw-acceleration" ]]; then
-                chmod +x ${current_path}/enable-hw-acceleration
-                . ${current_path}/enable-hw-acceleration
+                chmod +x "${current_path}/enable-hw-acceleration"
+                . "${current_path}/enable-hw-acceleration"
 			else
-				wget --tries=5 --retry-connrefused -O ${current_path}/enable-hw-acceleration https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/enable-hw-acceleration
-				chmod +x ${current_path}/enable-hw-acceleration
-            	. ${current_path}/enable-hw-acceleration
+				wget --tries=5 --retry-connrefused -O "${current_path}/enable-hw-acceleration https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/enable-hw-acceleration"
+				chmod +x "${current_path}/enable-hw-acceleration"
+            	. "${current_path}/enable-hw-acceleration"
 			fi
     fi
         check_and_delete "${current_path}/enable-hw-acceleration"
@@ -1498,55 +1509,63 @@ function hw_config() {
 function distro_container_setup() {
     if [[ "$distro_add_answer" == "n" ]]; then
         banner
-        echo "${R}[${C}-${R}]${C} Skipping Linux Distro Container Setup..."${W}
+        echo "${R}[${C}-${R}]${C} Skipping Linux Distro Container Setup...${W}"
         echo
-		hw_config
+        hw_config
     else
         banner
-        echo "${R}[${C}-${R}]${G}${BOLD} Configuring Linux Distro Container"${W}
+        echo "${R}[${C}-${R}]${G}${BOLD} Configuring Linux Distro Container${W}"
         echo
 
         if [[ -f "${current_path}/distro-container-setup" ]]; then
-            local current_script_hash=$(curl -sL https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/distro-container-setup | sha256sum | cut -d ' ' -f 1)
-            local local_script_hash=$(basename $(sha256sum ${current_path}/distro-container-setup | cut -d ' ' -f 1))
+            local current_script_hash
+            current_script_hash=$(curl -sL https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/distro-container-setup | sha256sum | cut -d ' ' -f 1)
+            local local_script_hash
+            local_script_hash=$(basename "$(sha256sum "${current_path}/distro-container-setup" | cut -d ' ' -f 1)")
 
             if [[ "$local_script_hash" != "$current_script_hash" ]]; then
-                echo "${R}[${C}-${R}]${G} It looks like you already have a different distro-container setup script in your current directory"${W}
+                echo "${R}[${C}-${R}]${G} It looks like you already have a different distro-container setup script in your current directory${W}"
                 echo
                 confirmation_y_or_n "Do you want to change it with the latest installer" change_old_distro_installer
 
                 if [[ "$change_old_distro_installer" == "y" ]]; then
                     check_and_backup "${current_path}/distro-container-setup"
-                    wget --tries=5 --retry-connrefused -O ${current_path}/distro-container-setup https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/distro-container-setup
-					if [[ ("$1" == "--change" || "$1" == "-c") && ("$2" == "distro" || "$2" == "pd") ]]; then
-					sed -i 's/\(call_from_change_pd="\)[^"]*/\1y/' "${current_path}/distro-container-setup"
-					fi
-                    chmod +x ${current_path}/distro-container-setup
-                    . ${current_path}/distro-container-setup
+                    wget --tries=5 --retry-connrefused -O "${current_path}/distro-container-setup" https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/distro-container-setup
+
+                    # Check if arguments are passed
+                    if [[ ("$1" == "--change" || "$1" == "-c") && ("$2" == "distro" || "$2" == "pd") ]]; then
+                        sed -i 's/\(call_from_change_pd="\)[^"]*/\1y/' "${current_path}/distro-container-setup"
+                    fi
+
+                    chmod +x "${current_path}/distro-container-setup"
+                    . "${current_path}/distro-container-setup"
                 else
-                    echo "${R}[${C}-${R}]${G} Using the local distro-container setup file"${W}
-                    chmod +x ${current_path}/distro-container-setup
-                    . ${current_path}/distro-container-setup
+                    echo "${R}[${C}-${R}]${G} Using the local distro-container setup file${W}"
+                    chmod +x "${current_path}/distro-container-setup"
+                    . "${current_path}/distro-container-setup"
                 fi
 
-                echo "change_old_distro_installer=\"$change_old_distro_installer\"" >> $config_file
+                echo "change_old_distro_installer=\"$change_old_distro_installer\"" >> "$config_file"
             else
-                echo "${R}[${C}-${R}]${G} Using the local distro-container setup file"${W}
-                chmod +x ${current_path}/distro-container-setup
-                . ${current_path}/distro-container-setup
+                echo "${R}[${C}-${R}]${G} Using the local distro-container setup file${W}"
+                chmod +x "${current_path}/distro-container-setup"
+                . "${current_path}/distro-container-setup"
             fi
         else
-            wget --tries=5 --retry-connrefused -O ${current_path}/distro-container-setup https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/distro-container-setup
-			if [[ ("$1" == "--change" || "$1" == "-c") && ("$2" == "distro" || "$2" == "pd") ]]; then
-			sed -i 's/\(call_from_change_d="\)[^"]*/\1y/' "${current_path}/distro-container-setup"
-			fi
-            chmod +x ${current_path}/distro-container-setup
-            . ${current_path}/distro-container-setup
-            rm ${current_path}/distro-container-setup
+            wget --tries=5 --retry-connrefused -O "${current_path}/distro-container-setup" https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/distro-container-setup
+
+            # Check if arguments are passed
+            if [[ ("$1" == "--change" || "$1" == "-c") && ("$2" == "distro" || "$2" == "pd") ]]; then
+                sed -i 's/\(call_from_change_d="\)[^"]*/\1y/' "${current_path}/distro-container-setup"
+            fi
+
+            chmod +x "${current_path}/distro-container-setup"
+            . "${current_path}/distro-container-setup"
         fi
+	check_and_delete "${current_path}/distro-container-setup"
     fi
 
-    echo "distro_add_answer=\"$distro_add_answer\"" >> $config_file
+    echo "distro_add_answer=\"$distro_add_answer\"" >> "$config_file"
 }
 
 #########################################################################
@@ -1570,8 +1589,8 @@ case \$1 in
 env XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg LIBGL_ALWAYS_SOFTWARE=1 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe vncserver
 ;;
 --help|-h)
-echo "${C}vncstart ${G}to start vncserver with gpu acceleration"${W}
-echo "${C}vncstart ---nogpu ${G}to start vncserver without gpu acceleration"${W}
+echo "${C}vncstart ${G}to start vncserver with gpu acceleration${W}"
+echo "${C}vncstart ---nogpu ${G}to start vncserver without gpu acceleration${W}"
 ;;
 *)
 export ${set_to_export}
@@ -1608,7 +1627,7 @@ EOF
 
 function setup_vnc() {
     banner
-    echo "${R}[${C}-${R}]${G}${BOLD} Configuring Vnc..."${W}
+    echo "${R}[${C}-${R}]${G}${BOLD} Configuring Vnc...${W}"
     echo
     package_install_and_check "tigervnc"
     check_and_create_directory "$HOME/.vnc"
@@ -1654,22 +1673,22 @@ case \$2 in
     # Start Termux X11 without dbus-launch
 	export ${set_to_export}
 	${initialize_server_method} &
-    env XDG_RUNTIME_DIR=\${TMPDIR} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} ${hw_method} termux-x11 :0 -xstartup "$de_startup"
+    env XDG_RUNTIME_DIR=\${TMPDIR} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} ${hw_method} termux-x11 :0 -xstartup $de_startup
     exit 0
 
     # Nested case to check for additional options
     case \$3 in
     --nogpu)
-        env LIBGL_ALWAYS_SOFTWARE=1 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe XDG_RUNTIME_DIR=\${TMPDIR} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} termux-x11 :0 -xstartup "$de_startup"
+        env LIBGL_ALWAYS_SOFTWARE=1 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe XDG_RUNTIME_DIR=\${TMPDIR} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} termux-x11 :0 -xstartup $de_startup
 
         if [[ "\$4" == "--legacy" ]]; then
-            env XDG_RUNTIME_DIR=\${TMPDIR} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} termux-x11 :0 -legacy-drawing -xstartup "$de_startup"
+            env XDG_RUNTIME_DIR=\${TMPDIR} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} termux-x11 :0 -legacy-drawing -xstartup $de_startup
         fi
         ;;
     --legacy)
 	export ${set_to_export}
 	${initialize_server_method} &
-        env XDG_RUNTIME_DIR=\${TMPDIR} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} ${hw_method} termux-x11 :0 -legacy-drawing -xstartup "$de_startup"
+        env XDG_RUNTIME_DIR=\${TMPDIR} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} ${hw_method} termux-x11 :0 -legacy-drawing -xstartup $de_startup
         ;;
     *)
         echo -e "${C}--legacy ${G}to start termux:x11 with -legacy-drawing${W}"
@@ -1688,7 +1707,7 @@ case \$2 in
     sleep 1
     am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1 &
     sleep 1
-    env DISPLAY=:0 XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} ${hw_method} dbus-launch --exit-with-session $de_startup
+    env DISPLAY=:0 XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} "${hw_method}" dbus-launch --exit-with-session $de_startup
     ;;
 
 *)
@@ -1739,22 +1758,22 @@ case \$1 in
     # Start Termux X11 without dbus-launch
 	export ${set_to_export}
 	${initialize_server_method} &
-    env XDG_RUNTIME_DIR=\${TMPDIR} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} ${hw_method} termux-x11 :0 -xstartup "$de_startup" > /dev/null 2>&1 &
+    env XDG_RUNTIME_DIR=\${TMPDIR} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} ${hw_method} termux-x11 :0 -xstartup $de_startup > /dev/null 2>&1 &
     exit 0
 
     # Nested case to check for additional options
     case \$2 in
     --nogpu)
-        env LIBGL_ALWAYS_SOFTWARE=1 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe XDG_RUNTIME_DIR=\${TMPDIR} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} termux-x11 :0 -xstartup "$de_startup" > /dev/null 2>&1 &
+        env LIBGL_ALWAYS_SOFTWARE=1 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe XDG_RUNTIME_DIR=\${TMPDIR} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} termux-x11 :0 -xstartup $de_startup > /dev/null 2>&1 &
 
         if [[ "\$3" == "--legacy" ]]; then
-            env XDG_RUNTIME_DIR=\${TMPDIR} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} termux-x11 :0 -legacy-drawing -xstartup "$de_startup" > /dev/null 2>&1 &
+            env XDG_RUNTIME_DIR=\${TMPDIR} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} termux-x11 :0 -legacy-drawing -xstartup $de_startup > /dev/null 2>&1 &
         fi
         ;;
     --legacy)
 	export ${set_to_export}
 	${initialize_server_method} &
-        env XDG_RUNTIME_DIR=\${TMPDIR} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} ${hw_method} termux-x11 :0 -legacy-drawing -xstartup "$de_startup" > /dev/null 2>&1 &
+        env XDG_RUNTIME_DIR=\${TMPDIR} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} ${hw_method} termux-x11 :0 -legacy-drawing -xstartup $de_startup > /dev/null 2>&1 &
         ;;
     *)
         echo -e "${C}--legacy ${G}to start termux:x11 with -legacy-drawing${W}"
@@ -1797,7 +1816,7 @@ process_id=$(ps -aux | grep '[x]fce4-screensaver' | awk '{print $2}')
 kill "$process_id" > /dev/null 2>&1
 EOF
 fi
-chmod +x $PREFIX/bin/tx11start
+chmod +x "$PREFIX/bin/tx11start"
 }
 
 function setup_tx11stop_cmd() {
@@ -1809,7 +1828,7 @@ cat <<EOF > "$PREFIX/bin/tx11stop"
 termux-wake-unlock
 
 termux_x11_pid=\$(pgrep -f "/system/bin/app_process / com.termux.x11.Loader :1.0")
-de_pid=\$(pgrep -f "$de_startup")
+de_pid=\$(pgrep -f $de_startup)
 if [[ -n "\$termux_x11_pid" ]] || [[ -n "\$de_pid" ]]; then
 kill -9 "\$termux_x11_pid" > /dev/null 2>&1
 pkill -9 pulseaudio > /dev/null 2>&1
@@ -1840,7 +1859,7 @@ cat <<EOF > "$PREFIX/bin/tx11stop"
 termux-wake-unlock
 
 termux_x11_pid=\$(pgrep -f "/system/bin/app_process / com.termux.x11.Loader :1.0")
-de_pid=\$(pgrep -f "$de_startup")
+de_pid=\$(pgrep -f $de_startup)
 if [[ -n "\$termux_x11_pid" ]] || [[ -n "\$de_pid" ]]; then
 kill -9 "\$termux_x11_pid" > /dev/null 2>&1
 pkill -9 pulseaudio > /dev/null 2>&1
@@ -1865,12 +1884,12 @@ fi
 exec 2>/dev/null
 EOF
 fi
-chmod +x $PREFIX/bin/tx11stop
+chmod +x "$PREFIX/bin/tx11stop"
 }
 
 function setup_termux_x11() {
 	banner
-        echo "${R}[${C}-${R}]${G}${BOLD} Configuring Termux:X11 "${W}
+        echo "${R}[${C}-${R}]${G}${BOLD} Configuring Termux:X11 ${W}"
         echo
         package_install_and_check "termux-x11-nightly"
 		local repo_owner="termux"
@@ -1880,11 +1899,11 @@ function setup_termux_x11() {
 		local termux_x11_url="https://github.com/$repo_owner/$repo_name/releases/download/$latest_tag/"
 		local assets
 		assets=$(curl -s "https://api.github.com/repos/$repo_owner/$repo_name/releases/latest" | grep -oP '(?<="name": ")[^"]*')
-		deb_assets=$(echo "$assets" | grep termux-x11.*all.deb)
-		wget --tries=5 --retry-connrefused -O $current_path/termux-x11.deb $termux_x11_url/$deb_assets
-		apt install $current_path/termux-x11.deb -y
-		rm $current_path/termux-x11.deb
-		sed -i '12s/^#//' $HOME/.termux/termux.properties
+		deb_assets=$(echo "$assets" | grep "termux-x11.*all.deb")
+		wget --tries=5 --retry-connrefused -O "$current_path/termux-x11.deb" "$termux_x11_url/$deb_assets"
+		apt install "$current_path/termux-x11.deb" -y
+		rm "$current_path/termux-x11.deb"
+		# "sed -i '12s/^#//' "$HOME/.termux/termux.properties"
 		setup_tx11start_cmd
 		setup_tx11stop_cmd
 }
@@ -1903,10 +1922,10 @@ tx11stop
 tx11stop -f
 ;;
 --help|-h)
-echo -e "${G} Use ${C}gui --start / gui -l ${G}to start termux:x11\n Use ${C}gui --stop / gui -s ${G}to stop termux:x11"${W}
+echo -e "${G} Use ${C}gui --start / gui -l ${G}to start termux:x11\n Use ${C}gui --stop / gui -s ${G}to stop termux:x11${W}"
 ;;
 *)
-echo "${R}Invalid choise"${W}
+echo "${R}Invalid choise${W}"
 gui -h
 ;;
 esac
@@ -1927,10 +1946,10 @@ vncstop
 vncstop -f
 ;;
 --help|-h)
-echo -e "${G} Use ${C}gui --start / gui -l ${G}to start vnc\n Use ${C}gui --stop / gui -s ${G}to stop vnc"${W}
+echo -e "${G} Use ${C}gui --start / gui -l ${G}to start vnc\n Use ${C}gui --stop / gui -s ${G}to stop vnc${W}"
 ;;
 *)
-echo "${R}Invalid choise"${W}
+echo "${R}Invalid choise${W}"
 gui -h
 ;;
 esac
@@ -1990,20 +2009,20 @@ function gui_launcher() {
 	package_install_and_check "xorg-xhost"
 	if [[ "$gui_mode" == "1" ]]; then
 	setup_termux_x11
-	echo "gui_mode=\"termux_x11\"" >> $config_file
+	echo "gui_mode=\"termux_x11\"" >> "$config_file"
 	gui_termux_x11
 	elif [[ "$gui_mode" == "2" ]]; then
 	setup_vnc
-	echo "gui_mode=\"vnc\"" >> $config_file
+	echo "gui_mode=\"vnc\"" >> "$config_file"
 	gui_vnc
 	elif [[ "$gui_mode" == "3" ]]; then
 	setup_termux_x11
 	setup_vnc
-	echo "gui_mode=\"both\"" >> $config_file
+	echo "gui_mode=\"both\"" >> "$config_file"
 	gui_both
 	else
 	setup_termux_x11
-	echo "gui_mode=\"termux_x11\"" >> $config_file
+	echo "gui_mode=\"termux_x11\"" >> "$config_file"
 	gui_termux_x11
 	fi
 	chmod +x "$PREFIX/bin/gui"
@@ -2021,8 +2040,8 @@ Path=
 Terminal=false
 StartupNotify=false
 EOF
-	chmod 644 $PREFIX/share/applications/killgui.desktop
-	cp $PREFIX/share/applications/killgui.desktop $HOME/Desktop/
+	chmod 644 "$PREFIX/share/applications/killgui.desktop"
+	cp "$PREFIX/share/applications/killgui.desktop" "$HOME/Desktop/"
 }
 
 #########################################################################
@@ -2035,21 +2054,21 @@ function browser_installer() {
 	banner
 	if [[ ${browser_answer} == "1" ]]; then
 		package_install_and_check "firefox"
-	echo "installed_browser=\"firefox\"" >> $config_file
+	echo "installed_browser=\"firefox\"" >> "$config_file"
 	elif [[ ${browser_answer} == "2" ]]; then
 	package_install_and_check "chromium"
-	echo "installed_browser=\"chromium\"" >> $config_file
+	echo "installed_browser=\"chromium\"" >> "$config_file"
 	elif [[ ${browser_answer} == "3" ]]; then
 	package_install_and_check "firefox chromium"
-	echo "installed_browser=\"both\"" >> $config_file
+	echo "installed_browser=\"both\"" >> "$config_file"
 	elif [[ ${browser_answer} == "4" ]]; then
-    echo "${R}[${C}-${R}]${C} Skipping Browser Installation..."${W}
-	echo "installed_browser=\"skip\"" >> $config_file
+    echo "${R}[${C}-${R}]${C} Skipping Browser Installation...${W}"
+	echo "installed_browser=\"skip\"" >> "$config_file"
 	echo
 	sleep 2
 	else
 	package_install_and_check "firefox"
-	echo "installed_browser=\"firefox\"" >> $config_file
+	echo "installed_browser=\"firefox\"" >> "$config_file"
 	fi
 }
 
@@ -2063,21 +2082,21 @@ function ide_installer() {
 	banner
 	if [[ ${ide_answer} == "1" ]]; then
 		package_install_and_check "code-oss code-is-code-oss"
-	echo "installed_ide=\"code\"" >> $config_file
+	echo "installed_ide=\"code\"" >> "$config_file"
 	elif [[ ${ide_answer} == "2" ]]; then
 		package_install_and_check "geany"
-	echo "installed_ide=\"geany\"" >> $config_file
+	echo "installed_ide=\"geany\"" >> "$config_file"
 	elif [[ ${ide_answer} == "3" ]]; then
 		package_install_and_check "code-oss code-is-code-oss geany"
-	echo "installed_ide=\"both\"" >> $config_file
+	echo "installed_ide=\"both\"" >> "$config_file"
 	elif [[ ${ide_answer} == "4" ]]; then
-    echo "${R}[${C}-${R}]${C} Skipping Ide Installation..."${W}
+    echo "${R}[${C}-${R}]${C} Skipping Ide Installation...${W}"
 	echo
-	echo "installed_ide=\"skip\"" >> $config_file
+	echo "installed_ide=\"skip\"" >> "$config_file"
 	sleep 2
 	else
 		package_install_and_check "code-oss code-is-code-oss"
-	echo "installed_ide=\"code\"" >> $config_file
+	echo "installed_ide=\"code\"" >> "$config_file"
 	fi
 }
 
@@ -2091,21 +2110,21 @@ function media_player_installer() {
 	banner
 	if [[ ${player_answer} == "1" ]]; then
 		package_install_and_check "vlc-qt-static"
-	echo "installed_media_player=\"vlc\"" >> $config_file
+	echo "installed_media_player=\"vlc\"" >> "$config_file"
 	elif [[ ${player_answer} == "2" ]]; then
 		package_install_and_check "audacious"
-	echo "installed_media_player=\"audacious\"" >> $config_file
+	echo "installed_media_player=\"audacious\"" >> "$config_file"
 	elif [[ ${player_answer} == "3" ]]; then
 		package_install_and_check "vlc-qt-static audacious"
-	echo "installed_media_player=\"both\"" >> $config_file
+	echo "installed_media_player=\"both\"" >> "$config_file"
 	elif [[ ${player_answer} == "4" ]]; then
-    echo "${R}[${C}-${R}]${C} Skipping Media Player Installation..."${W}
+    echo "${R}[${C}-${R}]${C} Skipping Media Player Installation...${W}"
 	echo
 	sleep 2
-	echo "installed_media_player=\"skip\"" >> $config_file
+	echo "installed_media_player=\"skip\"" >> "$config_file"
 	else
 		package_install_and_check "vlc-qt-static"
-	echo "installed_media_player=\"vlc\"" >> $config_file
+	echo "installed_media_player=\"vlc\"" >> "$config_file"
 	fi
 }
 
@@ -2119,21 +2138,21 @@ function photo_editor_installer() {
 	banner
 	if [[ ${photo_editor_answer} == "1" ]]; then
 		package_install_and_check "gimp"
-	echo "installed_photo_editor=\"gimp\"" >> $config_file
+	echo "installed_photo_editor=\"gimp\"" >> "$config_file"
 	elif [[ ${photo_editor_answer} == "2" ]]; then
 		package_install_and_check "inkscape"
-	echo "installed_photo_editor=\"inkscape\"" >> $config_file
+	echo "installed_photo_editor=\"inkscape\"" >> "$config_file"
 	elif [[ ${photo_editor_answer} == "3" ]]; then
 		package_install_and_check "gimp inkscape"
-	echo "installed_photo_editor=\"both\"" >> $config_file
+	echo "installed_photo_editor=\"both\"" >> "$config_file"
 	elif [[ ${photo_editor_answer} == "4" ]]; then
-    echo "${R}[${C}-${R}]${C} Skipping Photo Editor Installation..."${W}
+    echo "${R}[${C}-${R}]${C} Skipping Photo Editor Installation...${W}"
 	echo
 	sleep 2
-	echo "installed_photo_editor=\"skip\"" >> $config_file
+	echo "installed_photo_editor=\"skip\"" >> "$config_file"
 	else
 		package_install_and_check "gimp"
-	echo "installed_photo_editor=\"gimp\"" >> $config_file
+	echo "installed_photo_editor=\"gimp\"" >> "$config_file"
 	fi
 
 }
@@ -2148,15 +2167,15 @@ function setup_synaptic() {
 	banner
     if [[ "$synaptic_answer" == "n" ]]; then
 	banner
-    echo "${R}[${C}-${R}]${C} Skipping Synaptic Setup.."${W}
+    echo "${R}[${C}-${R}]${C} Skipping Synaptic Setup..${W}"
 	echo
     sleep 1.5
 	else
-	echo "${R}[${C}-${R}]${G} Installing Synaptic Graphical Package Manager..."${W}
+	echo "${R}[${C}-${R}]${G} Installing Synaptic Graphical Package Manager...${W}"
 	echo
 	package_install_and_check "synaptic"
 	fi
-	echo "install_synaptic=\"$synaptic_answer\"" >> $config_file
+	echo "install_synaptic=\"$synaptic_answer\"" >> "$config_file"
 }
 
 #########################################################################
@@ -2176,12 +2195,12 @@ function get_shellrc_path() {
 function setup_zsh() {
 	banner
     if [[ "$zsh_answer" == "n" ]]; then
-	echo "${R}[${C}-${R}]${C} Canceling Zsh Setup..."${W}
+	echo "${R}[${C}-${R}]${C} Canceling Zsh Setup...${W}"
     sleep 1.5
 	shell_name="bash"
 	else
 	shell_name="zsh"
-	echo "${R}[${C}-${R}]${G}${BOLD} Configuring Zsh.."${W}
+	echo "${R}[${C}-${R}]${G}${BOLD} Configuring Zsh..${W}"
 	echo
 	package_install_and_check "zsh git"
 	wget --tries=5 --retry-connrefused https://raw.githubusercontent.com/sabamdarif/simple-linux-scripts/main/install-zsh.sh
@@ -2194,23 +2213,23 @@ function setup_zsh() {
 	clear
 	fi
 	get_shellrc_path
-	echo "zsh_answer=\"$zsh_answer\"" >> $config_file
+	echo "zsh_answer=\"$zsh_answer\"" >> "$config_file"
 }
 
 function terminal_utility_setup() {
 	if [[ "$terminal_utility_setup_answer" == "n" ]]; then
     banner
-	echo "${R}[${C}-${R}]${C} Skipping Terminal Utility Setup..."${W}
+	echo "${R}[${C}-${R}]${C} Skipping Terminal Utility Setup...${W}"
 	echo
 	else
 	banner
-	echo "${R}[${C}-${R}]${C}${BOLD} Configuring Terminal Utility For Termux..."${W}
+	echo "${R}[${C}-${R}]${C}${BOLD} Configuring Terminal Utility For Termux...${W}"
 	echo
 	package_install_and_check "bat eza zoxide fastfetch openssh fzf"
 	check_and_backup "$PREFIX/etc/motd"
 	check_and_backup "$PREFIX/etc/motd-playstore"
     check_and_backup "$PREFIX/etc/motd.sh"
-	wget --tries=5 --retry-connrefused -O $PREFIX/etc/motd.sh https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/other/motd.sh
+	wget --tries=5 --retry-connrefused -O "$PREFIX/etc/motd.sh" https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/other/motd.sh
 	if grep -q "motd.sh$" "$PREFIX/etc/termux-login.sh"; then
 	sed -i "s|.*motd\.sh$|bash $PREFIX/etc/motd.sh|" "$PREFIX/etc/termux-login.sh"
     else
@@ -2218,14 +2237,14 @@ function terminal_utility_setup() {
     fi
 	check_and_create_directory "$HOME/.termux"
 	check_and_backup "$HOME/.termux/colors.properties $HOME/.termux/termux.properties $HOME/.aliases"
-	wget --tries=5 --retry-connrefused -O $HOME/.termux/termux.properties https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/other/termux.properties
-	wget --tries=5 --retry-connrefused -O $HOME/.aliases https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/other/.aliases
-	wget --tries=5 --retry-connrefused -O $HOME/.termux/colors.properties https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/other/colors.properties
-	wget --tries=5 --retry-connrefused -O $PREFIX/bin/termux-ssh https://raw.githubusercontent.com/sabamdarif/simple-linux-scripts/main/termux-ssh \
-		&& chmod +x $PREFIX/bin/termux-ssh
-	cp $shell_rc_file ${shell_rc_file}-2
+	wget --tries=5 --retry-connrefused -O "$HOME/.termux/termux.properties" https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/other/termux.properties
+	wget --tries=5 --retry-connrefused -O "$HOME/.aliases" https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/other/.aliases
+	wget --tries=5 --retry-connrefused -O "$HOME/.termux/colors.properties" https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/other/colors.properties
+	wget --tries=5 --retry-connrefused -O "$PREFIX/bin/termux-ssh" https://raw.githubusercontent.com/sabamdarif/simple-linux-scripts/main/termux-ssh \
+		&& chmod +x "$PREFIX/bin/termux-ssh"
+	cp "$shell_rc_file" "${shell_rc_file}-2"
 	check_and_backup "$shell_rc_file"
-	mv ${shell_rc_file}-2 ${shell_rc_file}
+	mv "${shell_rc_file}-2" "${shell_rc_file}"
 cat <<'EOF' >> "$shell_rc_file"
 #######################################################
 # SPECIAL FUNCTIONS
@@ -2317,7 +2336,8 @@ EOF
 	fi
 cat <<EOF >> "$shell_rc_file"
 # print your current termux-desktop configuration
-alias 'tdconfig'='cat $config_file'
+alias 'tdconfig'='cat "$config_file"'
+source $HOME/.aliases
 EOF
 if [[ "$distro_add_answer" == "y" ]]; then
 cat <<EOF >> "$shell_rc_file"
@@ -2325,7 +2345,7 @@ cat <<EOF >> "$shell_rc_file"
 alias 'pdapps'='cd /data/data/com.termux/files/usr/share/applications/pd_added && ls'
 EOF
 fi
-echo "terminal_utility_setup_answer=\"$terminal_utility_setup_answer\"" >> $config_file
+echo "terminal_utility_setup_answer=\"$terminal_utility_setup_answer\"" >> "$config_file"
 }
 
 #########################################################################
@@ -2337,7 +2357,7 @@ echo "terminal_utility_setup_answer=\"$terminal_utility_setup_answer\"" >> $conf
 function setup_fonts() {
 	if [[ "$terminal_utility_setup_answer" == "y" ]]; then
 	banner
-	echo "${R}[${C}-${R}]${G}${BOLD} Installing Fonts..."${W}
+	echo "${R}[${C}-${R}]${G}${BOLD} Installing Fonts...${W}"
 	package_install_and_check "nerdfix fontconfig-utils"
 	check_and_create_directory "$HOME/.termux"
 	check_and_create_directory "$HOME/.fonts"
@@ -2345,10 +2365,11 @@ function setup_fonts() {
 	download_and_extract "https://github.com/ryanoasis/nerd-fonts/releases/download/v3.2.1/0xProto.zip" "$HOME/.fonts"
 	clear
 	check_and_delete "$HOME/.fonts/README.md $HOME/.fonts/LICENSE"
-	cp $HOME/.fonts/0xProtoNerdFont-Regular.ttf $HOME/.termux/font.ttf
+	cp "$HOME/.fonts/0xProtoNerdFont-Regular.ttf" "$HOME/.termux/font.ttf"
 	fc-cache -f
 	check_and_create_directory "$HOME/.config/fastfetch"
-	wget --tries=5 --retry-connrefused -O $HOME/.config/fastfetch/config.jsonc https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/other/config.jsonc 
+	banner
+	wget --tries=5 --retry-connrefused -O "$HOME/.config/fastfetch/config.jsonc" https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/other/config.jsonc 
 	fi
 }
 
@@ -2359,7 +2380,7 @@ function setup_fonts() {
 #########################################################################
 
 function wine_shortcut() {
-cat << EOF > $PREFIX/share/applications/wine-explorer.desktop
+cat << EOF > "$PREFIX/share/applications/wine-explorer.desktop"
 [Desktop Entry]
 Name=Wine File
 Comment=Wine File Browser
@@ -2372,8 +2393,8 @@ Type=Application
 Categories=X-Wine;
 X-Desktop-File-Install-Version=0.26
 EOF
-chmod +x $PREFIX/share/applications/wine-explorer.desktop
-cat << EOF > $PREFIX/share/applications/wine-winecfg.desktop
+chmod +x "$PREFIX/share/applications/wine-explorer.desktop"
+cat << EOF > "$PREFIX/share/applications/wine-winecfg.desktop"
 [Desktop Entry]
 Name=Wine Configuration
 Comment=Interface to set wine parameters
@@ -2388,8 +2409,8 @@ StartupWMClass=winecfg.exe
 Categories=X-Wine;
 X-Desktop-File-Install-Version=0.26
 EOF
-chmod +x $PREFIX/share/applications/wine-winecfg.desktop
-cat << EOF > $PREFIX/share/applications/wine-uninstaller.desktop
+chmod +x "$PREFIX/share/applications/wine-winecfg.desktop"
+cat << EOF > "$PREFIX/share/applications/wine-uninstaller.desktop"
 [Desktop Entry]
 Name=Wine Software Uninstaller
 Comment=Interface to uninstall software
@@ -2404,8 +2425,8 @@ StartupWMClass=uninstaller.exe
 Categories=X-Wine;
 X-Desktop-File-Install-Version=0.26
 EOF
-chmod +x $PREFIX/share/applications/wine-uninstaller.desktop
-cat << EOF > $PREFIX/share/applications/wine-regedit.desktop
+chmod +x "$PREFIX/share/applications/wine-uninstaller.desktop"
+cat << EOF > "$PREFIX/share/applications/wine-regedit.desktop"
 [Desktop Entry]
 Name=Regedit
 Comment=Wine registry editor
@@ -2420,8 +2441,8 @@ StartupWMClass=regedit.exe
 Categories=X-Wine;
 X-Desktop-File-Install-Version=0.26
 EOF
-chmod +x $PREFIX/share/applications/wine-regedit.desktop
-cat << EOF > $PREFIX/share/applications/wine-wineboot.desktop
+chmod +x "$PREFIX/share/applications/wine-regedit.desktop"
+cat << EOF > "$PREFIX/share/applications/wine-wineboot.desktop"
 [Desktop Entry]
 Name=Wine Boot
 Comment=Simulate restart
@@ -2434,43 +2455,43 @@ Type=Application
 Categories=X-Wine;
 X-Desktop-File-Install-Version=0.26
 EOF
-chmod +x $PREFIX/share/applications/wine-wineboot.desktop
+chmod +x "$PREFIX/share/applications/wine-wineboot.desktop"
 }
 
 function setup_wine() {
 	banner
     if [[ "$wine_answer" == "1" ]]; then
-	echo "${R}[${C}-${R}]${G}${BOLD} Installing Wine Natively In Termux"${W}
+	echo "${R}[${C}-${R}]${G}${BOLD} Installing Wine Natively In Termux${W}"
 	echo
 	package_install_and_check "wine-stable winetricks"
 	wine_shortcut
-	echo "setup_wine=\"default-wine\"" >> $config_file
+	echo "setup_wine=\"default-wine\"" >> "$config_file"
 	elif [[ "$wine_answer" == "2" ]]; then
-	echo "${R}[${C}-${R}]${G}${BOLD} Addind Mobox Launch Option To Termux"${W}
+	echo "${R}[${C}-${R}]${G}${BOLD} Addind Mobox Launch Option To Termux${W}"
 	echo
-	echo "${R}[${C}-${R}]${C}${BOLD} After the installation finishes, make sure to install Mobox using their official instructions"${W}
+	echo "${R}[${C}-${R}]${C}${BOLD} After the installation finishes, make sure to install Mobox using their official instructions${W}"
 	echo
-	echo "${R}[${C}-${R}]${G}${BOLD} Mobox:- ${C}https://github.com/olegos2/mobox"${W}
+	echo "${R}[${C}-${R}]${G}${BOLD} Mobox:- ${C}https://github.com/olegos2/mobox${W}"
 	echo
 	sleep 4
-	wget --tries=5 --retry-connrefused -O $PREFIX/bin/wine https://raw.githubusercontent.com/LinuxDroidMaster/Termux-Desktops/main/scripts/termux_native/mobox_run.sh
-	chmod +x $PREFIX/bin/wine
+	wget --tries=5 --retry-connrefused -O "$PREFIX/bin/wine https://raw.githubusercontent.com/LinuxDroidMaster/Termux-Desktops/main/scripts/termux_native/mobox_run.sh"
+	chmod +x "$PREFIX/bin/wine"
 	wine_shortcut
-	cp $PREFIX/share/applications/wine-explorer.desktop $HOME/Desktop/MoboxExplorer.desktop
-	echo "setup_wine=\"mobox\"" >> $config_file
+	cp "$PREFIX/share/applications/wine-explorer.desktop" "$HOME/Desktop/MoboxExplorer.desktop"
+	echo "setup_wine=\"mobox\"" >> "$config_file"
 	elif [[ "$wine_answer" == "3" ]]; then
 	package_install_and_check "hangover hangover-wine winetricks"
 	wine_shortcut
-	echo "setup_wine=\"hangover-wine\"" >> $config_file
+	echo "setup_wine=\"hangover-wine\"" >> "$config_file"
 	elif [[ "$wine_answer" == "4" ]]; then
-	echo "${R}[${C}-${R}]${C} Skipping wine Installation..."${W}
-	echo "setup_wine=\"skip\"" >> $config_file
+	echo "${R}[${C}-${R}]${C} Skipping wine Installation...${W}"
+	echo "setup_wine=\"skip\"" >> "$config_file"
 	else
-    echo "${R}[${C}-${R}]${G} Installing Wine Natively In Termux"${W}
+    echo "${R}[${C}-${R}]${G} Installing Wine Natively In Termux${W}"
 	echo
 	package_install_and_check "wine-stable winetricks"
 	wine_shortcut
-	echo "setup_wine=\"default-wine\"" >> $config_file
+	echo "setup_wine=\"default-wine\"" >> "$config_file"
 	fi
 }
 
@@ -2481,9 +2502,9 @@ function setup_wine() {
 #########################################################################
 
 function add_vnc_autostart() {
-	echo "${R}[${C}-${R}]${G}${BOLD} Adding vnc to autostart"${W}
-	if grep -q "^vncstart" $shell_rc_file; then
-	echo "${R}[${C}-${R}]${G} Termux:X11 start already exist"${W}
+	echo "${R}[${C}-${R}]${G}${BOLD} Adding vnc to autostart${W}"
+	if grep -q "^vncstart" "$shell_rc_file"; then
+	echo "${R}[${C}-${R}]${G} Termux:X11 start already exist${W}"
 	else
 cat << EOF >> "$shell_rc_file"
 # Start Vnc
@@ -2496,9 +2517,9 @@ EOF
 }
 
 function add_tx11_autostart() {
-	echo "${R}[${C}-${R}]${G}${BOLD} Adding Termux:x11 to autostart"${W}
-	if grep -q "^tx11start" $shell_rc_file; then
-	echo "${R}[${C}-${R}]${G} Termux:X11 start already exist"${W}
+	echo "${R}[${C}-${R}]${G}${BOLD} Adding Termux:x11 to autostart${W}"
+	if grep -q "^tx11start" "$shell_rc_file"; then
+	echo "${R}[${C}-${R}]${G} Termux:X11 start already exist${W}"
 	else
 cat << EOF >> "$shell_rc_file"
 # Start Termux:X11
@@ -2529,7 +2550,7 @@ function add_to_autostart() {
 		add_tx11_autostart
 	   fi
 	fi
-	echo "de_on_startup=\"$de_on_startup\"" >> $config_file
+	echo "de_on_startup=\"$de_on_startup\"" >> "$config_file"
 }
 
 
@@ -2540,7 +2561,7 @@ function add_to_autostart() {
 #########################################################################
 function cleanup_cache() {
 	banner
-	echo "${R}[${C}-${R}]${G} Cleaning up the cache..."${W}
+	echo "${R}[${C}-${R}]${G} Cleaning up the cache...${W}"
 	if [[ "$PACKAGE_MANAGER" == "pacman" ]]; then
 	pacman -Scc
 	else
@@ -2562,7 +2583,7 @@ termux_desktop_path="$PREFIX/etc/termux-desktop"
 config_file="$termux_desktop_path/configuration"
 EOF
 declare -f check_termux debug check_and_create_directory check_and_delete check_and_backup check_and_restore package_install_and_check package_check_and_remove get_file_name_number extract_archive download_and_extract count_subfolders confirmation_y_or_n get_latest_release >> "$PREFIX/etc/termux-desktop/common_functions"
-chmod +x $PREFIX/etc/termux-desktop/common_functions
+chmod +x "$PREFIX/etc/termux-desktop/common_functions"
 }
 
 function delete_installer_file() {
@@ -2571,26 +2592,26 @@ function delete_installer_file() {
 	    if [[ -f "${current_path}/setup-termux-desktop" ]]; then
 		(exec rm -- "${current_path}/setup-termux-desktop") &
 		else
-		echo "${R}[${R}☓${R}]${R}Installer file not found"${W}
+		echo "${R}[${R}☓${R}]${R}Installer file not found${W}"
 		fi
 	fi
 }
 
 function notes() {
 	banner
-	echo "${R}[${C}-${R}]${G}${BOLD} Installation Successfull..."${W}
+	echo "${R}[${C}-${R}]${G}${BOLD} Installation Successfull...${W}"
 	echo
 	sleep 2
-	echo "${R}[${C}-${R}]${C}${BOLD} Now Restart Termux ${G}(Must)"${W}
+	echo "${R}[${C}-${R}]${C}${BOLD} Now Restart Termux ${G}(Must)${W}"
 	echo
-	echo "${R}[${C}-${R}]${C}${BOLD} See Uses Section in github to know how to use it"${W}
+	echo "${R}[${C}-${R}]${C}${BOLD} See Uses Section in github to know how to use it${W}"
 	echo
-	echo "${R}[${C}-${R}]${C} URL:- ${B}https://github.com/sabamdarif/termux-desktop/blob/main/README.md#uses"${W}
+	echo "${R}[${C}-${R}]${C} URL:- ${B}https://github.com/sabamdarif/termux-desktop/blob/main/README.md#uses${W}"
 	echo
 	if [[ "$distro_add_answer" == "y" ]]; then
-	echo "${R}[${C}-${R}]${C}${BOLD} See how to use Linux distro container"${W}
+	echo "${R}[${C}-${R}]${C}${BOLD} See how to use Linux distro container${W}"
 	echo
-	echo "${R}[${C}-${R}]${C} URL:- ${B}https://github.com/sabamdarif/termux-desktop/blob/main/proot-caontainer.md"${W}
+	echo "${R}[${C}-${R}]${C} URL:- ${B}https://github.com/sabamdarif/termux-desktop/blob/main/proot-caontainer.md${W}"
 	fi
 }
 
@@ -2602,18 +2623,18 @@ function notes() {
 
 function remove_termux_desktop() {
 	if [[ ! -e "$config_file" ]]; then
-	echo "${R}[${C}-${R}]${C}${BOLD} Please Install Termux Desktop First"${W}
+	echo "${R}[${C}-${R}]${C}${BOLD} Please Install Termux Desktop First${W}"
 	exit 0
 	else
 	banner
-	echo "${R}[${C}-${R}]${R}${BOLD} Remove Termux Desktop"${W}
+	echo "${R}[${C}-${R}]${R}${BOLD} Remove Termux Desktop${W}"
 	echo ""
 	confirmation_y_or_n "Are You Sure You Want To Remove Termux Desktop Completely" ask_remove
 	if [[ "$ask_remove" == "n" ]]; then
-	echo "${R}[${C}-${R}]${G}${BOLD} Canceling..."${W}
+	echo "${R}[${C}-${R}]${G}${BOLD} Canceling...${W}"
 	exit 0
 	else
-	echo "${R}[${C}-${R}]${R}${BOLD} Removeing Termux Desktop"${W}
+	echo "${R}[${C}-${R}]${R}${BOLD} Removeing Termux Desktop${W}"
 	sleep 3
 	read_conf
 	#remove basic packages
@@ -2683,7 +2704,7 @@ function remove_termux_desktop() {
 	if [[ "$setup_wine" == "default-wine" ]]; then
 	package_check_and_remove "wine winetricks"
 	elif [[ "$setup_wine" == "mobox" ]]; then
-	echo "${R}[${C}-${R}]${C}${BOLD} Make Sure To Uninstall Mobox Using Their Instruction"${W}
+	echo "${R}[${C}-${R}]${C}${BOLD} Make Sure To Uninstall Mobox Using Their Instruction${W}"
 	check_and_delete "$HOME/Desktop/MoboxExplorer.desktop"
 	sleep 4
 	elif [[ "$setup_wine" == "hangover-wine" ]]; then
@@ -2708,7 +2729,7 @@ function remove_termux_desktop() {
 	package_check_and_remove "mesa-zink virglrenderer-mesa-zink vulkan-loader-android angle-android virglrenderer-android mesa-vulkan-icd-freedreno mesa-vulkan-icd-wrapper mesa-zink"
 	#remove distro container
 	if [[ "$distro_add_answer" == "y" ]]; then
-	proot-distro remove $selected_distro
+	proot-distro remove "$selected_distro"
 	proot-distro clear-cache
 	package_check_and_remove "proot-distro"
 	check_and_delete "$PREFIX/bin/$selected_distro $PREFIX/bin/pdrun"
@@ -2727,7 +2748,7 @@ function remove_termux_desktop() {
 	fi
 	check_and_delete "$PREFIX/etc/termux-desktop $PREFIX/bin/setup-termux-desktop"
 	clear
-	echo "${R}[${C}-${R}]${G}${BOLD} Everything remove successfully"${W}
+	echo "${R}[${C}-${R}]${G}${BOLD} Everything remove successfully${W}"
 	fi
 	fi
 }
@@ -2740,32 +2761,32 @@ function remove_termux_desktop() {
 
 function gui_check_up() {
 termux_x11_pid=$(pgrep -f /system/bin/app_process.*com.termux.x11.Loader)
-de_pid=$(pgrep -f "$de_startup")
+de_pid=$(pgrep -f $de_startup)
 if [ -n "$termux_x11_pid" ] || [ -n "$de_pid" ] >/dev/null 2>&1; then
-echo "${G}Please Stop The Gui Desktop Server First"${W}
+echo "${G}Please Stop The Gui Desktop Server First${W}"
 exit 0
 fi
 }
 
 function change_style() {
 	if [[ ! -e "$config_file" ]]; then
-	echo -e "${C} It look like you haven't install the desktop yet\n Please install the desktop first"${W}
+	echo -e "${C} It look like you haven't install the desktop yet\n Please install the desktop first${W}"
 	exit 0
 	else
 	gui_check_up
 	read_conf
 	banner
-	echo "${R}[${C}-${R}]${G} Your currently installed style is ${C}${BOLD}$style_name "${W}
+	echo "${R}[${C}-${R}]${G} Your currently installed style is ${C}${BOLD}$style_name ${W}"
 	echo
 	sleep 2
 	questions_theme_select
 	rm -rf ~/.cache/sessions/x*
 	setup_config
 	banner
-	echo "${R}[${C}-${R}]${G} Style changed successfully"${W}
+	echo "${R}[${C}-${R}]${G} Style changed successfully${W}"
 	echo
 	read_conf
-	echo "${R}[${C}-${R}]${G} Your currently installed style is ${C}${BOLD}$style_name "${W}
+	echo "${R}[${C}-${R}]${G} Your currently installed style is ${C}${BOLD}$style_name ${W}"
 	fi
 }
 
@@ -2821,7 +2842,7 @@ function change_hw() {
 
 function change_distro() {
 	if [[ ! -e "$config_file" ]]; then
-	echo -e "${C} It look like you haven't install the desktop yet\n Please install the desktop first"${W}
+	echo -e "${C} It look like you haven't install the desktop yet\n Please install the desktop first${W}"
 	exit 0
 	else
 	read_conf
@@ -2830,41 +2851,41 @@ function change_distro() {
 	    if [[ -d "$PREFIX/var/lib/proot-distro/installed-rootfs/$selected_distro" ]] ;then
 		echo "${R}[${C}-${R}]${G} Your currently installed distro is :${C}${BOLD}${selected_distro}${W}"
 		echo
-		echo "${R}[${C}-${R}]${R} Changing distro will delete all the data from your previous distro"${W}
+		echo "${R}[${C}-${R}]${R} Changing distro will delete all the data from your previous distro${W}"
 		echo
 		confirmation_y_or_n "Do you want to continue" distro_change_confirmation
 		    if [[ "$distro_change_confirmation" == "y" ]]; then
 			choose_distro
-			echo "${R}[${C}-${R}]${G} Removing $selected_distro and it's data"${W}
+			echo "${R}[${C}-${R}]${G} Removing $selected_distro and it's data${W}"
 			pd remove $selected_distro
-			rm -rf $PREFIX/share/applications/pd_added
-			rm $PREFIX/bin/$selected_distro
-			pd_hw_method=$(grep 'selected_pd_hw_method=' $PREFIX/bin/pdrun | sed -e 's/.*selected_pd_hw_method="\([^"]*\)".*/\1/')
+			check_and_delete "$PREFIX/share/applications/pd_added"
+			check_and_delete "$PREFIX/bin/$selected_distro"
+			pd_hw_method=$(grep 'selected_pd_hw_method=' "$PREFIX/bin/pdrun" | sed -e 's/.*selected_pd_hw_method="\([^"]*\)".*/\1/')
 			if [[ "$pd_audio_config_answer" == "y" ]]; then
-			rm $HOME/.${selected_distro}-sound-access
+			rm "$HOME/.${selected_distro}-sound-access"
 			fi
 			echo
-			distro_container_setup
+			distro_container_setup "$1" "$2"
 			else
-			echo "${R}[${C}-${R}]${C} Canceling distro change process..."${W}
+			echo "${R}[${C}-${R}]${C} Canceling distro change process...${W}"
 			sleep 2
 			exit 0
 			fi
 	     fi
 	else
-		echo "${R}[${C}-${R}]${G} It look like you haven't install any distro yet"${W}
+		echo "${R}[${C}-${R}]${G} It look like you haven't install any distro yet${W}"
 		echo
-		echo "${R}[${C}-${R}]${G}${BOLD} Do you want to add a Linux distro container (proot distro)"${W}
+		echo "${R}[${C}-${R}]${G}${BOLD} Do you want to add a Linux distro container (proot distro)${W}"
 		echo
-		echo "${R}[${C}-${R}]${G} It will help you to install those app which are not avilable in termux"${W}
+		echo "${R}[${C}-${R}]${G} It will help you to install those app which are not avilable in termux${W}"
 		echo
-		echo "${R}[${C}-${R}]${G} You can launch those installed apps from termux like other apps"${W}
+		echo "${R}[${C}-${R}]${G} You can launch those installed apps from termux like other apps${W}"
 		echo
 		confirmation_y_or_n "Do you want to continue" distro_add_answer
-		echo "distro_add_answer=\"$distro_add_answer\"" >> $config_file
+		echo "distro_add_answer=\"$distro_add_answer\"" >> "$config_file"
 			distro_questions
 			distro_hw_questions
-			distro_container_setup
+			distro_container_setup "$1" "$2"
 	fi
 	fi
 }
@@ -2894,20 +2915,20 @@ function change_autostart() {
     if [[ "$de_on_startup" == "y" ]]; then
         if grep -q "^vncstart" "$shell_rc_file"; then
             sed -i '/# Start Vnc/,/fi/d' "$shell_rc_file"
-			echo "de_on_startup=\"n\"" >> $config_file
+			echo "de_on_startup=\"n\"" >> "$config_file"
         elif grep -q "^tx11start" "$shell_rc_file"; then
             sed -i '/# Start Termux:X11/,/fi/d' "$shell_rc_file"
-			echo "de_on_startup=\"n\"" >> $config_file
+			echo "de_on_startup=\"n\"" >> "$config_file"
         fi
 	elif [[ "$de_on_startup" == "n" ]]; then
 	    if [[ "$de_on_startup" == "y" && "$gui_mode" == "3" ]]; then
-		echo "${R}[${C}-${R}]${G} You chose both vnc and termux:x11 to access gui mode"${W}
+		echo "${R}[${C}-${R}]${G} You chose both vnc and termux:x11 to access gui mode${W}"
 		echo
-		echo "${R}[${C}-${R}]${G} Which will be your default"${W}
+		echo "${R}[${C}-${R}]${G} Which will be your default${W}"
 		echo
-		echo "${Y}1. Termux:x11"${W}
+		echo "${Y}1. Termux:x11${W}"
 		echo
-		echo "${Y}2. Vnc"${W}
+		echo "${Y}2. Vnc${W}"
 		echo
 		select_an_option 2 1 autostart_gui_mode
 		fi
@@ -2927,15 +2948,16 @@ function reinstall_themes() {
 	tmp_themes_folder="$PREFIX/tmp/themes"
 	check_and_create_directory "$tmp_themes_folder"
 	read_conf
-	echo "${R}[${C}-${R}]${G} Reinstalling Themes..."${W}
+	echo "${R}[${C}-${R}]${G} Reinstalling Themes...${W}"
 	download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/${de_name}/look_${style_answer}/theme.tar.gz" "$tmp_themes_folder"
-	local theme_names=$(ls $tmp_themes_folder)
-	local themes_theme
+	local theme_names
+	theme_names=$(ls "$tmp_themes_folder")
+	local theme_name
 	for theme_name in $theme_names; do
 	check_and_delete "$themes_folder/$theme_name"
-	mv $tmp_themes_folder/$theme_name $themes_folder/
+	mv "$tmp_themes_folder/$theme_name" "$themes_folder/"
 	done
-	echo "${R}[${C}-${R}]${G}${BOLD} Themes reinstall successfully"${W}
+	echo "${R}[${C}-${R}]${G}${BOLD} Themes reinstall successfully${W}"
 }
 
 #########################################################################
@@ -2953,20 +2975,21 @@ function reinstall_icons() {
 	if [[ "$style_answer" == "2" ]]; then
 	package_install_and_check "fluent-icon-theme"
 	else
-	echo "${R}[${C}-${R}]${G} Reinstalling Icons..."${W}
+	echo "${R}[${C}-${R}]${G} Reinstalling Icons...${W}"
 	download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/${de_name}/look_${style_answer}/icon.tar.gz" "$tmp_icons_folder"
-	local icon_themes_names=$(ls $tmp_icons_folder)
+	local icon_themes_names
+	icon_themes_names=$(ls "$tmp_icons_folder")
 	local icon_theme
 	for icon_theme in $icon_themes_names; do
 	check_and_delete "$icons_folder/$icon_theme"
-	mv $tmp_icons_folder/$icon_theme $icons_folder/
-	echo "${R}[${C}-${R}]${G} Creating icon cache..."${W}
+	mv "$tmp_icons_folder/$icon_theme" "$icons_folder/"
+	echo "${R}[${C}-${R}]${G} Creating icon cache...${W}"
 	if [[ "$de_name" == "xfce" ]]; then
-	gtk-update-icon-cache -f -t $icons_folder/$icons_theme
+	gtk-update-icon-cache -f -t "$icons_folder/$icons_theme"
 	fi
-	gtk-update-icon-cache -f -t $PREFIX/share/icons/$icons_theme
+	gtk-update-icon-cache -f -t "$PREFIX/share/icons/$icons_theme"
 	done
-	echo "${R}[${C}-${R}]${G}${BOLD} Icons reinstall successfully"${W}
+	echo "${R}[${C}-${R}]${G}${BOLD} Icons reinstall successfully${W}"
 	fi
 }
 
@@ -2981,15 +3004,16 @@ function reinstall_config() {
 	tmp_config_folder="$PREFIX/tmp/config"
 	check_and_create_directory "$tmp_config_folder"
 	read_conf
-	echo "${R}[${C}-${R}]${G} Reinstalling Config..."${W}
+	echo "${R}[${C}-${R}]${G} Reinstalling Config...${W}"
 	download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/${de_name}/look_${style_answer}/config.tar.gz" "$tmp_config_folder"
-	local config_file_names=$(ls $tmp_config_folder)
+	local config_file_names
+	config_file_names=$(ls "$tmp_config_folder")
 	local config_file
 	for config_file in $config_file_names; do
 	check_and_delete "$HOME/.config/$config_file"
-	mv $tmp_config_folder/$config_file $HOME/.config/
+	mv "$tmp_config_folder/$config_file" "$HOME/.config/"
 	done
-	echo "${R}[${C}-${R}]${G}${BOLD} Config reinstall successfully"${W}
+	echo "${R}[${C}-${R}]${G}${BOLD} Config reinstall successfully${W}"
 }
 
 #########################################################################
@@ -2998,26 +3022,32 @@ function reinstall_config() {
 #
 #########################################################################
 
+function disable_vblank_mode() {
+	if [[ "$de_name" == "xfce" ]]; then
+		sed -i 's|<property name="vblank_mode" type="string" value="auto"/>|<property name="vblank_mode" type="string" value="off"/>|' "$HOME/.config/xfce4/xfconf/xfce-perchannel-xml/xfwm4.xml"
+	fi
+}
+
 function some_fixes() {
 	termux-reload-settings
 
 	# samsung oneui-6 audio fixes
-	local device_brand_name=$(getprop ro.product.brand | cut -d ' ' -f 1)
+	local device_brand_name
+	device_brand_name=$(getprop ro.product.brand | cut -d ' ' -f 1)
 	if [[ $device_brand_name == samsung* && $android_version -ge 14 ]]; then
-    echo "LD_PRELOAD=/system/lib64/libskcodec.so" >> $shell_rc_file
+    grep -q "LD_PRELOAD=/system/lib64/libskcodec.so" "$shell_rc_file" || echo "LD_PRELOAD=/system/lib64/libskcodec.so" >> "$shell_rc_file"
 	fi
 
 	# tx11start and vncstart
 	if [[ $termux_hw_answer == "freedreno" ]]; then
 	sed -i 's/^[[:space:]]*&[[:space:]]*$/ /' "$PREFIX/bin/tx11start"
 	sed -i 's/^[[:space:]]*&[[:space:]]*$/ /' "$PREFIX/bin/vncstart"
+	disable_vblank_mode
 	fi
 
 	if [[ "$confirmation_mesa_vulkan_icd_wrapper" == "y" ]]; then
-		sed -i 's|<property name="vblank_mode" type="string" value="auto"/>|<property name="vblank_mode" type="string" value="off"/>|' "$HOME/.config/xfce4/xfconf/xfce-perchannel-xml/xfwm4.xml"
-
+		disable_vblank_mode
 		if [[ "$device_gpu_model" == "1" ]]; then
-		sed -i 's|eval "\${initialize_server}" > /dev/null 2>&1 &| |' $PREFIX/bin/pdrun
 		sed -i 's/^[[:space:]]*initialize_server="\s*"/ /' "$PREFIX/bin/pdrun"
 		fi
 
@@ -3034,13 +3064,15 @@ function some_fixes() {
 # add the basic details into a config file
 function print_basic_details() {
 	android_version=$(getprop ro.build.version.release)
-	local model="$(getprop ro.product.brand) $(getprop ro.product.model)"
-	local lotal_ram=$(free -htm | awk '/Mem:/ {print $2}')
+	local model
+	model="$(getprop ro.product.brand) $(getprop ro.product.model)"
+	local lotal_ram
+	lotal_ram=$(free -htm | awk '/Mem:/ {print $2}')
 	app_arch=$(uname -m)
 	supported_arch="$(getprop ro.product.cpu.abilist)"
 	net_condition="$(getprop gsm.network.type)"
 	country="$(getprop gsm.sim.operator.iso-country)"
-cat <<EOF > $config_file
+cat <<EOF > "$config_file"
 ####################################
 ########## Termux Desktop ##########
 ####################################
@@ -3068,41 +3100,44 @@ EOF
 # check for the changes in the installer file
 function check_for_update_and_update_installer() {
     if [[ -e "$PREFIX/bin/setup-termux-desktop" ]]; then
-        echo "${R}[${C}-${R}]${G} Checking for update..."${W}
+        echo "${R}[${C}-${R}]${G} Checking for update...${W}"
         echo
 
         check_and_create_directory "$termux_desktop_path"
-        local current_script_hash=$(curl -sL https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop | sha256sum | cut -d ' ' -f 1)
-        local local_script_hash=$(basename $(sha256sum $PREFIX/bin/setup-termux-desktop | cut -d ' ' -f 1))
+        local current_script_hash
+		current_script_hash=$(curl -sL https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop | sha256sum | cut -d ' ' -f 1)
+        local local_script_hash
+		local_script_hash=$(basename "$(sha256sum "$PREFIX/bin/setup-termux-desktop" | cut -d ' ' -f 1)")
 
         if [[ "$local_script_hash" != "$current_script_hash" ]]; then
             confirmation_y_or_n "You are using an old installer. Do you want to update it to the latest version" update_installer
 
             if [[ "$update_installer" == "y" ]]; then
 				check_and_create_directory "$PREFIX/etc/termux-desktop"
-                mv $PREFIX/bin/setup-termux-desktop $PREFIX/etc/termux-desktop/
+                mv "$PREFIX/bin/setup-termux-desktop" "$PREFIX/etc/termux-desktop/"
                 check_and_backup "$PREFIX/etc/termux-desktop/setup-termux-desktop"
-                curl -Lsf https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop -o $PREFIX/bin/setup-termux-desktop
-                chmod +x $PREFIX/bin/setup-termux-desktop
+                curl -Lsf https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop -o "$PREFIX/bin/setup-termux-desktop"
+                chmod +x "$PREFIX/bin/setup-termux-desktop"
                 add_common_function
                 termux-reload-settings
 
-                local new_local_script_hash=$(basename $(sha256sum $PREFIX/bin/setup-termux-desktop | cut -d ' ' -f 1))
+                local new_local_script_hash
+				new_local_script_hash=$(basename "$(sha256sum "$PREFIX/bin/setup-termux-desktop" | cut -d ' ' -f 1)")
                 if [[ "$new_local_script_hash" == "$current_script_hash" ]]; then
-                    echo "${R}[${C}-${R}]${G} Installer updated successfully"${W}
+                    echo "${R}[${C}-${R}]${G} Installer updated successfully${W}"
                     check_and_delete "$termux_desktop_path/skip_update_checkup"
                     exit 0
                 else
-                    echo "${R}[${C}-${R}]${G} Failed to update the installer"${W}
+                    echo "${R}[${C}-${R}]${G} Failed to update the installer${W}"
                     exit 0
                 fi
             elif [[ "$update_installer" == "n" ]]; then
-                echo "${R}[${C}-${R}]${G} Keeping the old installer"${W}
-                touch $termux_desktop_path/skip_update_checkup >/dev/null 2>&1
+                echo "${R}[${C}-${R}]${G} Keeping the old installer${W}"
+                touch "$termux_desktop_path/skip_update_checkup" >/dev/null 2>&1
                 exit 0
             fi
         else
-            echo -e "${R}[${C}-${R}]${G}${BOLD} Good job, you are using the latest installer"${W}
+            echo -e "${R}[${C}-${R}]${G}${BOLD} Good job, you are using the latest installer${W}"
         fi
     fi
 }
@@ -3112,13 +3147,13 @@ function check_and_add_installer() {
         if [[ ! -e "$termux_desktop_path/skip_update_checkup" ]] || [[ "$1" != "--update" ]]; then
             check_for_update_and_update_installer
         else
-            echo "${R}[${C}-${R}]${G}${BOLD} You paused the update"${W}
-            echo "${R}[${C}-${R}]${G}${BOLD} Use ${C}--update ${G}to re-start update"${W}
+            echo "${R}[${C}-${R}]${G}${BOLD} You paused the update${W}"
+            echo "${R}[${C}-${R}]${G}${BOLD} Use ${C}--update ${G}to re-start update${W}"
         fi
     else
-        echo "${R}[${C}-${R}]${G} Adding setup-termux-desktop installer to bin"${W}
-        curl -Lsf https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop -o $PREFIX/bin/setup-termux-desktop
-        chmod +x $PREFIX/bin/setup-termux-desktop
+        echo "${R}[${C}-${R}]${G} Adding setup-termux-desktop installer to bin${W}"
+        curl -Lsf https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop -o "$PREFIX/bin/setup-termux-desktop"
+        chmod +x "$PREFIX/bin/setup-termux-desktop"
     fi
 }
 
@@ -3135,10 +3170,10 @@ function reset_changes() {
     else
         read_conf
         banner
-        echo "${R}[${C}-${R}]${G} Removing $de_name Config..."${W}
+        echo "${R}[${C}-${R}]${G} Removing $de_name Config...${W}"
         set_config_dir
-		check_and_delete "$config_dirs"
-		shell_name=$($basename "$SHELL")
+		check_and_delete "${config_dirs}"
+		shell_name=$(basename "$SHELL")
         get_shellrc_path
 		if [[ "$distro_add_answer" == "y" ]]; then
             confirmation_y_or_n "Do you want to reset the Linux distro container as well?" conf_distro_reset
@@ -3169,13 +3204,13 @@ function reset_changes() {
 
         if [[ "$shell_name" == "zsh" ]]; then
             chsh -s bash
-            rm -rf $HOME/.oh-my-zsh
+            rm -rf "$HOME/.oh-my-zsh"
         fi
 
         check_and_delete "$shell_rc_file"
         check_and_restore "$shell_rc_file"
 		check_and_backup "$config_file"
-        touch $config_file
+        touch "$config_file"
         print_basic_details
 
         echo -e "${R}[${C}-${R}]${G}${BOLD} Reset successful.\n Now restart Termux.${W}"
@@ -3189,7 +3224,7 @@ function reset_changes() {
 #########################################################################
 check_termux
 if [[ -z "$1" ]] || [[ "$1" = "--install" ]] || [[ "$1" = "-i" ]]; then
-check_and_add_installer
+check_and_add_installer "$1"
 fi
 current_path=$(pwd)
 function install_termux_desktop() {
@@ -3200,7 +3235,7 @@ sleep 2
 termux-wake-lock
 sleep 2
 check_and_create_directory "$PREFIX/etc/termux-desktop"
-touch $config_file
+touch "$config_file"
 print_basic_details
 install_required_packages
 questions
@@ -3221,9 +3256,9 @@ setup_synaptic
 setup_wine
 if [[ "$style_answer" == "0" ]]; then
     banner
-	echo "${R}[${C}-${R}]${G}${BOLD} Configuring Stock $de_name Style..."${W}
+	echo "${R}[${C}-${R}]${G}${BOLD} Configuring Stock $de_name Style...${W}"
 	echo
-	echo "style_name=\"Stock\"" >> $config_file
+	echo "style_name=\"Stock\"" >> "$config_file"
 else
 setup_config
 fi
@@ -3297,7 +3332,7 @@ case $1 in
                 change_style
                 ;;
 			distro|pd)
-                change_distro
+                change_distro "$1" "$2"
                 ;;
 			hw|hwa)
                 change_hw
@@ -3309,8 +3344,8 @@ case $1 in
 			    show_change_help
                 ;;
             *)
-                echo "${R}[${R}☓${R}]${R}${BOLD} Invalid option: ${C}$2"${W}
-				echo "${R}[${C}-${R}]${G} Use --change help to show help"${W}
+                echo "${R}[${R}☓${R}]${R}${BOLD} Invalid option: ${C}$2${W}"
+				echo "${R}[${C}-${R}]${G} Use --change help to show help${W}"
                 ;;
         esac
         ;;
@@ -3332,8 +3367,8 @@ case $1 in
                     exit
                     ;;
                 *)
-                    echo "${R}[${R}☓${R}]${R}${BOLD} Invalid option: ${C}$option"${W}
-					echo "${R}[${C}-${R}]${G} Use --reinstall help to show help"${W}
+                    echo "${R}[${R}☓${R}]${R}${BOLD} Invalid option: ${C}$option${W}"
+					echo "${R}[${C}-${R}]${G} Use --reinstall help to show help${W}"
                     ;;
             esac
         done

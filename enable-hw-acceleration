@@ -2,7 +2,7 @@
 
 function check_termux() {
 	if [[ $HOME != *termux* ]]; then
-	echo "${R}[${R}☓${R}]${R}${BOLD}Please run it inside termux"${W}
+	echo "${R}[${R}☓${R}]${R}${BOLD}Please run it inside termux${W}"
 	exit 0
 	fi
 }
@@ -19,14 +19,14 @@ function hw_install_required_packages() {
             archtype="arm"
             ;;
         *)
-            echo "${R}[${R}☓${R}]${R} Unsupported architecture"${W}
+            echo "${R}[${R}☓${R}]${R} Unsupported architecture${W}"
             return
             ;;
     esac
 
     if [[ "$confirmation_mesa_vulkan_icd_wrapper" == "y" ]]; then
         if [[ "$archtype" == "aarch64" || "$archtype" == "arm" ]]; then
-            echo "${R}[${C}-${R}]${G}${BOLD} Installing mesa-vulkan-icd-wrapper Driver..."${W}
+            echo "${R}[${C}-${R}]${G}${BOLD} Installing mesa-vulkan-icd-wrapper Driver...${W}"
             echo
             wget --tries=5 --retry-connrefused -O mesa-vulkan-icd-wrapper.deb https://github.com/sabamdarif/termux-desktop/releases/download/mesa-vulkan-24.3.1-3/mesa-vulkan-icd-wrapper_24.3.1-3_${archtype}.deb
             apt install ./mesa-vulkan-icd-wrapper.deb -y
@@ -59,7 +59,7 @@ function hw_install_required_packages() {
             "freedreno")
                 # package_install_and_check "mesa-zink mesa-zink-vulkan-icd-freedreno mesa-vulkan-icd-freedreno-dri3"
                 if [[ "$archtype" == "aarch64" || "$archtype" == "arm" ]]; then
-                    echo "${R}[${C}-${R}]${G}${BOLD} Installing mesa-vulkan-icd-freedreno Driver..."${W}
+                    echo "${R}[${C}-${R}]${G}${BOLD} Installing mesa-vulkan-icd-freedreno Driver...${W}"
                     echo
                     wget --tries=5 --retry-connrefused -O mesa-freedreno.deb https://github.com/sabamdarif/termux-desktop/releases/download/mesa-vulkan/mesa-vulkan-icd-freedreno_24.3.1-1_${archtype}.deb
                     apt install ./mesa-freedreno.deb -y
@@ -149,7 +149,7 @@ case "$pd_hw_answer" in
     pd_hw_method="MESA_LOADER_DRIVER_OVERRIDE=kgsl MESA_GL_VERSION_OVERRIDE=3.3"
     ;;
     *)
-    echo "${R}[${C}-${R}]${G} Uses The Previous Selection For Distro"${W}
+    echo "${R}[${C}-${R}]${G} Uses The Previous Selection For Distro${W}"
     echo
     ;;
 esac
@@ -187,7 +187,7 @@ function setup_gpu_specific_environment_variables() {
 
 function setup_turnip_proot() {
     banner
-    echo "${R}[${C}-${R}]${G}${BOLD} Setting up Turnip for $selected_distro ..."${W}
+    echo "${R}[${C}-${R}]${G}${BOLD} Setting up Turnip for $selected_distro ...${W}"
     echo
     if [[ "$selected_distro" == "debian" ]] || [[ "$selected_distro" == "ubuntu" ]]; then
     proot-distro login $selected_distro --shared-tmp -- env DISPLAY=:1.0 apt install xdg-desktop-portal libgl1 libgl1-mesa-dri libvulkan1 glmark2 -y
