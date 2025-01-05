@@ -14,11 +14,11 @@ W="$(printf '\033[0m')"
 BOLD="$(printf '\033[1m')"
 termux_desktop_path="$PREFIX/etc/termux-desktop"
 config_file="$termux_desktop_path/configuration.conf"
+log_file="$HOME/termux-desktop.log"
 cd "$HOME" || exit
 
 # create log
 function debug() {
-	log_file="$HOME/termux-desktop.log"
 	exec > >(tee -a "$log_file") 2>&1
 }
 
@@ -54,9 +54,16 @@ function check_and_create_directory() {
     fi
 }
 
+# function print_log() {
+# 	local subject
+# 	subject="$1"
+# 	echo "$subject" >> "$log_file"
+# }
+
 # first check then delete
 function check_and_delete() {
     local file
+	local files_folders
     for files_folders in "$@"; do
         for file in $files_folders; do
             if [[ -e "$file" ]]; then
@@ -89,6 +96,22 @@ function check_and_backup() {
             fi
         done
     done
+}
+
+function download_file() {
+	local dest
+	local url
+	dest="$1"
+    url="$2"
+    
+    wget --tries=5 --timeout=15 --retry-connrefused -O "$dest" "$url"
+    
+    if [[ -f "$dest" ]]; then
+        echo "${R}[${G}✓${R}]${G} Successfully download the file${W}"
+    else
+        echo "${R}[${C}☓${R}]${R} Failed to download the file${W}"
+        exit 1
+    fi
 }
 
 # find a backup file which end with a number pattern and restore it
@@ -660,7 +683,7 @@ function questions_theme_select() {
     cd "$HOME" || return
     echo "${R}[${C}-${R}]${G} Downloading list....${W}"
 	check_and_backup "${current_path}/styles.md"
-    wget --tries=5 --retry-connrefused -qO "${current_path}/styles.md" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/${de_name}_styles.md"
+    download_file "${current_path}/styles.md" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/${de_name}_styles.md"
 
     clear
 	banner
@@ -1450,53 +1473,45 @@ function hw_config() {
     echo "${R}[${C}-${R}]${G}${BOLD} Configuring Hardware Acceleration${W}"
     echo
 
-    if [[ -f "${current_path}/enable-hw-acceleration" ]]; then
+    local hw_accel_url="https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/enable-hw-acceleration"
+    local hw_accel_file="${current_path}/enable-hw-acceleration"
+
+    if [[ -f "$hw_accel_file" ]]; then
         local current_script_hash
-		current_script_hash=$(curl -sL https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/enable-hw-acceleration | sha256sum | cut -d ' ' -f 1)
-  		local local_script_hash
-		local_script_hash=$(basename "$(sha256sum "${current_path}/enable-hw-acceleration" | cut -d ' ' -f 1)")
+        current_script_hash=$(curl -sL "$hw_accel_url" | sha256sum | cut -d ' ' -f 1)
+        local local_script_hash
+        local_script_hash=$(sha256sum "$hw_accel_file" | cut -d ' ' -f 1)
 
         if [[ "$local_script_hash" != "$current_script_hash" ]]; then
-            echo "${R}[${C}-${R}]${G} It looks like you already have a different hw-acceleration installer in your current directory${W}"
+            echo "${R}[${C}-${R}]${G} A different version of the hardware acceleration installer is detected.${W}"
             echo
 
-            confirmation_y_or_n "Do you want to change it with the latest installer" change_old_hw_installer
+            confirmation_y_or_n "Do you want to replace it with the latest version?" change_old_hw_installer
 
             if [[ "$change_old_hw_installer" == "y" ]]; then
-                check_and_backup "${current_path}/enable-hw-acceleration"
-                wget --tries=5 --retry-connrefused -O "${current_path}/enable-hw-acceleration" https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/enable-hw-acceleration
-					if [[ -f "${current_path}/enable-hw-acceleration" ]]; then
-                    	chmod +x "${current_path}/enable-hw-acceleration"
-                    	. "${current_path}/enable-hw-acceleration"
-					else
-						wget --tries=5 --retry-connrefused -O "${current_path}/enable-hw-acceleration https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/enable-hw-acceleration"
-						chmod +x "${current_path}/enable-hw-acceleration"
-                    	. "${current_path}/enable-hw-acceleration"
-					fi
+                check_and_backup "$hw_accel_file"
+                download_file "$hw_accel_file" "$hw_accel_url"
+				chmod +x "$hw_accel_file"
+                . "$hw_accel_file"
             else
-                echo "${R}[${C}-${R}]${G} Using the local hardware acceleration setup file${W}"
-                chmod +x "${current_path}/enable-hw-acceleration"
-                . "${current_path}/enable-hw-acceleration"
+                echo "${R}[${C}-${R}]${G} Using the local hardware acceleration setup file.${W}"
+                chmod +x "$hw_accel_file"
+                . "$hw_accel_file"
             fi
 
             echo "change_old_hw_installer=\"$change_old_hw_installer\"" >> "$config_file"
         else
-            echo "${R}[${C}-${R}]${G} Using the local hardware acceleration setup file${W}"
-            chmod +x "${current_path}/enable-hw-acceleration"
-            . "${current_path}/enable-hw-acceleration"
+            echo "${R}[${C}-${R}]${G} Using the local hardware acceleration setup file.${W}"
+            chmod +x "$hw_accel_file"
+            . "$hw_accel_file"
         fi
     else
-        wget --tries=5 --retry-connrefused -O "${current_path}/enable-hw-acceleration https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/enable-hw-acceleration"
-			if [[ -f "${current_path}/enable-hw-acceleration" ]]; then
-                chmod +x "${current_path}/enable-hw-acceleration"
-                . "${current_path}/enable-hw-acceleration"
-			else
-				wget --tries=5 --retry-connrefused -O "${current_path}/enable-hw-acceleration https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/enable-hw-acceleration"
-				chmod +x "${current_path}/enable-hw-acceleration"
-            	. "${current_path}/enable-hw-acceleration"
-			fi
+        download_file "$hw_accel_file" "$hw_accel_url"
+		chmod +x "$hw_accel_file"
+        . "$hw_accel_file"
     fi
-        check_and_delete "${current_path}/enable-hw-acceleration"
+
+    check_and_delete "$hw_accel_file"
 }
 
 #########################################################################
@@ -1530,7 +1545,7 @@ function distro_container_setup() {
 
                 if [[ "$change_old_distro_installer" == "y" ]]; then
                     check_and_backup "${current_path}/distro-container-setup"
-                    wget --tries=5 --retry-connrefused -O "${current_path}/distro-container-setup" https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/distro-container-setup
+                    download_file "${current_path}/distro-container-setup" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/distro-container-setup"
 
                     # Check if arguments are passed
                     if [[ ("$1" == "--change" || "$1" == "-c") && ("$2" == "distro" || "$2" == "pd") ]]; then
@@ -1552,7 +1567,7 @@ function distro_container_setup() {
                 . "${current_path}/distro-container-setup"
             fi
         else
-            wget --tries=5 --retry-connrefused -O "${current_path}/distro-container-setup" https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/distro-container-setup
+            download_file "${current_path}/distro-container-setup" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/distro-container-setup"
 
             # Check if arguments are passed
             if [[ ("$1" == "--change" || "$1" == "-c") && ("$2" == "distro" || "$2" == "pd") ]]; then
@@ -1707,7 +1722,7 @@ case \$2 in
     sleep 1
     am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1 &
     sleep 1
-    env DISPLAY=:0 XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} "${hw_method}" dbus-launch --exit-with-session $de_startup
+    env DISPLAY=:0 XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} ${hw_method} dbus-launch --exit-with-session $de_startup
     ;;
 
 *)
@@ -1900,7 +1915,7 @@ function setup_termux_x11() {
 		local assets
 		assets=$(curl -s "https://api.github.com/repos/$repo_owner/$repo_name/releases/latest" | grep -oP '(?<="name": ")[^"]*')
 		deb_assets=$(echo "$assets" | grep "termux-x11.*all.deb")
-		wget --tries=5 --retry-connrefused -O "$current_path/termux-x11.deb" "$termux_x11_url/$deb_assets"
+		download_file "$current_path/termux-x11.deb" "$termux_x11_url/$deb_assets"
 		apt install "$current_path/termux-x11.deb" -y
 		rm "$current_path/termux-x11.deb"
 		# "sed -i '12s/^#//' "$HOME/.termux/termux.properties"
@@ -2229,7 +2244,7 @@ function terminal_utility_setup() {
 	check_and_backup "$PREFIX/etc/motd"
 	check_and_backup "$PREFIX/etc/motd-playstore"
     check_and_backup "$PREFIX/etc/motd.sh"
-	wget --tries=5 --retry-connrefused -O "$PREFIX/etc/motd.sh" https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/other/motd.sh
+	download_file "$PREFIX/etc/motd.sh" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/other/motd.sh"
 	if grep -q "motd.sh$" "$PREFIX/etc/termux-login.sh"; then
 	sed -i "s|.*motd\.sh$|bash $PREFIX/etc/motd.sh|" "$PREFIX/etc/termux-login.sh"
     else
@@ -2237,11 +2252,11 @@ function terminal_utility_setup() {
     fi
 	check_and_create_directory "$HOME/.termux"
 	check_and_backup "$HOME/.termux/colors.properties $HOME/.termux/termux.properties $HOME/.aliases"
-	wget --tries=5 --retry-connrefused -O "$HOME/.termux/termux.properties" https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/other/termux.properties
-	wget --tries=5 --retry-connrefused -O "$HOME/.aliases" https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/other/.aliases
-	wget --tries=5 --retry-connrefused -O "$HOME/.termux/colors.properties" https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/other/colors.properties
-	wget --tries=5 --retry-connrefused -O "$PREFIX/bin/termux-ssh" https://raw.githubusercontent.com/sabamdarif/simple-linux-scripts/main/termux-ssh \
-		&& chmod +x "$PREFIX/bin/termux-ssh"
+
+	download_file "$HOME/.termux/termux.properties" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/other/termux.properties"
+	download_file "$HOME/.aliases" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/other/.aliases"
+	download_file "$HOME/.termux/colors.properties" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/other/colors.properties"
+	download_file "$PREFIX/bin/termux-ssh" "https://raw.githubusercontent.com/sabamdarif/simple-linux-scripts/main/termux-ssh" && chmod +x "$PREFIX/bin/termux-ssh"
 	cp "$shell_rc_file" "${shell_rc_file}-2"
 	check_and_backup "$shell_rc_file"
 	mv "${shell_rc_file}-2" "${shell_rc_file}"
@@ -2369,7 +2384,7 @@ function setup_fonts() {
 	fc-cache -f
 	check_and_create_directory "$HOME/.config/fastfetch"
 	banner
-	wget --tries=5 --retry-connrefused -O "$HOME/.config/fastfetch/config.jsonc" https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/other/config.jsonc 
+	download_file "$HOME/.config/fastfetch/config.jsonc" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/other/config.jsonc" 
 	fi
 }
 
@@ -2474,7 +2489,7 @@ function setup_wine() {
 	echo "${R}[${C}-${R}]${G}${BOLD} Mobox:- ${C}https://github.com/olegos2/mobox${W}"
 	echo
 	sleep 4
-	wget --tries=5 --retry-connrefused -O "$PREFIX/bin/wine https://raw.githubusercontent.com/LinuxDroidMaster/Termux-Desktops/main/scripts/termux_native/mobox_run.sh"
+	download_file "$PREFIX/bin/wine" "https://raw.githubusercontent.com/LinuxDroidMaster/Termux-Desktops/main/scripts/termux_native/mobox_run.sh"
 	chmod +x "$PREFIX/bin/wine"
 	wine_shortcut
 	cp "$PREFIX/share/applications/wine-explorer.desktop" "$HOME/Desktop/MoboxExplorer.desktop"
@@ -3071,6 +3086,8 @@ function print_basic_details() {
 	app_arch=$(uname -m)
 	supported_arch="$(getprop ro.product.cpu.abilist)"
 	net_condition="$(getprop gsm.network.type)"
+	PROCESSOR_BRAND_NAME="$(getprop ro.soc.manufacturer)"
+	PROCESSOR_NAME="$(getprop ro.soc.model)"
 	country="$(getprop gsm.sim.operator.iso-country)"
 cat <<EOF > "$config_file"
 ####################################
@@ -3087,6 +3104,7 @@ cat <<EOF > "$config_file"
 # Total Ram: $lotal_ram
 # Architecture: $app_arch
 # System CPU Architecture: $supported_arch
+# Processor: $PROCESSOR_BRAND_NAME $PROCESSOR_NAME
 # Network Condition: $net_condition (On first run)
 # Country: $country
 #
