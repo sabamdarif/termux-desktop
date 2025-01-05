@@ -1473,14 +1473,11 @@ function hw_config() {
     echo "${R}[${C}-${R}]${G}${BOLD} Configuring Hardware Acceleration${W}"
     echo
 
-    local hw_accel_url="https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/enable-hw-acceleration"
-    local hw_accel_file="${current_path}/enable-hw-acceleration"
-
-    if [[ -f "$hw_accel_file" ]]; then
+    if [[ -f ${current_path}/enable-hw-acceleration ]]; then
         local current_script_hash
-        current_script_hash=$(curl -sL "$hw_accel_url" | sha256sum | cut -d ' ' -f 1)
+        current_script_hash=$(curl -sL https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/enable-hw-acceleration | sha256sum | cut -d ' ' -f 1)
         local local_script_hash
-        local_script_hash=$(sha256sum "$hw_accel_file" | cut -d ' ' -f 1)
+        local_script_hash=$(sha256sum ${current_path}/enable-hw-acceleration | cut -d ' ' -f 1)
 
         if [[ "$local_script_hash" != "$current_script_hash" ]]; then
             echo "${R}[${C}-${R}]${G} A different version of the hardware acceleration installer is detected.${W}"
@@ -1489,29 +1486,29 @@ function hw_config() {
             confirmation_y_or_n "Do you want to replace it with the latest version?" change_old_hw_installer
 
             if [[ "$change_old_hw_installer" == "y" ]]; then
-                check_and_backup "$hw_accel_file"
-                download_file "$hw_accel_file" "$hw_accel_url"
-				chmod +x "$hw_accel_file"
-                . "$hw_accel_file"
+                check_and_backup ${current_path}/enable-hw-acceleration
+                download_file ${current_path}/enable-hw-acceleration https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/enable-hw-acceleration
+				chmod +x ${current_path}/enable-hw-acceleration
+                . ${current_path}/enable-hw-acceleration
             else
                 echo "${R}[${C}-${R}]${G} Using the local hardware acceleration setup file.${W}"
-                chmod +x "$hw_accel_file"
-                . "$hw_accel_file"
+                chmod +x ${current_path}/enable-hw-acceleration
+                . ${current_path}/enable-hw-acceleration
             fi
 
             echo "change_old_hw_installer=\"$change_old_hw_installer\"" >> "$config_file"
         else
             echo "${R}[${C}-${R}]${G} Using the local hardware acceleration setup file.${W}"
-            chmod +x "$hw_accel_file"
-            . "$hw_accel_file"
+            chmod +x ${current_path}/enable-hw-acceleration
+            . ${current_path}/enable-hw-acceleration
         fi
     else
-        download_file "$hw_accel_file" "$hw_accel_url"
-		chmod +x "$hw_accel_file"
-        . "$hw_accel_file"
+        download_file ${current_path}/enable-hw-acceleration https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/enable-hw-acceleration
+		chmod +x ${current_path}/enable-hw-acceleration
+        . ${current_path}/enable-hw-acceleration
     fi
 
-    check_and_delete "$hw_accel_file"
+    check_and_delete ${current_path}/enable-hw-acceleration
 }
 
 #########################################################################
@@ -2347,12 +2344,12 @@ EOF
 cat <<EOF >> "$shell_rc_file"
 # set zoxide as cd
 eval "\$(zoxide init --cmd cd ${shell_name})"
+source $HOME/.aliases
 EOF
 	fi
 cat <<EOF >> "$shell_rc_file"
 # print your current termux-desktop configuration
 alias 'tdconfig'='cat "$config_file"'
-source $HOME/.aliases
 EOF
 if [[ "$distro_add_answer" == "y" ]]; then
 cat <<EOF >> "$shell_rc_file"

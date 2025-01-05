@@ -194,7 +194,7 @@ function setup_turnip_proot() {
         if [[ "$selected_distro" == "ubuntu" ]]; then
         proot-distro login $selected_distro --shared-tmp -- env DISPLAY=:1.0 apt install mesa-vulkan-drivers libllvm15t64 -y
         fi
-    download_file "mesa-vulkan-kgsl_arm64.deb https://github.com/sabamdarif/termux-desktop/releases/download/mesa-vulkan/mesa-vulkan-kgsl_24.1.0-devel-20240120_arm64.deb
+    download_file "mesa-vulkan-kgsl_arm64.deb" "https://github.com/sabamdarif/termux-desktop/releases/download/mesa-vulkan/mesa-vulkan-kgsl_24.1.0-devel-20240120_arm64.deb"
     mv mesa-vulkan-kgsl_arm64.deb $distro_path/root/
     proot-distro login $selected_distro --shared-tmp -- env DISPLAY=:1.0 dpkg -i mesa-vulkan-kgsl_arm64.deb
     proot-distro login $selected_distro --shared-tmp -- env DISPLAY=:1.0 rm mesa-vulkan-kgsl_arm64.deb
