@@ -12,10 +12,11 @@ B="$(printf '\033[1;34m')"
 C="$(printf '\033[1;36m')"
 W="$(printf '\033[0m')"
 BOLD="$(printf '\033[1m')"
+
+cd "$HOME" || exit
 termux_desktop_path="$PREFIX/etc/termux-desktop"
 config_file="$termux_desktop_path/configuration.conf"
 log_file="$HOME/termux-desktop.log"
-cd "$HOME" || exit
 
 # create log
 function debug() {
@@ -48,17 +49,61 @@ function check_termux() {
 #
 #########################################################################
 
+function print_log() {
+    local call_stack=""
+
+    for ((i = 1; i < ${#FUNCNAME[@]}; i++)); do
+        if [[ -n "${FUNCNAME[$i]}" ]]; then
+            call_stack+="${FUNCNAME[$i]} -> "
+        fi
+    done
+
+    # Remove the trailing " -> "
+    call_stack="${call_stack::-4}"
+
+    # Print the logs in a structured way
+    {
+     	echo "========== $(date '+%Y-%m-%d %H:%M:%S') under ${call_stack:-main} =========="
+
+        # If multiple arguments are passed, print each on a new line
+        if [[ $# -gt 1 ]]; then
+            for arg in "$@"; do
+                echo "$arg"
+            done
+        else
+            # Print single argument as-is
+            echo "$1"
+        fi
+
+	echo "========================================"
+    } >> "$log_file"
+}
+
+function print_success() {
+	local msg
+	msg="$1"
+	echo "${R}[${G}✓${R}]${G} $msg${W}"
+	print_log "$msg"
+}
+
+function print_failed() {
+	local msg
+	msg="$1"
+	echo "${R}[${R}☓${R}]${R} $msg${W}"
+	print_log "$msg"
+}
+
+function wait_for_keypress() {
+	read -n1 -s -r -p "${R}[${C}-${R}]${G} Press any key to continue...${W}"
+	echo
+}
+
 function check_and_create_directory() {
     if [[ ! -d "$1" ]]; then
         mkdir -p "$1"
+		print_log "$1"
     fi
 }
-
-# function print_log() {
-# 	local subject
-# 	subject="$1"
-# 	echo "$subject" >> "$log_file"
-# }
 
 # first check then delete
 function check_and_delete() {
@@ -73,6 +118,7 @@ function check_and_delete() {
                     rm "$file" >/dev/null 2>&1
                 fi
             fi
+		print_log "$file"
         done
     done
 }
@@ -93,24 +139,43 @@ function check_and_backup() {
 				fi
 		    echo "${R}[${C}-${R}]${G}backing up file ${C}$file${W}"
 			mv "$1" "$backup"
+			print_log "$1 $backup"
             fi
         done
     done
 }
 
 function download_file() {
-	local dest
-	local url
-	dest="$1"
+    local dest
+    local url
+    dest="$1"
     url="$2"
-    
-    wget --tries=5 --timeout=15 --retry-connrefused -O "$dest" "$url"
-    
-    if [[ -f "$dest" ]]; then
-        echo "${R}[${G}✓${R}]${G} Successfully download the file${W}"
+	print_log "$dest"
+	print_log "$url"
+    if [[ -z "$dest" ]]; then
+        wget --tries=5 --timeout=15 --retry-connrefused "$url"
     else
-        echo "${R}[${C}☓${R}]${R} Failed to download the file${W}"
-        exit 1
+        wget --tries=5 --timeout=15 --retry-connrefused -O "$dest" "$url"
+    fi
+
+    # Check if the file was downloaded successfully
+    if [[ -f "$dest" || -f "$(basename "$url")" ]]; then
+        print_success "Successfully downloaded the file"
+    else
+        print_failed "Failed to download the file, retrying..."
+        if [[ -z "$dest" ]]; then
+            wget --tries=5 --timeout=15 --retry-connrefused "$url"
+        else
+            wget --tries=5 --timeout=15 --retry-connrefused -O "$dest" "$url"
+        fi
+
+        # Final check
+        if [[ -f "$dest" || -f "$(basename "$url")" ]]; then
+            print_success "Successfully downloaded the file after retry"
+        else
+            print_failed "Failed to download the file after retry"
+            exit 0
+        fi
     fi
 }
 
@@ -127,19 +192,20 @@ function check_and_restore() {
    latest_backup=$(find "$dir" -maxdepth 1 -type f -name "$base_name-[0-9][0-9]-[0-9][0-9]-[0-9][0-9][0-9][0-9].bak" 2>/dev/null | sort | tail -n 1)
 
     if [[ -z "$latest_backup" ]]; then
-        echo "${R}[${R}☓${R}]${R}No backup file found for ${target_path}.${W}"
+        print_failed "No backup file found for ${target_path}."
 		echo
         return 1
     fi
 
     if [[ -e "$target_path" ]]; then
-        echo "${R}[${R}☓${R}]${C}Original file or directory ${target_path} already exists.${W}"
+        print_failed "${C}Original file or directory ${target_path} already exists.${W}"
 		echo
     else
         mv "$latest_backup" "$target_path"
-        echo "${R}[${G}✓${R}]${G}Restored ${latest_backup} to ${target_path}.${W}"
+        print_success "Restored ${latest_backup} to ${target_path}"
 		echo
     fi
+	print_log "$target_path $dir $base_name $latest_backup"
 }
 
 function detact_package_manager() {
@@ -149,9 +215,9 @@ function detact_package_manager() {
 	elif [[ "$TERMUX_APP_PACKAGE_MANAGER" == "pacman" ]]; then
 	PACKAGE_MANAGER="pacman"
 	else
-	echo "${R}[${R}☓${R}]${C} Could not detact your package manager, Switching To ${C}pkg ${W}" 
+	print_failed "${C} Could not detact your package manager, Switching To ${C}pkg ${W}" 
 	fi
-
+	print_log "$PACKAGE_MANAGER"
 }
 
 # will check if the package is already installed or not, if it installed then it will reinstall it and at the end it will print success/failed message
@@ -163,11 +229,13 @@ function package_install_and_check() {
         if [[ "$PACKAGE_MANAGER" == "pacman" ]]; then
             if pacman -Qi "$package_name" >/dev/null 2>&1; then
                 echo "\"${package_name}\"=\"already_exist\"" >> "$config_file"
+				print_log "$package_name = already_exist"
                 continue
             fi
 
             if [[ $package_name == *"*"* ]]; then
                 echo "${R}[${C}-${R}]${C} Processing wildcard pattern: $package_name ${W}"
+				print_log "Processing wildcard pattern: $package_name"
                 packages=$(pacman -Ssq "${package_name%*}" 2>/dev/null)
                 for pkgs in $packages; do
                     echo "${R}[${C}-${R}]${G}${BOLD} Installing matched package: ${C}$pkgs ${W}"
@@ -180,6 +248,7 @@ function package_install_and_check() {
         else
             if [[ $package_name == *"*"* ]]; then
                 echo "${R}[${C}-${R}]${C} Processing wildcard pattern: $package_name ${W}"
+				print_log "Processing wildcard pattern: $package_name"
                 packages_by_name=$(apt-cache search "${package_name%*}" | awk "/^${package_name}/ {print \$1}")
 				packages_by_description=$(apt-cache search "${package_name%*}" | grep -Ei "\b${package_name%*}\b" | awk '{print $1}')
 				packages=$(echo -e "${packages_by_name}\n${packages_by_description}" | sort -u)
@@ -187,6 +256,7 @@ function package_install_and_check() {
                     echo "${R}[${C}-${R}]${G}${BOLD} Installing matched package: ${C}$pkgs ${W}"
                     if dpkg -s "$pkgs" >/dev/null 2>&1; then
                         echo "\"${pkgs}\"=\"already_exist\"" >> "$config_file"
+						print_log "$pkgs = already_exist"
                         pkg reinstall "$pkgs" -y
                     else
                         pkg install "$pkgs" -y
@@ -195,6 +265,7 @@ function package_install_and_check() {
             else
                 if dpkg -s "$package_name" >/dev/null 2>&1; then
                     echo "\"${package_name}\"=\"already_exist\"" >> "$config_file"
+					print_log "$package_name = already_exist"
                     pkg reinstall "$package_name" -y
                 else
                     pkg install "$package_name" -y
@@ -205,6 +276,7 @@ function package_install_and_check() {
         # Check installation success
         if [ $? -ne 0 ]; then
             echo "${R}[${C}-${R}]${G}${BOLD} Error detected during installation of: ${C}$package_name ${W}"
+			print_log "Error detected during installation of: $package_name"
             if [[ "$PACKAGE_MANAGER" == "pacman" ]]; then
                 pacman -Sy --overwrite '*' "$package_name"
                 pacman -Sy --noconfirm "$package_name"
@@ -219,20 +291,21 @@ function package_install_and_check() {
 		if [[ $package_name != *"*"* ]]; then
         	if [[ "$PACKAGE_MANAGER" == "pacman" ]]; then
         	    if pacman -Qi "$package_name" >/dev/null 2>&1; then
-        	        echo "${R}[${G}✓${R}]${G} $package_name installed successfully ${W}"
+        	        print_success "$package_name installed successfully"
         	    else
-        	        echo "${R}[${R}☓${R}]${C} $package_name installation failed ${W}"
+        	        print_failed "$package_name installation failed ${W}"
         	    fi
         	else
         	    if dpkg -s "$package_name" >/dev/null 2>&1; then
-        	        echo "${R}[${G}✓${R}]${G} $package_name installed successfully ${W}"
+        	        print_success "$package_name installed successfully"
         	    else
-        	        echo "${R}[${R}☓${R}]${C} $package_name installation failed ${W}"
+        	        print_failed "$package_name installation failed ${W}"
         	    fi
         	fi
 		fi
     done
     echo ""
+	print_log "package list: $packs_list"
 }
 
 # will check the package is installed or not then remove it
@@ -243,7 +316,7 @@ function package_check_and_remove() {
 
         if [[ $package_name == *"*"* ]]; then
             echo "${R}[${C}-${R}]${C} Processing wildcard pattern: $package_name ${W}"
-
+			print_log "Processing wildcard pattern: $package_name"
             if [[ "$PACKAGE_MANAGER" == "pacman" ]]; then
                 packages=$(pacman -Qq | grep -E "${package_name//\*/.*}")
             else
@@ -257,18 +330,19 @@ function package_check_and_remove() {
                     if pacman -Qi "$pkg" >/dev/null 2>&1; then
                         pacman -Rnds --noconfirm "$pkg"
                         if [ $? -eq 0 ]; then
-                            echo "${R}[${G}✓${R}]${G} $pkg removed successfully ${W}"
+                            print_success "$pkg removed successfully"
+							print_log "Processing wildcard pattern: $package_name"
                         else
-                            echo "${R}[${R}☓${R}]${C} Failed to remove $pkg ${W}"
+                            print_failed "Failed to remove $pkg ${W}"
                         fi
                     fi
                 else
                     if dpkg -s "$pkg" >/dev/null 2>&1; then
                         apt autoremove "$pkg" -y
                         if [ $? -eq 0 ]; then
-                            echo "${R}[${G}✓${R}]${G} $pkg removed successfully ${W}"
+                            print_success "$pkg removed successfully"
                         else
-                            echo "${R}[${R}☓${R}]${C} Failed to remove $pkg ${W}"
+                            print_failed "Failed to remove $pkg ${W}"
                         fi
                     fi
                 fi
@@ -281,9 +355,9 @@ function package_check_and_remove() {
                     echo "${R}[${C}-${R}]${G}${BOLD} Removing package: ${C}$package_name ${W}"
                     pacman -Rnds --noconfirm "$package_name"
                     if [ $? -eq 0 ]; then
-                        echo "${R}[${G}✓${R}]${G} $package_name removed successfully ${W}"
+                        print_success "$package_name removed successfully"
                     else
-                        echo "${R}[${R}☓${R}]${C} Failed to remove $package_name ${W}"
+                        print_failed "Failed to remove $package_name ${W}"
                     fi
                 fi
             else
@@ -291,9 +365,9 @@ function package_check_and_remove() {
                     echo "${R}[${C}-${R}]${G}${BOLD} Removing package: ${C}$package_name ${W}"
                     apt autoremove "$package_name" -y
                     if [ $? -eq 0 ]; then
-                        echo "${R}[${G}✓${R}]${G} $package_name removed successfully ${W}"
+                        print_success "$package_name removed successfully"
                     else
-                        echo "${R}[${R}☓${R}]${C} Failed to remove $package_name ${W}"
+                        print_failed "Failed to remove $package_name ${W}"
                     fi
                 fi
             fi
@@ -301,12 +375,14 @@ function package_check_and_remove() {
 		fi
     done
     echo ""
+	print_log "$package_name"
 }
 
 function get_file_name_number() {
     current_file=$(basename "$0")
     folder_name="${current_file%.sh}"
     theme_number=$(echo "$folder_name" | grep -oE '[1-9][0-9]*')
+	print_log "$theme_number"
 }
 
 function extract_zip_with_progress() {
@@ -315,7 +391,7 @@ function extract_zip_with_progress() {
 
     # Check if the archive file exists
     if [[ ! -f "$archive" ]]; then
-        echo "${R}[${R}☓${R}]${R}$archive doesn't exist${W}"
+        print_failed "$archive doesn't exist"
         return 1
     fi
 
@@ -323,7 +399,7 @@ function extract_zip_with_progress() {
     total_files=$(unzip -l "$archive" | grep -c -E '^\s+[0-9]+')
 
     if [[ "$total_files" -eq 0 ]]; then
-        echo "${R}[${R}☓${R}]${R}No files found in the archive${W}"
+        print_failed "No files found in the archive"
         return 1
     fi
 
@@ -336,14 +412,13 @@ function extract_zip_with_progress() {
             echo -ne "${G}Extracting: ${C}$progress% ($extracted_files/$total_files) \r${W}"
         fi
     done
-
-    echo "${R}[${G}✓${R}]${G}${archive} Extraction complete!${W}"
+    print_success "${archive} Extraction complete!"
 }
 
 function extract_archive() {
     local archive="$1"
     if [[ ! -f "$archive" ]]; then
-        echo -e "${R}[☓]${R} $archive doesn't exist${W}"
+        print_failed "$archive doesn't exist"
         return 1
     fi
 
@@ -352,47 +427,48 @@ function extract_archive() {
 
     case "$archive" in
         *.tar.gz|*.tgz)
-            echo -e "${G}[✔] Extracting ${C}$archive${W}"
-            pv -s "$total_size" -p -r "$archive" | tar xzf - || { echo -e "${R}[☓] Failed to extract ${C}$archive${W}"; return 1; }
+            print_success "Extracting ${C}$archive"
+            pv -s "$total_size" -p -r "$archive" | tar xzf - || { print_failed "Failed to extract ${C}$archive"; return 1; }
             ;;
         *.tar.xz)
-            echo -e "${G}[✔] Extracting ${C}$archive${W}"
-            pv -s "$total_size" -p -r "$archive" | tar xJf - || { echo -e "${R}[☓] Failed to extract ${C}$archive${W}"; return 1; }
+            print_success "Extracting ${C}$archive"
+            pv -s "$total_size" -p -r "$archive" | tar xJf - || { print_failed "Failed to extract ${C}$archive"; return 1; }
             ;;
         *.tar.bz2|*.tbz2)
-            echo -e "${G}[✔] Extracting ${C}$archive${W}"
-            pv -s "$total_size" -p -r "$archive" | tar xjf - || { echo -e "${R}[☓] Failed to extract ${C}$archive${W}"; return 1; }
+            print_success "Extracting ${C}$archive"
+            pv -s "$total_size" -p -r "$archive" | tar xjf - || { print_failed "Failed to extract ${C}$archive"; return 1; }
             ;;
         *.tar)
-            echo -e "${G}[✔] Extracting ${C}$archive${W}"
-            pv -s "$total_size" -p -r "$archive" | tar xf - || { echo -e "${R}[☓] Failed to extract ${C}$archive${W}"; return 1; }
+            print_success "Extracting ${C}$archive"
+            pv -s "$total_size" -p -r "$archive" | tar xf - || { print_failed "Failed to extract ${C}$archive"; return 1; }
             ;;
         *.bz2)
-            echo -e "${G}[✔] Extracting ${C}$archive${W}"
-            pv -s "$total_size" -p -r "$archive" | bunzip2 > "${archive%.bz2}" || { echo -e "${R}[☓] Failed to extract ${C}$archive${W}"; return 1; }
+            print_success "Extracting ${C}$archive"
+            pv -s "$total_size" -p -r "$archive" | bunzip2 > "${archive%.bz2}" || { print_failed "Failed to extract ${C}$archive"; return 1; }
             ;;
         *.gz)
-            echo -e "${G}[✔] Extracting ${C}$archive${W}"
-            pv -s "$total_size" -p -r "$archive" | gunzip > "${archive%.gz}" || { echo -e "${R}[☓] Failed to extract ${C}$archive${W}"; return 1; }
+            print_success "Extracting ${C}$archive${W}"
+            pv -s "$total_size" -p -r "$archive" | gunzip > "${archive%.gz}" || { print_failed "Failed to extract ${C}$archive"; return 1; }
             ;;
         *.7z)
-            echo -e "${G}[✔] Extracting ${C}$archive${W}"
-            pv -s "$total_size" -p -r "$archive" | 7z x -si -y > /dev/null || { echo -e "${R}[☓] Failed to extract ${C}$archive${W}"; return 1; }
+            print_success "Extracting ${C}$archive"
+            pv -s "$total_size" -p -r "$archive" | 7z x -si -y > /dev/null || { print_failed "Failed to extract ${C}$archive"; return 1; }
             ;;
 		*.zip)
             extract_zip_with_progress "${archive}"
             ;;
         *.rar)
-            echo -e "${G}[✔] Extracting ${C}$archive${W}"
-            unrar x "$archive" || { echo -e "${R}[☓] Failed to extract ${C}$archive${W}"; return 1; }
+            print_success "Extracting ${C}$archive"
+            unrar x "$archive" || { print_failed "Failed to extract ${C}$archive"; return 1; }
             ;;
         *)
-            echo -e "${R}[☓] Unsupported archive format: ${C}$archive${W}"
+            print_failed "Unsupported archive format: ${C}$archive"
             return 1
             ;;
     esac
 
-    echo -e "${G}[✔] Successfully extracted ${C}$archive${W}"
+    print_success "Successfully extracted ${C}$archive"
+	print_log "$archive"
 }
 
 # download a archive file and extract it in a folder
@@ -417,7 +493,7 @@ function download_and_extract() {
             success=true
             break
         else
-            echo "${R}[${R}☓${R}]${R}Failed to download ${C}${filename}${W}"
+            print_failed "Failed to download ${C}${filename}"
             echo "${R}[${C}☓-{R}]${G}Retrying... Attempt ${C}$attempt${W}"
             ((attempt++))
             sleep 1
@@ -434,9 +510,10 @@ function download_and_extract() {
         fi
     else
         # Notify if download fails after all attempts
-        echo "${R}[${R}☓${R}]${R}Failed to download ${C}${filename}${W}"
+        print_failed "Failed to download ${C}${filename}"
         echo "${R}[${C}-${R}]${C}Please check your internet connection${W}"
     fi
+	print_log "$url $target_dir $filename"
 }
 
 # count the number subfolders inside a folder in my repo
@@ -455,6 +532,7 @@ function count_subfolders() {
     fi
 
     echo "$subfolder_count"
+	print_log "$url $response $subfolder_count"
 }
 
 # create a yes / no confirmation prompt
@@ -466,7 +544,7 @@ function confirmation_y_or_n() {
         case $response in
             [yY]* )
 				echo
-                echo "${R}[${G}✓${R}]${G} Continuing with answer: $response${W}"
+                print_success "Continuing with answer: $response"
 				echo
 				sleep 0.2
                 break;;
@@ -478,12 +556,12 @@ function confirmation_y_or_n() {
                 break;;
             * )
 				echo
-               	echo "${R}[${R}☓${R}]${R} Invalid input. Please enter 'y' or 'n'.${W}"
+               	print_failed " Invalid input. Please enter 'y' or 'n'."
 				echo
                 ;;
         esac
     done
-
+	print_log "$1 $response"
 }
 
 # get the latest version from a github releases
@@ -540,7 +618,7 @@ function download_github_action_artifact() {
     WORKFLOW_ID=$(gh api repos/$GITHUB_USER/$REPO/actions/workflows --jq ".workflows[] | select(.name == \"$WORKFLOW_NAME\") | .id")
     # Check if WORKFLOW_ID is found
     if [ -z "$WORKFLOW_ID" ]; then
-        echo "${R}[${R}☓${R}]${R} Workflow '$WORKFLOW_NAME' not found.${W}"
+        print_failed " Workflow '$WORKFLOW_NAME' not found."
         exit 1
     fi
 
@@ -551,7 +629,7 @@ function download_github_action_artifact() {
     WORKFLOW_RUN_ID=$(gh api repos/$GITHUB_USER/$REPO/actions/workflows/$WORKFLOW_ID/runs --paginate --jq ".workflow_runs[] | select(.display_title == \"$RUN_NAME\") | .id" | head -n 1)
     # Check if WORKFLOW_RUN_ID is obtained
     if [ -z "$WORKFLOW_RUN_ID" ]; then
-        echo "${R}[${R}☓${R}]${R} No workflow run found with the name '$RUN_NAME' for workflow '$WORKFLOW_NAME'.${W}"
+        print_failed " No workflow run found with the name '$RUN_NAME' for workflow '$WORKFLOW_NAME'."
         exit 1
     fi
 
@@ -565,12 +643,12 @@ function download_github_action_artifact() {
 
     # Check if ARTIFACT_URL is found
     if [ -z "$ARTIFACT_URL" ]; then
-        echo "${R}[${R}☓${R}]${R} No artifact found starting with '$ARTIFACT_NAME'.${W}"
+        print_failed " No artifact found starting with '$ARTIFACT_NAME'."
         exit 1
     fi
 
     # Download the artifact using the URL
-    echo "${R}[${G}✓${R}]${G} Downloading artifact from run '$RUN_NAME'...${W}"
+    print_success "Downloading artifact from run '$RUN_NAME'..."
     curl -# -L -H "Authorization: Bearer $(gh auth token)" -o artifact.zip "$ARTIFACT_URL"
 
     # Extract the artifact
@@ -589,13 +667,13 @@ function select_an_option() {
 
         if [[ $response =~ ^[0-9]+$ ]] && ((response >= 1 && response <= max_options)); then
             echo
-            echo "${R}[${G}✓${R}]${G} Continuing with answer: $response${W}"
+            print_success "Continuing with answer: $response"
             sleep 0.2
             eval "$response_var=$response"
             break
         else
             echo
-            echo "${R}[${R}☓${R}]${R} Invalid input. Please enter a number between 1 and $max_options.${W}"
+            print_failed " Invalid input, Please enter a number between 1 and $max_options"
         fi
     done
 }
@@ -642,7 +720,7 @@ function preprocess_conf() {
 
 function read_conf() {
     if [[ ! -f "$config_file" ]]; then
-        echo "${R}[${R}☓${R}]${R} Configuration file "$config_file" not found.${W}"
+        print_failed " Configuration file "$config_file" not found"
 		exit 0
     fi
 
@@ -663,7 +741,7 @@ function read_conf() {
         export "$key"="$value"
     done < "$config_file"
 
-    echo "${R}[${C}✓${R}]${G} Configuration variables loaded.${W}"
+    print_success "Configuration variables loaded"
 }
 
 #########################################################################
@@ -679,15 +757,15 @@ function questions_theme_select() {
     local repo="termux-desktop"
     local main_folder="patch/$de_name"
     local subfolder_count_value
-	subfolder_count_value=$(count_subfolders "$owner" "$repo" "$main_folder" 2>/dev/null)
+    subfolder_count_value=$(count_subfolders "$owner" "$repo" "$main_folder" 2>/dev/null)
     cd "$HOME" || return
     echo "${R}[${C}-${R}]${G} Downloading list....${W}"
-	check_and_backup "${current_path}/styles.md"
+    check_and_backup "${current_path}/styles.md"
     download_file "${current_path}/styles.md" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/${de_name}_styles.md"
 
     clear
-	banner
-    # Check if the subfolder count value is obtained
+    banner
+
     if [[ -n "$subfolder_count_value" ]]; then
         echo "${R}[${C}-${R}]${G} Check the $de_name styles section in GitHub${W}"
         echo
@@ -697,49 +775,46 @@ function questions_theme_select() {
         echo
         echo "${R}[${C}-${R}]${G} Available Styles:${W}"
         echo
-        # Display available styles from the styles.md file
         grep -oP '## \d+\..+?(?=(\n## \d+\.|\Z))' styles.md | while read -r style; do
             echo "${Y}${style#### }${W}"
         done
 
-        # Prompt user to select a style
         while true; do
             echo
             read -r -p "${R}[${C}-${R}]${Y} Type number of the style: ${W}" style_answer
 
-            # Check if the input is empty
             if [[ -z "$style_answer" ]]; then
                 echo
-                echo "${R}[${R}☓${R}]${R} Input cannot be empty. Please type a number.${W}"
+                print_failed "Input cannot be empty. Please type a number"
                 continue
             fi
 
-            # Ensure the input is a valid number and within range
             if [[ "$style_answer" =~ ^[0-9]+$ ]] && [[ "$style_answer" -ge 0 ]] && [[ "$style_answer" -le "$subfolder_count_value" ]]; then
                 style_name=$(grep -oP "^## $style_answer\..+?(?=(\n## \d+\.|\Z))" styles.md | sed -e "s/^## $style_answer\. //" -e "s/:$//")
                 break
             else
                 echo
-                echo "${R}[${R}☓${R}]${R} The entered style number is incorrect.${W}"
+                print_failed "The entered style number is incorrect"
                 echo
-				if [[ "$subfolder_count_value" == "0" ]]; then
-				echo "${R}[${C}-${R}]${Y} Please enter 0 beacuse for $de_name only stock style is available${W}"
-                echo
-				else
-				echo "${R}[${C}-${R}]${Y} Please enter a number between 0 to ${subfolder_count_value}${W}"
-                echo
-				fi
+                if [[ "$subfolder_count_value" == "0" ]]; then
+                    echo "${R}[${C}-${R}]${Y} Please enter 0 because for $de_name only stock style is available${W}"
+                    echo
+                else
+                    echo "${R}[${C}-${R}]${Y} Please enter a number between 0 to ${subfolder_count_value}${W}"
+                    echo
+                fi
                 echo "${R}[${C}-${R}]${G} Check the $de_name styles section in GitHub${W}"
                 echo
                 echo "${R}[${C}-${R}]${B} https://github.com/sabamdarif/termux-desktop/blob/main/${de_name}_styles.md${W}"
                 echo
             fi
         done
-        # Remove the styles.md file after use
         rm "${current_path}/styles.md"
     else
-        echo "${R}[${R}☓${R}]${R} Failed to get total available styles value.${W}"
+        print_failed "Failed to get total available styles value"
+		exit 0
     fi
+    print_log "$style_answer $subfolder_count_value"
 }
 
 function questions() {
@@ -787,7 +862,7 @@ function questions() {
 	banner
 	questions_theme_select
 	echo
-	echo "${R}[${G}✓${R}]${G} Continuing with answer: ${style_answer}.$style_name${W}"
+	print_success "Continuing with answer: ${style_answer}.$style_name"
 	echo "style_answer=\"$style_answer\"" >> "$config_file"
 	echo "style_name=\"$style_name\"" >> "$config_file"
 	sleep 0.2
@@ -1177,18 +1252,18 @@ function distro_questions() {
 	    echo
 	    choice="${choice:-y}"
 	    echo
-	    echo "${R}[${G}✓${R}]${G} Continuing with answer: $choice${W}"
+	    print_success "Continuing with answer: $choice"
 	    sleep 0.2
 	    case $choice in
 	    [yY]* )
-	    echo "${R}[${G}✓${R}]${G} Continuing with username ${C}$user_name ${W}"
+	    print_success "Continuing with username ${C}$user_name"
 	    break;;
 	    [nN]* )
 	    echo "${R}[${C}-${R}]${G}Please provide username again.${W}"
 	    echo
 	    ;;
 	    * )
-	    echo "${R}[${R}☓${R}]${R}Invalid input. Please enter 'y' or 'n'.${W}"
+	    print_failed "Invalid input, Please enter y or n"
 	    ;;
 	    esac
 	    done
@@ -1206,19 +1281,19 @@ function distro_questions() {
 	    echo
 	    choice="${choice:-y}"
 	    echo
-	    echo "${R}[${G}✓${R}]${G} Continuing with answer: $choice${W}"
+	    print_success "Continuing with answer: $choice"
 	    echo ""
 	    sleep 0.2
 	    case $choice in
 	    [yY]* )
-	    echo "${R}[${G}✓${R}]${G} Continuing with username ${C}$user_name ${G}and password ${C}$pass${W}"
+	    print_success "Continuing with username ${C}$user_name ${G}and password ${C}$pass"
 	    break;;
 	    [nN]* )
 	    echo "${R}[${C}-${R}]${G}Please provide username and password again.${W}"
 	    echo
 	    ;;
 	    * )
-	    echo "${R}[${R}☓${R}]${R}Invalid input. Please enter 'y' or 'n'.${W}"
+	    print_failed "Invalid input, Please enter y or n"
 	    ;;
 	    esac
 	    done
@@ -1227,6 +1302,20 @@ function distro_questions() {
 	    fi
 
 	fi
+}
+
+function print_recomended_msg() {
+banner
+echo "${R}[${C}-${R}]${G}${BOLD} Please read this..."
+echo -e "${C}
+1. Ensure it's a clean installation.\n
+2. Make sure you have at least 1 GB of internet data and 3 GB of free storage space.\n
+3. Use a reliable VPN to avoid any internet connection issues.\n
+4. Long press on Termux and enable "Keep screen on".\n
+5. Do not close Termux during the installation process.\n
+6. Make sure to read the README files carefully.
+${W}"
+wait_for_keypress
 }
 
 #########################################################################
@@ -1443,7 +1532,7 @@ function setup_folder() {
     if [[ -d ~/storage ]]; then
 	break
     else
-	echo "${R}[${R}☓${R}]${R} Storage permission denied${W}"
+	print_failed "Storage permission denied"
     fi
     sleep 3
 	done
@@ -1509,6 +1598,7 @@ function hw_config() {
     fi
 
     check_and_delete ${current_path}/enable-hw-acceleration
+	print_log "$current_path $current_script_hash $local_script_hash"
 }
 
 #########################################################################
@@ -1578,6 +1668,7 @@ function distro_container_setup() {
     fi
 
     echo "distro_add_answer=\"$distro_add_answer\"" >> "$config_file"
+	print_log "$current_path $distro_add_answer $local_script_hash"
 }
 
 #########################################################################
@@ -2391,83 +2482,11 @@ function setup_fonts() {
 #
 #########################################################################
 
-function wine_shortcut() {
-cat << EOF > "$PREFIX/share/applications/wine-explorer.desktop"
-[Desktop Entry]
-Name=Wine File
-Comment=Wine File Browser
-Name[ar]=مدير ملفات واين
-Comment[ar]=إدارة الملفات بطريقة واين
-Exec=wine explorer
-Icon=winefile
-Terminal=false
-Type=Application
-Categories=X-Wine;
-X-Desktop-File-Install-Version=0.26
-EOF
-chmod +x "$PREFIX/share/applications/wine-explorer.desktop"
-cat << EOF > "$PREFIX/share/applications/wine-winecfg.desktop"
-[Desktop Entry]
-Name=Wine Configuration
-Comment=Interface to set wine parameters
-Name[ar]=إعدادات واين
-Comment[ar]=لوحة تحكم بمنظومة واين
-Exec=wine winecfg
-Icon=winecfg
-Terminal=false
-Type=Application
-StartupNotify=true
-StartupWMClass=winecfg.exe
-Categories=X-Wine;
-X-Desktop-File-Install-Version=0.26
-EOF
-chmod +x "$PREFIX/share/applications/wine-winecfg.desktop"
-cat << EOF > "$PREFIX/share/applications/wine-uninstaller.desktop"
-[Desktop Entry]
-Name=Wine Software Uninstaller
-Comment=Interface to uninstall software
-Name[ar]=مزيل التطبيقات من واين
-Comment[ar]=واجهة إزالة التّطبيقات من واين
-Exec=wine uninstaller
-Icon=msiexec
-Terminal=false
-Type=Application
-StartupNotify=true
-StartupWMClass=uninstaller.exe
-Categories=X-Wine;
-X-Desktop-File-Install-Version=0.26
-EOF
-chmod +x "$PREFIX/share/applications/wine-uninstaller.desktop"
-cat << EOF > "$PREFIX/share/applications/wine-regedit.desktop"
-[Desktop Entry]
-Name=Regedit
-Comment=Wine registry editor
-Name[ar]=محرر السّجل
-Comment[ar]=محرر لسجلات واين
-Exec=wine regedit
-Icon=regedit
-Terminal=false
-Type=Application
-StartupNotify=true
-StartupWMClass=regedit.exe
-Categories=X-Wine;
-X-Desktop-File-Install-Version=0.26
-EOF
-chmod +x "$PREFIX/share/applications/wine-regedit.desktop"
-cat << EOF > "$PREFIX/share/applications/wine-wineboot.desktop"
-[Desktop Entry]
-Name=Wine Boot
-Comment=Simulate restart
-Name[ar]=إقلاع واين
-Comment[ar]=محاكاة إعادة التشغيل لواين
-Exec=wine wineboot
-Icon=wine
-Terminal=false
-Type=Application
-Categories=X-Wine;
-X-Desktop-File-Install-Version=0.26
-EOF
-chmod +x "$PREFIX/share/applications/wine-wineboot.desktop"
+function run_wine_shortcut_script() {
+	download_file ${current_path}/add-wine-shortcut https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/other/add-wine-shortcut
+	chmod +x ${current_path}/add-wine-shortcut
+    . ${current_path}/add-wine-shortcut
+	check_and_delete "add-wine-shortcut"
 }
 
 function setup_wine() {
@@ -2476,7 +2495,7 @@ function setup_wine() {
 	echo "${R}[${C}-${R}]${G}${BOLD} Installing Wine Natively In Termux${W}"
 	echo
 	package_install_and_check "wine-stable winetricks"
-	wine_shortcut
+	run_wine_shortcut_script
 	echo "setup_wine=\"default-wine\"" >> "$config_file"
 	elif [[ "$wine_answer" == "2" ]]; then
 	echo "${R}[${C}-${R}]${G}${BOLD} Addind Mobox Launch Option To Termux${W}"
@@ -2488,12 +2507,12 @@ function setup_wine() {
 	sleep 4
 	download_file "$PREFIX/bin/wine" "https://raw.githubusercontent.com/LinuxDroidMaster/Termux-Desktops/main/scripts/termux_native/mobox_run.sh"
 	chmod +x "$PREFIX/bin/wine"
-	wine_shortcut
+	run_wine_shortcut_script
 	cp "$PREFIX/share/applications/wine-explorer.desktop" "$HOME/Desktop/MoboxExplorer.desktop"
 	echo "setup_wine=\"mobox\"" >> "$config_file"
 	elif [[ "$wine_answer" == "3" ]]; then
 	package_install_and_check "hangover hangover-wine winetricks"
-	wine_shortcut
+	run_wine_shortcut_script
 	echo "setup_wine=\"hangover-wine\"" >> "$config_file"
 	elif [[ "$wine_answer" == "4" ]]; then
 	echo "${R}[${C}-${R}]${C} Skipping wine Installation...${W}"
@@ -2502,7 +2521,7 @@ function setup_wine() {
     echo "${R}[${C}-${R}]${G} Installing Wine Natively In Termux${W}"
 	echo
 	package_install_and_check "wine-stable winetricks"
-	wine_shortcut
+	run_wine_shortcut_script
 	echo "setup_wine=\"default-wine\"" >> "$config_file"
 	fi
 }
@@ -2584,6 +2603,8 @@ function cleanup_cache() {
 function add_common_function() {
 	check_and_delete "$PREFIX/etc/termux-desktop/common_functions"
 cat <<'EOF' > "$PREFIX/etc/termux-desktop/common_functions"
+#!/data/data/com.termux/files/usr/bin/bash
+
 R="$(printf '\033[1;31m')"
 G="$(printf '\033[1;32m')"
 Y="$(printf '\033[1;33m')"
@@ -2591,10 +2612,13 @@ B="$(printf '\033[1;34m')"
 C="$(printf '\033[1;36m')"
 W="$(printf '\033[0m')"
 BOLD="$(printf '\033[1m')"
+
+cd "$HOME" || exit
 termux_desktop_path="$PREFIX/etc/termux-desktop"
-config_file="$termux_desktop_path/configuration"
+config_file="$termux_desktop_path/configuration.conf"
+log_file="$HOME/termux-desktop.log"
 EOF
-declare -f check_termux debug check_and_create_directory check_and_delete check_and_backup check_and_restore package_install_and_check package_check_and_remove get_file_name_number extract_archive download_and_extract count_subfolders confirmation_y_or_n get_latest_release >> "$PREFIX/etc/termux-desktop/common_functions"
+declare -f check_termux print_log print_failed wait_for_keypress print_success download_file debug check_and_create_directory check_and_delete check_and_backup check_and_restore package_install_and_check package_check_and_remove get_file_name_number extract_archive download_and_extract count_subfolders confirmation_y_or_n get_latest_release >> "$PREFIX/etc/termux-desktop/common_functions"
 chmod +x "$PREFIX/etc/termux-desktop/common_functions"
 }
 
@@ -2604,7 +2628,7 @@ function delete_installer_file() {
 	    if [[ -f "${current_path}/setup-termux-desktop" ]]; then
 		(exec rm -- "${current_path}/setup-termux-desktop") &
 		else
-		echo "${R}[${R}☓${R}]${R}Installer file not found${W}"
+		print_failed "Installer file not found"
 		fi
 	fi
 }
@@ -2842,7 +2866,7 @@ function change_hw() {
 	        sed -i "s|selected_pd_hw_method=\"[^\"]*\"|selected_pd_hw_method=\"$pd_hw_method\"|" "$PREFIX/bin/pdrun"
 	    fi
 	    clear
-	    echo "${R}[${G}✓${R}]${G}${BOLD}Hardware acceleration method changed successfully${W}"
+	    print_success "${BOLD}Hardware acceleration method changed successfully"
 	fi
 }
 
@@ -2920,7 +2944,7 @@ function change_autostart() {
     fi
 
     if [[ "$zsh_answer" == "y" && "$current_shell" == "bash" ]] || [[ "$zsh_answer" == "n" && "$current_shell" == "zsh" ]]; then
-        echo "${R}[${R}☓${R}]${R}It looks like you have changed your shell after the installation ${W}"
+        print_failed "It looks like you have changed your shell after the installation"
         exit 0
     fi
 
@@ -3243,6 +3267,7 @@ check_and_add_installer "$1"
 fi
 current_path=$(pwd)
 function install_termux_desktop() {
+print_recomended_msg
 cleanup_cache
 detact_package_manager
 update_sys
@@ -3287,6 +3312,7 @@ preprocess_conf
 cleanup_cache
 termux-wake-unlock
 notes
+print_log "$(cat $config_file)"
 delete_installer_file
 }
 
@@ -3359,7 +3385,7 @@ case $1 in
 			    show_change_help
                 ;;
             *)
-                echo "${R}[${R}☓${R}]${R}${BOLD} Invalid option: ${C}$2${W}"
+                print_failed "${BOLD} Invalid option: ${C}$2"
 				echo "${R}[${C}-${R}]${G} Use --change help to show help${W}"
                 ;;
         esac
@@ -3382,7 +3408,7 @@ case $1 in
                     exit
                     ;;
                 *)
-                    echo "${R}[${R}☓${R}]${R}${BOLD} Invalid option: ${C}$option${W}"
+                    print_failed "${BOLD} Invalid option: ${C}$option"
 					echo "${R}[${C}-${R}]${G} Use --reinstall help to show help${W}"
                     ;;
             esac

@@ -19,7 +19,7 @@ function hw_install_required_packages() {
             archtype="arm"
             ;;
         *)
-            echo "${R}[${R}☓${R}]${R} Unsupported architecture${W}"
+            print_failed "Unsupported architecture"
             return
             ;;
     esac

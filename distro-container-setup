@@ -72,7 +72,7 @@ function pd_package_install_and_check() {
 
         # Handle error in installation
         if [ $? -ne 0 ]; then
-            echo "${R}[${R}☓${R}]${R}${BOLD} Error detected during installation of: ${C}$package_name ${W}"
+            print_failed "${BOLD} Error detected during installation of: ${C}$package_name"
             if [[ "$ID" == "debian" ]] || [[ "$ID" == "ubuntu" ]]; then
                 sudo apt --fix-broken install -y
                 sudo dpkg --configure -a
@@ -112,34 +112,34 @@ function pd_package_install_and_check() {
         # Check installation
         if [[ "$ID" == "debian" ]] || [[ "$ID" == "ubuntu" ]]; then
             if dpkg -s "$package_name" >/dev/null 2>&1; then
-                echo "${R}[${G}✓${R}]${G} $package_name installed successfully ${W}"
+                print_success "$package_name installed successfully"
             else
                 if type -p "$package_name" &>/dev/null || ls "$PREFIX/bin/"*"$package_name"* >/dev/null 2>&1; then
-                    echo "${R}[${G}✓${R}]${C} $package_name ${G}installed successfully ${W}"
+                    print_success "$package_name ${G}installed successfully"
                 fi
             fi
         elif [[ "$ID" == arch* ]]; then
             if pacman -Qi "$package_name" >/dev/null 2>&1; then
-                echo "${R}[${G}✓${R}]${G} $package_name installed successfully ${W}"
+                print_success "$package_name installed successfully"
             else
                 if type -p "$package_name" &>/dev/null || ls "$PREFIX/bin/"*"$package_name"* >/dev/null 2>&1; then
-                    echo "${R}[${G}✓${R}]${C} $package_name ${G}installed successfully ${W}"
+                    print_success "$package_name ${G}installed successfully"
                 fi
             fi
         elif [[ "$ID" == "alpine" ]]; then
             if apk info -e "$package_name"; then
-                echo "${R}[${G}✓${R}]${G} $package_name installed successfully ${W}"
+                print_success "$package_name installed success"
             else
                 if type -p "$package_name" &>/dev/null || ls "$PREFIX/bin/"*"$package_name"* >/dev/null 2>&1; then
-                    echo "${R}[${G}✓${R}]${C} $package_name ${G}installed successfully ${W}"
+                    print_success "$package_name ${G}installed success"
                 fi
             fi
         elif [[ "$ID" == "fedora" ]]; then
             if rpm -q "$package_name" >/dev/null 2>&1; then
-                echo "${R}[${G}✓${R}]${G} $package_name installed successfully ${W}"
+                print_success "$package_name installed success"
             else
                 if type -p "$package_name" &>/dev/null || ls "$PREFIX/bin/"*"$package_name"* >/dev/null 2>&1; then
-                    echo "${R}[${G}✓${R}]${C} $package_name ${G}installed successfully ${W}"
+                    print_success "$package_name ${G}installed success"
                 fi
             fi
         fi
@@ -171,7 +171,7 @@ function pd_root_package_install_and_check() {
 
         # Handle error in installation
         if [ $? -ne 0 ]; then
-            echo "${R}[${R}☓${R}]${R}${BOLD} Error detected during installation of: ${C}$package_name ${W}"
+            print_failed "${BOLD} Error detected during installation of: ${C}$package_name"
             if [[ "$ID" == "debian" ]] || [[ "$ID" == "ubuntu" ]]; then
                 apt --fix-broken install -y
                 dpkg --configure -a
@@ -211,34 +211,34 @@ function pd_root_package_install_and_check() {
         # Check installation
         if [[ "$ID" == "debian" ]] || [[ "$ID" == "ubuntu" ]]; then
             if dpkg -s "$package_name" >/dev/null 2>&1; then
-                echo "${R}[${G}✓${R}]${G} $package_name installed successfully ${W}"
+                print_success "$package_name installed successfully"
             else
                 if type -p "$package_name" &>/dev/null || ls "$PREFIX/bin/"*"$package_name"* >/dev/null 2>&1; then
-                    echo "${R}[${G}✓${R}]${C} $package_name ${G}installed successfully ${W}"
+                    print_success "$package_name ${G}installed successfully"
                 fi
             fi
         elif [[ "$ID" == arch* ]]; then
             if pacman -Qi "$package_name" >/dev/null 2>&1; then
-                echo "${R}[${G}✓${R}]${G} $package_name installed successfully ${W}"
+                print_success "$package_name installed successfully ${W}"
             else
                 if type -p "$package_name" &>/dev/null || ls "$PREFIX/bin/"*"$package_name"* >/dev/null 2>&1; then
-                    echo "${R}[${G}✓${R}]${C} $package_name ${G}installed successfully ${W}"
+                    print_success "$package_name ${G}installed successfully"
                 fi
             fi
         elif [[ "$ID" == "alpine" ]]; then
             if apk info -e "$package_name"; then
-                echo "${R}[${G}✓${R}]${G} $package_name installed successfully ${W}"
+                print_success "$package_name installed successfully ${W}"
             else
                 if type -p "$package_name" &>/dev/null || ls "$PREFIX/bin/"*"$package_name"* >/dev/null 2>&1; then
-                    echo "${R}[${G}✓${R}]${C} $package_name ${G}installed successfully ${W}"
+                    print_success "$package_name ${G}installed successfully"
                 fi
             fi
         elif [[ "$ID" == "fedora" ]]; then
             if rpm -q "$package_name" >/dev/null 2>&1; then
-                echo "${R}[${G}✓${R}]${G} $package_name installed successfully ${W}"
+                print_success "$package_name installed successfully ${W}"
             else
                 if type -p "$package_name" &>/dev/null || ls "$PREFIX/bin/"*"$package_name"* >/dev/null 2>&1; then
-                    echo "${R}[${G}✓${R}]${C} $package_name ${G}installed successfully ${W}"
+                    print_success "$package_name ${G}installed successfully"
                 fi
             fi
         fi
@@ -656,7 +656,11 @@ function handel_debian_based_app_installer() {
         local package_manager="apt"
     fi
 
-    cat <<TOP_EOF > "$PREFIX/bin/$selected_distro"
+cat <<EOF > "$PREFIX/bin/$selected_distro"
+. $PREFIX/etc/termux-desktop/common_functions
+EOF
+
+    cat <<TOP_EOF >> "$PREFIX/bin/$selected_distro"
 #!/data/data/com.termux/files/usr/bin/bash
 
 xhost + > /dev/null 2>&1
@@ -675,7 +679,7 @@ EOF
 for package_name in "\${packages[@]}"; do
     desktop_files=\$(dpkg-query -W -f='\${binary:Package}\n' | grep "^\$package_name\(-.*\)\?\$" | xargs dpkg-query -L | grep "^/usr/share/applications/.*\.desktop\$")
     if [ -z "\$desktop_files" ]; then
-        echo "${R}[${R}☓${R}]${G} No .desktop files found for package ${C}'\$package_name' ${G}in /usr/share/applications."
+        print_failed "No .desktop files found for package ${C}\$package_name ${G}in /usr/share/applications."
     else
         for desktop_files_name in \$desktop_files; do
             desktop_files_with_ext=\$(basename "\$desktop_files_name")
@@ -699,7 +703,7 @@ EOF
 for package_name in "\${packages[@]}"; do
     desktop_files=\$(dpkg-query -W -f='\${binary:Package}\n' | grep "^\$package_name\(-.*\)\?\$" | xargs dpkg-query -L | grep "^/usr/share/applications/.*\.desktop\$")
     if [ -z "\$desktop_files" ]; then
-        echo "${R}[${R}☓${R}]${G} No .desktop files found for package ${C}'\$package_name' ${G}in /usr/share/applications."
+        print_failed "No .desktop files found for package ${C}\$package_name ${G}in /usr/share/applications."
     else
         for desktop_files_name in \$desktop_files; do
             desktop_files_with_ext=\$(basename "\$desktop_files_name")
@@ -725,7 +729,7 @@ TOP_EOF
 }
 
 function handel_arch_based_app_installer() {
-    cat <<TOP_EOF > "$PREFIX/bin/$selected_distro"
+    cat <<TOP_EOF >> "$PREFIX/bin/$selected_distro"
 #!/data/data/com.termux/files/usr/bin/bash
 
 xhost + > /dev/null 2>&1
@@ -745,7 +749,7 @@ EOF
 for package_name in "\${packages[@]}"; do
     desktop_files=\$(pacman -Ql \$package_name | grep -oP "/usr/share/applications/.*\.desktop$")
     if [ -z "\$desktop_files" ]; then
-        echo "${R}[${R}☓${R}]${G} No .desktop files found for package ${C}'\$package_name' ${G}in /usr/share/applications."
+        print_failed "No .desktop files found for package ${C}\$package_name ${G}in /usr/share/applications."
     else
         for desktop_files_name in \$desktop_files; do
             desktop_files_with_ext=\$(basename "\$desktop_files_name")
@@ -771,7 +775,7 @@ EOF
 for package_name in "\${packages[@]}"; do
     desktop_files=\$(pacman -Ql \$package_name | grep -oP "/usr/share/applications/.*\.desktop$")
     if [ -z "\$desktop_files" ]; then
-        echo "${R}[${R}☓${R}]${G} No .desktop files found for package ${C}'\$package_name' ${G}in /usr/share/applications."
+        print_failed "No .desktop files found for package ${C}\$package_name ${G}in /usr/share/applications."
     else
         for desktop_files_name in \$desktop_files; do
             desktop_files_with_ext=\$(basename "\$desktop_files_name")
@@ -798,7 +802,7 @@ TOP_EOF
 }
 
 function handel_alpine_based_app_installer() {
-    cat <<TOP_EOF > "$PREFIX/bin/$selected_distro"
+    cat <<TOP_EOF >> "$PREFIX/bin/$selected_distro"
 #!/data/data/com.termux/files/usr/bin/bash
 
 xhost + > /dev/null 2>&1
@@ -818,7 +822,7 @@ EOF
 for package_name in "\${packages[@]}"; do
     desktop_files=\$(ls /usr/share/applications/ | grep "\$package_name.*\.desktop$")
     if [ -z "\$desktop_files" ]; then
-        echo "${R}[${R}☓${R}]${G} No .desktop files found for package ${C}'\$package_name' ${G}in /usr/share/applications."
+        print_failed "No .desktop files found for package ${C}\$package_name ${G}in /usr/share/applications."
     else
         for desktop_files_name in \$desktop_files; do
             desktop_files_without_ext="\${desktop_files_with_ext%.desktop}"
@@ -844,7 +848,7 @@ EOF
 for package_name in "\${packages[@]}"; do
     desktop_files=\$(ls /usr/share/applications/ | grep "\$package_name.*\.desktop\$")
     if [ -z "\$desktop_files" ]; then
-        echo "${R}[${R}☓${R}]${G} No .desktop files found for package ${C}'\$package_name' ${G}in /usr/share/applications."
+        print_failed "No .desktop files found for package ${C}\$package_name ${G}in /usr/share/applications."
     else
         for desktop_files_name in \$desktop_files; do
             desktop_files_without_ext="\${desktop_files_with_ext%.desktop}"
@@ -871,7 +875,7 @@ TOP_EOF
 }
 
 function handel_fedora_based_app_installer() {
-    cat <<TOP_EOF > "$PREFIX/bin/$selected_distro"
+    cat <<TOP_EOF >> "$PREFIX/bin/$selected_distro"
 #!/data/data/com.termux/files/usr/bin/bash
 
 xhost + > /dev/null 2>&1
@@ -894,7 +898,7 @@ for package_name in "\${packages[@]}"; do
     package_query=\$(rpm -q "\$package_name" | sed 's/-[0-9].*//')
     desktop_files=\$(ls /usr/share/applications/ | grep "\$package_query.*\.desktop\$")
     if [ -z "\$desktop_files" ]; then
-        echo "${R}[${R}☓${R}]${G} No .desktop files found for package ${C}'\$package_name' ${G}in /usr/share/applications."
+        print_failed "No .desktop files found for package ${C}\$package_name ${G}in /usr/share/applications."
     else
         for desktop_files_name in \$desktop_files; do
             desktop_files_with_ext=\$(basename "\$desktop_files_name")
@@ -922,7 +926,7 @@ for package_name in "\${packages[@]}"; do
     package_query=\$(rpm -q "\$package_name" | sed 's/-[0-9].*//')
     desktop_files=\$(ls /usr/share/applications/ | grep "\$package_query.*\.desktop\$")
     if [ -z "\$desktop_files" ]; then
-        echo "${R}[${R}☓${R}]${G} No .desktop files found for package ${C}'\$package_name' ${G}in /usr/share/applications."
+        print_failed "No .desktop files found for package ${C}\$package_name ${G}in /usr/share/applications."
     else
         for desktop_files_name in \$desktop_files; do
             desktop_files_with_ext=\$(basename "\$desktop_files_name")
@@ -969,7 +973,7 @@ function remove_distro_container() {
         read -p "${R}[${C}-${R}]${Y}${BOLD} Do you want to remove the distro${R}it can't be undone ${Y}(y/n) ${W}" ans_remove_distro
         case \$ans_remove_distro in
             [yY]* )
-                echo "${R}[${G}✓${R}]${G} Continuing with answer: \$ans_remove_distro${W}"
+                print_success "Continuing with answer: \$ans_remove_distro"
                 sleep 0.2
                 if [[ -d $distro_path ]]; then
                 proot-distro remove "$selected_distro"
@@ -988,13 +992,13 @@ function remove_distro_container() {
                         rm $distro_file
                         fi
                     else
-                    echo "${R}[${R}☓${R}]${R}File does not exist: $distro_file${W}"
+                    print_failed "File does not exist: $distro_file"
                     fi
                     done
-                echo "${R}[${G}✓${R}]${G}$"$selected_distro" removed successfully${W}"
+                print_success "$"$selected_distro" removed successfully"
                 echo "distro_add_answer=\"n\"" >> $config_file
                 else
-                echo "${R}[${R}☓${R}]${R}"$selected_distro" does not exist"
+                print_failed "$selected_distro does not exist"
                 fi
                 break;;
             [nN]* )
@@ -1002,7 +1006,7 @@ function remove_distro_container() {
                 sleep 0.2
                 break;;
             * )
-                echo "${R}[${R}☓${R}]${R} Invalid input. Please enter 'y' or 'n'.${W}"
+                print_failed "Invalid input, Please enter y or n"
                 ;;
         esac
     done
@@ -1266,23 +1270,23 @@ function install_distro_container() {
 function disro_container_install_check() {
     if [[ -d "$PREFIX/bin/$selected_distro" ]] || [[ -d "$PREFIX/var/lib/proot-distro/installed-rootfs/$selected_distro" ]]; then
     echo
-    echo "${R}[${G}✓${R}]${G}${BOLD} $selected_distro container setup successfully${W}"
+    print_success "${BOLD} $selected_distro container setup successfully"
     else
     max_retries=2
     retry_count=0
         while [[ "$retry_count" -lt "$max_retries" ]]; do
-        echo "${R}[${R}☓${R}]${R} Some problem occurred in $selected_distro setup${W}"
+        print_failed "Some problem occurred in $selected_distro setup"
         echo
         echo "${R}[${C}-${R}]${G} Trying again... (Attempt $((retry_count + 1)) of $max_retries)${W}"
         install_distro_container
             if [[ -d "$PREFIX/bin/$selected_distro" ]] || [[ -d "$PREFIX/var/lib/proot-distro/installed-rootfs/$selected_distro" ]]; then
             echo
-            echo "${R}[${G}✓${R}]${G}${BOLD} $selected_distro container setup successfully${W}"
+            print_success "${BOLD} $selected_distro container setup successfully"
             break
             fi
             ((retry_count++))
             if [[ "$retry_count" == "$max_retries" ]]; then
-            echo "${R}[${R}☓${R}]${R} Failed to set up $selected_distro container after multiple attempts. Skipping...${W}"
+            print_failed "Failed to set up $selected_distro container after multiple attempts. Skipping...${W}"
             break
             fi
         done
