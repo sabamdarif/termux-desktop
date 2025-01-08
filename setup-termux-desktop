@@ -228,7 +228,6 @@ function package_install_and_check() {
 
         if [[ "$PACKAGE_MANAGER" == "pacman" ]]; then
             if pacman -Qi "$package_name" >/dev/null 2>&1; then
-                echo "\"${package_name}\"=\"already_exist\"" >> "$config_file"
 				print_log "$package_name = already_exist"
                 continue
             fi
@@ -255,7 +254,6 @@ function package_install_and_check() {
                 for pkgs in $packages; do
                     echo "${R}[${C}-${R}]${G}${BOLD} Installing matched package: ${C}$pkgs ${W}"
                     if dpkg -s "$pkgs" >/dev/null 2>&1; then
-                        echo "\"${pkgs}\"=\"already_exist\"" >> "$config_file"
 						print_log "$pkgs = already_exist"
                         pkg reinstall "$pkgs" -y
                     else
@@ -264,7 +262,6 @@ function package_install_and_check() {
                 done
             else
                 if dpkg -s "$package_name" >/dev/null 2>&1; then
-                    echo "\"${package_name}\"=\"already_exist\"" >> "$config_file"
 					print_log "$package_name = already_exist"
                     pkg reinstall "$package_name" -y
                 else
@@ -325,7 +322,6 @@ function package_check_and_remove() {
 
             for pkg in $packages; do
                 echo "${R}[${C}-${R}]${G}${BOLD} Removing matched package: ${C}$pkg ${W}"
-				if [[ "$pkg" != "already_exist" ]]; then
                 if [[ "$PACKAGE_MANAGER" == "pacman" ]]; then
                     if pacman -Qi "$pkg" >/dev/null 2>&1; then
                         pacman -Rnds --noconfirm "$pkg"
@@ -346,10 +342,8 @@ function package_check_and_remove() {
                         fi
                     fi
                 fi
-				fi
             done
         else
-			if [[ "$package_name" != "already_exist" ]]; then
             if [[ "$PACKAGE_MANAGER" == "pacman" ]]; then
                 if pacman -Qi "$package_name" >/dev/null 2>&1; then
                     echo "${R}[${C}-${R}]${G}${BOLD} Removing package: ${C}$package_name ${W}"
@@ -372,7 +366,6 @@ function package_check_and_remove() {
                 fi
             fi
         fi
-		fi
     done
     echo ""
 	print_log "$package_name"
@@ -678,38 +671,6 @@ function select_an_option() {
     done
 }
 
-# temp_config_file="$PREFIX/tmp/processed_config.conf"
-# function preprocess_conf() {
-#     cp "$config_file" "$temp_config_file"
-
-#     # Preprocess configuration file:
-#     # 1. Replace all dashes in keys with underscores.
-#     # 2. Remove quotes from keys and values.
-#     sed -i -E 's/^([[:space:]]*[^#=]+)-/\1_/g; s/-/_/g; s/^([[:space:]]*[^#=]+)="([^"]*)"/\1=\2/g' "$temp_config_file"
-# }
-
-# function read_conf() {
-#     if [[ ! -f "$temp_config_file" ]]; then
-#         echo "Preprocessed configuration file not found."
-#         exit 1
-#     fi
-
-#     # Safely source the preprocessed configuration file
-#     while IFS='=' read -r key value; do
-#         # Trim whitespace from key and value
-#         key=$(echo "$key" | xargs)
-#         value=$(echo "$value" | xargs)
-
-#         # Skip comments and empty lines
-#         if [[ -z "$key" || "$key" =~ ^# ]]; then
-#             continue
-#         fi
-
-#         # Export the key-value pair as a variable
-#         export "$key"="$value"
-#     done < "$temp_config_file"
-# }
-
 function preprocess_conf() {
     # Preprocess configuration file:
     # 1. Remove lines where keys contain dashes (-).
@@ -724,22 +685,22 @@ function read_conf() {
 		exit 0
     fi
 
-	# source "$config_file"
+	source "$config_file"
 
     # Process each line of the file
-    while IFS='=' read -r key value; do
-        # Trim whitespace and surrounding quotes from key and value
-        key=$(echo "$key" | xargs | sed 's/"//g')
-        value=$(echo "$value" | xargs | sed 's/"//g')
+    # while IFS='=' read -r key value; do
+    #     # Trim whitespace and surrounding quotes from key and value
+    #     key=$(echo "$key" | xargs | sed 's/"//g')
+    #     value=$(echo "$value" | xargs | sed 's/"//g')
 
-        # Skip empty lines and comments
-        if [[ -z "$key" || "$key" =~ ^# ]]; then
-            continue
-        fi
+    #     # Skip empty lines and comments
+    #     if [[ -z "$key" || "$key" =~ ^# ]]; then
+    #         continue
+    #     fi
 
-        # Dynamically create variables
-        export "$key"="$value"
-    done < "$config_file"
+    #     # Dynamically create variables
+    #     export "$key"="$value"
+    # done < "$config_file"
 
     print_success "Configuration variables loaded"
 }
@@ -2809,8 +2770,8 @@ function change_style() {
 	echo -e "${C} It look like you haven't install the desktop yet\n Please install the desktop first${W}"
 	exit 0
 	else
-	gui_check_up
 	read_conf
+	gui_check_up
 	banner
 	echo "${R}[${C}-${R}]${G} Your currently installed style is ${C}${BOLD}$style_name ${W}"
 	echo
@@ -2980,10 +2941,10 @@ function change_autostart() {
 #########################################################################
 
 function reinstall_themes() {
+	read_conf
 	gui_check_up
 	tmp_themes_folder="$PREFIX/tmp/themes"
 	check_and_create_directory "$tmp_themes_folder"
-	read_conf
 	echo "${R}[${C}-${R}]${G} Reinstalling Themes...${W}"
 	download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/${de_name}/look_${style_answer}/theme.tar.gz" "$tmp_themes_folder"
 	local theme_names
@@ -3003,10 +2964,10 @@ function reinstall_themes() {
 #########################################################################
 
 function reinstall_icons() {
+	read_conf
 	gui_check_up
 	tmp_icons_folder="$PREFIX/tmp/icons"
 	check_and_create_directory "$tmp_icons_folder"
-	read_conf
 	package_install_and_check "gdk-pixbuf"
 	if [[ "$style_answer" == "2" ]]; then
 	package_install_and_check "fluent-icon-theme"
@@ -3036,10 +2997,10 @@ function reinstall_icons() {
 #########################################################################
 
 function reinstall_config() {
+	read_conf
 	gui_check_up
 	tmp_config_folder="$PREFIX/tmp/config"
 	check_and_create_directory "$tmp_config_folder"
-	read_conf
 	echo "${R}[${C}-${R}]${G} Reinstalling Config...${W}"
 	download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/${de_name}/look_${style_answer}/config.tar.gz" "$tmp_config_folder"
 	local config_file_names
@@ -3136,6 +3097,14 @@ cat <<EOF > "$config_file"
 EOF
 }
 
+function add_installer() {
+	if [[ ! -e "$PREFIX/bin/setup-termux-desktop" ]]; then
+		echo "${R}[${C}-${R}]${G} Adding setup-termux-desktop installer to bin${W}"
+    	download_file "$PREFIX/bin/setup-termux-desktop" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop"
+    	chmod +x "$PREFIX/bin/setup-termux-desktop"
+	fi
+}
+
 # check for the changes in the installer file
 function check_for_update_and_update_installer() {
     if [[ -e "$PREFIX/bin/setup-termux-desktop" ]]; then
@@ -3155,11 +3124,9 @@ function check_for_update_and_update_installer() {
 				check_and_create_directory "$PREFIX/etc/termux-desktop"
                 mv "$PREFIX/bin/setup-termux-desktop" "$PREFIX/etc/termux-desktop/"
                 check_and_backup "$PREFIX/etc/termux-desktop/setup-termux-desktop"
-                curl -Lsf https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop -o "$PREFIX/bin/setup-termux-desktop"
-                chmod +x "$PREFIX/bin/setup-termux-desktop"
+                add_installer
                 add_common_function
-                termux-reload-settings
-
+				unset local_script_hash
                 local new_local_script_hash
 				new_local_script_hash=$(basename "$(sha256sum "$PREFIX/bin/setup-termux-desktop" | cut -d ' ' -f 1)")
                 if [[ "$new_local_script_hash" == "$current_script_hash" ]]; then
@@ -3171,9 +3138,10 @@ function check_for_update_and_update_installer() {
                     exit 0
                 fi
             elif [[ "$update_installer" == "n" ]]; then
-                echo "${R}[${C}-${R}]${G} Keeping the old installer${W}"
-                touch "$termux_desktop_path/skip_update_checkup" >/dev/null 2>&1
-                exit 0
+            	echo "${R}[${C}-${R}]${G} Keeping the old installer${W}"
+            	check_and_create_directory "$termux_desktop_path"
+            	touch "$termux_desktop_path/skip_update_checkup"
+            	exit 0
             fi
         else
             echo -e "${R}[${C}-${R}]${G}${BOLD} Good job, you are using the latest installer${W}"
@@ -3181,18 +3149,14 @@ function check_for_update_and_update_installer() {
     fi
 }
 
-function check_and_add_installer() {
+function check_installer_status() {
     if [[ -e "$PREFIX/bin/setup-termux-desktop" ]]; then
-        if [[ ! -e "$termux_desktop_path/skip_update_checkup" ]] || [[ "$1" != "--update" ]]; then
+        if [[ ! -e "$termux_desktop_path/skip_update_checkup" ]]; then
             check_for_update_and_update_installer
         else
-            echo "${R}[${C}-${R}]${G}${BOLD} You paused the update${W}"
-            echo "${R}[${C}-${R}]${G}${BOLD} Use ${C}--update ${G}to re-start update${W}"
+            echo "${R}[${C}-${R}]${G}${BOLD} Update check skipped${W}"
+            echo "${R}[${C}-${R}]${G}${BOLD} Use ${C}--update ${G}to force update check${W}"
         fi
-    else
-        echo "${R}[${C}-${R}]${G} Adding setup-termux-desktop installer to bin${W}"
-        curl -Lsf https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop -o "$PREFIX/bin/setup-termux-desktop"
-        chmod +x "$PREFIX/bin/setup-termux-desktop"
     fi
 }
 
@@ -3262,8 +3226,8 @@ function reset_changes() {
 #
 #########################################################################
 check_termux
-if [[ -z "$1" ]] || [[ "$1" = "--install" ]] || [[ "$1" = "-i" ]]; then
-check_and_add_installer "$1"
+if [[ -z "$1" ]] || [[ "$1" == "--install" ]] || [[ "$1" == "-i" ]]; then
+check_installer_status "$1"
 fi
 current_path=$(pwd)
 function install_termux_desktop() {
@@ -3311,6 +3275,7 @@ some_fixes
 preprocess_conf
 cleanup_cache
 termux-wake-unlock
+add_installer
 notes
 print_log "$(cat $config_file)"
 delete_installer_file
@@ -3415,7 +3380,7 @@ case $1 in
         done
         ;;
 	--update)
-	check_for_update_and_update_installer
+	check_for_update_and_update_installer "$1"
 	;;
     --help|-h)
         show_help
