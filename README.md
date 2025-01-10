@@ -35,7 +35,7 @@
 ##### 1. Ensure Requirements Are Met:
    - Android 8+ device
    - [Termux](https://termux.dev/en/) (download from [GitHub](https://github.com/termux/termux-app/releases) or [F-Droid](https://f-droid.org/en/packages/com.termux/))
-      >NOTE: This Only Works Only On Termux From Github Or Fdroid
+      >NOTE: This Only Works On Termux From Github Or Fdroid
 
      > Avoid using Termux from Google Play due to API limitations.
    - Minimum 2GB of RAM (3GB recommended)
