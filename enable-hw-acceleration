@@ -39,7 +39,7 @@ function hw_install_required_packages() {
         fi
 
         case "$termux_hw_answer" in
-            "zink"|"zink_virgl")
+            "zink"|"zink_virgl"|"zink_with_mesa_zink")
                 package_install_and_check "mesa-zink virglrenderer-mesa-zink vulkan-loader-generic angle-android virglrenderer-android"
                 ;;
             "zink_with_mesa")
@@ -125,6 +125,18 @@ case "$termux_hw_answer" in
     set_to_export="MESA_NO_ERROR=1 MESA_GL_VERSION_OVERRIDE=4.3COMPAT MESA_GLES_VERSION_OVERRIDE=3.2 GALLIUM_DRIVER=zink ZINK_DESCRIPTORS=lazy"
     initialize_server_method="virgl_test_server --use-egl-surfaceless --use-gles"
     hw_method="GALLIUM_DRIVER=virpipe MESA_GL_VERSION_OVERRIDE=4.0"
+    pd_hw_method="${hw_method}"
+    ;;
+    "zink_with_mesa")
+    set_to_export="MESA_NO_ERROR=1 MESA_GL_VERSION_OVERRIDE=4.3COMPAT MESA_GLES_VERSION_OVERRIDE=3.2"
+    hw_method="GALLIUM_DRIVER=zink"
+    initialize_server_method=" "
+    pd_hw_method="${hw_method}"
+    ;;
+    "zink_with_mesa_zink")
+    set_to_export="MESA_NO_ERROR=1 MESA_GL_VERSION_OVERRIDE=4.3COMPAT MESA_GLES_VERSION_OVERRIDE=3.2"
+    hw_method="GALLIUM_DRIVER=zink"
+    initialize_server_method=" "
     pd_hw_method="${hw_method}"
     ;;
     "freedreno")
