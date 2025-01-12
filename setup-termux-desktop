@@ -903,6 +903,18 @@ function questions() {
 	echo
 	confirmation_y_or_n "Do you want install some terminal utility to make better terminal exprience" terminal_utility_setup_answer
 	banner
+	echo -e"
+	Typing 'Y' to this option will add a variety of options to your file manager's right-click menu. Using this, you can do a lot more things within the right-click menu than you ever imagined, such as:
+
+    - Most basic video/image-related tasks
+    - Audio/PDF-related tasks
+    - Archive-related tasks, file permissions, document handling, encryption, and hash checks
+    - And much more
+	Click on the scripts meanu to see them all
+	"
+	echo
+	confirmation_y_or_n "Do you want to Configuring File Manager Tools (Testing)" fm_tools
+	banner
 	echo "${R}[${C}-${R}]${G}${BOLD} Select Gui Mode${W}"
 	echo
 	echo "${Y}1. Termux:x11${W}"
@@ -2266,7 +2278,7 @@ function setup_synaptic() {
 
 #########################################################################
 #
-# Setup Zsh And Terminal Utility
+# Setup Zsh And Terminal and File Manager Utility
 #
 #########################################################################
 
@@ -2432,6 +2444,18 @@ alias 'pdapps'='cd /data/data/com.termux/files/usr/share/applications/pd_added &
 EOF
 fi
 echo "terminal_utility_setup_answer=\"$terminal_utility_setup_answer\"" >> "$config_file"
+}
+
+install_fm_tools() {
+	if [[ "$fm_tools" == "y" ]]; then
+		banner
+		echo "${R}[${C}-${R}]${G}${BOLD} Installing File Manager Tools...${W}"
+		git clone https://github.com/sabamdarif/nautilus-scripts.git
+		cd nautilus-scripts
+		bash setup-termux.sh
+		cd ..
+		check_and_delete "nautilus-scripts"
+	fi
 }
 
 #########################################################################
@@ -3272,6 +3296,7 @@ banner
 hw_questions
 setup_folder
 setup_zsh
+install_fm_tools
 setup_fonts
 install_desktop
 browser_installer
