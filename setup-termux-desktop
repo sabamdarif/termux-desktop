@@ -2625,7 +2625,7 @@ termux_desktop_path="$PREFIX/etc/termux-desktop"
 config_file="$termux_desktop_path/configuration.conf"
 log_file="$HOME/termux-desktop.log"
 EOF
-declare -f check_termux print_log print_failed wait_for_keypress print_success download_file debug check_and_create_directory check_and_delete check_and_backup check_and_restore package_install_and_check package_check_and_remove get_file_name_number extract_archive download_and_extract count_subfolders confirmation_y_or_n get_latest_release >> "$PREFIX/etc/termux-desktop/common_functions"
+typeset -f check_termux print_log print_success print_failed wait_for_keypress check_and_create_directory check_and_delete check_and_backup download_file check_and_restore detact_package_manager package_install_and_check package_check_and_remove get_file_name_number extract_zip_with_progress extract_archive download_and_extract count_subfolders confirmation_y_or_n get_latest_release install_font_for_style select_an_option preprocess_conf read_conf >> "$PREFIX/etc/termux-desktop/common_functions"
 chmod +x "$PREFIX/etc/termux-desktop/common_functions"
 }
 

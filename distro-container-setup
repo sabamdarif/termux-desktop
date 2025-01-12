@@ -657,12 +657,13 @@ function handel_debian_based_app_installer() {
     fi
 
 cat <<EOF > "$PREFIX/bin/$selected_distro"
+#!/data/data/com.termux/files/usr/bin/bash
+
 . $PREFIX/etc/termux-desktop/common_functions
+
 EOF
 
     cat <<TOP_EOF >> "$PREFIX/bin/$selected_distro"
-#!/data/data/com.termux/files/usr/bin/bash
-
 xhost + > /dev/null 2>&1
 if [[ "\$#" -eq 0 ]]; then
     proot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp
@@ -730,8 +731,6 @@ TOP_EOF
 
 function handel_arch_based_app_installer() {
     cat <<TOP_EOF >> "$PREFIX/bin/$selected_distro"
-#!/data/data/com.termux/files/usr/bin/bash
-
 xhost + > /dev/null 2>&1
 if [[ "\$#" -eq 0 ]]; then
     proot-distro login --user $final_user_name "$selected_distro" --shared-tmp
@@ -803,8 +802,6 @@ TOP_EOF
 
 function handel_alpine_based_app_installer() {
     cat <<TOP_EOF >> "$PREFIX/bin/$selected_distro"
-#!/data/data/com.termux/files/usr/bin/bash
-
 xhost + > /dev/null 2>&1
 if [[ "\$#" -eq 0 ]]; then
     proot-distro login --user $final_user_name $selected_distro --shared-tmp
@@ -876,8 +873,6 @@ TOP_EOF
 
 function handel_fedora_based_app_installer() {
     cat <<TOP_EOF >> "$PREFIX/bin/$selected_distro"
-#!/data/data/com.termux/files/usr/bin/bash
-
 xhost + > /dev/null 2>&1
 if [[ "\$#" -eq 0 ]]; then
     proot-distro login --user $final_user_name $selected_distro --shared-tmp
@@ -969,13 +964,12 @@ fi
 
 cat <<EOF >> "$PREFIX/bin/$selected_distro"
 function remove_distro_container() {
-     while true; do
-        read -p "${R}[${C}-${R}]${Y}${BOLD} Do you want to remove the distro${R}it can't be undone ${Y}(y/n) ${W}" ans_remove_distro
-        case \$ans_remove_distro in
-            [yY]* )
-                print_success "Continuing with answer: \$ans_remove_distro"
-                sleep 0.2
-                if [[ -d $distro_path ]]; then
+    confirmation_y_or_n "Do you want to remove the distro${R}it can't be undone" ans_remove_distro
+    case \$ans_remove_distro in
+        [yY]* )
+            print_success "Continuing with answer: \$ans_remove_distro"
+            sleep 0.2
+            if [[ -d $distro_path ]]; then
                 proot-distro remove "$selected_distro"
                 distro_file_list=(
                     "$PREFIX/bin/pdrun"
@@ -984,32 +978,27 @@ function remove_distro_container() {
                     "$PREFIX/share/applications/add2menu.desktop"
                     "$PREFIX/bin/"$selected_distro""
                 )
-                    for distro_file in "${distro_file_list[@]}"; do
-                    if [[ -e "$distro_file" ]]; then
-                        if [[ -d "$distro_file" ]]; then
-                        rm -rf $distro_file
-                        else
-                        rm $distro_file
-                        fi
+                for distro_file in "\${distro_file_list[@]}"; do
+                    if [[ -e "\$distro_file" ]]; then
+                        check_and_delete "\$distro_file"
                     else
-                    print_failed "File does not exist: $distro_file"
+                        print_failed "File does not exist: \$distro_file"
                     fi
-                    done
-                print_success "$"$selected_distro" removed successfully"
+                done
+                print_success "$selected_distro removed successfully"
                 echo "distro_add_answer=\"n\"" >> $config_file
-                else
+            else
                 print_failed "$selected_distro does not exist"
-                fi
-                break;;
-            [nN]* )
-                echo "${R}[${C}-${R}]${C} Skipping distro remove${W}"
-                sleep 0.2
-                break;;
-            * )
-                print_failed "Invalid input, Please enter y or n"
-                ;;
-        esac
-    done
+            fi
+            ;;
+        [nN]* )
+            echo "${R}[${C}-${R}]${C} Skipping distro remove${W}"
+            sleep 0.2
+            ;;
+        * )
+            print_failed "Invalid input, Please enter y or n"
+            ;;
+    esac
 }
 
 function help_distro_container() {
