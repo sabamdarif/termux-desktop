@@ -923,7 +923,21 @@ function questions() {
 	echo
 	echo "${Y}3. Both${W}"
 	echo
-	select_an_option 3 1 gui_mode
+	select_an_option 3 1 gui_mode_num
+	# set gui_mode and display_number value
+	if [[ "$gui_mode_num"  == "1" ]]; then
+		gui_mode="termux_x11"
+		display_number="0"
+		echo "display_number=\"$display_number\"" >> "$config_file"
+	elif [[ "$gui_mode_num"  == "2" ]]; then
+		gui_mode="vnc"
+	elif [[ "$gui_mode_num"  == "3" ]]; then
+		gui_mode="both"
+		display_number="0"
+		echo "display_number=\"$display_number\"" >> "$config_file"
+	fi
+	echo "gui_mode_num=\"$gui_mode_num\"" >> "$config_file"
+
 	banner
 	confirmation_y_or_n "Do you want to start the desktop at Termux startup" de_on_startup
 	if [[ "$de_on_startup" == "y" && "$gui_mode" == "3" ]]; then
@@ -1751,19 +1765,19 @@ if [[ "\$1" == "--debug" ]]; then
 case \$2 in
 --nogpu)
     # Start Termux X11 without GPU acceleration
-    XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :0 &
+    XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :${display_number} &
     sleep 1
     am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1
     sleep 1
-    env DISPLAY=:0 XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} LIBGL_ALWAYS_SOFTWARE=1 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe dbus-launch --exit-with-session $de_startup
+    env DISPLAY=:${display_number} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} LIBGL_ALWAYS_SOFTWARE=1 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe dbus-launch --exit-with-session $de_startup
 
     # Check if the second argument is --legacy
     if [[ "\$3" == "--legacy" ]]; then
-        XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :0 -legacy-drawing &
+        XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :${display_number} -legacy-drawing &
         sleep 1
         am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1
         sleep 1
-        env DISPLAY=:0 XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} dbus-launch --exit-with-session $de_startup
+        env DISPLAY=:${display_number} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} dbus-launch --exit-with-session $de_startup
     fi
     ;;
 
@@ -1771,22 +1785,22 @@ case \$2 in
     # Start Termux X11 without dbus-launch
 	export ${set_to_export}
 	${initialize_server_method} &
-    env XDG_RUNTIME_DIR=\${TMPDIR} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} ${hw_method} termux-x11 :0 -xstartup $de_startup
+    env XDG_RUNTIME_DIR=\${TMPDIR} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} ${hw_method} termux-x11 :${display_number} -xstartup $de_startup
     exit 0
 
     # Nested case to check for additional options
     case \$3 in
     --nogpu)
-        env LIBGL_ALWAYS_SOFTWARE=1 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe XDG_RUNTIME_DIR=\${TMPDIR} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} termux-x11 :0 -xstartup $de_startup
+        env LIBGL_ALWAYS_SOFTWARE=1 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe XDG_RUNTIME_DIR=\${TMPDIR} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} termux-x11 :${display_number} -xstartup $de_startup
 
         if [[ "\$4" == "--legacy" ]]; then
-            env XDG_RUNTIME_DIR=\${TMPDIR} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} termux-x11 :0 -legacy-drawing -xstartup $de_startup
+            env XDG_RUNTIME_DIR=\${TMPDIR} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} termux-x11 :${display_number} -legacy-drawing -xstartup $de_startup
         fi
         ;;
     --legacy)
 	export ${set_to_export}
 	${initialize_server_method} &
-        env XDG_RUNTIME_DIR=\${TMPDIR} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} ${hw_method} termux-x11 :0 -legacy-drawing -xstartup $de_startup
+        env XDG_RUNTIME_DIR=\${TMPDIR} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} ${hw_method} termux-x11 :${display_number} -legacy-drawing -xstartup $de_startup
         ;;
     *)
         echo -e "${C}--legacy ${G}to start termux:x11 with -legacy-drawing${W}"
@@ -1801,11 +1815,11 @@ case \$2 in
 	export ${set_to_export}
 	${initialize_server_method} &
     sleep 1
-    XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :0 -legacy-drawing &
+    XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :${display_number} -legacy-drawing &
     sleep 1
     am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1 &
     sleep 1
-    env DISPLAY=:0 XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} ${hw_method} dbus-launch --exit-with-session $de_startup
+    env DISPLAY=:${display_number} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} ${hw_method} dbus-launch --exit-with-session $de_startup
     ;;
 
 *)
@@ -1813,11 +1827,11 @@ case \$2 in
 	export ${set_to_export}
 	${initialize_server_method} &
     sleep 1
-    XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :0 &
+    XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :${display_number} &
     sleep 1
     am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1 &
     sleep 1
-    env DISPLAY=:0 XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} ${hw_method} dbus-launch --exit-with-session $de_startup
+    env DISPLAY=:${display_number} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} ${hw_method} dbus-launch --exit-with-session $de_startup
     ;;
 esac
 
@@ -1836,19 +1850,19 @@ else
 case \$1 in
 --nogpu)
     # Start Termux X11 without GPU acceleration
-    XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :0 &
+    XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :${display_number} &
     sleep 1
     am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1
     sleep 1
-    env DISPLAY=:0 XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} LIBGL_ALWAYS_SOFTWARE=1 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe dbus-launch --exit-with-session $de_startup > /dev/null 2>&1 &
+    env DISPLAY=:${display_number} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} LIBGL_ALWAYS_SOFTWARE=1 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe dbus-launch --exit-with-session $de_startup > /dev/null 2>&1 &
 
     # Check if the second argument is --legacy
     if [[ "\$2" == "--legacy" ]]; then
-        XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :0 -legacy-drawing &
+        XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :${display_number} -legacy-drawing &
         sleep 1
         am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1
         sleep 1
-        env DISPLAY=:0 XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} dbus-launch --exit-with-session $de_startup > /dev/null 2>&1 &
+        env DISPLAY=:${display_number} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} dbus-launch --exit-with-session $de_startup > /dev/null 2>&1 &
     fi
     ;;
 
@@ -1856,22 +1870,22 @@ case \$1 in
     # Start Termux X11 without dbus-launch
 	export ${set_to_export}
 	${initialize_server_method} &
-    env XDG_RUNTIME_DIR=\${TMPDIR} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} ${hw_method} termux-x11 :0 -xstartup $de_startup > /dev/null 2>&1 &
+    env XDG_RUNTIME_DIR=\${TMPDIR} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} ${hw_method} termux-x11 :${display_number} -xstartup $de_startup > /dev/null 2>&1 &
     exit 0
 
     # Nested case to check for additional options
     case \$2 in
     --nogpu)
-        env LIBGL_ALWAYS_SOFTWARE=1 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe XDG_RUNTIME_DIR=\${TMPDIR} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} termux-x11 :0 -xstartup $de_startup > /dev/null 2>&1 &
+        env LIBGL_ALWAYS_SOFTWARE=1 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe XDG_RUNTIME_DIR=\${TMPDIR} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} termux-x11 :${display_number} -xstartup $de_startup > /dev/null 2>&1 &
 
         if [[ "\$3" == "--legacy" ]]; then
-            env XDG_RUNTIME_DIR=\${TMPDIR} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} termux-x11 :0 -legacy-drawing -xstartup $de_startup > /dev/null 2>&1 &
+            env XDG_RUNTIME_DIR=\${TMPDIR} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} termux-x11 :${display_number} -legacy-drawing -xstartup $de_startup > /dev/null 2>&1 &
         fi
         ;;
     --legacy)
 	export ${set_to_export}
 	${initialize_server_method} &
-        env XDG_RUNTIME_DIR=\${TMPDIR} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} ${hw_method} termux-x11 :0 -legacy-drawing -xstartup $de_startup > /dev/null 2>&1 &
+        env XDG_RUNTIME_DIR=\${TMPDIR} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} ${hw_method} termux-x11 :${display_number} -legacy-drawing -xstartup $de_startup > /dev/null 2>&1 &
         ;;
     *)
         echo -e "${C}--legacy ${G}to start termux:x11 with -legacy-drawing${W}"
@@ -1886,22 +1900,22 @@ case \$1 in
 	export ${set_to_export}
 	${initialize_server_method} &
     sleep 1
-    XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :0 -legacy-drawing &
+    XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :${display_number} -legacy-drawing &
     sleep 1
     am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1 &
     sleep 1
-    env DISPLAY=:0 XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} ${hw_method} dbus-launch --exit-with-session $de_startup > /dev/null 2>&1 &
+    env DISPLAY=:${display_number} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} ${hw_method} dbus-launch --exit-with-session $de_startup > /dev/null 2>&1 &
     ;;
 *)
     # Default behavior: start Termux X11 with GPU acceleration and dbus
 	export ${set_to_export}
 	${initialize_server_method} &
     sleep 1
-    XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :0 &
+    XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :${display_number} &
     sleep 1
     am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1 &
     sleep 1
-    env DISPLAY=:0 XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} ${hw_method} dbus-launch --exit-with-session $de_startup > /dev/null 2>&1 &
+    env DISPLAY=:${display_number} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} ${hw_method} dbus-launch --exit-with-session $de_startup > /dev/null 2>&1 &
     ;;
 esac
 fi
@@ -2105,15 +2119,15 @@ EOF
 function gui_launcher() {
 	check_and_delete "$PREFIX/bin/gui"
 	package_install_and_check "xorg-xhost"
-	if [[ "$gui_mode" == "1" ]]; then
+	if [[ "$gui_mode" == "termux_x11" ]]; then
 	setup_termux_x11
 	echo "gui_mode=\"termux_x11\"" >> "$config_file"
 	gui_termux_x11
-	elif [[ "$gui_mode" == "2" ]]; then
+	elif [[ "$gui_mode" == "vnc" ]]; then
 	setup_vnc
 	echo "gui_mode=\"vnc\"" >> "$config_file"
 	gui_vnc
-	elif [[ "$gui_mode" == "3" ]]; then
+	elif [[ "$gui_mode" == "both" ]]; then
 	setup_termux_x11
 	setup_vnc
 	echo "gui_mode=\"both\"" >> "$config_file"
@@ -2562,7 +2576,7 @@ function add_tx11_autostart() {
 cat << EOF >> "$shell_rc_file"
 # Start Termux:X11
 termux_x11_pid=\$(pgrep -f "app_process -Xnoimage-dex2oat / com.termux.x11.Loader :1")
-if [ !-n "\$termux_x11_pid" ]; then
+if [ -z "\$termux_x11_pid" ]; then
 echo "${G}Starting Termux:x11...${W}"
 tx11start
 fi
@@ -2580,9 +2594,9 @@ function add_to_autostart() {
 		  else
 		  add_tx11_autostart
 		  fi
-		elif [[ "$gui_mode" == "2" ]]; then
+		elif [[ "$gui_mode" == "vnc" ]]; then
 		add_vnc_autostart
-		elif [[ "$gui_mode" == "1" ]]; then
+		elif [[ "$gui_mode" == "termux_x11" ]]; then
 		add_tx11_autostart
 		else
 		add_tx11_autostart
@@ -2964,7 +2978,7 @@ function change_autostart() {
 			echo "de_on_startup=\"n\"" >> "$config_file"
         fi
 	elif [[ "$de_on_startup" == "n" ]]; then
-	    if [[ "$de_on_startup" == "y" && "$gui_mode" == "3" ]]; then
+	    if [[ "$de_on_startup" == "y" && "$gui_mode" == "both" ]]; then
 		echo "${R}[${C}-${R}]${G} You chose both vnc and termux:x11 to access gui mode${W}"
 		echo
 		echo "${R}[${C}-${R}]${G} Which will be your default${W}"
@@ -2977,6 +2991,38 @@ function change_autostart() {
 		fi
 		add_to_autostart
     fi
+}
+
+#########################################################################
+#
+# Change Display Port
+#
+#########################################################################
+
+# change the Display Port/Display Number where it will show the output
+function change_display() {
+	read_conf
+	gui_check_up
+	if [[ "$gui_mode" == "termux_x11" ]] || [[ "$gui_mode" == "both" ]]; then
+		echo "${R}[${C}-${R}]${G}${BOLD} Your Current Display Port: ${display_number}${W}"
+		echo
+		confirmation_y_or_n "Do you want to change the display port" change_display_port
+		if [[ "$change_display_port" == "y" ]]; then
+			while true; do
+        	read -r -p "${R}[${C}-${R}]${Y}${BOLD} Type the Display Port number: ${W}" display_number
+				if [[ "$display_number" =~ ^[0-9]+$ ]]; then
+					break
+				else
+					echo "${R}[${C}-${R}]${R} Please enter a valid number between 0-9 ${W}"
+				fi
+    		done
+			setup_tx11start_cmd
+			echo "display_number=\"$display_number\"" >> "$config_file"
+			print_log "Type the Display Port number: $display_number"
+		fi
+	else
+	echo "${R}[${C}-${R}]${G} Changing display port only supported in Termux:x11${W}"
+	fi
 }
 
 
@@ -3072,7 +3118,6 @@ function disable_vblank_mode() {
 }
 
 function some_fixes() {
-	termux-reload-settings
 
 	# samsung oneui-6 audio fixes
 	local device_brand_name
@@ -3348,6 +3393,7 @@ style      to change installed style
 pd,distro  to change installed linux distro container
 hw,hwa     to change hardware acceleration method
 autostart  to change autostart behaviour
+display    to change termux:x11 display port
 h,help     to show help
 
 example uses : --change style
@@ -3393,6 +3439,9 @@ case $1 in
                 ;;
 			autostart)
                 change_autostart
+                ;;
+			display)
+                change_display
                 ;;
 			h|help|-h|--help)
 			    show_change_help
