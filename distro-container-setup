@@ -286,7 +286,7 @@ W="$(printf '\033[0m')"
 BOLD="$(printf '\033[1m')"
 
 EOF
-declare -f banner pd_root_package_install_and_check >> "$distro_path/root/pd_basic_setup.sh"
+typeset -f banner pd_root_package_install_and_check >> "$distro_path/root/pd_basic_setup.sh"
 cat <<EOF >> "$distro_path/root/pd_basic_setup.sh"
 banner
 pd_root_package_install_and_check "${distro_packs}"
@@ -371,182 +371,108 @@ fi
 #
 #########################################################################
 
-function distro_zsh_answer() {
-    banner
+function assigne_value() {
     if [[ "$pd_useradd_answer" == "y" ]]; then
-    save_path="$distro_path/home/$final_user_name"
+        save_path="$distro_path/home/$final_user_name"
     elif [[ "$pd_useradd_answer" == "n" ]]; then
-    save_path="$distro_path/root"
+        save_path="$distro_path/root"
     fi
 
     if [[ "$distro_zsh_answer" == "y" ]]; then
-    pd_shell_name="zsh"
-	echo "${R}[${C}-${R}]${G}${BOLD} Configuring Zsh for ${selected_distro}${G}..${W}"
-	echo
-cat <<'EOF' > "$distro_path/root/pd_zsh_install.sh"
+        pd_shell_name="zsh"
+    else
+        pd_shell_name="bash"
+    fi
+}
+
+# Create Shell Setup Script
+function create_shell_script() {
+    local script_path
+    script_path="$1"
+    local shell_setup_content
+    shell_setup_content="$2"  
+cat << 'EOF' > "$script_path"
 #!/bin/bash
 
 R="$(printf '\033[1;31m')"
 G="$(printf '\033[1;32m')"
 Y="$(printf '\033[1;33m')"
-B="$(printf '\033[1;34m')"
 C="$(printf '\033[1;36m')"
 W="$(printf '\033[0m')"
 BOLD="$(printf '\033[1m')"
-
 EOF
-declare -f banner get_latest_release pd_root_package_install_and_check >> "$distro_path/root/pd_zsh_install.sh"
-cat <<'EOF' >> "$distro_path/root/pd_zsh_install.sh"
-banner
-pd_root_package_install_and_check "git zsh wget"
-# wget https://raw.githubusercontent.com/sabamdarif/short-linux-scripts/main/install-zsh.sh && bash install-zsh.sh # may create some issue
-# clear
-# rm pd_zsh_install.sh
-EOF
-proot-distro login "$selected_distro" -- /bin/bash -c 'bash pd_zsh_install.sh'
-cat <<'EOF' > "$save_path/pd_zsh_setup.sh"
-#!/bin/bash
+    typeset -f banner print_log print_success print_failed check_and_delete get_latest_release pd_root_package_install_and_check pd_package_install_and_check >> "$script_path"
+    echo "$shell_setup_content" >> "$script_path"
+}
 
-R="$(printf '\033[1;31m')"
-G="$(printf '\033[1;32m')"
-Y="$(printf '\033[1;33m')"
-B="$(printf '\033[1;34m')"
-C="$(printf '\033[1;36m')"
-W="$(printf '\033[0m')"
-BOLD="$(printf '\033[1m')"
-
-EOF
-cat <<'EOF' >> "$save_path/pd_zsh_setup.sh"
+function distro_zsh_answer() {
+# ZSH Setup
+if [[ "$distro_zsh_answer" == "y" ]]; then
+    zsh_setup_content=$(cat <<'EOF'
+pd_package_install_and_check "git zsh wget"
 wget --tries=5 --retry-connrefused https://raw.githubusercontent.com/sabamdarif/short-linux-scripts/main/install-zsh.sh && bash install-zsh.sh
-clear
-rm pd_zsh_setup.sh
+check_and_delete "pd_zsh_install.sh"
 EOF
-    proot-distro login --user "$final_user_name" "$selected_distro" -- /bin/bash -c 'bash pd_zsh_setup.sh'
+)
+create_shell_script "$save_path/pd_zsh_install.sh" "$zsh_setup_content"
+banner
+echo "${R}[${C}-${R}]${G}${BOLD} Setting up shell for ${selected_distro}...${W}"
+echo
+proot-distro login --user "$final_user_name" "$selected_distro" -- /bin/bash -c 'bash pd_zsh_install.sh'
 else
-    echo "${R}[${C}-${R}]${C} Canceling Distro Zsh Setup...${W}"
-    sleep 1.5
-	pd_shell_name="bash"
+echo "${R}[${C}-${R}]${C} Canceling ZSH setup...${W}"
 fi
-echo "pd_shell_name=\"$pd_shell_name\"" >> "$config_file"
 }
 
 function distro_terminal_utility_setup() {
-    if [[ "$distro_terminal_utility_setup_answer" == "n" ]];then
-    banner
-	echo "${R}[${C}-${R}]${C} Skipping Terminal Utility Setup For ${selected_distro}...${W}"
-	echo
-    if [[ "$pd_useradd_answer" == "y" ]]; then
-    cp "$distro_path/home/$final_user_name/.${pd_shell_name}rc" "$distro_path/home/$final_user_name/.${pd_shell_name}rc-2"
-    check_and_backup "$distro_path/home/$final_user_name/.${pd_shell_name}rc"
-    mv "$distro_path/home/$final_user_name/.${pd_shell_name}rc-2" "$distro_path/home/$final_user_name/.${pd_shell_name}rc"
-cat <<'EOF' >> "$distro_path/home/$final_user_name/.${pd_shell_name}rc"
-case $1 in
-    tx11start|tx11stop|vncstart|vncstop)
-        case $2 in
-            --help|-h|--nogpu|-f) ;;
-        esac
-	echo "please run it from termux, not inside proot distro."
-    ;;
-esac
+# Terminal Utility Setup
+if [[ "$distro_terminal_utility_setup_answer" == "y" ]]; then
 
-EOF
-    fi
-    cp "$distro_path/root/.${pd_shell_name}rc" "$distro_path/root/.${pd_shell_name}rc-2"
-    check_and_backup "$distro_path/root/.${pd_shell_name}rc"
-    mv "$distro_path/root/.${pd_shell_name}rc-2" "$distro_path/root/.${pd_shell_name}rc"
-cat <<'EOF' >> "$distro_path/root/.${pd_shell_name}rc"
-case $1 in
-    tx11start|tx11stop|vncstart|vncstop)
-        case $2 in
-            --help|-h|--nogpu|-f) ;;
-        esac
-	echo "please run it from termux, not inside proot distro."
-    ;;
-esac
-
-EOF
-	elif [[ "$distro_terminal_utility_setup_answer" == "y" ]];then
-	banner
-    echo "${R}[${C}-${R}]${C}${BOLD} Configuring Terminal Utility For $selected_distro ...${W}"
-    echo
-    if [[ "$selected_distro" == "debian" ]] || [[ "$selected_distro" == "ubuntu" ]]; then
-cat <<'EOF' > "$distro_path/root/pd_setup.sh"
-#!/bin/bash
-
-R="$(printf '\033[1;31m')"
-G="$(printf '\033[1;32m')"
-Y="$(printf '\033[1;33m')"
-B="$(printf '\033[1;34m')"
-C="$(printf '\033[1;36m')"
-W="$(printf '\033[0m')"
-BOLD="$(printf '\033[1m')"
-EOF
-declare -f banner get_latest_release pd_package_install_and_check >> "$distro_path/root/pd_setup.sh"
-cat <<'EOF' >> "$distro_path/root/pd_setup.sh"
-banner
+if [[ "$selected_distro" == "debian" ]] || [[ "$selected_distro" == "ubuntu" ]]; then
+    terminal_utility_content=$(cat <<'EOF'
 pd_package_install_and_check "nala zoxide bat wget gpg"
 device_arch=$(uname -m)
-    case "$device_arch" in
-        aarch64)
-            archtype="aarch64"
-            ;;
-        arm)
-            archtype="armhf"
-            ;;
-        amd64|x86_64)
-            archtype="amd64"
-            ;;
-        i*86|x86)
-            archtype="i386"
-            ;;
-        *)
-            echo "${R} unknown architecture${W}"
-            ;;
-    esac
-    version=$(get_latest_release "fastfetch-cli" "fastfetch")
-    wget --tries=5 --retry-connrefused -O $distro_path/root/fastfetch.deb https://github.com/fastfetch-cli/fastfetch/releases/download/${version}/fastfetch-linux-${archtype}.deb
-    apt install ./fastfetch.deb -y
-    rm fastfetch.deb
+case "$device_arch" in
+    aarch64) archtype="aarch64" ;;
+    arm) archtype="armhf" ;;
+    amd64|x86_64) archtype="amd64" ;;
+    i*86|x86) archtype="i386" ;;
+    *) echo "${R} Unknown architecture${W}" ;;
+esac
+
+version=$(get_latest_release "fastfetch-cli" "fastfetch")
+wget --tries=5 --retry-connrefused -O fastfetch.deb https://github.com/fastfetch-cli/fastfetch/releases/download/${version}/fastfetch-linux-${archtype}.deb
+apt install ./fastfetch.deb -y
+check_and_delete "fastfetch.deb"
+
 mkdir -p /etc/apt/keyrings
 wget --tries=5 --retry-connrefused -qO- https://raw.githubusercontent.com/eza-community/eza/main/deb.asc | sudo gpg --dearmor -o /etc/apt/keyrings/gierens.gpg
 echo "deb [signed-by=/etc/apt/keyrings/gierens.gpg] http://deb.gierens.de stable main" | sudo tee /etc/apt/sources.list.d/gierens.list
 chmod 644 /etc/apt/keyrings/gierens.gpg /etc/apt/sources.list.d/gierens.list
 apt update
 pd_package_install_and_check "eza"
-rm pd_setup.sh
+check_and_delete "pd_setup.sh"
 EOF
+)
 else
-cat <<'EOF' > "$distro_path/root/pd_setup.sh"
-#!/bin/bash
-
-R="$(printf '\033[1;31m')"
-G="$(printf '\033[1;32m')"
-Y="$(printf '\033[1;33m')"
-B="$(printf '\033[1;34m')"
-C="$(printf '\033[1;36m')"
-W="$(printf '\033[0m')"
-BOLD="$(printf '\033[1m')"
+    terminal_utility_content=$(cat <<'EOF'
+pd_package_install_and_check "zoxide bat wget gpg eza fastfetch"
+check_and_delete "pd_setup.sh"
 EOF
-declare -f banner pd_package_install_and_check >> "$distro_path/root/pd_setup.sh"
-cat <<'EOF' >> "$distro_path/root/pd_setup.sh"
-pd_package_install_and_check "eza zoxide bat fastfetch"
-EOF
+)
 fi
-proot-distro login "$selected_distro" -- /bin/bash -c 'bash pd_setup.sh'
+
+create_shell_script "$save_path/pd_setup.sh" "$terminal_utility_content"
+banner
+echo "${R}[${C}-${R}]${C} Configuring Terminal Utility For $selected_distro ...${W}"
+echo
+proot-distro login --user "$final_user_name" "$selected_distro" -- /bin/bash -c 'bash pd_setup.sh'
 
 shell_rc_content=$(cat <<'EOF'
 alias cat='bat $@'
 alias ls='eza --icons $@'
 alias mkdir='mkdir -p'
 alias neofetch='fastfetch'
-case $1 in
-    tx11start|tx11stop|vncstart|vncstop)
-        case $2 in
-            --help|-h|--nogpu|-f) ;;
-        esac
-    echo "please run it from termux, not inside proot distro."
-    ;;
-esac
 #######################################################
 # SPECIAL FUNCTIONS
 #######################################################
@@ -607,39 +533,40 @@ mkdirg() {
 }
 EOF
 )
+
+# Preserve old shell rc file
+cp "$save_path/.${pd_shell_name}rc" "$save_path/.${pd_shell_name}rc-2"
+check_and_backup "$save_path/.${pd_shell_name}rc"
+mv "$save_path/.${pd_shell_name}rc-2" "$save_path/.${pd_shell_name}rc"
+
+echo "$shell_rc_content" >> "$save_path/.${pd_shell_name}rc"
+if [[ "$selected_distro" == "debian" ]] || [[ "$selected_distro" == "ubuntu" ]]; then
+cat <<'EOF' >> "$save_path/.${pd_shell_name}rc"
+alias apt='sudo nala $@'
+alias apt-get='sudo nala $@'
+EOF
+fi
+cat <<EOF >> "$save_path/.${pd_shell_name}rc"
+#set zoxide as cd
+eval "\$(zoxide init --cmd cd ${pd_shell_name})"
+EOF
 fi
 
-if [[ "$distro_terminal_utility_setup_answer" == "y" ]];then
-    if [[ "$pd_useradd_answer" == "y" ]]; then
-    cp "$distro_path/home/$final_user_name/.${pd_shell_name}rc" "$distro_path/home/$final_user_name/.${pd_shell_name}rc-2"
-    check_and_backup "$distro_path/home/$final_user_name/.${pd_shell_name}rc"
-    mv "$distro_path/home/$final_user_name/.${pd_shell_name}rc-2" "$distro_path/home/$final_user_name/.${pd_shell_name}rc"
-    echo "$shell_rc_content" >> "$distro_path/home/$final_user_name/.${pd_shell_name}rc"
-    fi
-    echo "$shell_rc_content" >> "$distro_path/root/.${pd_shell_name}rc"
-if [[ "$pd_useradd_answer" == "y" ]]; then
-cat <<EOF >> "$distro_path/home/$final_user_name/.${pd_shell_name}rc"
-#set zoxide as cd
-eval "\$(zoxide init --cmd cd ${pd_shell_name})"
+cat <<'EOF' >> "$save_path/.${pd_shell_name}rc"
+export DISPLAY=:0
+
+case $1 in
+    tx11start|tx11stop|vncstart|vncstop)
+        case $2 in
+            --help|-h|--nogpu|-f) ;;
+        esac
+	echo "please run it from termux, not inside proot distro."
+    ;;
+esac
 EOF
-fi
-cat <<EOF >> "$distro_path/root/.${pd_shell_name}rc"
-#set zoxide as cd
-eval "\$(zoxide init --cmd cd ${pd_shell_name})"
-EOF
-    if [[ "$selected_distro" == "debian" ]] || [[ "$selected_distro" == "ubuntu" ]]; then
-    if [[ "$pd_useradd_answer" == "y" ]]; then
-cat <<'EOF' >> "$distro_path/home/$final_user_name/.${pd_shell_name}rc"
-alias apt='sudo nala $@'
-alias apt-get='sudo nala $@'
-EOF
-    fi
-cat <<'EOF' >> "$distro_path/root/.${pd_shell_name}rc"
-alias apt='sudo nala $@'
-alias apt-get='sudo nala $@'
-EOF
-fi
-fi
+
+echo "pd_shell_name=\"$pd_shell_name\"" >> "$config_file"
+
 }
 
 #########################################################################
@@ -656,14 +583,11 @@ function handel_debian_based_app_installer() {
         local package_manager="apt"
     fi
 
-cat <<EOF > "$PREFIX/bin/$selected_distro"
+    cat <<TOP_EOF >> "$PREFIX/bin/$selected_distro"
 #!/data/data/com.termux/files/usr/bin/bash
 
 . $PREFIX/etc/termux-desktop/common_functions
 
-EOF
-
-    cat <<TOP_EOF >> "$PREFIX/bin/$selected_distro"
 xhost + > /dev/null 2>&1
 if [[ "\$#" -eq 0 ]]; then
     proot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp
@@ -731,6 +655,10 @@ TOP_EOF
 
 function handel_arch_based_app_installer() {
     cat <<TOP_EOF >> "$PREFIX/bin/$selected_distro"
+#!/data/data/com.termux/files/usr/bin/bash
+
+. $PREFIX/etc/termux-desktop/common_functions
+
 xhost + > /dev/null 2>&1
 if [[ "\$#" -eq 0 ]]; then
     proot-distro login --user $final_user_name "$selected_distro" --shared-tmp
@@ -802,6 +730,10 @@ TOP_EOF
 
 function handel_alpine_based_app_installer() {
     cat <<TOP_EOF >> "$PREFIX/bin/$selected_distro"
+#!/data/data/com.termux/files/usr/bin/bash
+
+. $PREFIX/etc/termux-desktop/common_functions
+
 xhost + > /dev/null 2>&1
 if [[ "\$#" -eq 0 ]]; then
     proot-distro login --user $final_user_name $selected_distro --shared-tmp
@@ -873,6 +805,10 @@ TOP_EOF
 
 function handel_fedora_based_app_installer() {
     cat <<TOP_EOF >> "$PREFIX/bin/$selected_distro"
+#!/data/data/com.termux/files/usr/bin/bash
+
+. $PREFIX/etc/termux-desktop/common_functions
+
 xhost + > /dev/null 2>&1
 if [[ "\$#" -eq 0 ]]; then
     proot-distro login --user $final_user_name $selected_distro --shared-tmp
@@ -1244,6 +1180,7 @@ function install_distro_container() {
     if [[ "$call_from_change_pd" != "y" ]]; then
     hw_config
     fi
+    assigne_value
     distro_zsh_answer
     distro_terminal_utility_setup
     distro_create_app_installer

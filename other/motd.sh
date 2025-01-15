@@ -14,7 +14,7 @@ termux_build=$(echo "$TERMUX_APK_RELEASE" | awk '{print tolower($0)}' | awk '{fo
 cpu=$(</sys/class/thermal/thermal_zone0/temp)
 TEMP=$(echo $cpu | cut -c 1-2)
 PROCESSOR_BRAND_NAME="$(getprop ro.soc.manufacturer)"
-PROCESSOR_NAME="$(getprop ro.soc.model)"
+PROCESSOR_NAME="$(getprop ro.soc.model)" # getprop ro.hardware
 PROCESSOR_COUNT=$(grep -ioP 'processor\t:' /proc/cpuinfo | wc -l)
 
 if [[ "$TEMP" -lt "20" ]]; then
