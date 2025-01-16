@@ -1,0 +1,3021 @@
+diff --git a/.helper-scripts/accessed-recently.sh b/.helper-scripts/accessed-recently.sh
+index 332f6062..7909bf69 100644
+--- a/.helper-scripts/accessed-recently.sh
++++ b/.helper-scripts/accessed-recently.sh
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # This script manages an "Accessed recently" directory within the scripts'
+ # directory. It creates symbolic links to maintain a list of the 10 most
+diff --git a/.helper-scripts/multiselect-menu.sh b/.helper-scripts/multiselect-menu.sh
+index 54378f2c..92c7ef0e 100644
+--- a/.helper-scripts/multiselect-menu.sh
++++ b/.helper-scripts/multiselect-menu.sh
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Code based on: https://unix.stackexchange.com/a/673436
+ # Version: 2024-08-21
+diff --git a/.helper-scripts/unit-tests.sh b/.helper-scripts/unit-tests.sh
+index 7511b064..a5e59f23 100644
+--- a/.helper-scripts/unit-tests.sh
++++ b/.helper-scripts/unit-tests.sh
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Unit test script.
+ 
+@@ -8,7 +8,7 @@ set -u
+ # CONSTANTS
+ # -----------------------------------------------------------------------------
+ 
+-_TEMP_DIR_TEST="/tmp/unit-test"
++_TEMP_DIR_TEST="${TMPDIR}/unit-test"
+ _TEMP_FILE1="$_TEMP_DIR_TEST/file1"
+ _TEMP_FILE2="$_TEMP_DIR_TEST/file2"
+ _TEMP_FILE3="$_TEMP_DIR_TEST/file3"
+@@ -151,32 +151,32 @@ _run_get_filename_extension() {
+     output=$(_get_filename_extension "$input")
+     _test_equal "$input" "$output" "$expected_output"
+ 
+-    input="/tmp/File.txt"
++    input="${TMPDIR}/File.txt"
+     expected_output=".txt"
+     output=$(_get_filename_extension "$input")
+     _test_equal "$input" "$output" "$expected_output"
+ 
+-    input="/tmp/.File.txt"
++    input="${TMPDIR}/.File.txt"
+     expected_output=".txt"
+     output=$(_get_filename_extension "$input")
+     _test_equal "$input" "$output" "$expected_output"
+ 
+-    input="/tmp/.File"
++    input="${TMPDIR}/.File"
+     expected_output=""
+     output=$(_get_filename_extension "$input")
+     _test_equal "$input" "$output" "$expected_output"
+ 
+-    input="/tmp/File.thisisnotanextension"
++    input="${TMPDIR}/File.thisisnotanextension"
+     expected_output=""
+     output=$(_get_filename_extension "$input")
+     _test_equal "$input" "$output" "$expected_output"
+ 
+-    input="/tmp/File"
++    input="${TMPDIR}/File"
+     expected_output=""
+     output=$(_get_filename_extension "$input")
+     _test_equal "$input" "$output" "$expected_output"
+ 
+-    input="/tmp/File !@#$%&*()_"$'\n'"+.txt"
++    input="${TMPDIR}/File !@#$%&*()_"$'\n'"+.txt"
+     expected_output=".txt"
+     output=$(_get_filename_extension "$input")
+     _test_equal "$input" "$output" "$expected_output"
+@@ -293,33 +293,33 @@ _run_strip_filename_extension() {
+     output=$(_strip_filename_extension "$input")
+     _test_equal "$input" "$output" "$expected_output"
+ 
+-    input="/tmp/File.txt"
+-    expected_output="/tmp/File"
++    input="${TMPDIR}/File.txt"
++    expected_output="${TMPDIR}/File"
+     output=$(_strip_filename_extension "$input")
+     _test_equal "$input" "$output" "$expected_output"
+ 
+-    input="/tmp/.File.txt"
+-    expected_output="/tmp/.File"
++    input="${TMPDIR}/.File.txt"
++    expected_output="${TMPDIR}/.File"
+     output=$(_strip_filename_extension "$input")
+     _test_equal "$input" "$output" "$expected_output"
+ 
+-    input="/tmp/.File"
+-    expected_output="/tmp/.File"
++    input="${TMPDIR}/.File"
++    expected_output="${TMPDIR}/.File"
+     output=$(_strip_filename_extension "$input")
+     _test_equal "$input" "$output" "$expected_output"
+ 
+-    input="/tmp/File.thisisnotanextension"
+-    expected_output="/tmp/File.thisisnotanextension"
++    input="${TMPDIR}/File.thisisnotanextension"
++    expected_output="${TMPDIR}/File.thisisnotanextension"
+     output=$(_strip_filename_extension "$input")
+     _test_equal "$input" "$output" "$expected_output"
+ 
+-    input="/tmp/File"
+-    expected_output="/tmp/File"
++    input="${TMPDIR}/File"
++    expected_output="${TMPDIR}/File"
+     output=$(_strip_filename_extension "$input")
+     _test_equal "$input" "$output" "$expected_output"
+ 
+-    input="/tmp/File !@#$%&*()_"$'\n'"+.txt"
+-    expected_output="/tmp/File !@#$%&*()_"$'\n'"+"
++    input="${TMPDIR}/File !@#$%&*()_"$'\n'"+.txt"
++    expected_output="${TMPDIR}/File !@#$%&*()_"$'\n'"+"
+     output=$(_strip_filename_extension "$input")
+     _test_equal "$input" "$output" "$expected_output"
+ }
+diff --git a/Archive/Compress to '7z' (each) b/Archive/Compress to '7z' (each)
+index 777f9a09..a829c819 100755
+--- a/Archive/Compress to '7z' (each)	
++++ b/Archive/Compress to '7z' (each)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Archive/Compress to '7z' with password (each) b/Archive/Compress to '7z' with password (each)
+index 7bee5c03..f85a98d2 100755
+--- a/Archive/Compress to '7z' with password (each)	
++++ b/Archive/Compress to '7z' with password (each)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Archive/Compress to 'iso' (each) b/Archive/Compress to 'iso' (each)
+index ac3412c2..de22d297 100755
+--- a/Archive/Compress to 'iso' (each)	
++++ b/Archive/Compress to 'iso' (each)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Archive/Compress to 'squashfs' (each) b/Archive/Compress to 'squashfs' (each)
+index b91451d0..8d4f43f2 100755
+--- a/Archive/Compress to 'squashfs' (each)	
++++ b/Archive/Compress to 'squashfs' (each)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Archive/Compress to 'tar.gz' (each) b/Archive/Compress to 'tar.gz' (each)
+index 9fbc40bc..efdfe0f9 100755
+--- a/Archive/Compress to 'tar.gz' (each)	
++++ b/Archive/Compress to 'tar.gz' (each)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ # install_keyboard_shortcut=<Control><Alt>G
+ 
+ # Source the script 'common-functions.sh'.
+diff --git a/Archive/Compress to 'tar.xz' (each) b/Archive/Compress to 'tar.xz' (each)
+index 7431b8e4..cce6800c 100755
+--- a/Archive/Compress to 'tar.xz' (each)	
++++ b/Archive/Compress to 'tar.xz' (each)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ # install_keyboard_shortcut=<Control><Alt>X
+ 
+ # Source the script 'common-functions.sh'.
+diff --git a/Archive/Compress to 'tar.zst' (each) b/Archive/Compress to 'tar.zst' (each)
+index 5b7443b5..ec86b75d 100755
+--- a/Archive/Compress to 'tar.zst' (each)	
++++ b/Archive/Compress to 'tar.zst' (each)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ # install_keyboard_shortcut=<Control><Alt>S
+ 
+ # Source the script 'common-functions.sh'.
+diff --git a/Archive/Compress to 'zip' (each) b/Archive/Compress to 'zip' (each)
+index ddb317c6..d24cd153 100755
+--- a/Archive/Compress to 'zip' (each)	
++++ b/Archive/Compress to 'zip' (each)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ # install_keyboard_shortcut=<Control><Alt>Z
+ 
+ # Source the script 'common-functions.sh'.
+diff --git a/Archive/Compress... b/Archive/Compress...
+index c3325f92..09354f5b 100755
+--- a/Archive/Compress...
++++ b/Archive/Compress...
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ # install_keyboard_shortcut=<Control><Alt>C
+ 
+ # Source the script 'common-functions.sh'.
+diff --git a/Archive/Extract Here b/Archive/Extract Here
+index fa942b23..743b2659 100755
+--- a/Archive/Extract Here	
++++ b/Archive/Extract Here	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ # install_keyboard_shortcut=<Control>E
+ 
+ # Source the script 'common-functions.sh'.
+diff --git a/Audio/Audio convert/Convert to 'flac' b/Audio/Audio convert/Convert to 'flac'
+index 6f3787af..5204aa69 100755
+--- a/Audio/Audio convert/Convert to 'flac'	
++++ b/Audio/Audio convert/Convert to 'flac'	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Audio/Audio convert/Convert to 'mp3' (192 kbps) b/Audio/Audio convert/Convert to 'mp3' (192 kbps)
+index 7ef12e25..14e0981a 100755
+--- a/Audio/Audio convert/Convert to 'mp3' (192 kbps)	
++++ b/Audio/Audio convert/Convert to 'mp3' (192 kbps)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Audio/Audio convert/Convert to 'mp3' (320 kbps) b/Audio/Audio convert/Convert to 'mp3' (320 kbps)
+index 9aafe325..74a7d019 100755
+--- a/Audio/Audio convert/Convert to 'mp3' (320 kbps)	
++++ b/Audio/Audio convert/Convert to 'mp3' (320 kbps)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Audio/Audio convert/Convert to 'mp3' (48 kbps, mono) b/Audio/Audio convert/Convert to 'mp3' (48 kbps, mono)
+index 86c4a85d..b209fc76 100755
+--- a/Audio/Audio convert/Convert to 'mp3' (48 kbps, mono)	
++++ b/Audio/Audio convert/Convert to 'mp3' (48 kbps, mono)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Audio/Audio convert/Convert to 'ogg' (192 kbps) b/Audio/Audio convert/Convert to 'ogg' (192 kbps)
+index c8dd7605..f6eef55c 100755
+--- a/Audio/Audio convert/Convert to 'ogg' (192 kbps)	
++++ b/Audio/Audio convert/Convert to 'ogg' (192 kbps)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Audio/Audio convert/Convert to 'ogg' (320 kbps) b/Audio/Audio convert/Convert to 'ogg' (320 kbps)
+index d0d0b64b..33acc422 100755
+--- a/Audio/Audio convert/Convert to 'ogg' (320 kbps)	
++++ b/Audio/Audio convert/Convert to 'ogg' (320 kbps)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Audio/Audio convert/Convert to 'ogg' (48 kbps, mono) b/Audio/Audio convert/Convert to 'ogg' (48 kbps, mono)
+index c62926ea..1ef6f2ee 100755
+--- a/Audio/Audio convert/Convert to 'ogg' (48 kbps, mono)	
++++ b/Audio/Audio convert/Convert to 'ogg' (48 kbps, mono)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Audio/Audio convert/Convert to 'opus' (192 kbps, VBR) b/Audio/Audio convert/Convert to 'opus' (192 kbps, VBR)
+index aaeb1651..8fb55971 100755
+--- a/Audio/Audio convert/Convert to 'opus' (192 kbps, VBR)	
++++ b/Audio/Audio convert/Convert to 'opus' (192 kbps, VBR)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Audio/Audio convert/Convert to 'opus' (320 kbps, VBR) b/Audio/Audio convert/Convert to 'opus' (320 kbps, VBR)
+index a5a6f20c..564d5174 100755
+--- a/Audio/Audio convert/Convert to 'opus' (320 kbps, VBR)	
++++ b/Audio/Audio convert/Convert to 'opus' (320 kbps, VBR)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Audio/Audio convert/Convert to 'opus' (48 kbps, mono, VBR) b/Audio/Audio convert/Convert to 'opus' (48 kbps, mono, VBR)
+index ddfa4611..7d514dec 100755
+--- a/Audio/Audio convert/Convert to 'opus' (48 kbps, mono, VBR)	
++++ b/Audio/Audio convert/Convert to 'opus' (48 kbps, mono, VBR)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Audio/Audio convert/Convert to 'wav' b/Audio/Audio convert/Convert to 'wav'
+index 3ec88830..4ecb19af 100755
+--- a/Audio/Audio convert/Convert to 'wav'	
++++ b/Audio/Audio convert/Convert to 'wav'	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Audio/Audio effects/Effect Fade in b/Audio/Audio effects/Effect Fade in
+index 729522be..1611d294 100755
+--- a/Audio/Audio effects/Effect Fade in	
++++ b/Audio/Audio effects/Effect Fade in	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Audio/Audio effects/Effect Fade out b/Audio/Audio effects/Effect Fade out
+index eab6da7d..a891afc7 100755
+--- a/Audio/Audio effects/Effect Fade out	
++++ b/Audio/Audio effects/Effect Fade out	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Audio/Audio effects/Effect Normalize b/Audio/Audio effects/Effect Normalize
+index 1b2ed4cb..01c77a9b 100755
+--- a/Audio/Audio effects/Effect Normalize	
++++ b/Audio/Audio effects/Effect Normalize	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Audio/Audio effects/Remove silent sections (below -30 dB) b/Audio/Audio effects/Remove silent sections (below -30 dB)
+index 6ded6653..11a571e7 100755
+--- a/Audio/Audio effects/Remove silent sections (below -30 dB)	
++++ b/Audio/Audio effects/Remove silent sections (below -30 dB)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Audio/Audio effects/Silence noise (below -30 dB) b/Audio/Audio effects/Silence noise (below -30 dB)
+index 2549a4fc..7a5c8ea5 100755
+--- a/Audio/Audio effects/Silence noise (below -30 dB)	
++++ b/Audio/Audio effects/Silence noise (below -30 dB)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Audio/Audio tools/Concatenate files ('wav' output) b/Audio/Audio tools/Concatenate files ('wav' output)
+index 863f904d..95cfd2dd 100755
+--- a/Audio/Audio tools/Concatenate files ('wav' output)	
++++ b/Audio/Audio tools/Concatenate files ('wav' output)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Audio/Audio tools/List audio quality b/Audio/Audio tools/List audio quality
+index 6cba9666..e08b9e94 100755
+--- a/Audio/Audio tools/List audio quality	
++++ b/Audio/Audio tools/List audio quality	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Audio/Audio tools/Mix channels to mono b/Audio/Audio tools/Mix channels to mono
+index 0690b717..39292860 100755
+--- a/Audio/Audio tools/Mix channels to mono	
++++ b/Audio/Audio tools/Mix channels to mono	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Audio/Audio tools/Mix two files ('wav' output) b/Audio/Audio tools/Mix two files ('wav' output)
+index 877641b1..cb063a05 100755
+--- a/Audio/Audio tools/Mix two files ('wav' output)	
++++ b/Audio/Audio tools/Mix two files ('wav' output)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Audio/Audio tools/Produce a spectrogram b/Audio/Audio tools/Produce a spectrogram
+index 0eadb0ca..6102eda1 100755
+--- a/Audio/Audio tools/Produce a spectrogram	
++++ b/Audio/Audio tools/Produce a spectrogram	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Audio/Audio tools/Strip metadata (recursive) b/Audio/Audio tools/Strip metadata (recursive)
+index d4cd385f..4e7fb31f 100755
+--- a/Audio/Audio tools/Strip metadata (recursive)	
++++ b/Audio/Audio tools/Strip metadata (recursive)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Audio/MP3 files/List ID3 tags b/Audio/MP3 files/List ID3 tags
+index c441b58d..61c5bde6 100755
+--- a/Audio/MP3 files/List ID3 tags	
++++ b/Audio/MP3 files/List ID3 tags	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Audio/MP3 files/List MP3 information b/Audio/MP3 files/List MP3 information
+index 2fc15bca..bd063dec 100755
+--- a/Audio/MP3 files/List MP3 information	
++++ b/Audio/MP3 files/List MP3 information	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Audio/MP3 files/Maximize gain (recursive) b/Audio/MP3 files/Maximize gain (recursive)
+index 5d9ca067..e5c80787 100755
+--- a/Audio/MP3 files/Maximize gain (recursive)	
++++ b/Audio/MP3 files/Maximize gain (recursive)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Audio/MP3 files/Normalize gain (recursive) b/Audio/MP3 files/Normalize gain (recursive)
+index 09f57f21..bd786c51 100755
+--- a/Audio/MP3 files/Normalize gain (recursive)	
++++ b/Audio/MP3 files/Normalize gain (recursive)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Audio/MP3 files/Repair (recursive) b/Audio/MP3 files/Repair (recursive)
+index 328ecb5f..3c4809bc 100755
+--- a/Audio/MP3 files/Repair (recursive)	
++++ b/Audio/MP3 files/Repair (recursive)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Audio/MP3 files/Tag ID3 to filename (artist - title) b/Audio/MP3 files/Tag ID3 to filename (artist - title)
+index 3d357767..ef2406c9 100755
+--- a/Audio/MP3 files/Tag ID3 to filename (artist - title)	
++++ b/Audio/MP3 files/Tag ID3 to filename (artist - title)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Audio/MP3 files/Tag filename to ID3 (artist - title) b/Audio/MP3 files/Tag filename to ID3 (artist - title)
+index da287b23..3e943fc6 100755
+--- a/Audio/MP3 files/Tag filename to ID3 (artist - title)	
++++ b/Audio/MP3 files/Tag filename to ID3 (artist - title)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Clipboard operations/Copy filenames to clipboard b/Clipboard operations/Copy filenames to clipboard
+index 4ea3edf7..78256f52 100755
+--- a/Clipboard operations/Copy filenames to clipboard	
++++ b/Clipboard operations/Copy filenames to clipboard	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Clipboard operations/Download (URLs in clipboard) b/Clipboard operations/Download (URLs in clipboard)
+index f4f24a33..5c476a21 100755
+--- a/Clipboard operations/Download (URLs in clipboard)	
++++ b/Clipboard operations/Download (URLs in clipboard)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ # install_keyboard_shortcut=<Control><Shift>X
+ 
+ # Source the script 'common-functions.sh'.
+diff --git a/Clipboard operations/Git clone (URLs in clipboard) b/Clipboard operations/Git clone (URLs in clipboard)
+index 15bce608..35e098ab 100755
+--- a/Clipboard operations/Git clone (URLs in clipboard)	
++++ b/Clipboard operations/Git clone (URLs in clipboard)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ # install_keyboard_shortcut=<Control><Shift>G
+ 
+ # Source the script 'common-functions.sh'.
+diff --git a/Directories and files/Compare items b/Directories and files/Compare items
+index feac0700..f46ed37c 100755
+--- a/Directories and files/Compare items	
++++ b/Directories and files/Compare items	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ # install_keyboard_shortcut=<Control><Shift>C
+ 
+ # Source the script 'common-functions.sh'.
+diff --git a/Directories and files/Compare with diff b/Directories and files/Compare with diff
+index 2dc61a5d..916fd3f3 100755
+--- a/Directories and files/Compare with diff	
++++ b/Directories and files/Compare with diff	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Directories and files/Flatten directory structure b/Directories and files/Flatten directory structure
+index cb2534f5..1fe95310 100755
+--- a/Directories and files/Flatten directory structure	
++++ b/Directories and files/Flatten directory structure	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+@@ -80,7 +80,7 @@ _make_undo_script() {
+ 
+     # Create the undo script with a header and usage instructions.
+     {
+-        printf "%s\n" "#!/usr/bin/env bash"
++        printf "%s\n" "#!/data/data/com.termux/files/usr/bin/bash"
+         printf "\n"
+         printf "%s\n" "# This script is automatically generated to reverse the directory flattening"
+         printf "%s\n" "# process. It restores the original directory structure and moves files back to"
+diff --git a/Directories and files/List duplicate files b/Directories and files/List duplicate files
+index 84d74acc..936bf126 100755
+--- a/Directories and files/List duplicate files	
++++ b/Directories and files/List duplicate files	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ # shellcheck disable=SC2001
+ # install_keyboard_shortcut=<Control><Shift>U
+ 
+diff --git a/Directories and files/List empty directories b/Directories and files/List empty directories
+index 9b18d979..2faedc2f 100755
+--- a/Directories and files/List empty directories	
++++ b/Directories and files/List empty directories	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ # install_keyboard_shortcut=<Control><Shift>E
+ 
+ # Source the script 'common-functions.sh'.
+diff --git a/Directories and files/List file information b/Directories and files/List file information
+index b2fb946b..2f7d37c8 100755
+--- a/Directories and files/List file information	
++++ b/Directories and files/List file information	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ # install_keyboard_shortcut=<Control><Shift>Y
+ 
+ # Source the script 'common-functions.sh'.
+diff --git a/Directories and files/List file information (ExifTool) b/Directories and files/List file information (ExifTool)
+index 298e28a8..b735e50d 100755
+--- a/Directories and files/List file information (ExifTool)	
++++ b/Directories and files/List file information (ExifTool)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Directories and files/List file information (MediaInfo) b/Directories and files/List file information (MediaInfo)
+index e5708574..e05e8364 100755
+--- a/Directories and files/List file information (MediaInfo)	
++++ b/Directories and files/List file information (MediaInfo)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Directories and files/List file mime b/Directories and files/List file mime
+index c2c401f3..0d94e5d2 100755
+--- a/Directories and files/List file mime	
++++ b/Directories and files/List file mime	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ # install_keyboard_shortcut=<Control><Alt>1
+ 
+ # Source the script 'common-functions.sh'.
+diff --git a/Directories and files/List hidden items b/Directories and files/List hidden items
+index 2f919e64..219895fa 100755
+--- a/Directories and files/List hidden items	
++++ b/Directories and files/List hidden items	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ # install_keyboard_shortcut=<Control><Shift>H
+ 
+ # Source the script 'common-functions.sh'.
+diff --git a/Directories and files/List item properties b/Directories and files/List item properties
+index 080eaf0d..4fd94e45 100755
+--- a/Directories and files/List item properties	
++++ b/Directories and files/List item properties	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Directories and files/List largest directories b/Directories and files/List largest directories
+index b472ca59..997c0e77 100755
+--- a/Directories and files/List largest directories	
++++ b/Directories and files/List largest directories	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ # install_keyboard_shortcut=<Control><Alt>9
+ 
+ # Source the script 'common-functions.sh'.
+diff --git a/Directories and files/List largest files b/Directories and files/List largest files
+index cf2efe22..5da6eb36 100755
+--- a/Directories and files/List largest files	
++++ b/Directories and files/List largest files	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ # install_keyboard_shortcut=<Control><Alt>0
+ 
+ # Source the script 'common-functions.sh'.
+diff --git a/Directories and files/List recently modified files b/Directories and files/List recently modified files
+index 43a12449..4b5bbc63 100755
+--- a/Directories and files/List recently modified files	
++++ b/Directories and files/List recently modified files	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Directories and files/Open item location b/Directories and files/Open item location
+index a2726f7a..2382f6a9 100755
+--- a/Directories and files/Open item location	
++++ b/Directories and files/Open item location	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ # install_keyboard_shortcut=<Control><Shift>O
+ 
+ # Source the script 'common-functions.sh'.
+diff --git a/Document PDF/PDF combine, split/Combine multiple PDFs b/Document PDF/PDF combine, split/Combine multiple PDFs
+index b9b6f0f6..98fb89bb 100755
+--- a/Document PDF/PDF combine, split/Combine multiple PDFs	
++++ b/Document PDF/PDF combine, split/Combine multiple PDFs	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Document PDF/PDF combine, split/Split into single-page PDFs b/Document PDF/PDF combine, split/Split into single-page PDFs
+index 97f0ab89..64a49cc9 100755
+--- a/Document PDF/PDF combine, split/Split into single-page PDFs	
++++ b/Document PDF/PDF combine, split/Split into single-page PDFs	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Document PDF/PDF encrypt, decrypt/Decrypt (remove password) b/Document PDF/PDF encrypt, decrypt/Decrypt (remove password)
+index d6d6ce02..1fed4c1b 100755
+--- a/Document PDF/PDF encrypt, decrypt/Decrypt (remove password)	
++++ b/Document PDF/PDF encrypt, decrypt/Decrypt (remove password)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Document PDF/PDF encrypt, decrypt/Decrypt (remove security) b/Document PDF/PDF encrypt, decrypt/Decrypt (remove security)
+index cb1e69a5..2e9e6fba 100755
+--- a/Document PDF/PDF encrypt, decrypt/Decrypt (remove security)	
++++ b/Document PDF/PDF encrypt, decrypt/Decrypt (remove security)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Document PDF/PDF encrypt, decrypt/Encrypt (set a password) b/Document PDF/PDF encrypt, decrypt/Encrypt (set a password)
+index 5f7223d6..c116cd61 100755
+--- a/Document PDF/PDF encrypt, decrypt/Encrypt (set a password)	
++++ b/Document PDF/PDF encrypt, decrypt/Encrypt (set a password)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Document PDF/PDF encrypt, decrypt/List encrypted PDFs b/Document PDF/PDF encrypt, decrypt/List encrypted PDFs
+index 3abcb14b..54688809 100755
+--- a/Document PDF/PDF encrypt, decrypt/List encrypted PDFs	
++++ b/Document PDF/PDF encrypt, decrypt/List encrypted PDFs	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Document PDF/PDF multiple-page layout/Landscape 2 pages in 1 (1x2) b/Document PDF/PDF multiple-page layout/Landscape 2 pages in 1 (1x2)
+index b4bb425e..05132ebc 100755
+--- a/Document PDF/PDF multiple-page layout/Landscape 2 pages in 1 (1x2)	
++++ b/Document PDF/PDF multiple-page layout/Landscape 2 pages in 1 (1x2)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Document PDF/PDF multiple-page layout/Landscape 2 pages in 1 (2x1) b/Document PDF/PDF multiple-page layout/Landscape 2 pages in 1 (2x1)
+index bad7778d..7f01374e 100755
+--- a/Document PDF/PDF multiple-page layout/Landscape 2 pages in 1 (2x1)	
++++ b/Document PDF/PDF multiple-page layout/Landscape 2 pages in 1 (2x1)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Document PDF/PDF multiple-page layout/Landscape 4 pages in 1 (2x2) b/Document PDF/PDF multiple-page layout/Landscape 4 pages in 1 (2x2)
+index 8e96e428..193f03f3 100755
+--- a/Document PDF/PDF multiple-page layout/Landscape 4 pages in 1 (2x2)	
++++ b/Document PDF/PDF multiple-page layout/Landscape 4 pages in 1 (2x2)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Document PDF/PDF multiple-page layout/Landscape 8 pages in 1 (2x4) b/Document PDF/PDF multiple-page layout/Landscape 8 pages in 1 (2x4)
+index d15e0f98..f8ab2fe0 100755
+--- a/Document PDF/PDF multiple-page layout/Landscape 8 pages in 1 (2x4)	
++++ b/Document PDF/PDF multiple-page layout/Landscape 8 pages in 1 (2x4)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Document PDF/PDF multiple-page layout/Landscape 8 pages in 1 (4x2) b/Document PDF/PDF multiple-page layout/Landscape 8 pages in 1 (4x2)
+index 1e4ac94c..0f6c797e 100755
+--- a/Document PDF/PDF multiple-page layout/Landscape 8 pages in 1 (4x2)	
++++ b/Document PDF/PDF multiple-page layout/Landscape 8 pages in 1 (4x2)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Document PDF/PDF multiple-page layout/Portrait 2 pages in 1 (1x2) b/Document PDF/PDF multiple-page layout/Portrait 2 pages in 1 (1x2)
+index a21bba79..65a1f90b 100755
+--- a/Document PDF/PDF multiple-page layout/Portrait 2 pages in 1 (1x2)	
++++ b/Document PDF/PDF multiple-page layout/Portrait 2 pages in 1 (1x2)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Document PDF/PDF multiple-page layout/Portrait 2 pages in 1 (2x1) b/Document PDF/PDF multiple-page layout/Portrait 2 pages in 1 (2x1)
+index 65704b7d..1496a10c 100755
+--- a/Document PDF/PDF multiple-page layout/Portrait 2 pages in 1 (2x1)	
++++ b/Document PDF/PDF multiple-page layout/Portrait 2 pages in 1 (2x1)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Document PDF/PDF multiple-page layout/Portrait 4 pages in 1 (2x2) b/Document PDF/PDF multiple-page layout/Portrait 4 pages in 1 (2x2)
+index 63e1bd8e..e684e868 100755
+--- a/Document PDF/PDF multiple-page layout/Portrait 4 pages in 1 (2x2)	
++++ b/Document PDF/PDF multiple-page layout/Portrait 4 pages in 1 (2x2)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Document PDF/PDF multiple-page layout/Portrait 8 pages in 1 (2x4) b/Document PDF/PDF multiple-page layout/Portrait 8 pages in 1 (2x4)
+index 11039c23..c1c494e1 100755
+--- a/Document PDF/PDF multiple-page layout/Portrait 8 pages in 1 (2x4)	
++++ b/Document PDF/PDF multiple-page layout/Portrait 8 pages in 1 (2x4)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Document PDF/PDF multiple-page layout/Portrait 8 pages in 1 (4x2) b/Document PDF/PDF multiple-page layout/Portrait 8 pages in 1 (4x2)
+index e4487e96..3e092fcc 100755
+--- a/Document PDF/PDF multiple-page layout/Portrait 8 pages in 1 (4x2)	
++++ b/Document PDF/PDF multiple-page layout/Portrait 8 pages in 1 (4x2)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Document PDF/PDF optimize, shrink/Linearize (optimize) b/Document PDF/PDF optimize, shrink/Linearize (optimize)
+index 73960eb1..2ed6fe79 100755
+--- a/Document PDF/PDF optimize, shrink/Linearize (optimize)	
++++ b/Document PDF/PDF optimize, shrink/Linearize (optimize)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Document PDF/PDF optimize, shrink/List non-linearized PDFs b/Document PDF/PDF optimize, shrink/List non-linearized PDFs
+index f85932ee..18f5172e 100755
+--- a/Document PDF/PDF optimize, shrink/List non-linearized PDFs	
++++ b/Document PDF/PDF optimize, shrink/List non-linearized PDFs	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Document PDF/PDF optimize, shrink/Shrink (150 dpi, e-book) b/Document PDF/PDF optimize, shrink/Shrink (150 dpi, e-book)
+index a7012242..76862f47 100755
+--- a/Document PDF/PDF optimize, shrink/Shrink (150 dpi, e-book)	
++++ b/Document PDF/PDF optimize, shrink/Shrink (150 dpi, e-book)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Document PDF/PDF optimize, shrink/Shrink (300 dpi, printer) b/Document PDF/PDF optimize, shrink/Shrink (300 dpi, printer)
+index 22472351..edb6e009 100755
+--- a/Document PDF/PDF optimize, shrink/Shrink (300 dpi, printer)	
++++ b/Document PDF/PDF optimize, shrink/Shrink (300 dpi, printer)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Document PDF/PDF paper size/Paper size to A3 b/Document PDF/PDF paper size/Paper size to A3
+index d4d5ba6e..cef8263a 100755
+--- a/Document PDF/PDF paper size/Paper size to A3	
++++ b/Document PDF/PDF paper size/Paper size to A3	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Document PDF/PDF paper size/Paper size to A4 b/Document PDF/PDF paper size/Paper size to A4
+index 96d159ac..708f7d4f 100755
+--- a/Document PDF/PDF paper size/Paper size to A4	
++++ b/Document PDF/PDF paper size/Paper size to A4	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Document PDF/PDF paper size/Paper size to A5 b/Document PDF/PDF paper size/Paper size to A5
+index 336a373b..da590335 100755
+--- a/Document PDF/PDF paper size/Paper size to A5	
++++ b/Document PDF/PDF paper size/Paper size to A5	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Document PDF/PDF paper size/Paper size to US Legal b/Document PDF/PDF paper size/Paper size to US Legal
+index 8d606004..924634df 100755
+--- a/Document PDF/PDF paper size/Paper size to US Legal	
++++ b/Document PDF/PDF paper size/Paper size to US Legal	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Document PDF/PDF paper size/Paper size to US Letter b/Document PDF/PDF paper size/Paper size to US Letter
+index 0c07ca30..15859570 100755
+--- a/Document PDF/PDF paper size/Paper size to US Letter	
++++ b/Document PDF/PDF paper size/Paper size to US Letter	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Document PDF/PDF rotate/PDF Rotate (180 deg) b/Document PDF/PDF rotate/PDF Rotate (180 deg)
+index 532e3143..bac47538 100755
+--- a/Document PDF/PDF rotate/PDF Rotate (180 deg)	
++++ b/Document PDF/PDF rotate/PDF Rotate (180 deg)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Document PDF/PDF rotate/PDF Rotate (270 deg) b/Document PDF/PDF rotate/PDF Rotate (270 deg)
+index 20c09163..9deeb3b9 100755
+--- a/Document PDF/PDF rotate/PDF Rotate (270 deg)	
++++ b/Document PDF/PDF rotate/PDF Rotate (270 deg)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Document PDF/PDF rotate/PDF Rotate (90 deg) b/Document PDF/PDF rotate/PDF Rotate (90 deg)
+index 04b08b83..1fd1e879 100755
+--- a/Document PDF/PDF rotate/PDF Rotate (90 deg)	
++++ b/Document PDF/PDF rotate/PDF Rotate (90 deg)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Document PDF/PDF text recognition (OCR)/List non-searchable PDFs b/Document PDF/PDF text recognition (OCR)/List non-searchable PDFs
+index c81a90e3..df3a6d1d 100755
+--- a/Document PDF/PDF text recognition (OCR)/List non-searchable PDFs	
++++ b/Document PDF/PDF text recognition (OCR)/List non-searchable PDFs	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Document PDF/PDF text recognition (OCR)/Text OCR (in English) b/Document PDF/PDF text recognition (OCR)/Text OCR (in English)
+index 9a49f7e6..f34a9fe4 100755
+--- a/Document PDF/PDF text recognition (OCR)/Text OCR (in English)	
++++ b/Document PDF/PDF text recognition (OCR)/Text OCR (in English)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Document PDF/PDF text recognition (OCR)/Text OCR (in French) b/Document PDF/PDF text recognition (OCR)/Text OCR (in French)
+index 89ab911a..f0cccd01 100755
+--- a/Document PDF/PDF text recognition (OCR)/Text OCR (in French)	
++++ b/Document PDF/PDF text recognition (OCR)/Text OCR (in French)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Document PDF/PDF text recognition (OCR)/Text OCR (in German) b/Document PDF/PDF text recognition (OCR)/Text OCR (in German)
+index 57a892da..c9f52085 100755
+--- a/Document PDF/PDF text recognition (OCR)/Text OCR (in German)	
++++ b/Document PDF/PDF text recognition (OCR)/Text OCR (in German)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Document PDF/PDF text recognition (OCR)/Text OCR (in Italian) b/Document PDF/PDF text recognition (OCR)/Text OCR (in Italian)
+index 03b59f33..e91abda0 100755
+--- a/Document PDF/PDF text recognition (OCR)/Text OCR (in Italian)	
++++ b/Document PDF/PDF text recognition (OCR)/Text OCR (in Italian)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Document PDF/PDF text recognition (OCR)/Text OCR (in Portuguese) b/Document PDF/PDF text recognition (OCR)/Text OCR (in Portuguese)
+index 107e6533..40479eae 100755
+--- a/Document PDF/PDF text recognition (OCR)/Text OCR (in Portuguese)	
++++ b/Document PDF/PDF text recognition (OCR)/Text OCR (in Portuguese)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Document PDF/PDF text recognition (OCR)/Text OCR (in Russian) b/Document PDF/PDF text recognition (OCR)/Text OCR (in Russian)
+index 4980eb1a..d0a01caf 100755
+--- a/Document PDF/PDF text recognition (OCR)/Text OCR (in Russian)	
++++ b/Document PDF/PDF text recognition (OCR)/Text OCR (in Russian)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Document PDF/PDF text recognition (OCR)/Text OCR (in Spanish) b/Document PDF/PDF text recognition (OCR)/Text OCR (in Spanish)
+index 9c50a1b8..72cd507a 100755
+--- a/Document PDF/PDF text recognition (OCR)/Text OCR (in Spanish)	
++++ b/Document PDF/PDF text recognition (OCR)/Text OCR (in Spanish)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Document PDF/PDF tools/Add PDF watermark (overlay) b/Document PDF/PDF tools/Add PDF watermark (overlay)
+index 507c16ab..f5302beb 100755
+--- a/Document PDF/PDF tools/Add PDF watermark (overlay)	
++++ b/Document PDF/PDF tools/Add PDF watermark (overlay)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Document PDF/PDF tools/Add PDF watermark (underlay) b/Document PDF/PDF tools/Add PDF watermark (underlay)
+index ae46a8d8..8f8ff223 100755
+--- a/Document PDF/PDF tools/Add PDF watermark (underlay)	
++++ b/Document PDF/PDF tools/Add PDF watermark (underlay)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Document PDF/PDF tools/Convert to 'PDFA-2b' b/Document PDF/PDF tools/Convert to 'PDFA-2b'
+index f9f53ef6..cf9d382e 100755
+--- a/Document PDF/PDF tools/Convert to 'PDFA-2b'	
++++ b/Document PDF/PDF tools/Convert to 'PDFA-2b'	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Document PDF/PDF tools/Extract images b/Document PDF/PDF tools/Extract images
+index 664393f2..d597fd9a 100755
+--- a/Document PDF/PDF tools/Extract images	
++++ b/Document PDF/PDF tools/Extract images	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Document PDF/PDF tools/Strip PDF metadata (ExifTool) b/Document PDF/PDF tools/Strip PDF metadata (ExifTool)
+index 1954a94f..d42ca143 100755
+--- a/Document PDF/PDF tools/Strip PDF metadata (ExifTool)	
++++ b/Document PDF/PDF tools/Strip PDF metadata (ExifTool)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Document/Convert to 'docx' b/Document/Convert to 'docx'
+index a4d5989f..f51b6637 100755
+--- a/Document/Convert to 'docx'	
++++ b/Document/Convert to 'docx'	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Document/Convert to 'epub' b/Document/Convert to 'epub'
+index e7f5e016..4840591a 100755
+--- a/Document/Convert to 'epub'	
++++ b/Document/Convert to 'epub'	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Document/Convert to 'markdown' b/Document/Convert to 'markdown'
+index 753339ba..3cb68898 100755
+--- a/Document/Convert to 'markdown'	
++++ b/Document/Convert to 'markdown'	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Document/Convert to 'odp' b/Document/Convert to 'odp'
+index c053eedc..a6e0faf1 100755
+--- a/Document/Convert to 'odp'	
++++ b/Document/Convert to 'odp'	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Document/Convert to 'ods' b/Document/Convert to 'ods'
+index db9cf35c..c833bb3d 100755
+--- a/Document/Convert to 'ods'	
++++ b/Document/Convert to 'ods'	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Document/Convert to 'odt' b/Document/Convert to 'odt'
+index 0357866c..c10a7e94 100755
+--- a/Document/Convert to 'odt'	
++++ b/Document/Convert to 'odt'	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Document/Convert to 'pdf' b/Document/Convert to 'pdf'
+index b63b3adf..3c2e3c2c 100755
+--- a/Document/Convert to 'pdf'	
++++ b/Document/Convert to 'pdf'	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Document/Convert to 'pptx' b/Document/Convert to 'pptx'
+index 9a2eb849..413029d7 100755
+--- a/Document/Convert to 'pptx'	
++++ b/Document/Convert to 'pptx'	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Document/Convert to 'txt' b/Document/Convert to 'txt'
+index 384c4a71..c822d015 100755
+--- a/Document/Convert to 'txt'	
++++ b/Document/Convert to 'txt'	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Document/Convert to 'xlsx' b/Document/Convert to 'xlsx'
+index ed54d1ba..c1ef2868 100755
+--- a/Document/Convert to 'xlsx'	
++++ b/Document/Convert to 'xlsx'	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Document/Print documents b/Document/Print documents
+index d0b0ec26..5f21bde1 100755
+--- a/Document/Print documents	
++++ b/Document/Print documents	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/File encryption/GPG Decrypt b/File encryption/GPG Decrypt
+index 1f9c54e4..24bfa3e6 100755
+--- a/File encryption/GPG Decrypt	
++++ b/File encryption/GPG Decrypt	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/File encryption/GPG Encrypt with password b/File encryption/GPG Encrypt with password
+index 0054e41b..6ba02d5f 100755
+--- a/File encryption/GPG Encrypt with password	
++++ b/File encryption/GPG Encrypt with password	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/File encryption/GPG Encrypt with password (ASCII) b/File encryption/GPG Encrypt with password (ASCII)
+index 84ff52b2..7abf0117 100755
+--- a/File encryption/GPG Encrypt with password (ASCII)	
++++ b/File encryption/GPG Encrypt with password (ASCII)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/File encryption/GPG Encrypt with public keys b/File encryption/GPG Encrypt with public keys
+index 0b99192c..234c2761 100755
+--- a/File encryption/GPG Encrypt with public keys	
++++ b/File encryption/GPG Encrypt with public keys	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/File encryption/GPG Encrypt with public keys (ASCII) b/File encryption/GPG Encrypt with public keys (ASCII)
+index 6e52591e..39021844 100755
+--- a/File encryption/GPG Encrypt with public keys (ASCII)	
++++ b/File encryption/GPG Encrypt with public keys (ASCII)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/File encryption/GPG Import key b/File encryption/GPG Import key
+index 44b75a78..4dc217ca 100755
+--- a/File encryption/GPG Import key	
++++ b/File encryption/GPG Import key	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/File encryption/GPG Sign b/File encryption/GPG Sign
+index 7337dd0c..1ed46e9d 100755
+--- a/File encryption/GPG Sign	
++++ b/File encryption/GPG Sign	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/File encryption/GPG Sign (ASCII) b/File encryption/GPG Sign (ASCII)
+index 49ab5d35..593f5aed 100755
+--- a/File encryption/GPG Sign (ASCII)	
++++ b/File encryption/GPG Sign (ASCII)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/File encryption/GPG Sign (detached signature) b/File encryption/GPG Sign (detached signature)
+index 62bb86b6..02b8b7c5 100755
+--- a/File encryption/GPG Sign (detached signature)	
++++ b/File encryption/GPG Sign (detached signature)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/File encryption/GPG Verify signature b/File encryption/GPG Verify signature
+index 060496ef..9d60d131 100755
+--- a/File encryption/GPG Verify signature	
++++ b/File encryption/GPG Verify signature	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/File permissions/List permissions and owners b/File permissions/List permissions and owners
+index 4e61f843..cc97c542 100755
+--- a/File permissions/List permissions and owners	
++++ b/File permissions/List permissions and owners	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ # install_keyboard_shortcut=<Control><Shift>P
+ 
+ # Source the script 'common-functions.sh'.
+diff --git a/File permissions/Reset permissions (recursive) b/File permissions/Reset permissions (recursive)
+index bb7f40eb..0436a28f 100755
+--- a/File permissions/Reset permissions (recursive)	
++++ b/File permissions/Reset permissions (recursive)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/File permissions/Set executable b/File permissions/Set executable
+index 541e90c7..12face50 100755
+--- a/File permissions/Set executable	
++++ b/File permissions/Set executable	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/File permissions/Set executable for '.sh' (recursive) b/File permissions/Set executable for '.sh' (recursive)
+index db6627c7..0282ce6b 100755
+--- a/File permissions/Set executable for '.sh' (recursive)	
++++ b/File permissions/Set executable for '.sh' (recursive)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Git/Git clean b/Git/Git clean
+index 0ee9b93d..e4312fb6 100755
+--- a/Git/Git clean	
++++ b/Git/Git clean	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Git/Git fetch b/Git/Git fetch
+index 94083632..4c925772 100755
+--- a/Git/Git fetch	
++++ b/Git/Git fetch	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Git/Git full reset b/Git/Git full reset
+index 3ae930c4..e7d3b388 100755
+--- a/Git/Git full reset	
++++ b/Git/Git full reset	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Git/Git gc b/Git/Git gc
+index 0328e7af..df49e9c5 100755
+--- a/Git/Git gc	
++++ b/Git/Git gc	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Git/Git init b/Git/Git init
+index f84454c8..4db570b8 100755
+--- a/Git/Git init	
++++ b/Git/Git init	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Git/Git pull b/Git/Git pull
+index 44f36b9f..36e6f09f 100755
+--- a/Git/Git pull	
++++ b/Git/Git pull	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Git/List Git branches b/Git/List Git branches
+index 84104c6b..428bfd7e 100755
+--- a/Git/List Git branches	
++++ b/Git/List Git branches	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Git/List Git log b/Git/List Git log
+index a4041dd7..6e3c38ac 100755
+--- a/Git/List Git log	
++++ b/Git/List Git log	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Git/List Git status b/Git/List Git status
+index b52c0612..628c702d 100755
+--- a/Git/List Git status	
++++ b/Git/List Git status	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Git/List Git tags b/Git/List Git tags
+index a82bde6d..ee535b6b 100755
+--- a/Git/List Git tags	
++++ b/Git/List Git tags	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Git/Open repository website b/Git/Open repository website
+index 9b9693a5..839b7655 100755
+--- a/Git/Open repository website	
++++ b/Git/Open repository website	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Hash and checksum/List CRC32 b/Hash and checksum/List CRC32
+index f8098af7..17aa931f 100755
+--- a/Hash and checksum/List CRC32	
++++ b/Hash and checksum/List CRC32	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Hash and checksum/List MD5 b/Hash and checksum/List MD5
+index d11fba9f..4e9b360f 100755
+--- a/Hash and checksum/List MD5	
++++ b/Hash and checksum/List MD5	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Hash and checksum/List SHA-1 b/Hash and checksum/List SHA-1
+index 266d0fbc..95764303 100755
+--- a/Hash and checksum/List SHA-1	
++++ b/Hash and checksum/List SHA-1	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Hash and checksum/List SHA-256 b/Hash and checksum/List SHA-256
+index fd8415eb..7e9c485f 100755
+--- a/Hash and checksum/List SHA-256	
++++ b/Hash and checksum/List SHA-256	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Hash and checksum/List SHA-512 b/Hash and checksum/List SHA-512
+index 95a76b2c..97fe34a5 100755
+--- a/Hash and checksum/List SHA-512	
++++ b/Hash and checksum/List SHA-512	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Hash and checksum/List all file hashes b/Hash and checksum/List all file hashes
+index ba14109f..f6ca1bc9 100755
+--- a/Hash and checksum/List all file hashes	
++++ b/Hash and checksum/List all file hashes	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Hash and checksum/Produce 'md5sum.txt' b/Hash and checksum/Produce 'md5sum.txt'
+index bf81a5c5..fab7ef3a 100755
+--- a/Hash and checksum/Produce 'md5sum.txt'	
++++ b/Hash and checksum/Produce 'md5sum.txt'	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Hash and checksum/Produce 'sha1sum.txt' b/Hash and checksum/Produce 'sha1sum.txt'
+index da150881..13941086 100755
+--- a/Hash and checksum/Produce 'sha1sum.txt'	
++++ b/Hash and checksum/Produce 'sha1sum.txt'	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Hash and checksum/Produce 'sha256sum.txt' b/Hash and checksum/Produce 'sha256sum.txt'
+index 752747d7..51125584 100755
+--- a/Hash and checksum/Produce 'sha256sum.txt'	
++++ b/Hash and checksum/Produce 'sha256sum.txt'	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Hash and checksum/Produce 'sha512sum.txt' b/Hash and checksum/Produce 'sha512sum.txt'
+index 244da2e1..cd3e3c11 100755
+--- a/Hash and checksum/Produce 'sha512sum.txt'	
++++ b/Hash and checksum/Produce 'sha512sum.txt'	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Hash and checksum/Verify 'md5sum.txt' b/Hash and checksum/Verify 'md5sum.txt'
+index 42ed8e60..f1b5d631 100755
+--- a/Hash and checksum/Verify 'md5sum.txt'	
++++ b/Hash and checksum/Verify 'md5sum.txt'	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Hash and checksum/Verify 'sha1sum.txt' b/Hash and checksum/Verify 'sha1sum.txt'
+index 0108d921..ccefedfc 100755
+--- a/Hash and checksum/Verify 'sha1sum.txt'	
++++ b/Hash and checksum/Verify 'sha1sum.txt'	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Hash and checksum/Verify 'sha256sum.txt' b/Hash and checksum/Verify 'sha256sum.txt'
+index 5ef9e1a2..a29ad1d7 100755
+--- a/Hash and checksum/Verify 'sha256sum.txt'	
++++ b/Hash and checksum/Verify 'sha256sum.txt'	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Hash and checksum/Verify 'sha512sum.txt' b/Hash and checksum/Verify 'sha512sum.txt'
+index ef32310b..f341719e 100755
+--- a/Hash and checksum/Verify 'sha512sum.txt'	
++++ b/Hash and checksum/Verify 'sha512sum.txt'	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Image/Color operations/Colorspace to Gray b/Image/Color operations/Colorspace to Gray
+index 50f2ee6d..e0aa10cc 100755
+--- a/Image/Color operations/Colorspace to Gray	
++++ b/Image/Color operations/Colorspace to Gray	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Image/Color operations/Desaturate (average) b/Image/Color operations/Desaturate (average)
+index 0c9efab0..7bb79505 100755
+--- a/Image/Color operations/Desaturate (average)	
++++ b/Image/Color operations/Desaturate (average)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Image/Color operations/Desaturate (luma) b/Image/Color operations/Desaturate (luma)
+index 258d5b1b..4447c8a2 100755
+--- a/Image/Color operations/Desaturate (luma)	
++++ b/Image/Color operations/Desaturate (luma)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Image/Color operations/Generate images with multiple hues b/Image/Color operations/Generate images with multiple hues
+index 48bd0d70..9d6a0682 100755
+--- a/Image/Color operations/Generate images with multiple hues	
++++ b/Image/Color operations/Generate images with multiple hues	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Image/Combine, split/Combine images into a 'gif' b/Image/Combine, split/Combine images into a 'gif'
+index b14d90e4..1bdcd8d8 100755
+--- a/Image/Combine, split/Combine images into a 'gif'	
++++ b/Image/Combine, split/Combine images into a 'gif'	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Image/Combine, split/Combine images into a 'pdf' b/Image/Combine, split/Combine images into a 'pdf'
+index b4ba74f7..5c32e7a6 100755
+--- a/Image/Combine, split/Combine images into a 'pdf'	
++++ b/Image/Combine, split/Combine images into a 'pdf'	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Image/Combine, split/Split into 2 (horizontally) b/Image/Combine, split/Split into 2 (horizontally)
+index b4d92976..c71e8a90 100755
+--- a/Image/Combine, split/Split into 2 (horizontally)	
++++ b/Image/Combine, split/Split into 2 (horizontally)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Image/Combine, split/Split into 2 (vertically) b/Image/Combine, split/Split into 2 (vertically)
+index 7bd11f9b..e38c7314 100755
+--- a/Image/Combine, split/Split into 2 (vertically)	
++++ b/Image/Combine, split/Split into 2 (vertically)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Image/Combine, split/Split into 4 b/Image/Combine, split/Split into 4
+index 745cecba..a2d5727b 100755
+--- a/Image/Combine, split/Split into 4	
++++ b/Image/Combine, split/Split into 4	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Image/Combine, split/Stack images (horizontally) b/Image/Combine, split/Stack images (horizontally)
+index 8a77de31..abf23281 100755
+--- a/Image/Combine, split/Stack images (horizontally)	
++++ b/Image/Combine, split/Stack images (horizontally)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Image/Combine, split/Stack images (vertically) b/Image/Combine, split/Stack images (vertically)
+index 8bb5d5a8..50f18564 100755
+--- a/Image/Combine, split/Stack images (vertically)	
++++ b/Image/Combine, split/Stack images (vertically)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Image/Convert/Convert to 'bmp' b/Image/Convert/Convert to 'bmp'
+index 130020c3..38c23554 100755
+--- a/Image/Convert/Convert to 'bmp'	
++++ b/Image/Convert/Convert to 'bmp'	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Image/Convert/Convert to 'gif' b/Image/Convert/Convert to 'gif'
+index d8705e51..edf91fcc 100755
+--- a/Image/Convert/Convert to 'gif'	
++++ b/Image/Convert/Convert to 'gif'	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Image/Convert/Convert to 'jpg' b/Image/Convert/Convert to 'jpg'
+index f06e508f..1c74a028 100755
+--- a/Image/Convert/Convert to 'jpg'	
++++ b/Image/Convert/Convert to 'jpg'	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Image/Convert/Convert to 'png' b/Image/Convert/Convert to 'png'
+index 027338eb..680c70d3 100755
+--- a/Image/Convert/Convert to 'png'	
++++ b/Image/Convert/Convert to 'png'	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Image/Convert/Convert to 'tif' b/Image/Convert/Convert to 'tif'
+index 4478c0a9..72776b59 100755
+--- a/Image/Convert/Convert to 'tif'	
++++ b/Image/Convert/Convert to 'tif'	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Image/Convert/Convert to 'webp' b/Image/Convert/Convert to 'webp'
+index 9f6cc293..720f345f 100755
+--- a/Image/Convert/Convert to 'webp'	
++++ b/Image/Convert/Convert to 'webp'	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Image/Convert/Export to 'pdf' b/Image/Convert/Export to 'pdf'
+index 0d7e2489..9351ce04 100755
+--- a/Image/Convert/Export to 'pdf'	
++++ b/Image/Convert/Export to 'pdf'	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Image/Create icon/Create 'png' icon (128 px) b/Image/Create icon/Create 'png' icon (128 px)
+index 28c2c3fe..bcb6ddb5 100755
+--- a/Image/Create icon/Create 'png' icon (128 px)	
++++ b/Image/Create icon/Create 'png' icon (128 px)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Image/Create icon/Create 'png' icon (256 px) b/Image/Create icon/Create 'png' icon (256 px)
+index d8acb69a..ff834247 100755
+--- a/Image/Create icon/Create 'png' icon (256 px)	
++++ b/Image/Create icon/Create 'png' icon (256 px)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Image/Create icon/Create 'png' icon (512 px) b/Image/Create icon/Create 'png' icon (512 px)
+index 5729dfa5..94de1276 100755
+--- a/Image/Create icon/Create 'png' icon (512 px)	
++++ b/Image/Create icon/Create 'png' icon (512 px)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Image/Create icon/Create 'png' icon (64 px) b/Image/Create icon/Create 'png' icon (64 px)
+index 7a29f359..c7f30235 100755
+--- a/Image/Create icon/Create 'png' icon (64 px)	
++++ b/Image/Create icon/Create 'png' icon (64 px)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Image/Crop, resize/Automatic crop b/Image/Crop, resize/Automatic crop
+index a2067fef..4e2108b0 100755
+--- a/Image/Crop, resize/Automatic crop	
++++ b/Image/Crop, resize/Automatic crop	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Image/Crop, resize/Automatic crop (15 pct) b/Image/Crop, resize/Automatic crop (15 pct)
+index c47cc3f4..aaf7e9d6 100755
+--- a/Image/Crop, resize/Automatic crop (15 pct)	
++++ b/Image/Crop, resize/Automatic crop (15 pct)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Image/Crop, resize/Resize (25 pct) b/Image/Crop, resize/Resize (25 pct)
+index ff438154..7ea25bb2 100755
+--- a/Image/Crop, resize/Resize (25 pct)	
++++ b/Image/Crop, resize/Resize (25 pct)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Image/Crop, resize/Resize (50 pct) b/Image/Crop, resize/Resize (50 pct)
+index d8a47d81..7a331273 100755
+--- a/Image/Crop, resize/Resize (50 pct)	
++++ b/Image/Crop, resize/Resize (50 pct)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Image/Crop, resize/Resize (75 pct) b/Image/Crop, resize/Resize (75 pct)
+index d0759958..e006c6a5 100755
+--- a/Image/Crop, resize/Resize (75 pct)	
++++ b/Image/Crop, resize/Resize (75 pct)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Image/Crop, resize/Resize and crop (1920x1080) b/Image/Crop, resize/Resize and crop (1920x1080)
+index 41a7df33..5f072e0d 100755
+--- a/Image/Crop, resize/Resize and crop (1920x1080)	
++++ b/Image/Crop, resize/Resize and crop (1920x1080)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Image/Flip, rotate/Flip (horizontally) b/Image/Flip, rotate/Flip (horizontally)
+index 382776f9..090ca788 100755
+--- a/Image/Flip, rotate/Flip (horizontally)	
++++ b/Image/Flip, rotate/Flip (horizontally)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Image/Flip, rotate/Flip (vertically) b/Image/Flip, rotate/Flip (vertically)
+index 0bb96c36..5675896e 100755
+--- a/Image/Flip, rotate/Flip (vertically)	
++++ b/Image/Flip, rotate/Flip (vertically)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Image/Flip, rotate/Rotate (180 deg) b/Image/Flip, rotate/Rotate (180 deg)
+index fdcf59ce..6cdd15f1 100755
+--- a/Image/Flip, rotate/Rotate (180 deg)	
++++ b/Image/Flip, rotate/Rotate (180 deg)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Image/Flip, rotate/Rotate (270 deg) b/Image/Flip, rotate/Rotate (270 deg)
+index c8362264..410e3b46 100755
+--- a/Image/Flip, rotate/Rotate (270 deg)	
++++ b/Image/Flip, rotate/Rotate (270 deg)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Image/Flip, rotate/Rotate (90 deg) b/Image/Flip, rotate/Rotate (90 deg)
+index ac930883..d99492a0 100755
+--- a/Image/Flip, rotate/Rotate (90 deg)	
++++ b/Image/Flip, rotate/Rotate (90 deg)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Image/Image similarity/Similarity (65 pct) b/Image/Image similarity/Similarity (65 pct)
+index 29b9e262..ad076df8 100755
+--- a/Image/Image similarity/Similarity (65 pct)	
++++ b/Image/Image similarity/Similarity (65 pct)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Image/Image similarity/Similarity (75 pct) b/Image/Image similarity/Similarity (75 pct)
+index f5adb14f..1d9fc7a5 100755
+--- a/Image/Image similarity/Similarity (75 pct)	
++++ b/Image/Image similarity/Similarity (75 pct)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Image/Image similarity/Similarity (85 pct) b/Image/Image similarity/Similarity (85 pct)
+index 73fc9881..188b7bd2 100755
+--- a/Image/Image similarity/Similarity (85 pct)	
++++ b/Image/Image similarity/Similarity (85 pct)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Image/Image similarity/Similarity (95 pct) b/Image/Image similarity/Similarity (95 pct)
+index ecdc6a2f..c5ce6837 100755
+--- a/Image/Image similarity/Similarity (95 pct)	
++++ b/Image/Image similarity/Similarity (95 pct)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Image/Optimize/Optimize 'png' images b/Image/Optimize/Optimize 'png' images
+index df18cdfe..7c0f3ea5 100755
+--- a/Image/Optimize/Optimize 'png' images	
++++ b/Image/Optimize/Optimize 'png' images	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Image/Optimize/Strip metadata (ExifTool) b/Image/Optimize/Strip metadata (ExifTool)
+index 3533701c..8825cd29 100755
+--- a/Image/Optimize/Strip metadata (ExifTool)	
++++ b/Image/Optimize/Strip metadata (ExifTool)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Image/SVG files/Convert 'svg' to 'svgz' (compress) b/Image/SVG files/Convert 'svg' to 'svgz' (compress)
+index 70cc0fd9..1a6674b3 100755
+--- a/Image/SVG files/Convert 'svg' to 'svgz' (compress)	
++++ b/Image/SVG files/Convert 'svg' to 'svgz' (compress)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Image/SVG files/Convert 'svgz' to 'svg' (decompress) b/Image/SVG files/Convert 'svgz' to 'svg' (decompress)
+index 35e69a9d..7aef55ac 100755
+--- a/Image/SVG files/Convert 'svgz' to 'svg' (decompress)	
++++ b/Image/SVG files/Convert 'svgz' to 'svg' (decompress)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Image/SVG files/Export 'svg' to 'eps' b/Image/SVG files/Export 'svg' to 'eps'
+index 80e13e7b..ba12ee60 100755
+--- a/Image/SVG files/Export 'svg' to 'eps'	
++++ b/Image/SVG files/Export 'svg' to 'eps'	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Image/SVG files/Export 'svg' to 'pdf' b/Image/SVG files/Export 'svg' to 'pdf'
+index 3e81c791..4970285e 100755
+--- a/Image/SVG files/Export 'svg' to 'pdf'	
++++ b/Image/SVG files/Export 'svg' to 'pdf'	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Image/SVG files/Export 'svg' to 'png' (1024 px) b/Image/SVG files/Export 'svg' to 'png' (1024 px)
+index 6e9a35da..c8d6b599 100755
+--- a/Image/SVG files/Export 'svg' to 'png' (1024 px)	
++++ b/Image/SVG files/Export 'svg' to 'png' (1024 px)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Image/SVG files/Export 'svg' to 'png' (256 px) b/Image/SVG files/Export 'svg' to 'png' (256 px)
+index 19b028f7..5324ed27 100755
+--- a/Image/SVG files/Export 'svg' to 'png' (256 px)	
++++ b/Image/SVG files/Export 'svg' to 'png' (256 px)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Image/SVG files/Export 'svg' to 'png' (512 px) b/Image/SVG files/Export 'svg' to 'png' (512 px)
+index d13fe60a..8c686252 100755
+--- a/Image/SVG files/Export 'svg' to 'png' (512 px)	
++++ b/Image/SVG files/Export 'svg' to 'png' (512 px)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Image/SVG files/Replace fonts to 'Charter' b/Image/SVG files/Replace fonts to 'Charter'
+index 322939d2..812d41c2 100755
+--- a/Image/SVG files/Replace fonts to 'Charter'	
++++ b/Image/SVG files/Replace fonts to 'Charter'	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Image/SVG files/Replace fonts to 'Helvetica' b/Image/SVG files/Replace fonts to 'Helvetica'
+index 8813126a..20eb6fca 100755
+--- a/Image/SVG files/Replace fonts to 'Helvetica'	
++++ b/Image/SVG files/Replace fonts to 'Helvetica'	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Image/SVG files/Replace fonts to 'Times' b/Image/SVG files/Replace fonts to 'Times'
+index 94735e09..87aaecd2 100755
+--- a/Image/SVG files/Replace fonts to 'Times'	
++++ b/Image/SVG files/Replace fonts to 'Times'	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Image/Text recognition (OCR)/Image OCR (in English) b/Image/Text recognition (OCR)/Image OCR (in English)
+index e0ce28f3..e81eaddd 100755
+--- a/Image/Text recognition (OCR)/Image OCR (in English)	
++++ b/Image/Text recognition (OCR)/Image OCR (in English)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Image/Text recognition (OCR)/Image OCR (in French) b/Image/Text recognition (OCR)/Image OCR (in French)
+index 34cf82e3..568171d0 100755
+--- a/Image/Text recognition (OCR)/Image OCR (in French)	
++++ b/Image/Text recognition (OCR)/Image OCR (in French)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Image/Text recognition (OCR)/Image OCR (in German) b/Image/Text recognition (OCR)/Image OCR (in German)
+index 481ffbf2..09f65a39 100755
+--- a/Image/Text recognition (OCR)/Image OCR (in German)	
++++ b/Image/Text recognition (OCR)/Image OCR (in German)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Image/Text recognition (OCR)/Image OCR (in Italian) b/Image/Text recognition (OCR)/Image OCR (in Italian)
+index b6c09a66..d09290d7 100755
+--- a/Image/Text recognition (OCR)/Image OCR (in Italian)	
++++ b/Image/Text recognition (OCR)/Image OCR (in Italian)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Image/Text recognition (OCR)/Image OCR (in Portuguese) b/Image/Text recognition (OCR)/Image OCR (in Portuguese)
+index 380c3880..b922e141 100755
+--- a/Image/Text recognition (OCR)/Image OCR (in Portuguese)	
++++ b/Image/Text recognition (OCR)/Image OCR (in Portuguese)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Image/Text recognition (OCR)/Image OCR (in Russian) b/Image/Text recognition (OCR)/Image OCR (in Russian)
+index a38ab1ff..930598f6 100755
+--- a/Image/Text recognition (OCR)/Image OCR (in Russian)	
++++ b/Image/Text recognition (OCR)/Image OCR (in Russian)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Image/Text recognition (OCR)/Image OCR (in Spanish) b/Image/Text recognition (OCR)/Image OCR (in Spanish)
+index ec62c0da..7918f78c 100755
+--- a/Image/Text recognition (OCR)/Image OCR (in Spanish)	
++++ b/Image/Text recognition (OCR)/Image OCR (in Spanish)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Image/Transparency/Alpha to black b/Image/Transparency/Alpha to black
+index 77c18b1a..ceadae95 100755
+--- a/Image/Transparency/Alpha to black	
++++ b/Image/Transparency/Alpha to black	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Image/Transparency/Alpha to magenta b/Image/Transparency/Alpha to magenta
+index fec5e433..0cfed803 100755
+--- a/Image/Transparency/Alpha to magenta	
++++ b/Image/Transparency/Alpha to magenta	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Image/Transparency/Alpha to white b/Image/Transparency/Alpha to white
+index 58f024a0..58c16ea7 100755
+--- a/Image/Transparency/Alpha to white	
++++ b/Image/Transparency/Alpha to white	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Image/Transparency/Background to alpha b/Image/Transparency/Background to alpha
+index 08ddccc3..6ec319c4 100755
+--- a/Image/Transparency/Background to alpha	
++++ b/Image/Transparency/Background to alpha	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Image/Transparency/Background to alpha (15 pct) b/Image/Transparency/Background to alpha (15 pct)
+index 8808dd98..c19cc93c 100755
+--- a/Image/Transparency/Background to alpha (15 pct)	
++++ b/Image/Transparency/Background to alpha (15 pct)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Image/Transparency/Black to alpha b/Image/Transparency/Black to alpha
+index e87d7596..1f22bcf2 100755
+--- a/Image/Transparency/Black to alpha	
++++ b/Image/Transparency/Black to alpha	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Image/Transparency/Black to alpha (15 pct) b/Image/Transparency/Black to alpha (15 pct)
+index d0195db1..3832f49a 100755
+--- a/Image/Transparency/Black to alpha (15 pct)	
++++ b/Image/Transparency/Black to alpha (15 pct)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Image/Transparency/Magenta to alpha b/Image/Transparency/Magenta to alpha
+index e232ac45..7fcd1414 100755
+--- a/Image/Transparency/Magenta to alpha	
++++ b/Image/Transparency/Magenta to alpha	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Image/Transparency/Magenta to alpha (15 pct) b/Image/Transparency/Magenta to alpha (15 pct)
+index 2904700a..5348069e 100755
+--- a/Image/Transparency/Magenta to alpha (15 pct)	
++++ b/Image/Transparency/Magenta to alpha (15 pct)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Image/Transparency/White to alpha b/Image/Transparency/White to alpha
+index 336fdbc7..5937a5fd 100755
+--- a/Image/Transparency/White to alpha	
++++ b/Image/Transparency/White to alpha	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Image/Transparency/White to alpha (15 pct) b/Image/Transparency/White to alpha (15 pct)
+index 4d50ea0c..7db5a19d 100755
+--- a/Image/Transparency/White to alpha (15 pct)	
++++ b/Image/Transparency/White to alpha (15 pct)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Image/Watermark/Add image watermark (center) b/Image/Watermark/Add image watermark (center)
+index 9ff71277..86eaa71b 100755
+--- a/Image/Watermark/Add image watermark (center)	
++++ b/Image/Watermark/Add image watermark (center)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Image/Watermark/Add image watermark (north) b/Image/Watermark/Add image watermark (north)
+index bef445b6..d4bd6f82 100755
+--- a/Image/Watermark/Add image watermark (north)	
++++ b/Image/Watermark/Add image watermark (north)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Image/Watermark/Add image watermark (northeast) b/Image/Watermark/Add image watermark (northeast)
+index 62265abf..a6880a7f 100755
+--- a/Image/Watermark/Add image watermark (northeast)	
++++ b/Image/Watermark/Add image watermark (northeast)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Image/Watermark/Add image watermark (northwest) b/Image/Watermark/Add image watermark (northwest)
+index 2280d788..e392b619 100755
+--- a/Image/Watermark/Add image watermark (northwest)	
++++ b/Image/Watermark/Add image watermark (northwest)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Image/Watermark/Add image watermark (south) b/Image/Watermark/Add image watermark (south)
+index 27e853f9..80e5698c 100755
+--- a/Image/Watermark/Add image watermark (south)	
++++ b/Image/Watermark/Add image watermark (south)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Image/Watermark/Add image watermark (southeast) b/Image/Watermark/Add image watermark (southeast)
+index feea2b79..2d8dba2d 100755
+--- a/Image/Watermark/Add image watermark (southeast)	
++++ b/Image/Watermark/Add image watermark (southeast)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Image/Watermark/Add image watermark (southwest) b/Image/Watermark/Add image watermark (southwest)
+index 6366a680..5312fb37 100755
+--- a/Image/Watermark/Add image watermark (southwest)	
++++ b/Image/Watermark/Add image watermark (southwest)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Link operations/Create hard link here b/Link operations/Create hard link here
+index 0df77e52..df5bfc16 100755
+--- a/Link operations/Create hard link here	
++++ b/Link operations/Create hard link here	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Link operations/Create hard link to... b/Link operations/Create hard link to...
+index 1a3cf75e..5e1f2975 100755
+--- a/Link operations/Create hard link to...	
++++ b/Link operations/Create hard link to...	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Link operations/Create symbolic link here b/Link operations/Create symbolic link here
+index a87d9245..38fccc0f 100755
+--- a/Link operations/Create symbolic link here	
++++ b/Link operations/Create symbolic link here	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Link operations/Create symbolic link to... b/Link operations/Create symbolic link to...
+index fdcc170d..5448541c 100755
+--- a/Link operations/Create symbolic link to...	
++++ b/Link operations/Create symbolic link to...	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Link operations/List broken links b/Link operations/List broken links
+index 545c186c..65153397 100755
+--- a/Link operations/List broken links	
++++ b/Link operations/List broken links	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Link operations/List hard links b/Link operations/List hard links
+index 21faa5af..a64b18cd 100755
+--- a/Link operations/List hard links	
++++ b/Link operations/List hard links	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Link operations/List symbolic links b/Link operations/List symbolic links
+index 3eb5ae17..fdbdc4e0 100755
+--- a/Link operations/List symbolic links	
++++ b/Link operations/List symbolic links	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Link operations/Paste as hard link b/Link operations/Paste as hard link
+index 6fb93f91..63a0a62d 100755
+--- a/Link operations/Paste as hard link	
++++ b/Link operations/Paste as hard link	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ # install_keyboard_shortcut=<Control><Alt>V
+ 
+ # Source the script 'common-functions.sh'.
+diff --git a/Link operations/Paste as symbolic link b/Link operations/Paste as symbolic link
+index 75775fd1..4edcfc00 100755
+--- a/Link operations/Paste as symbolic link	
++++ b/Link operations/Paste as symbolic link	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ # install_keyboard_shortcut=<Control><Shift>V
+ 
+ # Source the script 'common-functions.sh'.
+diff --git a/Open with/Code Editor b/Open with/Code Editor
+index e3c7f34f..533cd62c 100755
+--- a/Open with/Code Editor	
++++ b/Open with/Code Editor	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ # shellcheck disable=SC2086
+ # install_keyboard_shortcut=F3
+ 
+diff --git a/Open with/Disk Usage Analyzer b/Open with/Disk Usage Analyzer
+index 93d52b94..5d40ae6f 100755
+--- a/Open with/Disk Usage Analyzer	
++++ b/Open with/Disk Usage Analyzer	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ # install_keyboard_shortcut=F7
+ 
+ # Source the script 'common-functions.sh'.
+diff --git a/Open with/Terminal b/Open with/Terminal
+index 6a6bad18..c14b8f65 100755
+--- a/Open with/Terminal	
++++ b/Open with/Terminal	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ # install_keyboard_shortcut=F4
+ 
+ # Source the script 'common-functions.sh'.
+diff --git a/Plain text/Text encodings/Encode to ASCII (translit.) b/Plain text/Text encodings/Encode to ASCII (translit.)
+index 28aae2c6..91ec5852 100755
+--- a/Plain text/Text encodings/Encode to ASCII (translit.)	
++++ b/Plain text/Text encodings/Encode to ASCII (translit.)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Plain text/Text encodings/Encode to ISO-8859-1 b/Plain text/Text encodings/Encode to ISO-8859-1
+index f12bf310..6ec754b5 100755
+--- a/Plain text/Text encodings/Encode to ISO-8859-1	
++++ b/Plain text/Text encodings/Encode to ISO-8859-1	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Plain text/Text encodings/Encode to UTF-8 b/Plain text/Text encodings/Encode to UTF-8
+index 89cd1078..245aba9b 100755
+--- a/Plain text/Text encodings/Encode to UTF-8	
++++ b/Plain text/Text encodings/Encode to UTF-8	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Plain text/Text encodings/List encodings b/Plain text/Text encodings/List encodings
+index e4e713e4..38951c7d 100755
+--- a/Plain text/Text encodings/List encodings	
++++ b/Plain text/Text encodings/List encodings	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ # install_keyboard_shortcut=<Control><Alt>4
+ 
+ # Source the script 'common-functions.sh'.
+diff --git a/Plain text/Text indentation/Convert '4 spaces' to 'tabs' b/Plain text/Text indentation/Convert '4 spaces' to 'tabs'
+index 47189c0d..42de0c8e 100755
+--- a/Plain text/Text indentation/Convert '4 spaces' to 'tabs'	
++++ b/Plain text/Text indentation/Convert '4 spaces' to 'tabs'	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Plain text/Text indentation/Convert '8 spaces' to 'tabs' b/Plain text/Text indentation/Convert '8 spaces' to 'tabs'
+index 9b36e3bf..c754af59 100755
+--- a/Plain text/Text indentation/Convert '8 spaces' to 'tabs'	
++++ b/Plain text/Text indentation/Convert '8 spaces' to 'tabs'	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Plain text/Text indentation/Convert 'tabs' to '4 spaces' b/Plain text/Text indentation/Convert 'tabs' to '4 spaces'
+index ddfe9185..23da1900 100755
+--- a/Plain text/Text indentation/Convert 'tabs' to '4 spaces'	
++++ b/Plain text/Text indentation/Convert 'tabs' to '4 spaces'	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Plain text/Text indentation/Convert 'tabs' to '8 spaces' b/Plain text/Text indentation/Convert 'tabs' to '8 spaces'
+index 9ec85687..184f5458 100755
+--- a/Plain text/Text indentation/Convert 'tabs' to '8 spaces'	
++++ b/Plain text/Text indentation/Convert 'tabs' to '8 spaces'	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Plain text/Text line breaks/Line breaks to CRLF (Windows) b/Plain text/Text line breaks/Line breaks to CRLF (Windows)
+index dfba6d40..77315c3b 100755
+--- a/Plain text/Text line breaks/Line breaks to CRLF (Windows)	
++++ b/Plain text/Text line breaks/Line breaks to CRLF (Windows)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Plain text/Text line breaks/Line breaks to LF (Unix) b/Plain text/Text line breaks/Line breaks to LF (Unix)
+index 2dcf514a..fbaa708c 100755
+--- a/Plain text/Text line breaks/Line breaks to LF (Unix)	
++++ b/Plain text/Text line breaks/Line breaks to LF (Unix)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Plain text/Text line breaks/List line breaks b/Plain text/Text line breaks/List line breaks
+index 8b14dfb5..bbd5d63e 100755
+--- a/Plain text/Text line breaks/List line breaks	
++++ b/Plain text/Text line breaks/List line breaks	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ # shellcheck disable=SC2001
+ # install_keyboard_shortcut=<Control><Alt>5
+ 
+diff --git a/Plain text/Text repair/List files issues b/Plain text/Text repair/List files issues
+index da05c212..5ca7efa4 100755
+--- a/Plain text/Text repair/List files issues	
++++ b/Plain text/Text repair/List files issues	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ # install_keyboard_shortcut=<Control><Alt>2
+ 
+ # Source the script 'common-functions.sh'.
+diff --git a/Plain text/Text repair/List files with bad chars b/Plain text/Text repair/List files with bad chars
+index 587bd233..443992bd 100755
+--- a/Plain text/Text repair/List files with bad chars	
++++ b/Plain text/Text repair/List files with bad chars	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ # install_keyboard_shortcut=<Control><Alt>3
+ 
+ # Source the script 'common-functions.sh'.
+diff --git a/Plain text/Text repair/Remove trailing spaces b/Plain text/Text repair/Remove trailing spaces
+index 5fbf7dd6..41b8df80 100755
+--- a/Plain text/Text repair/Remove trailing spaces	
++++ b/Plain text/Text repair/Remove trailing spaces	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Plain text/Text repair/Repair to UTF-8, CRLF (recursive) b/Plain text/Text repair/Repair to UTF-8, CRLF (recursive)
+index 1d02a68c..6c2950f1 100755
+--- a/Plain text/Text repair/Repair to UTF-8, CRLF (recursive)	
++++ b/Plain text/Text repair/Repair to UTF-8, CRLF (recursive)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Plain text/Text repair/Repair to UTF-8, LF (recursive) b/Plain text/Text repair/Repair to UTF-8, LF (recursive)
+index 8d65412c..436c7d82 100755
+--- a/Plain text/Text repair/Repair to UTF-8, LF (recursive)	
++++ b/Plain text/Text repair/Repair to UTF-8, LF (recursive)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Plain text/Text statistics/List lines count b/Plain text/Text statistics/List lines count
+index adafa369..7e322245 100755
+--- a/Plain text/Text statistics/List lines count	
++++ b/Plain text/Text statistics/List lines count	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ # install_keyboard_shortcut=<Control><Alt>6
+ 
+ # Source the script 'common-functions.sh'.
+diff --git a/Plain text/Text statistics/List max line length b/Plain text/Text statistics/List max line length
+index 66003941..526a83c7 100755
+--- a/Plain text/Text statistics/List max line length	
++++ b/Plain text/Text statistics/List max line length	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ # install_keyboard_shortcut=<Control><Alt>7
+ 
+ # Source the script 'common-functions.sh'.
+diff --git a/Plain text/Text statistics/List words count b/Plain text/Text statistics/List words count
+index e4799dfb..37a96c70 100755
+--- a/Plain text/Text statistics/List words count	
++++ b/Plain text/Text statistics/List words count	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ # install_keyboard_shortcut=<Control><Alt>8
+ 
+ # Source the script 'common-functions.sh'.
+diff --git a/Plain text/Text tools/Combine multiple files b/Plain text/Text tools/Combine multiple files
+index b6bbd6b5..047cbd9a 100755
+--- a/Plain text/Text tools/Combine multiple files	
++++ b/Plain text/Text tools/Combine multiple files	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Rename files/Remove accents (translit.) b/Rename files/Remove accents (translit.)
+index a51bc9a1..b87a0546 100755
+--- a/Rename files/Remove accents (translit.)	
++++ b/Rename files/Remove accents (translit.)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Rename files/Remove brackets b/Rename files/Remove brackets
+index 88842f1a..f96a42ba 100755
+--- a/Rename files/Remove brackets	
++++ b/Rename files/Remove brackets	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Rename files/Rename to lowercase b/Rename files/Rename to lowercase
+index 0ee63b7b..c89d3847 100755
+--- a/Rename files/Rename to lowercase	
++++ b/Rename files/Rename to lowercase	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Rename files/Rename to lowercase (recursive) b/Rename files/Rename to lowercase (recursive)
+index c5cfbd75..7acb30dd 100755
+--- a/Rename files/Rename to lowercase (recursive)	
++++ b/Rename files/Rename to lowercase (recursive)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Rename files/Rename to sentence case b/Rename files/Rename to sentence case
+index e785cb5c..75a29960 100755
+--- a/Rename files/Rename to sentence case	
++++ b/Rename files/Rename to sentence case	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Rename files/Rename to title case b/Rename files/Rename to title case
+index ede053b3..1f3547c5 100755
+--- a/Rename files/Rename to title case	
++++ b/Rename files/Rename to title case	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ # shellcheck disable=SC2001
+ 
+ # Source the script 'common-functions.sh'.
+diff --git a/Rename files/Rename to uppercase b/Rename files/Rename to uppercase
+index 3c50aa6b..21011bbb 100755
+--- a/Rename files/Rename to uppercase	
++++ b/Rename files/Rename to uppercase	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Rename files/Rename to uppercase (recursive) b/Rename files/Rename to uppercase (recursive)
+index 310f1dc3..7c756481 100755
+--- a/Rename files/Rename to uppercase (recursive)	
++++ b/Rename files/Rename to uppercase (recursive)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Rename files/Replace gaps with dashes b/Rename files/Replace gaps with dashes
+index 0d5a4cb7..d0bc1e94 100755
+--- a/Rename files/Replace gaps with dashes	
++++ b/Rename files/Replace gaps with dashes	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Rename files/Replace gaps with spaces b/Rename files/Replace gaps with spaces
+index 3d25ba89..a1eeb1ea 100755
+--- a/Rename files/Replace gaps with spaces	
++++ b/Rename files/Replace gaps with spaces	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Rename files/Replace gaps with underscores b/Rename files/Replace gaps with underscores
+index 4b2d8371..f8ee5e9c 100755
+--- a/Rename files/Replace gaps with underscores	
++++ b/Rename files/Replace gaps with underscores	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Security and recovery/File carving (Foremost) b/Security and recovery/File carving (Foremost)
+index 2001a138..c6c74862 100755
+--- a/Security and recovery/File carving (Foremost)	
++++ b/Security and recovery/File carving (Foremost)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Security and recovery/File carving (PhotoRec) b/Security and recovery/File carving (PhotoRec)
+index 3b1d0ef6..a8a1595d 100755
+--- a/Security and recovery/File carving (PhotoRec)	
++++ b/Security and recovery/File carving (PhotoRec)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Security and recovery/Permanently delete files (shred) b/Security and recovery/Permanently delete files (shred)
+index 2867ac61..ec526079 100755
+--- a/Security and recovery/Permanently delete files (shred)	
++++ b/Security and recovery/Permanently delete files (shred)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Security and recovery/Scan for malware (ClamAV) b/Security and recovery/Scan for malware (ClamAV)
+index f0212a58..4f0f8040 100755
+--- a/Security and recovery/Scan for malware (ClamAV)	
++++ b/Security and recovery/Scan for malware (ClamAV)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Video/Audio track/Extract audio b/Video/Audio track/Extract audio
+index a31a2162..091128dc 100755
+--- a/Video/Audio track/Extract audio	
++++ b/Video/Audio track/Extract audio	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Video/Audio track/Remove audio b/Video/Audio track/Remove audio
+index 1d504b57..2dd6a6f0 100755
+--- a/Video/Audio track/Remove audio	
++++ b/Video/Audio track/Remove audio	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Video/Change frame rate/Frame rate to 30 FPS b/Video/Change frame rate/Frame rate to 30 FPS
+index 9e1fd42f..10827364 100755
+--- a/Video/Change frame rate/Frame rate to 30 FPS	
++++ b/Video/Change frame rate/Frame rate to 30 FPS	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Video/Change frame rate/Frame rate to 60 FPS b/Video/Change frame rate/Frame rate to 60 FPS
+index 79331f46..9fb40b5a 100755
+--- a/Video/Change frame rate/Frame rate to 60 FPS	
++++ b/Video/Change frame rate/Frame rate to 60 FPS	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Video/Change speed factor/Speed factor to 0.5 b/Video/Change speed factor/Speed factor to 0.5
+index de554aa5..6a282251 100755
+--- a/Video/Change speed factor/Speed factor to 0.5	
++++ b/Video/Change speed factor/Speed factor to 0.5	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Video/Change speed factor/Speed factor to 1.5 b/Video/Change speed factor/Speed factor to 1.5
+index ad265704..7c4b5117 100755
+--- a/Video/Change speed factor/Speed factor to 1.5	
++++ b/Video/Change speed factor/Speed factor to 1.5	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Video/Change speed factor/Speed factor to 2.0 b/Video/Change speed factor/Speed factor to 2.0
+index f502c070..6078b74e 100755
+--- a/Video/Change speed factor/Speed factor to 2.0	
++++ b/Video/Change speed factor/Speed factor to 2.0	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Video/Video convert/Convert to 'mkv' b/Video/Video convert/Convert to 'mkv'
+index f1d5a78b..f2a64a54 100755
+--- a/Video/Video convert/Convert to 'mkv'	
++++ b/Video/Video convert/Convert to 'mkv'	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Video/Video convert/Convert to 'mkv' (copy video) b/Video/Video convert/Convert to 'mkv' (copy video)
+index 21bc66c7..26457076 100755
+--- a/Video/Video convert/Convert to 'mkv' (copy video)	
++++ b/Video/Video convert/Convert to 'mkv' (copy video)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Video/Video convert/Convert to 'mp4' b/Video/Video convert/Convert to 'mp4'
+index cf45f220..6adc722c 100755
+--- a/Video/Video convert/Convert to 'mp4'	
++++ b/Video/Video convert/Convert to 'mp4'	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Video/Video convert/Convert to 'mp4' (copy video) b/Video/Video convert/Convert to 'mp4' (copy video)
+index 90b8b270..c8b83fa7 100755
+--- a/Video/Video convert/Convert to 'mp4' (copy video)	
++++ b/Video/Video convert/Convert to 'mp4' (copy video)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Video/Video convert/Export to 'gif' b/Video/Video convert/Export to 'gif'
+index a4700c87..b043fcb5 100755
+--- a/Video/Video convert/Export to 'gif'	
++++ b/Video/Video convert/Export to 'gif'	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Video/Video resize/Resize video (25 pct) b/Video/Video resize/Resize video (25 pct)
+index 03ad5942..6e825d60 100755
+--- a/Video/Video resize/Resize video (25 pct)	
++++ b/Video/Video resize/Resize video (25 pct)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Video/Video resize/Resize video (50 pct) b/Video/Video resize/Resize video (50 pct)
+index 35d33790..fa26ed55 100755
+--- a/Video/Video resize/Resize video (50 pct)	
++++ b/Video/Video resize/Resize video (50 pct)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Video/Video resize/Resize video (75 pct) b/Video/Video resize/Resize video (75 pct)
+index a8c331c3..7a7b083a 100755
+--- a/Video/Video resize/Resize video (75 pct)	
++++ b/Video/Video resize/Resize video (75 pct)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Video/Video tools/Concatenate videos ('mp4' output) b/Video/Video tools/Concatenate videos ('mp4' output)
+index 4a70ff6f..ff694101 100755
+--- a/Video/Video tools/Concatenate videos ('mp4' output)	
++++ b/Video/Video tools/Concatenate videos ('mp4' output)	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Video/Video tools/Strip metadata b/Video/Video tools/Strip metadata
+index e11ca471..081f1fc9 100755
+--- a/Video/Video tools/Strip metadata	
++++ b/Video/Video tools/Strip metadata	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/common-functions.sh b/common-functions.sh
+index 40998c25..24051151 100644
+--- a/common-functions.sh
++++ b/common-functions.sh
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ # shellcheck disable=SC2001
+ 
+ # This file contains common functions that the scripts will source.
+@@ -1123,7 +1123,7 @@ _get_output_dir() {
+     # Check directories available to put the 'output' dir.
+     base_dir=$(_get_working_directory)
+     [[ ! -w "$base_dir" ]] && base_dir=$HOME
+-    [[ ! -w "$base_dir" ]] && base_dir="/tmp"
++    [[ ! -w "$base_dir" ]] && base_dir="${TMPDIR}"
+     if [[ ! -w "$base_dir" ]]; then
+         _display_error_box "Could not find a directory with write permissions!"
+         _exit_script
+@@ -2401,7 +2401,7 @@ _xdg_get_default_app() {
+ 
+     desktop_file=$(xdg-mime query default "$mime" 2>/dev/null)
+ 
+-    default_app=$(grep -m1 "^Exec" "/usr/share/applications/$desktop_file" |
++    default_app=$(grep -m1 "^Exec" "/data/data/com.termux/files/usr/share/applications/$desktop_file" |
+         sed "s|Exec=||g" | cut -d " " -f 1)
+ 
+     if [[ -z "$default_app" ]]; then

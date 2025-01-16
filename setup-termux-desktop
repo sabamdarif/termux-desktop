@@ -902,6 +902,7 @@ function questions() {
 	echo "${R}[${C}-${R}]${B} Know More About Terminal Utility:- https://github.com/sabamdarif/termux-desktop/blob/main/see-more.md#hammer_and_wrenchlearn-about-terminal-utilities${W}"
 	echo
 	confirmation_y_or_n "Do you want install some terminal utility to make better terminal exprience" terminal_utility_setup_answer
+	if [[ "$de_name" != "mate" ]]; then
 	banner
 	echo -e "
 Typing 'Y' to this option will add a variety of options to your file manager's right-click menu. Using this, you can do a lot more things within the right-click menu than you ever imagined, such as:
@@ -915,6 +916,7 @@ In File Manager click on the scripts meanu to see them all
 	"
 	echo
 	confirmation_y_or_n "Do you want to Configuring File Manager Tools (Testing)" fm_tools
+	fi
 	banner
 	echo "${R}[${C}-${R}]${G}${BOLD} Select Gui Mode${W}"
 	echo
@@ -2466,8 +2468,9 @@ install_fm_tools() {
 		banner
 		echo "${R}[${C}-${R}]${G}${BOLD} Installing File Manager Tools...${W}"
 		check_and_backup "nautilus-scripts"
-		git clone https://github.com/sabamdarif/nautilus-scripts.git
+		git clone https://github.com/cfgnunes/nautilus-scripts
 		cd nautilus-scripts
+    	wget --tries=5 --retry-connrefused https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/other/setup-termux.sh
 		bash setup-termux.sh
 		cd ..
 		check_and_delete "nautilus-scripts"
@@ -3343,7 +3346,9 @@ banner
 hw_questions
 setup_folder
 setup_zsh
+if [[ "$de_name" != "mate" ]]; then
 install_fm_tools
+fi
 setup_fonts
 install_desktop
 browser_installer
