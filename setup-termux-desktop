@@ -571,7 +571,7 @@ function install_font_for_style() {
 	local style_number="$1"
 	echo "${R}[${C}-${R}]${G} Installing Fonts...${W}"
 	check_and_create_directory "$HOME/.fonts"
-	download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/$de_name/look_${style_number}/font.tar.gz" "$HOME/.fonts"
+	download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-files/$de_name/look_${style_number}/font.tar.gz" "$HOME/.fonts"
 	fc-cache -f
 	cd "$HOME" || return
 }
@@ -716,7 +716,7 @@ function read_conf() {
 function questions_theme_select() {
     local owner="sabamdarif"
     local repo="termux-desktop"
-    local main_folder="patch/$de_name"
+    local main_folder="setup-files/$de_name"
     local subfolder_count_value
     subfolder_count_value=$(count_subfolders "$owner" "$repo" "$main_folder" 2>/dev/null)
     cd "$HOME" || return
@@ -1423,11 +1423,11 @@ function theme_installer() {
     echo "${R}[${C}-${R}]${G}${BOLD} Configuring Wallpapers...${W}"
     echo
     check_and_create_directory "$PREFIX/share/backgrounds"
-    download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/${de_name}/look_${style_answer}/wallpaper.tar.gz" "$PREFIX/share/backgrounds/"
+    download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-files/${de_name}/look_${style_answer}/wallpaper.tar.gz" "$PREFIX/share/backgrounds/"
 
     banner
     check_and_create_directory "$icons_folder"
-    download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/${de_name}/look_${style_answer}/icon.tar.gz" "$icons_folder"
+    download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-files/${de_name}/look_${style_answer}/icon.tar.gz" "$icons_folder"
 
     if [[ "$de_name" == "xfce" ]]; then
         local icons_themes_names
@@ -1454,7 +1454,7 @@ function theme_installer() {
     echo "${R}[${C}-${R}]${G}${BOLD} Installing Theme...${W}"
     echo
     check_and_create_directory "$themes_folder"
-    download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/${de_name}/look_${style_answer}/theme.tar.gz" "$themes_folder"
+    download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-files/${de_name}/look_${style_answer}/theme.tar.gz" "$themes_folder"
 
     echo "${R}[${C}-${R}]${G} Making Additional Configuration...${W}"
     echo
@@ -1466,9 +1466,9 @@ function theme_installer() {
     done
 
     if [[ "$de_name" == "openbox" ]]; then
-        download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/${de_name}/look_${style_answer}/config.tar.gz" "$HOME"
+        download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-files/${de_name}/look_${style_answer}/config.tar.gz" "$HOME"
     else
-        download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/${de_name}/look_${style_answer}/config.tar.gz" "$HOME/.config/"
+        download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-files/${de_name}/look_${style_answer}/config.tar.gz" "$HOME/.config/"
     fi
 }
 
@@ -1550,13 +1550,12 @@ function setup_folder() {
 	done
 	cd "$HOME" || return
 	termux-reload-settings
-	directories=(Desktop Music Download Pictures Videos)
+	directories=(Music Download Pictures Videos)
 	for dir in "${directories[@]}"; do
 	check_and_create_directory "$HOME/storage/shared/$dir"
 	done
 	check_and_create_directory "$HOME/Desktop"
 	ln -s "$HOME/storage/shared/Music" "$HOME/"
-	ln -s "$HOME/storage/shared/Desktop" "$HOME/"
 	ln -s "$HOME/storage/shared/Download" "$HOME/Downloads"
 	ln -s "$HOME/storage/shared/Pictures" "$HOME/"
 	ln -s "$HOME/storage/shared/Videos" "$HOME/"
@@ -3043,7 +3042,7 @@ function reinstall_themes() {
 	tmp_themes_folder="$PREFIX/tmp/themes"
 	check_and_create_directory "$tmp_themes_folder"
 	echo "${R}[${C}-${R}]${G} Reinstalling Themes...${W}"
-	download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/${de_name}/look_${style_answer}/theme.tar.gz" "$tmp_themes_folder"
+	download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-files/${de_name}/look_${style_answer}/theme.tar.gz" "$tmp_themes_folder"
 	local theme_names
 	theme_names=$(ls "$tmp_themes_folder")
 	local theme_name
@@ -3070,7 +3069,7 @@ function reinstall_icons() {
 	package_install_and_check "fluent-icon-theme"
 	else
 	echo "${R}[${C}-${R}]${G} Reinstalling Icons...${W}"
-	download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/${de_name}/look_${style_answer}/icon.tar.gz" "$tmp_icons_folder"
+	download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-files/${de_name}/look_${style_answer}/icon.tar.gz" "$tmp_icons_folder"
 	local icon_themes_names
 	icon_themes_names=$(ls "$tmp_icons_folder")
 	local icon_theme
@@ -3099,7 +3098,7 @@ function reinstall_config() {
 	tmp_config_folder="$PREFIX/tmp/config"
 	check_and_create_directory "$tmp_config_folder"
 	echo "${R}[${C}-${R}]${G} Reinstalling Config...${W}"
-	download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patch/${de_name}/look_${style_answer}/config.tar.gz" "$tmp_config_folder"
+	download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-files/${de_name}/look_${style_answer}/config.tar.gz" "$tmp_config_folder"
 	local config_file_names
 	config_file_names=$(ls "$tmp_config_folder")
 	local config_file
@@ -3358,10 +3357,10 @@ photo_editor_installer
 setup_synaptic
 setup_wine
 if [[ "$style_answer" == "0" ]]; then
-    banner
-	echo "${R}[${C}-${R}]${G}${BOLD} Configuring Stock $de_name Style...${W}"
-	echo
-	echo "style_name=\"Stock\"" >> "$config_file"
+banner
+echo "${R}[${C}-${R}]${G}${BOLD} Configuring Stock $de_name Style...${W}"
+echo
+echo "style_name=\"Stock\"" >> "$config_file"
 else
 setup_config
 fi

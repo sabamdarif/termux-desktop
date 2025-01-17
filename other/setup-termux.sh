@@ -204,9 +204,9 @@ _step_install_dependencies() {
 
 _make_supported_for_termux() {
     cd "$SCRIPT_DIR"
-    wget --tries=5 --retry-connrefused https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/other/nautilus-scripts-unit-tests.patch
-    patch -p1 < nautilus-scripts-unit-tests.patch
-    rm nautilus-scripts-unit-tests.patch
+    wget --tries=5 --retry-connrefused https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patches/fix-nautilus-scripts.patch
+    patch -p1 < fix-nautilus-scripts.patch
+    rm fix-nautilus-scripts.patch
     rm -rf "Security and recovery"
 }
 
