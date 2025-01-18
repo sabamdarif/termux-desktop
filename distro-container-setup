@@ -266,7 +266,7 @@ function distro_basic_task() {
     # Set proot timezone
     timezone=$(getprop persist.sys.timezone)
     proot-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:0 rm /etc/localtime
-    proot-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:0 cp "/usr/share/zoneinfo/$timezone /etc/localtime"
+    proot-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:0 cp "/usr/share/zoneinfo/$timezone" /etc/localtime
     if [[ "$pd_audio_config_answer" == "y" ]]; then
     distro_packs="sudo pulseaudio"
     distro_fix_sound_issue
@@ -583,7 +583,7 @@ function handel_debian_based_app_installer() {
         local package_manager="apt"
     fi
 
-    cat <<TOP_EOF >> "$PREFIX/bin/$selected_distro"
+    cat <<TOP_EOF > "$PREFIX/bin/$selected_distro"
 #!/data/data/com.termux/files/usr/bin/bash
 
 . $PREFIX/etc/termux-desktop/common_functions
@@ -654,7 +654,7 @@ TOP_EOF
 }
 
 function handel_arch_based_app_installer() {
-    cat <<TOP_EOF >> "$PREFIX/bin/$selected_distro"
+    cat <<TOP_EOF > "$PREFIX/bin/$selected_distro"
 #!/data/data/com.termux/files/usr/bin/bash
 
 . $PREFIX/etc/termux-desktop/common_functions
@@ -729,7 +729,7 @@ TOP_EOF
 }
 
 function handel_alpine_based_app_installer() {
-    cat <<TOP_EOF >> "$PREFIX/bin/$selected_distro"
+    cat <<TOP_EOF > "$PREFIX/bin/$selected_distro"
 #!/data/data/com.termux/files/usr/bin/bash
 
 . $PREFIX/etc/termux-desktop/common_functions
@@ -804,7 +804,7 @@ TOP_EOF
 }
 
 function handel_fedora_based_app_installer() {
-    cat <<TOP_EOF >> "$PREFIX/bin/$selected_distro"
+    cat <<TOP_EOF > "$PREFIX/bin/$selected_distro"
 #!/data/data/com.termux/files/usr/bin/bash
 
 . $PREFIX/etc/termux-desktop/common_functions

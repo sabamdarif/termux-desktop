@@ -93,6 +93,13 @@ function print_failed() {
 	print_log "$msg"
 }
 
+function print_warn() {
+	local msg
+	msg="$1"
+	echo "${R}[${Y}!${R}]${Y} $msg${W}"
+	print_log "$msg"
+}
+
 function wait_for_keypress() {
 	read -n1 -s -r -p "${R}[${C}-${R}]${G} Press any key to continue...${W}"
 	echo
@@ -560,11 +567,11 @@ function confirmation_y_or_n() {
 # get the latest version from a github releases
 # ex. latest_tag=$(get_latest_release "$repo_owner" "$repo_name")
 function get_latest_release() {
-	local repo_woner="$1"
+	local repo_owner="$1"
 	local repo_name="$2"
-	curl -s "https://api.github.com/repos/$repo_woner/$repo_name/releases/latest" |
+	curl -s "https://api.github.com/repos/$repo_owner/$repo_name/releases/latest" |
 	grep '"tag_name":' |
-	sed -E 's/.*"([^"]+)".*/\1/'
+	sed -E 's/.*"v?([^"]+)".*/\1/'
 }
 
 function install_font_for_style() {
@@ -648,6 +655,20 @@ function download_github_action_artifact() {
     extract_archive "artifact.zip"
 }
 
+function print_status() {
+    local status
+	status=$1
+    local message
+	message=$2
+    if [[ "$status" == "ok" ]]; then
+        print_success "$message"
+    elif [[ "$status" == "warn" ]]; then
+        print_warn "$message"
+    elif [[ "$status" == "error" ]]; then
+        print_failed "$message"
+    fi
+}
+
 function select_an_option() {
     local max_options=$1
     local default_option=${2:-1}
@@ -681,7 +702,7 @@ function preprocess_conf() {
 
 function read_conf() {
     if [[ ! -f "$config_file" ]]; then
-        print_failed " Configuration file "$config_file" not found"
+        print_failed " Configuration file $config_file not found"
 		exit 0
     fi
 
@@ -1100,27 +1121,34 @@ function exp_termux_gl_hw_support() {
 
 function exp_hwa_support() {
 	if [[ "$confirmation_mesa_vulkan_icd_wrapper" == "y" ]]; then
-	echo -e "${R}[${C}-${R}]${G} The new Hardware Acceleration Will Use The mesa-vulkan-icd-wrapper Package\nFor option 4 other GPUs, this driver might / might not work\n ${W}"
-	echo "${R}[${C}-${R}]${G}${BOLD} Select Your Device GPU${W}"
-    echo
-	echo "${Y}1. Adreno${W}"
-	echo
-    echo "${Y}2. Mali${W}"
-	echo
-	echo "${Y}3. Xclipse${W}"
-	echo
-	echo "${Y}4. Others${W}"
-	echo
-	select_an_option 4 1 device_gpu_model
-	echo "device_gpu_model=\"$device_gpu_model\"" >> "$config_file"
+	echo -e "${R}[${C}-${R}]${G} The new Hardware Acceleration Will Use The mesa-vulkan-icd-wrapper Package\n ${W}"
+	echo -e "${R}[${C}-${R}]${G} GPU Found: $detected_gpu\n"
+	sleep 0.2
+	if [[ "$gpu_name" == "unknown" ]]; then
+		echo -e "${R}[${C}-${R}]${G} For option 4 other GPUs, this driver might / might not work\n ${W}"
+		echo "${R}[${C}-${R}]${G}${BOLD} Please Select Your Device GPU${W}"
+    	echo
+		echo "${Y}1. Adreno${W}"
+		echo
+    	echo "${Y}2. Mali${W}"
+		echo
+		echo "${Y}3. Xclipse${W}"
+		echo
+		echo "${Y}4. Others${W}"
+		echo
+		select_an_option 4 1 device_gpu_model
+		echo "device_gpu_model=\"$device_gpu_model\"" >> "$config_file"
 
-	# set gpu model name
-	case "$device_gpu_model" in
-    1) device_gpu_model_name="adreno" ;;
-    2) device_gpu_model_name="mali" ;;
-    3) device_gpu_model_name="xclipse" ;;
-    4) device_gpu_model_name="others" ;;
-	esac
+		# set gpu model name
+		case "$device_gpu_model" in
+    	1) device_gpu_model_name="adreno" ;;
+    	2) device_gpu_model_name="mali" ;;
+    	3) device_gpu_model_name="xclipse" ;;
+    	4) device_gpu_model_name="others" ;;
+		esac
+	else
+		device_gpu_model_name="$gpu_name"
+	fi
 	echo "device_gpu_model_name=\"$device_gpu_model_name\"" >> "$config_file"
 
 	exp_termux_gl_hw_support
@@ -1294,20 +1322,6 @@ function distro_questions() {
 	fi
 }
 
-function print_recomended_msg() {
-banner
-echo "${R}[${C}-${R}]${G}${BOLD} Please read this..."
-echo -e "${C}
-1. Ensure it's a clean installation.\n
-2. Make sure you have at least 1 GB of internet data and 3 GB of free storage space.\n
-3. Use a reliable VPN to avoid any internet connection issues.\n
-4. Long press on Termux and enable "Keep screen on".\n
-5. Do not close Termux during the installation process.\n
-6. Make sure to read the README files carefully.
-${W}"
-wait_for_keypress
-}
-
 #########################################################################
 #
 # Update System And Install Required Packages Repo And Bssic Task
@@ -1338,7 +1352,7 @@ function update_sys() {
     else
         if [[ -f "$HOME/.run_chosen_mirrors_once" ]]; then
 			local date_on_file
-			date_on_file="$(cat $HOME/.run_chosen_mirrors_once)"
+			date_on_file="$(cat "$HOME"/.run_chosen_mirrors_once)"
 			# Check if the file is older than today
             if [[ $(find "$HOME/.run_chosen_mirrors_once" -mtime +0 2>/dev/null) ]] && [[ "$date_on_file" != "$todays_date" ]]; then # although [[ "$date_on_file" != "$todays_date" ]] is unnecessary
                 chose_mirror
@@ -1351,6 +1365,163 @@ function update_sys() {
             pkg upgrade -y -o Dpkg::Options::="--force-confnew"
         fi
     fi
+}
+
+function check_system_requirements() {
+	local errors=0
+	clear
+
+	# Disable keyboard interruptions
+    trap '' SIGINT SIGTSTP
+
+	printf "%s############################################################\n" "$C"
+	printf "%s#                                                          #\n" "$C"
+	printf "%s#  ▀█▀ █▀▀ █▀█ █▀▄▀█ █ █ ▀▄▀   █▀▄ █▀▀ █▀ █▄▀ ▀█▀ █▀█ █▀█  #\n" "$C"
+	printf "%s#   █  ██▄ █▀▄ █   █ █▄█ █ █   █▄▀ ██▄ ▄█ █ █  █  █▄█ █▀▀  #\n" "$C"
+	printf "%s#                                                          #\n" "$C"
+	printf "%s################# System Compatibility Check ###############%s\n" "$C" "$W"
+	echo " "
+    sleep 0.3
+    # Check if running on Android
+	android_version=$(getprop ro.build.version.release | cut -d'.' -f1)
+
+    if [[ "$(uname -o)" == "Android" ]]; then
+		if [[ "$android_version" -ge 8 ]]; then
+        	print_status "ok" "Running on: ${W}Android $android_version"
+		else
+			print_status "error" "Running on: ${W}Android $android_version is not recomended"
+			((errors++))
+		fi
+    else
+        print_status "error" "Not running on Android"
+        ((errors++))
+    fi
+    sleep 0.2
+	# Android device soc & model details
+	model="$(getprop ro.product.brand) $(getprop ro.product.model)"
+	print_status "ok" "Device: ${W}$model"
+	sleep 0.2
+	PROCESSOR_BRAND_NAME="$(getprop ro.soc.manufacturer)"
+	PROCESSOR_NAME="$(getprop ro.soc.model)"
+	print_status "ok" "SOC: ${W}$PROCESSOR_BRAND_NAME $PROCESSOR_NAME"
+	sleep 0.2
+	# Check GPU
+	gpu_egl=$(getprop ro.hardware.egl)
+    gpu_vulkan=$(getprop ro.hardware.vulkan)
+    detected_gpu="$(echo -e "$gpu_egl\n$gpu_vulkan" | sort -u | tr '\n' ' ' | sed 's/ $//')"
+	if echo "$detected_gpu" | grep -iq "adreno"; then
+		gpu_name="adreno"
+	elif echo "$detected_gpu" | grep -iq "mali"; then
+		gpu_name="mali"
+	elif echo "$detected_gpu" | grep -iq "xclipse"; then
+		gpu_name="xclipse"
+	else
+		gpu_name="unknown"
+	fi
+
+	if [[ "$gpu_name" == "adreno" ]] ||  [[ "$gpu_name" == "mali" ]] || [[ "$gpu_name" == "xclipse" ]]; then
+        print_status "ok" "GPU: ${W}$gpu_name"
+    else
+        print_status "warn" "Unknown GPU: ${W}$detected_gpu"
+    fi
+	sleep 0.2
+    # Check architecture
+	app_arch=$(uname -m)
+	supported_arch="$(getprop ro.product.cpu.abilist)"
+	local archtype
+	case "$app_arch" in
+    aarch64) archtype="aarch64" ;;
+    armv7*|arm) archtype="arm" ;;
+	esac
+
+    if [[ "$archtype" == "aarch64" ]] || [[ "$archtype" == "arm" ]]; then
+        print_status "ok" "App architecture: ${W}$app_arch"
+    else
+        print_status "error" "Unsupported architecture: $app_arch, requires aarch64/arm/armv7*"
+        ((errors++))
+    fi
+	sleep 0.2
+    # Check for termux app requirements
+    if [[ -d "$PREFIX" ]]; then
+        print_status "ok" "Termux PREFIX: ${W}Directory found"
+		sleep 0.2
+		local latest_tag
+		latest_tag=$(get_latest_release "termux" "termux-app")
+		if [[ "$TERMUX_VERSION" == "$latest_tag" ]]; then
+			print_status "ok" "Termux Version: ${W}$TERMUX_VERSION"
+			sleep 0.2
+			local termux_build
+			termux_build=$(echo "$TERMUX_APK_RELEASE" | awk '{print tolower($0)}')
+			if [[ "$termux_build" == "github" ]] || [[ "$termux_build" == "fdroid" ]]; then
+				print_status "ok" "Termux Build: ${W}$TERMUX_APK_RELEASE"
+				sleep 0.2
+			else
+        		print_status "error" "$TERMUX_APK_RELEASE build is not recomended"
+				echo "${W}Update Termux:- https://github.com/termux/termux-app/releases ${W}"
+				sleep 0.2
+			fi
+		else
+			print_status "warn" "Termux Version: ${W}$TERMUX_VERSION (Not Recomended)"
+			echo "${R}[${G}!${R}]${G} Update Termux:- https://github.com/termux/termux-app/releases ${W}"
+			sleep 0.2
+		fi
+    else
+        print_status "error" "Termux PREFIX: directory not found"
+        ((errors++))
+		sleep 0.2
+    fi
+    # Check available storage space
+	free_space=$(df -h "$HOME" | awk 'NR==2 {print $4}')
+    if [[ $(df "$HOME" | awk 'NR==2 {print $4}') -gt 4194304 ]]; then
+        print_status "ok" "Available storage: ${W}$free_space"
+    else
+        print_status "warn" "Low storage space: ${W}$free_space (4GB recommended)"
+    fi
+	sleep 0.2
+    # Check RAM
+	total_ram=$(free -htm | awk '/Mem:/ {print $2}')
+    if [[ $(free -m | awk 'NR==2 {print $2}') -gt 2048 ]]; then
+        print_status "ok" "RAM: ${W}${total_ram}"
+    else
+        print_status "warn" "Low RAM: ${W}${total_ram} (2GB recommended)"
+    fi
+	sleep 0.2
+    echo
+    if [[ $errors -eq 0 ]]; then
+        print_success "All system requirements met!"
+		sleep 0.2
+        return 0
+    else
+        print_failed "Found $errors error(s). System requirements not met."
+		sleep 0.2
+		echo
+        confirmation_y_or_n "Do you want to continue anyway (Not Recomended)" continue_install_anyway
+		if [[ "$continue_install_anyway" == "n" ]]; then
+			trap - SIGINT SIGTSTP
+			exit 1
+		fi
+    fi
+}
+
+function print_recomended_msg() {
+check_system_requirements
+echo
+echo "${R}[${C}-${R}]${G}${BOLD} Please read this..."
+echo -e "${W}
+1. Ensure it's a clean installation.\n
+2. Make sure you have at least 1 GB of internet data.\n
+3. Use a reliable VPN to avoid any internet connection issues.\n
+4. Long press on Termux and enable "Keep screen on".\n
+5. Do not close Termux during the installation process.\n
+6. Make sure to read all README files carefully."
+if [[ "$android_version" -ge 12 ]]; then
+echo -e "${W}
+7. Make sure to disable Phantom Process Killer.
+"
+fi
+# Re-enable keyboard interruptions
+trap - SIGINT SIGTSTP
+wait_for_keypress
 }
 
 function install_required_packages() {
@@ -1577,7 +1748,7 @@ function hw_config() {
         local current_script_hash
         current_script_hash=$(curl -sL https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/enable-hw-acceleration | sha256sum | cut -d ' ' -f 1)
         local local_script_hash
-        local_script_hash=$(sha256sum ${current_path}/enable-hw-acceleration | cut -d ' ' -f 1)
+        local_script_hash=$(sha256sum "${current_path}/enable-hw-acceleration" | cut -d ' ' -f 1)
 
         if [[ "$local_script_hash" != "$current_script_hash" ]]; then
             echo "${R}[${C}-${R}]${G} A different version of the hardware acceleration installer is detected.${W}"
@@ -1586,29 +1757,29 @@ function hw_config() {
             confirmation_y_or_n "Do you want to replace it with the latest version?" change_old_hw_installer
 
             if [[ "$change_old_hw_installer" == "y" ]]; then
-                check_and_backup ${current_path}/enable-hw-acceleration
-                download_file ${current_path}/enable-hw-acceleration https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/enable-hw-acceleration
-				chmod +x ${current_path}/enable-hw-acceleration
-                . ${current_path}/enable-hw-acceleration
+                check_and_backup "${current_path}/enable-hw-acceleration"
+                download_file "${current_path}/enable-hw-acceleration" https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/enable-hw-acceleration
+				chmod +x "${current_path}/enable-hw-acceleration"
+                . "${current_path}"/enable-hw-acceleration
             else
                 echo "${R}[${C}-${R}]${G} Using the local hardware acceleration setup file.${W}"
-                chmod +x ${current_path}/enable-hw-acceleration
-                . ${current_path}/enable-hw-acceleration
+                chmod +x "${current_path}/enable-hw-acceleration"
+                . "${current_path}"/enable-hw-acceleration
             fi
 
             echo "change_old_hw_installer=\"$change_old_hw_installer\"" >> "$config_file"
         else
             echo "${R}[${C}-${R}]${G} Using the local hardware acceleration setup file.${W}"
-            chmod +x ${current_path}/enable-hw-acceleration
-            . ${current_path}/enable-hw-acceleration
+            chmod +x "${current_path}/enable-hw-acceleration"
+            . "${current_path}"/enable-hw-acceleration
         fi
     else
-        download_file ${current_path}/enable-hw-acceleration https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/enable-hw-acceleration
-		chmod +x ${current_path}/enable-hw-acceleration
-        . ${current_path}/enable-hw-acceleration
+        download_file "${current_path}/enable-hw-acceleration" https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/enable-hw-acceleration
+		chmod +x "${current_path}/enable-hw-acceleration"
+        . "${current_path}"/enable-hw-acceleration
     fi
 
-    check_and_delete ${current_path}/enable-hw-acceleration
+    check_and_delete "${current_path}/enable-hw-acceleration"
 	print_log "$current_path $current_script_hash $local_script_hash"
 }
 
@@ -2010,7 +2181,7 @@ function setup_termux_x11() {
 		local repo_name="termux-x11"
 		local latest_tag
 		latest_tag=$(get_latest_release "$repo_owner" "$repo_name")
-		local termux_x11_url="https://github.com/$repo_owner/$repo_name/releases/download/$latest_tag/"
+		local termux_x11_url="https://github.com/$repo_owner/$repo_name/releases/download/v$latest_tag/"
 		local assets
 		assets=$(curl -s "https://api.github.com/repos/$repo_owner/$repo_name/releases/latest" | grep -oP '(?<="name": ")[^"]*')
 		deb_assets=$(echo "$assets" | grep "termux-x11.*all.deb")
@@ -2462,7 +2633,7 @@ fi
 echo "terminal_utility_setup_answer=\"$terminal_utility_setup_answer\"" >> "$config_file"
 }
 
-install_fm_tools() {
+function install_fm_tools() {
 	if [[ "$fm_tools" == "y" ]]; then
 		banner
 		echo "${R}[${C}-${R}]${G}${BOLD} Installing File Manager Tools...${W}"
@@ -2508,9 +2679,9 @@ function setup_fonts() {
 #########################################################################
 
 function run_wine_shortcut_script() {
-	download_file ${current_path}/add-wine-shortcut https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/other/add-wine-shortcut
-	chmod +x ${current_path}/add-wine-shortcut
-    . ${current_path}/add-wine-shortcut
+	download_file "${current_path}/add-wine-shortcut" https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/other/add-wine-shortcut
+	chmod +x "${current_path}/add-wine-shortcut"
+    . "${current_path}"/add-wine-shortcut
 	check_and_delete "add-wine-shortcut"
 }
 
@@ -2822,7 +2993,7 @@ function remove_termux_desktop() {
 
 function gui_check_up() {
 termux_x11_pid=$(pgrep -f /system/bin/app_process.*com.termux.x11.Loader)
-de_pid=$(pgrep -f $de_startup)
+de_pid=$(pgrep -f "$de_startup")
 if [ -n "$termux_x11_pid" ] || [ -n "$de_pid" ] >/dev/null 2>&1; then
 echo "${G}Please Stop The Gui Desktop Server First${W}"
 exit 0
@@ -3155,16 +3326,9 @@ function some_fixes() {
 
 # add the basic details into a config file
 function print_basic_details() {
-	android_version=$(getprop ro.build.version.release)
-	local model
-	model="$(getprop ro.product.brand) $(getprop ro.product.model)"
-	local lotal_ram
-	lotal_ram=$(free -htm | awk '/Mem:/ {print $2}')
-	app_arch=$(uname -m)
-	supported_arch="$(getprop ro.product.cpu.abilist)"
+	local net_condition
+	local country
 	net_condition="$(getprop gsm.network.type)"
-	PROCESSOR_BRAND_NAME="$(getprop ro.soc.manufacturer)"
-	PROCESSOR_NAME="$(getprop ro.soc.model)"
 	country="$(getprop gsm.sim.operator.iso-country)"
 cat <<EOF > "$config_file"
 ####################################
@@ -3178,10 +3342,12 @@ cat <<EOF > "$config_file"
 # Termux Version: ${TERMUX_VERSION}-${TERMUX_APK_RELEASE}
 # Device Model: $model
 # Android Version: $android_version
-# Total Ram: $lotal_ram
+# Free Space: $free_space
+# Total Ram: $total_ram
 # Architecture: $app_arch
 # System CPU Architecture: $supported_arch
 # Processor: $PROCESSOR_BRAND_NAME $PROCESSOR_NAME
+# GPU: $detected_gpu
 # Network Condition: $net_condition (On first run)
 # Country: $country
 #
@@ -3345,9 +3511,6 @@ banner
 hw_questions
 setup_folder
 setup_zsh
-if [[ "$de_name" != "mate" ]]; then
-install_fm_tools
-fi
 setup_fonts
 install_desktop
 browser_installer
@@ -3368,6 +3531,9 @@ banner
 distro_container_setup
 gui_launcher
 terminal_utility_setup
+if [[ "$de_name" != "mate" ]]; then
+install_fm_tools
+fi
 add_to_autostart
 some_fixes
 preprocess_conf

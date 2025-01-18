@@ -85,10 +85,10 @@ _check_and_backup() {
 			date_str=$(date +"%d-%m-%Y")
 			local backup="${file}-${date_str}.bak"
 			    if [[ -e "$backup" ]]; then
-				echo "${R}[${C}-${R}]${G}Backup file ${C}${backup} ${G}already exists${W}"
+				echo "${R}[${C}-${R}]${G} Backup file ${C}${backup} ${G}already exists${W}"
 				echo
 				fi
-		    echo "${R}[${C}-${R}]${G}backing up file ${C}$file${W}"
+		    echo "${R}[${C}-${R}]${G} Backing up file ${C}$file${W}"
 			mv "$1" "$backup"
             fi
         done
