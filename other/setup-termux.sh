@@ -208,6 +208,8 @@ _make_supported_for_termux() {
     patch -p1 < fix-nautilus-scripts.patch
     rm fix-nautilus-scripts.patch
     rm -rf "Security and recovery"
+    find "$SCRIPT_DIR" -type f -name "*.orig" -exec rm -f {} \;
+    find "$SCRIPT_DIR" -type f -name "*.rej   " -exec rm -f {} \;
 }
 
 _setup_file_manager() {
