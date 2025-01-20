@@ -2,6 +2,18 @@
 
 > Many additional applications are available for Termux via the **tur (Termux User Repository)** or the **x11 repository**.
 
+### Browsers:
+![Firefox and Chromium](images/apps/firefox-chromium.png)
+
+### Image Editors:
+![Inkscape and GIMP](images/apps/inkscape-gimp.png)
+
+### Code Editors:
+![Geany and VS Code](images/apps/geany-vscode.png)
+
+### Media Players:
+![Parole and VLC](images/apps/parole-vlc.png)
+
 ---
 
 ### Audio and Video Editing Tools

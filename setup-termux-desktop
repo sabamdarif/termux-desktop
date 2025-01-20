@@ -1867,6 +1867,12 @@ cat <<EOF > "$PREFIX/bin/vncstart"
 
 termux-wake-lock
 
+vnc_server_pid=\$(pgrep -f "vncserver")
+de_pid=\$(pgrep -f "$de_startup")
+if [[ -n "\$de_pid" ]] || [[ -n "\$vnc_server_pid" ]]>/dev/null 2>&1; then
+vncstop -f
+fi
+
 pulseaudio --start --exit-idle-time=-1
 
 case \$1 in
@@ -1932,13 +1938,26 @@ cat <<EOF > "$PREFIX/bin/tx11start"
 
 termux-wake-lock
 
+termux_x11_pid=\$(pgrep -f /system/bin/app_process.*com.termux.x11.Loader)
+de_pid=\$(pgrep -f "$de_startup")
+if [ -n "\$termux_x11_pid" ] || [ -n "\$de_pid" ] >/dev/null 2>&1; then
+pkill -f com.termux.x11 > /dev/null 2>&1
+kill -9 \$de_pid > /dev/null 2>&1
+fi
+
 pulseaudio --start --exit-idle-time=-1
+
+###########################################################
+#                                                         #
+#************************* Debug *************************#
+#                                                         #
+###########################################################
 
 if [[ "\$1" == "--debug" ]]; then
 case \$2 in
 --nogpu)
     # Start Termux X11 without GPU acceleration
-    XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :${display_number} &
+    XDG_RUNTIME_DIR=\${TMPDIR} TERMUX_X11_DEBUG=1 termux-x11 :${display_number} &
     sleep 1
     am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1
     sleep 1
@@ -1946,7 +1965,7 @@ case \$2 in
 
     # Check if the second argument is --legacy
     if [[ "\$3" == "--legacy" ]]; then
-        XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :${display_number} -legacy-drawing &
+        XDG_RUNTIME_DIR=\${TMPDIR} TERMUX_X11_DEBUG=1 termux-x11 :${display_number} -legacy-drawing &
         sleep 1
         am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1
         sleep 1
@@ -1958,22 +1977,22 @@ case \$2 in
     # Start Termux X11 without dbus-launch
 	export ${set_to_export}
 	${initialize_server_method} &
-    env XDG_RUNTIME_DIR=\${TMPDIR} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} ${hw_method} termux-x11 :${display_number} -xstartup $de_startup
+    env XDG_RUNTIME_DIR=\${TMPDIR} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} ${hw_method} TERMUX_X11_DEBUG=1 termux-x11 :${display_number} -xstartup $de_startup
     exit 0
 
     # Nested case to check for additional options
     case \$3 in
     --nogpu)
-        env LIBGL_ALWAYS_SOFTWARE=1 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe XDG_RUNTIME_DIR=\${TMPDIR} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} termux-x11 :${display_number} -xstartup $de_startup
+        env LIBGL_ALWAYS_SOFTWARE=1 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe XDG_RUNTIME_DIR=\${TMPDIR} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} TERMUX_X11_DEBUG=1 termux-x11 :${display_number} -xstartup $de_startup
 
         if [[ "\$4" == "--legacy" ]]; then
-            env XDG_RUNTIME_DIR=\${TMPDIR} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} termux-x11 :${display_number} -legacy-drawing -xstartup $de_startup
+            env XDG_RUNTIME_DIR=\${TMPDIR} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} TERMUX_X11_DEBUG=1 termux-x11 :${display_number} -legacy-drawing -xstartup $de_startup
         fi
         ;;
     --legacy)
 	export ${set_to_export}
 	${initialize_server_method} &
-        env XDG_RUNTIME_DIR=\${TMPDIR} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} ${hw_method} termux-x11 :${display_number} -legacy-drawing -xstartup $de_startup
+        env XDG_RUNTIME_DIR=\${TMPDIR} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} ${hw_method} TERMUX_X11_DEBUG=1 termux-x11 :${display_number} -legacy-drawing -xstartup $de_startup
         ;;
     *)
         echo -e "${C}--legacy ${G}to start termux:x11 with -legacy-drawing${W}"
@@ -1988,7 +2007,7 @@ case \$2 in
 	export ${set_to_export}
 	${initialize_server_method} &
     sleep 1
-    XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :${display_number} -legacy-drawing &
+    XDG_RUNTIME_DIR=\${TMPDIR} TERMUX_X11_DEBUG=1 termux-x11 :${display_number} -legacy-drawing &
     sleep 1
     am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1 &
     sleep 1
@@ -2000,7 +2019,7 @@ case \$2 in
 	export ${set_to_export}
 	${initialize_server_method} &
     sleep 1
-    XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :${display_number} &
+    XDG_RUNTIME_DIR=\${TMPDIR} TERMUX_X11_DEBUG=1 termux-x11 :${display_number} &
     sleep 1
     am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1 &
     sleep 1
@@ -2008,9 +2027,14 @@ case \$2 in
     ;;
 esac
 
-# End Debug
-
 elif [[ "\$1" == "--help" ]]; then
+
+###########################################################
+#                                                         #
+#************************** Help *************************#
+#                                                         #
+###########################################################
+
     # Display help information
     echo -e "${C}tx11start ${G}to start termux:x11 with GPU acceleration${W}"
     echo -e "${C}tx11start --nogpu ${G}to start termux:x11 without GPU acceleration${W}"
@@ -2019,7 +2043,13 @@ elif [[ "\$1" == "--help" ]]; then
 	echo -e "${C}tx11start --debug ${G}at the start to see debug log${W}"
     exit 0
 else
-# Main case statement to handle script arguments
+
+###########################################################
+#                                                         #
+#************************* Main **************************#
+#                                                         #
+###########################################################
+
 case \$1 in
 --nogpu)
     # Start Termux X11 without GPU acceleration
@@ -2993,8 +3023,9 @@ function remove_termux_desktop() {
 
 function gui_check_up() {
 termux_x11_pid=$(pgrep -f /system/bin/app_process.*com.termux.x11.Loader)
+vnc_server_pid=$(pgrep -f "vncserver")
 de_pid=$(pgrep -f "$de_startup")
-if [ -n "$termux_x11_pid" ] || [ -n "$de_pid" ] >/dev/null 2>&1; then
+if [[ -n "$termux_x11_pid" ]] || [[ -n "$de_pid" ]] || [[ -n "$vnc_server_pid" ]]>/dev/null 2>&1; then
 echo "${G}Please Stop The Gui Desktop Server First${W}"
 exit 0
 fi
