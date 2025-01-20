@@ -201,7 +201,7 @@ Options:
 |OPENBOX|MATE|
 |![img](images/openbox/look_1/desktop.png)|![img](images/mate/look_1/desktop.png)|
 
-### Supported Apps:- [Here]()
+### Supported Apps:- [Here](applist.md)
 ---
 
 ## Advanced Topics:

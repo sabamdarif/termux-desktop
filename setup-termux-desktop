@@ -943,19 +943,15 @@ In File Manager click on the scripts meanu to see them all
 	echo
 	echo "${Y}1. Termux:x11${W}"
 	echo
-	echo "${Y}2. Vnc (Not Recommended | Some features might not work)${W}"
+	echo "${Y}2. Both Termux:x11 and VNC${W}"
 	echo
-	echo "${Y}3. Both${W}"
-	echo
-	select_an_option 3 1 gui_mode_num
+	select_an_option 2 1 gui_mode_num
 	# set gui_mode and display_number value
-	if [[ "$gui_mode_num"  == "1" ]]; then
+	if [[ "$gui_mode_num" == "1" ]]; then
 		gui_mode="termux_x11"
 		display_number="0"
 		echo "display_number=\"$display_number\"" >> "$config_file"
-	elif [[ "$gui_mode_num"  == "2" ]]; then
-		gui_mode="vnc"
-	elif [[ "$gui_mode_num"  == "3" ]]; then
+	elif [[ "$gui_mode_num" == "2" ]]; then
 		gui_mode="both"
 		display_number="0"
 		echo "display_number=\"$display_number\"" >> "$config_file"
@@ -964,7 +960,7 @@ In File Manager click on the scripts meanu to see them all
 
 	banner
 	confirmation_y_or_n "Do you want to start the desktop at Termux startup" de_on_startup
-	if [[ "$de_on_startup" == "y" && "$gui_mode" == "3" ]]; then
+	if [[ "$de_on_startup" == "y" && "$gui_mode" == "both" ]]; then
 	echo "${R}[${C}-${R}]${G} You chose both vnc and termux:x11 to access gui mode${W}"
 	echo
 	echo "${R}[${C}-${R}]${G} Which will be your default${W}"
@@ -973,7 +969,14 @@ In File Manager click on the scripts meanu to see them all
 	echo
 	echo "${Y}2. Vnc${W}"
 	echo
-	select_an_option 2 1 autostart_gui_mode
+	select_an_option 2 1 autostart_gui_mode_num
+	echo "autostart_gui_mode_num=\"$autostart_gui_mode_num\"" >> "$config_file"
+		if [[ "$autostart_gui_mode_num" == "1" ]]; then
+			autostart_gui_mode="termux_x11"
+		elif [[ "$autostart_gui_mode_num" == "2" ]]; then
+			autostart_gui_mode="vnc"
+		fi
+	echo "autostart_gui_mode=\"$autostart_gui_mode\"" >> "$config_file"
 	fi
 	banner
 	echo "${R}[${C}-${R}]${Y}${BOLD} Do you want to add a Linux container (proot distro)${W}"
@@ -2247,30 +2250,6 @@ esac
 EOF
 }
 
-function gui_vnc() {
-cat << EOF > "$PREFIX/bin/gui"
-#!/data/data/com.termux/files/usr/bin/bash
-case \$1 in
---start|-l)
-vncstart
-;;
---stop|-s)
-vncstop
-;;
---kill|-k|-kill)
-vncstop -f
-;;
---help|-h)
-echo -e "${G} Use ${C}gui --start / gui -l ${G}to start vnc\n Use ${C}gui --stop / gui -s ${G}to stop vnc${W}"
-;;
-*)
-echo "${R}Invalid choise${W}"
-gui -h
-;;
-esac
-EOF
-}
-
 function gui_both() {
 cat << EOF > "$PREFIX/bin/gui"
 #!/data/data/com.termux/files/usr/bin/bash
@@ -2326,10 +2305,6 @@ function gui_launcher() {
 	setup_termux_x11
 	echo "gui_mode=\"termux_x11\"" >> "$config_file"
 	gui_termux_x11
-	elif [[ "$gui_mode" == "vnc" ]]; then
-	setup_vnc
-	echo "gui_mode=\"vnc\"" >> "$config_file"
-	gui_vnc
 	elif [[ "$gui_mode" == "both" ]]; then
 	setup_termux_x11
 	setup_vnc
@@ -2791,21 +2766,11 @@ EOF
 
 function add_to_autostart() {
 	if [[ "$de_on_startup" == "y" ]]; then
-	   if [[ "$gui_mode" == "3" ]]; then
-	      if [[ "$autostart_gui_mode" == "2" ]]; then
-		  add_vnc_autostart
-		  elif [[ "$autostart_gui_mode" == "1" ]]; then
-		  add_tx11_autostart
-		  else
-		  add_tx11_autostart
-		  fi
-		elif [[ "$gui_mode" == "vnc" ]]; then
-		add_vnc_autostart
-		elif [[ "$gui_mode" == "termux_x11" ]]; then
-		add_tx11_autostart
-		else
-		add_tx11_autostart
-	   fi
+		if [[ "$gui_mode" == "vnc" ]] || [[ "$autostart_gui_mode" == "vnc" ]]; then
+			add_vnc_autostart
+		elif [[ "$gui_mode" == "termux_x11" ]] || [[ "$autostart_gui_mode" == "termux_x11" ]]; then
+			add_tx11_autostart
+		fi
 	fi
 	echo "de_on_startup=\"$de_on_startup\"" >> "$config_file"
 }
@@ -3179,7 +3144,8 @@ function change_autostart() {
         if grep -q "^vncstart" "$shell_rc_file"; then
             sed -i '/# Start Vnc/,/fi/d' "$shell_rc_file"
 			echo "de_on_startup=\"n\"" >> "$config_file"
-        elif grep -q "^tx11start" "$shell_rc_file"; then
+		fi
+        if grep -q "^tx11start" "$shell_rc_file"; then
             sed -i '/# Start Termux:X11/,/fi/d' "$shell_rc_file"
 			echo "de_on_startup=\"n\"" >> "$config_file"
         fi
@@ -3193,7 +3159,12 @@ function change_autostart() {
 		echo
 		echo "${Y}2. Vnc${W}"
 		echo
-		select_an_option 2 1 autostart_gui_mode
+		select_an_option 2 1 autostart_gui_mode_num
+			if [[ "$autostart_gui_mode_num" == "1" ]]; then
+				autostart_gui_mode="termux_x11"
+			elif [[ "$autostart_gui_mode_num" == "2" ]]; then
+				autostart_gui_mode="vnc"
+			fi
 		fi
 		add_to_autostart
     fi
