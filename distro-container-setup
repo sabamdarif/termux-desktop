@@ -115,7 +115,7 @@ function pd_package_install_and_check() {
                 print_success "$package_name installed successfully"
             else
                 if type -p "$package_name" &>/dev/null || ls "$PREFIX/bin/"*"$package_name"* >/dev/null 2>&1; then
-                    print_success "$package_name ${G}installed successfully"
+                    print_success "$package_name installed successfully"
                 fi
             fi
         elif [[ "$ID" == arch* ]]; then
@@ -123,7 +123,7 @@ function pd_package_install_and_check() {
                 print_success "$package_name installed successfully"
             else
                 if type -p "$package_name" &>/dev/null || ls "$PREFIX/bin/"*"$package_name"* >/dev/null 2>&1; then
-                    print_success "$package_name ${G}installed successfully"
+                    print_success "$package_name installed successfully"
                 fi
             fi
         elif [[ "$ID" == "alpine" ]]; then
@@ -131,7 +131,7 @@ function pd_package_install_and_check() {
                 print_success "$package_name installed success"
             else
                 if type -p "$package_name" &>/dev/null || ls "$PREFIX/bin/"*"$package_name"* >/dev/null 2>&1; then
-                    print_success "$package_name ${G}installed success"
+                    print_success "$package_name installed success"
                 fi
             fi
         elif [[ "$ID" == "fedora" ]]; then
@@ -139,7 +139,7 @@ function pd_package_install_and_check() {
                 print_success "$package_name installed success"
             else
                 if type -p "$package_name" &>/dev/null || ls "$PREFIX/bin/"*"$package_name"* >/dev/null 2>&1; then
-                    print_success "$package_name ${G}installed success"
+                    print_success "$package_name installed success"
                 fi
             fi
         fi
@@ -214,7 +214,7 @@ function pd_root_package_install_and_check() {
                 print_success "$package_name installed successfully"
             else
                 if type -p "$package_name" &>/dev/null || ls "$PREFIX/bin/"*"$package_name"* >/dev/null 2>&1; then
-                    print_success "$package_name ${G}installed successfully"
+                    print_success "$package_name installed successfully"
                 fi
             fi
         elif [[ "$ID" == arch* ]]; then
@@ -222,7 +222,7 @@ function pd_root_package_install_and_check() {
                 print_success "$package_name installed successfully ${W}"
             else
                 if type -p "$package_name" &>/dev/null || ls "$PREFIX/bin/"*"$package_name"* >/dev/null 2>&1; then
-                    print_success "$package_name ${G}installed successfully"
+                    print_success "$package_name installed successfully"
                 fi
             fi
         elif [[ "$ID" == "alpine" ]]; then
@@ -238,7 +238,7 @@ function pd_root_package_install_and_check() {
                 print_success "$package_name installed successfully ${W}"
             else
                 if type -p "$package_name" &>/dev/null || ls "$PREFIX/bin/"*"$package_name"* >/dev/null 2>&1; then
-                    print_success "$package_name ${G}installed successfully"
+                    print_success "$package_name installed successfully"
                 fi
             fi
         fi
@@ -430,7 +430,7 @@ if [[ "$distro_terminal_utility_setup_answer" == "y" ]]; then
 
 if [[ "$selected_distro" == "debian" ]] || [[ "$selected_distro" == "ubuntu" ]]; then
     terminal_utility_content=$(cat <<'EOF'
-pd_package_install_and_check "nala zoxide bat wget gpg"
+pd_package_install_and_check "nala zoxide bat wget gpg fzf"
 device_arch=$(uname -m)
 case "$device_arch" in
     aarch64) archtype="aarch64" ;;
@@ -456,7 +456,7 @@ EOF
 )
 else
     terminal_utility_content=$(cat <<'EOF'
-pd_package_install_and_check "zoxide bat wget gpg eza fastfetch"
+pd_package_install_and_check "zoxide bat wget gpg eza fastfetch fzf"
 check_and_delete "pd_setup.sh"
 EOF
 )
@@ -469,9 +469,37 @@ echo
 proot-distro login --user "$final_user_name" "$selected_distro" -- /bin/bash -c 'bash pd_setup.sh'
 
 shell_rc_content=$(cat <<'EOF'
-alias cat='bat $@'
-alias ls='eza --icons $@'
+# fzf
+alias preview="fzf --preview='bat --color=always --style=numbers --theme OneHalfDark {}' --preview-window=down"
+
+#System    
+alias q="exit"
+alias c="clear"
+alias sd="cd /sdcard"
 alias mkdir='mkdir -p'
+
+#Photos
+alias ss="cd /sdcard/Pictures/Screenshots/"
+
+#Movies
+alias ms="cd /sdcard/Movies"
+
+#Downloads
+alias dl="cd /sdcard/Download"
+
+#Documents
+alias ds="cd /sdcard/Documents"
+
+#Largest Files
+alias largefile="du -h -x -s -- * | sort -r -h | head -20"
+
+#System Information
+alias ls="eza --icons"
+alias la="eza --icons -lgha --group-directories-first"
+alias lt="eza --icons --tree"
+alias lta="eza --icons --tree -lgha"
+alias bat="bat --theme OneHalfDark"
+alias cat="bat --theme OneHalfDark -p $@"
 alias neofetch='fastfetch'
 #######################################################
 # SPECIAL FUNCTIONS
@@ -586,7 +614,7 @@ function handel_debian_based_app_installer() {
     cat <<TOP_EOF > "$PREFIX/bin/$selected_distro"
 #!/data/data/com.termux/files/usr/bin/bash
 
-. $PREFIX/etc/termux-desktop/common_functions
+source $PREFIX/etc/termux-desktop/common_functions
 
 xhost + > /dev/null 2>&1
 if [[ "\$#" -eq 0 ]]; then
@@ -597,19 +625,23 @@ elif [[ "\$1" = "install" ]]; then
     fi
     proot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp -- env DISPLAY=:0 sudo "$package_manager" install \${@:2}
 
-    cat <<EOF > "$save_root_path/packinstall.sh"
+cat <<EOF > "$save_root_path/packinstall.sh"
+#!/bin/bash
+
+source /data/data/com.termux/files/usr/etc/termux-desktop/common_functions
 packages=(\${@:2})
 EOF
-    cat <<'EOF' >> "$save_root_path/packinstall.sh"
+    
+cat <<'EOF' >> "$save_root_path/packinstall.sh"
 for package_name in "\${packages[@]}"; do
     desktop_files=\$(dpkg-query -W -f='\${binary:Package}\n' | grep "^\$package_name\(-.*\)\?\$" | xargs dpkg-query -L | grep "^/usr/share/applications/.*\.desktop\$")
     if [ -z "\$desktop_files" ]; then
-        print_failed "No .desktop files found for package ${C}\$package_name ${G}in /usr/share/applications."
+        print_failed "No .desktop files found for package ${C} \$package_name ${R}in /usr/share/applications."
     else
         for desktop_files_name in \$desktop_files; do
             desktop_files_with_ext=\$(basename "\$desktop_files_name")
             desktop_files_without_ext="\${desktop_files_with_ext%.desktop}"
-            echo "${R}[${C}-${R}]${G} Adding ${C}\${desktop_files_without_ext} ${G}To Termux Menu"
+            print_success "Adding ${C}\${desktop_files_without_ext} ${G}To Termux Menu"
             cp "/usr/share/applications/\${desktop_files_with_ext}" "/data/data/com.termux/files/usr/share/applications/pd_added/"
             sed -i 's/Exec=/Exec=pdrun /g' "/data/data/com.termux/files/usr/share/applications/pd_added/\${desktop_files_with_ext}"
         done
@@ -621,19 +653,23 @@ EOF
 
 elif [[ "\$1" = "remove" ]] || [[ "\$1" = "autoremove" ]]; then
     proot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp -- env DISPLAY=:0 sudo "$package_manager" \$1 \${@:2}
-    cat <<EOF > "$save_root_path/packremove.sh"
+cat <<EOF > "$save_root_path/packremove.sh"
+#!/bin/bash
+
+source /data/data/com.termux/files/usr/etc/termux-desktop/common_functions
 packages=(\${@:2})
 EOF
-    cat <<'EOF' >> "$save_root_path/packremove.sh"
+
+cat <<'EOF' >> "$save_root_path/packremove.sh"
 for package_name in "\${packages[@]}"; do
     desktop_files=\$(dpkg-query -W -f='\${binary:Package}\n' | grep "^\$package_name\(-.*\)\?\$" | xargs dpkg-query -L | grep "^/usr/share/applications/.*\.desktop\$")
     if [ -z "\$desktop_files" ]; then
-        print_failed "No .desktop files found for package ${C}\$package_name ${G}in /usr/share/applications."
+        print_failed "No .desktop files found for package ${C} \$package_name ${R}in /usr/share/applications."
     else
         for desktop_files_name in \$desktop_files; do
             desktop_files_with_ext=\$(basename "\$desktop_files_name")
             desktop_files_without_ext="\${desktop_files_with_ext%.desktop}"
-            echo "${R}[${C}-${R}]${G} Removing ${C}\${desktop_files_without_ext} ${G}From Termux Menu"
+            print_success "Removing ${C}\${desktop_files_without_ext} ${G}From Termux Menu"
             rm /data/data/com.termux/files/usr/share/applications/pd_added/\${desktop_files_with_ext}
         done
     fi
@@ -657,7 +693,7 @@ function handel_arch_based_app_installer() {
     cat <<TOP_EOF > "$PREFIX/bin/$selected_distro"
 #!/data/data/com.termux/files/usr/bin/bash
 
-. $PREFIX/etc/termux-desktop/common_functions
+source $PREFIX/etc/termux-desktop/common_functions
 
 xhost + > /dev/null 2>&1
 if [[ "\$#" -eq 0 ]]; then
@@ -668,20 +704,23 @@ elif [[ "\$1" = "install" ]]; then
     fi
     proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:0 sudo pacman -S --noconfirm "\${@:2}"
     
-    cat <<EOF > "$save_root_path/packinstall.sh"
+cat <<EOF > "$save_root_path/packinstall.sh"
+#!/bin/bash
+
+source /data/data/com.termux/files/usr/etc/termux-desktop/common_functions
 packages=("\${@:2}")
 EOF
 
-    cat <<'EOF' >> "$save_root_path/packinstall.sh"
+cat <<'EOF' >> "$save_root_path/packinstall.sh"
 for package_name in "\${packages[@]}"; do
     desktop_files=\$(pacman -Ql \$package_name | grep -oP "/usr/share/applications/.*\.desktop$")
     if [ -z "\$desktop_files" ]; then
-        print_failed "No .desktop files found for package ${C}\$package_name ${G}in /usr/share/applications."
+        print_failed "No .desktop files found for package ${C} \$package_name ${R}in /usr/share/applications."
     else
         for desktop_files_name in \$desktop_files; do
             desktop_files_with_ext=\$(basename "\$desktop_files_name")
             desktop_files_without_ext="\${desktop_files_with_ext%.desktop}"
-            echo "${R}[${C}-${R}]${G} Adding ${C}\${desktop_files_without_ext} ${G}To Termux Menu"
+            print_success "Adding ${C}\${desktop_files_without_ext} ${G}To Termux Menu"
             cp "/usr/share/applications/\${desktop_files_with_ext}" "/data/data/com.termux/files/usr/share/applications/pd_added/"
             sed -i 's/Exec=/Exec=pdrun /g' "/data/data/com.termux/files/usr/share/applications/pd_added/\${desktop_files_with_ext}"
         done
@@ -694,20 +733,24 @@ EOF
 
 elif [[ "\$1" = "remove" ]]; then
     proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:0 sudo pacman -R --noconfirm "\${@:2}"
-    cat <<EOF > "$save_root_path/packremove.sh"
+    
+cat <<EOF > "$save_root_path/packremove.sh"
+#!/bin/bash
+
+source /data/data/com.termux/files/usr/etc/termux-desktop/common_functions
 packages=("\${@:2}")
 EOF
 
-    cat <<'EOF' >> "$save_root_path/packremove.sh"
+cat <<'EOF' >> "$save_root_path/packremove.sh"
 for package_name in "\${packages[@]}"; do
     desktop_files=\$(pacman -Ql \$package_name | grep -oP "/usr/share/applications/.*\.desktop$")
     if [ -z "\$desktop_files" ]; then
-        print_failed "No .desktop files found for package ${C}\$package_name ${G}in /usr/share/applications."
+        print_failed "No .desktop files found for package ${C} \$package_name ${R}in /usr/share/applications."
     else
         for desktop_files_name in \$desktop_files; do
             desktop_files_with_ext=\$(basename "\$desktop_files_name")
             desktop_files_without_ext="\${desktop_files_with_ext%.desktop}"
-            echo "${R}[${C}-${R}]${G} Removing ${C}\${desktop_files_without_ext} ${G}From Termux Menu"
+            print_success "Removing ${C}\${desktop_files_without_ext} ${G}From Termux Menu"
             rm /data/data/com.termux/files/usr/share/applications/pd_added/\${desktop_files_with_ext}
         done
     fi
@@ -732,7 +775,7 @@ function handel_alpine_based_app_installer() {
     cat <<TOP_EOF > "$PREFIX/bin/$selected_distro"
 #!/data/data/com.termux/files/usr/bin/bash
 
-. $PREFIX/etc/termux-desktop/common_functions
+source $PREFIX/etc/termux-desktop/common_functions
 
 xhost + > /dev/null 2>&1
 if [[ "\$#" -eq 0 ]]; then
@@ -743,19 +786,23 @@ elif [[ "\$1" = "install" ]]; then
         mkdir -p "/data/data/com.termux/files/usr/share/applications/pd_added"
     fi
     proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:0 sudo apk add "\${@:2}"
-    cat <<EOF > "$save_root_path/packinstall.sh"
+    
+cat <<EOF > "$save_root_path/packinstall.sh"
+#!/bin/bash
+
+source /data/data/com.termux/files/usr/etc/termux-desktop/common_functions
 packages=("\${@:2}")
 EOF
 
-    cat <<'EOF' >> "$save_root_path/packinstall.sh"
+cat <<'EOF' >> "$save_root_path/packinstall.sh"
 for package_name in "\${packages[@]}"; do
     desktop_files=\$(ls /usr/share/applications/ | grep "\$package_name.*\.desktop$")
     if [ -z "\$desktop_files" ]; then
-        print_failed "No .desktop files found for package ${C}\$package_name ${G}in /usr/share/applications."
+        print_failed "No .desktop files found for package ${C} \$package_name ${R}in /usr/share/applications."
     else
         for desktop_files_name in \$desktop_files; do
             desktop_files_without_ext="\${desktop_files_with_ext%.desktop}"
-            echo "${R}[${C}-${R}]${G} Adding ${C}\${desktop_files_without_ext} ${G}To Termux Menu"
+            print_success "Adding ${C}\${desktop_files_without_ext} ${G}To Termux Menu"
             sudo cp "/usr/share/applications/\${desktop_files_name}" "/data/data/com.termux/files/usr/share/applications/pd_added/"
             sudo sed -i 's/Exec=/Exec=pdrun /g' "/data/data/com.termux/files/usr/share/applications/pd_added/\${desktop_files_name}"
         done
@@ -769,19 +816,22 @@ EOF
 elif [[ "\$1" = "remove" ]]; then
     proot-distro login --user $final_user_name "$selected_distro" --shared-tmp -- env DISPLAY=:0 sudo apk del "\${@:2}"
 
-    cat <<EOF > "$save_root_path/packremove.sh"
+cat <<EOF > "$save_root_path/packremove.sh"
+#!/bin/bash
+
+source /data/data/com.termux/files/usr/etc/termux-desktop/common_functions
 packages=("\${@:2}")
 EOF
 
-    cat <<'EOF' >> "$save_root_path/packremove.sh"
+cat <<'EOF' >> "$save_root_path/packremove.sh"
 for package_name in "\${packages[@]}"; do
     desktop_files=\$(ls /usr/share/applications/ | grep "\$package_name.*\.desktop\$")
     if [ -z "\$desktop_files" ]; then
-        print_failed "No .desktop files found for package ${C}\$package_name ${G}in /usr/share/applications."
+        print_failed "No .desktop files found for package ${C} \$package_name ${R}in /usr/share/applications."
     else
         for desktop_files_name in \$desktop_files; do
             desktop_files_without_ext="\${desktop_files_with_ext%.desktop}"
-            echo "${R}[${C}-${R}]${G} Removing ${C}\${desktop_files_without_ext} ${G}From Termux Menu"
+            print_success "Removing ${C}\${desktop_files_without_ext} ${G}From Termux Menu"
             sudo rm /data/data/com.termux/files/usr/share/applications/pd_added/\${desktop_files_name}
         done
     fi
@@ -807,7 +857,7 @@ function handel_fedora_based_app_installer() {
     cat <<TOP_EOF > "$PREFIX/bin/$selected_distro"
 #!/data/data/com.termux/files/usr/bin/bash
 
-. $PREFIX/etc/termux-desktop/common_functions
+source $PREFIX/etc/termux-desktop/common_functions
 
 xhost + > /dev/null 2>&1
 if [[ "\$#" -eq 0 ]]; then
@@ -820,21 +870,24 @@ elif [[ "\$1" = "install" ]]; then
 
     proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:0 sudo dnf install \${@:2}
 
-    cat <<EOF > "$save_root_path/packinstall.sh"
+cat <<EOF > "$save_root_path/packinstall.sh"
+#!/bin/bash
+
+source /data/data/com.termux/files/usr/etc/termux-desktop/common_functions
 packages=(\${@:2})
 EOF
 
-    cat <<'EOF' >> "$save_root_path/packinstall.sh"
+cat <<'EOF' >> "$save_root_path/packinstall.sh"
 for package_name in "\${packages[@]}"; do
     package_query=\$(rpm -q "\$package_name" | sed 's/-[0-9].*//')
     desktop_files=\$(ls /usr/share/applications/ | grep "\$package_query.*\.desktop\$")
     if [ -z "\$desktop_files" ]; then
-        print_failed "No .desktop files found for package ${C}\$package_name ${G}in /usr/share/applications."
+        print_failed "No .desktop files found for package ${C} \$package_name ${R}in /usr/share/applications."
     else
         for desktop_files_name in \$desktop_files; do
             desktop_files_with_ext=\$(basename "\$desktop_files_name")
             desktop_files_without_ext="\${desktop_files_with_ext%.desktop}"
-            echo "${R}[${C}-${R}]${G} Adding ${C}\${desktop_files_without_ext} ${G}To Termux Menu"
+            print_success "Adding ${C}\${desktop_files_without_ext} ${G}To Termux Menu"
             cp "/usr/share/applications/\${desktop_files_with_ext}" "/data/data/com.termux/files/usr/share/applications/pd_added/"
             sed -i 's/Exec=/Exec=pdrun /g' "/data/data/com.termux/files/usr/share/applications/pd_added/\${desktop_files_with_ext}"
         done
@@ -848,21 +901,24 @@ EOF
 elif [[ "\$1" = "remove" ]]; then
     proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:0 sudo dnf remove \${@:2}
 
-    cat <<EOF > "$save_root_path/packremove.sh"
+cat <<EOF > "$save_root_path/packremove.sh"
+#!/bin/bash
+
+source /data/data/com.termux/files/usr/etc/termux-desktop/common_functions
 packages=(\${@:2})
 EOF
 
-    cat <<'EOF' >> "$save_root_path/packremove.sh"
+cat <<'EOF' >> "$save_root_path/packremove.sh"
 for package_name in "\${packages[@]}"; do
     package_query=\$(rpm -q "\$package_name" | sed 's/-[0-9].*//')
     desktop_files=\$(ls /usr/share/applications/ | grep "\$package_query.*\.desktop\$")
     if [ -z "\$desktop_files" ]; then
-        print_failed "No .desktop files found for package ${C}\$package_name ${G}in /usr/share/applications."
+        print_failed "No .desktop files found for package ${C} \$package_name ${R}in /usr/share/applications."
     else
         for desktop_files_name in \$desktop_files; do
             desktop_files_with_ext=\$(basename "\$desktop_files_name")
             desktop_files_without_ext="\${desktop_files_with_ext%.desktop}"
-            echo "${R}[${C}-${R}]${G} Removing ${C}\${desktop_files_without_ext} ${G}From Termux Menu"
+            print_success "Removing ${C}\${desktop_files_without_ext} ${G}From Termux Menu"
             rm /data/data/com.termux/files/usr/share/applications/pd_added/\${desktop_files_with_ext}
         done
     fi
