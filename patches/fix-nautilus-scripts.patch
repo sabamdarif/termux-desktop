@@ -19,7 +19,7 @@ index 54378f2c..92c7ef0e 100644
  # Code based on: https://unix.stackexchange.com/a/673436
  # Version: 2024-08-21
 diff --git a/.helper-scripts/unit-tests.sh b/.helper-scripts/unit-tests.sh
-index 7511b064..a5e59f23 100644
+index 7511b064..c1f53250 100644
 --- a/.helper-scripts/unit-tests.sh
 +++ b/.helper-scripts/unit-tests.sh
 @@ -1,4 +1,4 @@
@@ -33,7 +33,7 @@ index 7511b064..a5e59f23 100644
  # -----------------------------------------------------------------------------
  
 -_TEMP_DIR_TEST="/tmp/unit-test"
-+_TEMP_DIR_TEST="${TMPDIR}/unit-test"
++_TEMP_DIR_TEST="/data/data/com.termux/files/usr/tmp/unit-test"
  _TEMP_FILE1="$_TEMP_DIR_TEST/file1"
  _TEMP_FILE2="$_TEMP_DIR_TEST/file2"
  _TEMP_FILE3="$_TEMP_DIR_TEST/file3"
@@ -42,37 +42,37 @@ index 7511b064..a5e59f23 100644
      _test_equal "$input" "$output" "$expected_output"
  
 -    input="/tmp/File.txt"
-+    input="${TMPDIR}/File.txt"
++    input="/data/data/com.termux/files/usr/tmp/File.txt"
      expected_output=".txt"
      output=$(_get_filename_extension "$input")
      _test_equal "$input" "$output" "$expected_output"
  
 -    input="/tmp/.File.txt"
-+    input="${TMPDIR}/.File.txt"
++    input="/data/data/com.termux/files/usr/tmp/.File.txt"
      expected_output=".txt"
      output=$(_get_filename_extension "$input")
      _test_equal "$input" "$output" "$expected_output"
  
 -    input="/tmp/.File"
-+    input="${TMPDIR}/.File"
++    input="/data/data/com.termux/files/usr/tmp/.File"
      expected_output=""
      output=$(_get_filename_extension "$input")
      _test_equal "$input" "$output" "$expected_output"
  
 -    input="/tmp/File.thisisnotanextension"
-+    input="${TMPDIR}/File.thisisnotanextension"
++    input="/data/data/com.termux/files/usr/tmp/File.thisisnotanextension"
      expected_output=""
      output=$(_get_filename_extension "$input")
      _test_equal "$input" "$output" "$expected_output"
  
 -    input="/tmp/File"
-+    input="${TMPDIR}/File"
++    input="/data/data/com.termux/files/usr/tmp/File"
      expected_output=""
      output=$(_get_filename_extension "$input")
      _test_equal "$input" "$output" "$expected_output"
  
 -    input="/tmp/File !@#$%&*()_"$'\n'"+.txt"
-+    input="${TMPDIR}/File !@#$%&*()_"$'\n'"+.txt"
++    input="/data/data/com.termux/files/usr/tmp/File !@#$%&*()_"$'\n'"+.txt"
      expected_output=".txt"
      output=$(_get_filename_extension "$input")
      _test_equal "$input" "$output" "$expected_output"
@@ -82,48 +82,48 @@ index 7511b064..a5e59f23 100644
  
 -    input="/tmp/File.txt"
 -    expected_output="/tmp/File"
-+    input="${TMPDIR}/File.txt"
-+    expected_output="${TMPDIR}/File"
++    input="/data/data/com.termux/files/usr/tmp/File.txt"
++    expected_output="/data/data/com.termux/files/usr/tmp/File"
      output=$(_strip_filename_extension "$input")
      _test_equal "$input" "$output" "$expected_output"
  
 -    input="/tmp/.File.txt"
 -    expected_output="/tmp/.File"
-+    input="${TMPDIR}/.File.txt"
-+    expected_output="${TMPDIR}/.File"
++    input="/data/data/com.termux/files/usr/tmp/.File.txt"
++    expected_output="/data/data/com.termux/files/usr/tmp/.File"
      output=$(_strip_filename_extension "$input")
      _test_equal "$input" "$output" "$expected_output"
  
 -    input="/tmp/.File"
 -    expected_output="/tmp/.File"
-+    input="${TMPDIR}/.File"
-+    expected_output="${TMPDIR}/.File"
++    input="/data/data/com.termux/files/usr/tmp/.File"
++    expected_output="/data/data/com.termux/files/usr/tmp/.File"
      output=$(_strip_filename_extension "$input")
      _test_equal "$input" "$output" "$expected_output"
  
 -    input="/tmp/File.thisisnotanextension"
 -    expected_output="/tmp/File.thisisnotanextension"
-+    input="${TMPDIR}/File.thisisnotanextension"
-+    expected_output="${TMPDIR}/File.thisisnotanextension"
++    input="/data/data/com.termux/files/usr/tmp/File.thisisnotanextension"
++    expected_output="/data/data/com.termux/files/usr/tmp/File.thisisnotanextension"
      output=$(_strip_filename_extension "$input")
      _test_equal "$input" "$output" "$expected_output"
  
 -    input="/tmp/File"
 -    expected_output="/tmp/File"
-+    input="${TMPDIR}/File"
-+    expected_output="${TMPDIR}/File"
++    input="/data/data/com.termux/files/usr/tmp/File"
++    expected_output="/data/data/com.termux/files/usr/tmp/File"
      output=$(_strip_filename_extension "$input")
      _test_equal "$input" "$output" "$expected_output"
  
 -    input="/tmp/File !@#$%&*()_"$'\n'"+.txt"
 -    expected_output="/tmp/File !@#$%&*()_"$'\n'"+"
-+    input="${TMPDIR}/File !@#$%&*()_"$'\n'"+.txt"
-+    expected_output="${TMPDIR}/File !@#$%&*()_"$'\n'"+"
++    input="/data/data/com.termux/files/usr/tmp/File !@#$%&*()_"$'\n'"+.txt"
++    expected_output="/data/data/com.termux/files/usr/tmp/File !@#$%&*()_"$'\n'"+"
      output=$(_strip_filename_extension "$input")
      _test_equal "$input" "$output" "$expected_output"
  }
 diff --git a/Archive/Compress to '7z' (each) b/Archive/Compress to '7z' (each)
-index 777f9a09..a829c819 100755
+index a298f5b2..14fece8c 100755
 --- a/Archive/Compress to '7z' (each)	
 +++ b/Archive/Compress to '7z' (each)	
 @@ -1,4 +1,4 @@
@@ -133,7 +133,7 @@ index 777f9a09..a829c819 100755
  # Source the script 'common-functions.sh'.
  SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 diff --git a/Archive/Compress to '7z' with password (each) b/Archive/Compress to '7z' with password (each)
-index 7bee5c03..f85a98d2 100755
+index 89012004..3b241d01 100755
 --- a/Archive/Compress to '7z' with password (each)	
 +++ b/Archive/Compress to '7z' with password (each)	
 @@ -1,4 +1,4 @@
@@ -163,7 +163,7 @@ index b91451d0..8d4f43f2 100755
  # Source the script 'common-functions.sh'.
  SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 diff --git a/Archive/Compress to 'tar.gz' (each) b/Archive/Compress to 'tar.gz' (each)
-index 9fbc40bc..efdfe0f9 100755
+index 1a08ef62..b597e63a 100755
 --- a/Archive/Compress to 'tar.gz' (each)	
 +++ b/Archive/Compress to 'tar.gz' (each)	
 @@ -1,4 +1,4 @@
@@ -173,7 +173,7 @@ index 9fbc40bc..efdfe0f9 100755
  
  # Source the script 'common-functions.sh'.
 diff --git a/Archive/Compress to 'tar.xz' (each) b/Archive/Compress to 'tar.xz' (each)
-index 7431b8e4..cce6800c 100755
+index 922991ab..d10d5cab 100755
 --- a/Archive/Compress to 'tar.xz' (each)	
 +++ b/Archive/Compress to 'tar.xz' (each)	
 @@ -1,4 +1,4 @@
@@ -183,7 +183,7 @@ index 7431b8e4..cce6800c 100755
  
  # Source the script 'common-functions.sh'.
 diff --git a/Archive/Compress to 'tar.zst' (each) b/Archive/Compress to 'tar.zst' (each)
-index 5b7443b5..ec86b75d 100755
+index ff6d0bb4..d6740a6a 100755
 --- a/Archive/Compress to 'tar.zst' (each)	
 +++ b/Archive/Compress to 'tar.zst' (each)	
 @@ -1,4 +1,4 @@
@@ -193,7 +193,7 @@ index 5b7443b5..ec86b75d 100755
  
  # Source the script 'common-functions.sh'.
 diff --git a/Archive/Compress to 'zip' (each) b/Archive/Compress to 'zip' (each)
-index ddb317c6..d24cd153 100755
+index faf9569e..e207d3be 100755
 --- a/Archive/Compress to 'zip' (each)	
 +++ b/Archive/Compress to 'zip' (each)	
 @@ -1,4 +1,4 @@
@@ -213,7 +213,7 @@ index c3325f92..09354f5b 100755
  
  # Source the script 'common-functions.sh'.
 diff --git a/Archive/Extract Here b/Archive/Extract Here
-index fa942b23..743b2659 100755
+index 20a7ae9b..7c3c6a38 100755
 --- a/Archive/Extract Here	
 +++ b/Archive/Extract Here	
 @@ -1,4 +1,4 @@
@@ -543,7 +543,7 @@ index 15bce608..35e098ab 100755
  
  # Source the script 'common-functions.sh'.
 diff --git a/Directories and files/Compare items b/Directories and files/Compare items
-index feac0700..f46ed37c 100755
+index 287bc807..a65bd85d 100755
 --- a/Directories and files/Compare items	
 +++ b/Directories and files/Compare items	
 @@ -1,4 +1,4 @@
@@ -1381,16 +1381,6 @@ index 94083632..4c925772 100755
  
  # Source the script 'common-functions.sh'.
  SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
-diff --git a/Git/Git full reset b/Git/Git full reset
-index 3ae930c4..e7d3b388 100755
---- a/Git/Git full reset	
-+++ b/Git/Git full reset	
-@@ -1,4 +1,4 @@
--#!/usr/bin/env bash
-+#!/data/data/com.termux/files/usr/bin/bash
- 
- # Source the script 'common-functions.sh'.
- SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 diff --git a/Git/Git gc b/Git/Git gc
 index 0328e7af..df49e9c5 100755
 --- a/Git/Git gc	
@@ -1415,6 +1405,16 @@ diff --git a/Git/Git pull b/Git/Git pull
 index 44f36b9f..36e6f09f 100755
 --- a/Git/Git pull	
 +++ b/Git/Git pull	
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Source the script 'common-functions.sh'.
+ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+diff --git a/Git/Git reset full b/Git/Git reset full
+index f33f7212..be8f6756 100755
+--- a/Git/Git reset full	
++++ b/Git/Git reset full	
 @@ -1,4 +1,4 @@
 -#!/usr/bin/env bash
 +#!/data/data/com.termux/files/usr/bin/bash
@@ -1462,7 +1462,7 @@ index a82bde6d..ee535b6b 100755
  # Source the script 'common-functions.sh'.
  SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 diff --git a/Git/Open repository website b/Git/Open repository website
-index 9b9693a5..839b7655 100755
+index d430818c..29c6db90 100755
 --- a/Git/Open repository website	
 +++ b/Git/Open repository website	
 @@ -1,4 +1,4 @@
@@ -2992,7 +2992,7 @@ index e11ca471..081f1fc9 100755
  # Source the script 'common-functions.sh'.
  SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 diff --git a/common-functions.sh b/common-functions.sh
-index 40998c25..24051151 100644
+index 642c38a8..5d7d3a34 100644
 --- a/common-functions.sh
 +++ b/common-functions.sh
 @@ -1,4 +1,4 @@
@@ -3001,16 +3001,16 @@ index 40998c25..24051151 100644
  # shellcheck disable=SC2001
  
  # This file contains common functions that the scripts will source.
-@@ -1123,7 +1123,7 @@ _get_output_dir() {
+@@ -1127,7 +1127,7 @@ _get_output_dir() {
      # Check directories available to put the 'output' dir.
      base_dir=$(_get_working_directory)
      [[ ! -w "$base_dir" ]] && base_dir=$HOME
 -    [[ ! -w "$base_dir" ]] && base_dir="/tmp"
-+    [[ ! -w "$base_dir" ]] && base_dir="${TMPDIR}"
++    [[ ! -w "$base_dir" ]] && base_dir="/data/data/com.termux/files/usr/tmp"
      if [[ ! -w "$base_dir" ]]; then
          _display_error_box "Could not find a directory with write permissions!"
          _exit_script
-@@ -2401,7 +2401,7 @@ _xdg_get_default_app() {
+@@ -2431,7 +2431,7 @@ _xdg_get_default_app() {
  
      desktop_file=$(xdg-mime query default "$mime" 2>/dev/null)
  
@@ -3019,3 +3019,13 @@ index 40998c25..24051151 100644
          sed "s|Exec=||g" | cut -d " " -f 1)
  
      if [[ -z "$default_app" ]]; then
+diff --git a/install.sh b/install.sh
+index 545362dc..86527b3a 100644
+--- a/install.sh
++++ b/install.sh
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env bash
++#!/data/data/com.termux/files/usr/bin/bash
+ 
+ # Install the scripts for file managers.
+ 
