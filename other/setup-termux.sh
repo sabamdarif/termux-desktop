@@ -630,7 +630,6 @@ _check_files_copied_successfully() {
 
 _check_termux
 _detact_package_manager
-_update_sys
 _step_install_dependencies
 _make_supported_for_termux
 _setup_file_manager

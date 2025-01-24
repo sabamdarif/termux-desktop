@@ -7,7 +7,6 @@ function check_termux() {
 	fi
 }
 
-call_from_change_pd="n"
 
 function setup_distro() {
     banner
@@ -251,22 +250,22 @@ function distro_basic_task() {
     echo "${R}[${C}-${R}]${G}${BOLD} Updating ${C}$selected_distro ${G}And Installing Required Packages${W}"
     echo
     if [[ "$selected_distro" == "debian" ]] || [[ "$selected_distro" == "ubuntu" ]]; then
-    proot-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:0 apt update
-    proot-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:0 apt upgrade -y
+    proot-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:$display_number apt update
+    proot-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:$display_number apt upgrade -y
     elif [[ "$selected_distro" == "archlinux" ]]; then
-    proot-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:0 pacman -Syu --noconfirm
+    proot-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:$display_number pacman -Syu --noconfirm
     elif [[ "$selected_distro" == "alpine" ]]; then
-    proot-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:0 apk update
-    proot-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:0 apk upgrade
+    proot-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:$display_number apk update
+    proot-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:$display_number apk upgrade
     elif [[ "$selected_distro" == "fedora" ]]; then
-    proot-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:0 dnf update -y
-    proot-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:0 dnf upgrade -y
+    proot-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:$display_number dnf update -y
+    proot-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:$display_number dnf upgrade -y
     fi
     chmod -R +w "$distro_path/"
     # Set proot timezone
     timezone=$(getprop persist.sys.timezone)
-    proot-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:0 rm /etc/localtime
-    proot-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:0 cp "/usr/share/zoneinfo/$timezone" /etc/localtime
+    proot-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:$display_number rm /etc/localtime
+    proot-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:$display_number cp "/usr/share/zoneinfo/$timezone" /etc/localtime
     if [[ "$pd_audio_config_answer" == "y" ]]; then
     distro_packs="sudo pulseaudio"
     distro_fix_sound_issue
@@ -286,7 +285,7 @@ W="$(printf '\033[0m')"
 BOLD="$(printf '\033[1m')"
 
 EOF
-typeset -f banner pd_root_package_install_and_check >> "$distro_path/root/pd_basic_setup.sh"
+typeset -f banner print_log print_success print_failed pd_root_package_install_and_check >> "$distro_path/root/pd_basic_setup.sh"
 cat <<EOF >> "$distro_path/root/pd_basic_setup.sh"
 banner
 pd_root_package_install_and_check "${distro_packs}"
@@ -580,12 +579,12 @@ eval "\$(zoxide init --cmd cd ${pd_shell_name})"
 EOF
 fi
 
-cat <<'EOF' >> "$save_path/.${pd_shell_name}rc"
-export DISPLAY=:0
+cat <<EOF >> "$save_path/.${pd_shell_name}rc"
+export DISPLAY=:$display_number
 
-case $1 in
+case \$1 in
     tx11start|tx11stop|vncstart|vncstop)
-        case $2 in
+        case \$2 in
             --help|-h|--nogpu|-f) ;;
         esac
 	echo "please run it from termux, not inside proot distro."
@@ -623,15 +622,29 @@ elif [[ "\$1" = "install" ]]; then
     if [[ ! -d "/data/data/com.termux/files/usr/share/applications/pd_added" ]]; then
         mkdir -p "/data/data/com.termux/files/usr/share/applications/pd_added"
     fi
-    proot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp -- env DISPLAY=:0 sudo "$package_manager" install \${@:2}
 
+    # Separate options and package names
+    options=()
+    packages=()
+    for arg in "\${@:2}"; do
+        if [[ "\$arg" == -* ]]; then
+            options+=("\$arg")  # Add to options if it starts with '-'
+        else
+            packages+=("\$arg") # Add to packages otherwise
+        fi
+    done
+
+    # Install the packages using the package manager
+    proot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp -- env DISPLAY=:$display_number sudo "$package_manager" install "\${options[@]}" "\${packages[@]}"
+
+    # Generate the packinstall.sh script
 cat <<EOF > "$save_root_path/packinstall.sh"
 #!/bin/bash
 
 source /data/data/com.termux/files/usr/etc/termux-desktop/common_functions
-packages=(\${@:2})
+packages=(\${packages[@]})
 EOF
-    
+
 cat <<'EOF' >> "$save_root_path/packinstall.sh"
 for package_name in "\${packages[@]}"; do
     desktop_files=\$(dpkg-query -W -f='\${binary:Package}\n' | grep "^\$package_name\(-.*\)\?\$" | xargs dpkg-query -L | grep "^/usr/share/applications/.*\.desktop\$")
@@ -649,15 +662,30 @@ for package_name in "\${packages[@]}"; do
 done
 rm packinstall.sh
 EOF
-        proot-distro login "$selected_distro" --shared-tmp -- /bin/bash -c 'export DISPLAY=:0; export XDG_RUNTIME_DIR=$TMPDIR; bash packinstall.sh'
+
+# Execute the script inside the proot-distro container
+proot-distro login "$selected_distro" --shared-tmp -- /bin/bash -c 'export DISPLAY=:$display_number; export XDG_RUNTIME_DIR=$TMPDIR; bash packinstall.sh'
 
 elif [[ "\$1" = "remove" ]] || [[ "\$1" = "autoremove" ]]; then
-    proot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp -- env DISPLAY=:0 sudo "$package_manager" \$1 \${@:2}
+
+    # Separate options and package names
+    options=()
+    packages=()
+    for arg in "\${@:2}"; do
+        if [[ "\$arg" == -* ]]; then
+            options+=("\$arg")  # Add to options if it starts with '-'
+        else
+            packages+=("\$arg") # Add to packages otherwise
+        fi
+    done
+
+    # Remove the packages using the package manager
+    proot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp -- env DISPLAY=:$display_number sudo "$package_manager" \$1 "\${options[@]}" "\${packages[@]}"
 cat <<EOF > "$save_root_path/packremove.sh"
 #!/bin/bash
 
 source /data/data/com.termux/files/usr/etc/termux-desktop/common_functions
-packages=(\${@:2})
+packages=(\${packages[@]})
 EOF
 
 cat <<'EOF' >> "$save_root_path/packremove.sh"
@@ -676,9 +704,9 @@ for package_name in "\${packages[@]}"; do
 done
 rm packremove.sh
 EOF
-        proot-distro login "$selected_distro" --shared-tmp -- /bin/bash -c 'export DISPLAY=:0; export XDG_RUNTIME_DIR=$TMPDIR; bash packremove.sh'
+    proot-distro login "$selected_distro" --shared-tmp -- /bin/bash -c 'export DISPLAY=:$display_number; export XDG_RUNTIME_DIR=$TMPDIR; bash packremove.sh'
 elif [[ "\$1" = "update" ]]; then
-    proot-distro login --user $final_user_name "$selected_distro" --shared-tmp -- env DISPLAY=:0 sudo $package_manager update
+    proot-distro login --user $final_user_name "$selected_distro" --shared-tmp -- env DISPLAY=:$display_number sudo $package_manager update
 fi
 
 if [[ \$1 = "install" ]] || [[ \$1 = "remove" ]] || [[ \$1 = "autoremove" ]]; then
@@ -702,13 +730,26 @@ elif [[ "\$1" = "install" ]]; then
     if [[ ! -d "/data/data/com.termux/files/usr/share/applications/pd_added" ]]; then
         mkdir -p "/data/data/com.termux/files/usr/share/applications/pd_added"
     fi
-    proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:0 sudo pacman -S --noconfirm "\${@:2}"
+
+    # Separate options and package names
+    options=()
+    packages=()
+    for arg in "\${@:2}"; do
+        if [[ "\$arg" == -* ]]; then
+            options+=("\$arg")  # Add to options if it starts with '-'
+        else
+            packages+=("\$arg") # Add to packages otherwise
+        fi
+    done
+
+    # Install the packages using the package manager
+    proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:$display_number sudo pacman -S"\${options[@]}" --noconfirm  "\${packages[@]}"
     
 cat <<EOF > "$save_root_path/packinstall.sh"
 #!/bin/bash
 
 source /data/data/com.termux/files/usr/etc/termux-desktop/common_functions
-packages=("\${@:2}")
+packages=(\${packages[@]})
 EOF
 
 cat <<'EOF' >> "$save_root_path/packinstall.sh"
@@ -729,16 +770,29 @@ done
 rm packinstall.sh
 EOF
 
-        proot-distro login $selected_distro --shared-tmp -- /bin/bash -c 'export DISPLAY=:0; export XDG_RUNTIME_DIR=$TMPDIR; bash packinstall.sh'
+    proot-distro login $selected_distro --shared-tmp -- /bin/bash -c 'export DISPLAY=:$display_number; export XDG_RUNTIME_DIR=$TMPDIR; bash packinstall.sh'
 
 elif [[ "\$1" = "remove" ]]; then
-    proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:0 sudo pacman -R --noconfirm "\${@:2}"
+
+    # Separate options and package names
+    options=()
+    packages=()
+    for arg in "\${@:2}"; do
+        if [[ "\$arg" == -* ]]; then
+            options+=("\$arg")  # Add to options if it starts with '-'
+        else
+            packages+=("\$arg") # Add to packages otherwise
+        fi
+    done
+
+    # Remove the packages using the package manager
+    proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:$display_number sudo pacman -R"\${options[@]}" --noconfirm "\${packages[@]}"
     
 cat <<EOF > "$save_root_path/packremove.sh"
 #!/bin/bash
 
 source /data/data/com.termux/files/usr/etc/termux-desktop/common_functions
-packages=("\${@:2}")
+packages=(\${packages[@]})
 EOF
 
 cat <<'EOF' >> "$save_root_path/packremove.sh"
@@ -758,9 +812,9 @@ done
 rm packremove.sh
 EOF
 
-        proot-distro login $selected_distro --shared-tmp -- /bin/bash -c 'export DISPLAY=:0; export XDG_RUNTIME_DIR=$TMPDIR; bash packremove.sh'
+    proot-distro login $selected_distro --shared-tmp -- /bin/bash -c 'export DISPLAY=:$display_number; export XDG_RUNTIME_DIR=$TMPDIR; bash packremove.sh'
 elif [[ "\$1" = "update" ]]; then
-    proot-distro login --user $final_user_name "$selected_distro" --shared-tmp -- env DISPLAY=:0 sudo pacman -Su
+    proot-distro login --user $final_user_name "$selected_distro" --shared-tmp -- env DISPLAY=:$display_number sudo pacman -Su
 fi
 
 if [[ \$1 = "install" ]] || [[ \$1 = "remove" ]]; then
@@ -785,13 +839,26 @@ elif [[ "\$1" = "install" ]]; then
     if [[ ! -d "/data/data/com.termux/files/usr/share/applications/pd_added" ]]; then
         mkdir -p "/data/data/com.termux/files/usr/share/applications/pd_added"
     fi
-    proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:0 sudo apk add "\${@:2}"
+
+    # Separate options and package names
+    options=()
+    packages=()
+    for arg in "\${@:2}"; do
+        if [[ "\$arg" == -* ]]; then
+            options+=("\$arg")  # Add to options if it starts with '-'
+        else
+            packages+=("\$arg") # Add to packages otherwise
+        fi
+    done
+
+    # Install the packages using the package manager
+    proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:$display_number sudo apk add "\${options[@]}" "\${packages[@]}"
     
 cat <<EOF > "$save_root_path/packinstall.sh"
 #!/bin/bash
 
 source /data/data/com.termux/files/usr/etc/termux-desktop/common_functions
-packages=("\${@:2}")
+packages=(\${packages[@]})
 EOF
 
 cat <<'EOF' >> "$save_root_path/packinstall.sh"
@@ -811,16 +878,29 @@ done
 rm packinstall.sh
 EOF
 
-        proot-distro login $selected_distro --shared-tmp -- /bin/bash -c 'export DISPLAY=:0; export XDG_RUNTIME_DIR=$TMPDIR; bash packinstall.sh'
+    proot-distro login $selected_distro --shared-tmp -- /bin/bash -c 'export DISPLAY=:$display_number; export XDG_RUNTIME_DIR=$TMPDIR; bash packinstall.sh'
 
 elif [[ "\$1" = "remove" ]]; then
-    proot-distro login --user $final_user_name "$selected_distro" --shared-tmp -- env DISPLAY=:0 sudo apk del "\${@:2}"
+
+    # Separate options and package names
+    options=()
+    packages=()
+    for arg in "\${@:2}"; do
+        if [[ "\$arg" == -* ]]; then
+            options+=("\$arg")  # Add to options if it starts with '-'
+        else
+            packages+=("\$arg") # Add to packages otherwise
+        fi
+    done
+
+    # Remove the packages using the package manager
+    proot-distro login --user $final_user_name "$selected_distro" --shared-tmp -- env DISPLAY=:$display_number sudo apk del "\${options[@]}" "\${packages[@]}"
 
 cat <<EOF > "$save_root_path/packremove.sh"
 #!/bin/bash
 
 source /data/data/com.termux/files/usr/etc/termux-desktop/common_functions
-packages=("\${@:2}")
+packages=(\${packages[@]})
 EOF
 
 cat <<'EOF' >> "$save_root_path/packremove.sh"
@@ -839,11 +919,7 @@ done
 rm packremove.sh
 EOF
 
-        proot-distro login $selected_distro --shared-tmp -- /bin/bash -c 'export DISPLAY=:0; export XDG_RUNTIME_DIR=$TMPDIR; bash packremove.sh'
-
-elif [[ "\$1" = "update" ]]; then
-    proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:0 sudo apk update
-fi
+    proot-distro login $selected_distro --shared-tmp -- /bin/bash -c 'export DISPLAY=:$display_number; export XDG_RUNTIME_DIR=$TMPDIR; bash packremove.sh'
 
 if [[ \$1 = "install" ]] || [[ \$1 = "remove" ]]; then
     gtk-update-icon-cache
@@ -868,13 +944,25 @@ elif [[ "\$1" = "install" ]]; then
         mkdir -p "/data/data/com.termux/files/usr/share/applications/pd_added"
     fi
 
-    proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:0 sudo dnf install \${@:2}
+    # Separate options and package names
+    options=()
+    packages=()
+    for arg in "\${@:2}"; do
+        if [[ "\$arg" == -* ]]; then
+            options+=("\$arg")  # Add to options if it starts with '-'
+        else
+            packages+=("\$arg") # Add to packages otherwise
+        fi
+    done
+
+    # Install the packages using the package manager
+    proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:$display_number sudo dnf install "\${options[@]}" "\${packages[@]}"
 
 cat <<EOF > "$save_root_path/packinstall.sh"
 #!/bin/bash
 
 source /data/data/com.termux/files/usr/etc/termux-desktop/common_functions
-packages=(\${@:2})
+packages=(\${packages[@]})
 EOF
 
 cat <<'EOF' >> "$save_root_path/packinstall.sh"
@@ -896,16 +984,30 @@ done
 rm packinstall.sh
 EOF
 
-    proot-distro login $selected_distro --shared-tmp -- /bin/bash -c 'export DISPLAY=:0; export XDG_RUNTIME_DIR=$TMPDIR; bash packinstall.sh'
+    # Execute the script inside the proot-distro container
+    proot-distro login $selected_distro --shared-tmp -- /bin/bash -c 'export DISPLAY=:$display_number; export XDG_RUNTIME_DIR=$TMPDIR; bash packinstall.sh'
 
 elif [[ "\$1" = "remove" ]]; then
-    proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:0 sudo dnf remove \${@:2}
+
+# Separate options and package names
+    options=()
+    packages=()
+    for arg in "\${@:2}"; do
+        if [[ "\$arg" == -* ]]; then
+            options+=("\$arg")  # Add to options if it starts with '-'
+        else
+            packages+=("\$arg") # Add to packages otherwise
+        fi
+    done
+
+    # Remove the packages using the package manager
+    proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:$display_number sudo dnf remove "\${options[@]}" "\${packages[@]}"
 
 cat <<EOF > "$save_root_path/packremove.sh"
 #!/bin/bash
 
 source /data/data/com.termux/files/usr/etc/termux-desktop/common_functions
-packages=(\${@:2})
+packages=(\${packages[@]})
 EOF
 
 cat <<'EOF' >> "$save_root_path/packremove.sh"
@@ -926,7 +1028,7 @@ done
 rm packremove.sh
 EOF
 
-    proot-distro login $selected_distro --shared-tmp -- /bin/bash -c 'export DISPLAY=:0; export XDG_RUNTIME_DIR=$TMPDIR; bash packremove.sh'
+    proot-distro login $selected_distro --shared-tmp -- /bin/bash -c 'export DISPLAY=:$display_number; export XDG_RUNTIME_DIR=$TMPDIR; bash packremove.sh'
 
 fi
 
@@ -1188,14 +1290,14 @@ cat <<EOF >> "$PREFIX/bin/pdrun"
 xhost + > /dev/null 2>&1
 case \$1 in
 --nogpu)
-proot-distro login --user $final_user_name "$selected_distro" --shared-tmp -- eval "env DISPLAY=:0 XDG_RUNTIME_DIR=\${TMPDIR} LIBGL_ALWAYS_SOFTWARE=1 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe \${@:2}"
+proot-distro login --user $final_user_name "$selected_distro" --shared-tmp -- eval "env DISPLAY=:$display_number XDG_RUNTIME_DIR=\${TMPDIR} LIBGL_ALWAYS_SOFTWARE=1 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe \${@:2}"
 ;;
 --help|-h)
 echo "${G}Type ${C}pdrun launch command ${G}to start with gpu acceleration${W}"
 echo "${G}Type ${C}pdrun ---nogpu launch command ${G}to start without gpu acceleration${W}"
 ;;
 *)
-proot-distro login --user $final_user_name "$selected_distro" --shared-tmp -- eval "env DISPLAY=:0 XDG_RUNTIME_DIR=\${TMPDIR} \$selected_pd_hw_method \$@"
+proot-distro login --user $final_user_name "$selected_distro" --shared-tmp -- eval "env DISPLAY=:$display_number XDG_RUNTIME_DIR=\${TMPDIR} \$selected_pd_hw_method \$@"
 ;;
 esac
 EOF

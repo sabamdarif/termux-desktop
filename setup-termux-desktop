@@ -946,6 +946,7 @@ In File Manager click on the scripts meanu to see them all
 	echo "${Y}2. Both Termux:x11 and VNC${W}"
 	echo
 	select_an_option 2 1 gui_mode_num
+
 	# set gui_mode and display_number value
 	if [[ "$gui_mode_num" == "1" ]]; then
 		gui_mode="termux_x11"
@@ -971,26 +972,50 @@ In File Manager click on the scripts meanu to see them all
 	echo
 	select_an_option 2 1 autostart_gui_mode_num
 	echo "autostart_gui_mode_num=\"$autostart_gui_mode_num\"" >> "$config_file"
+
 		if [[ "$autostart_gui_mode_num" == "1" ]]; then
 			autostart_gui_mode="termux_x11"
 		elif [[ "$autostart_gui_mode_num" == "2" ]]; then
 			autostart_gui_mode="vnc"
 		fi
+
 	echo "autostart_gui_mode=\"$autostart_gui_mode\"" >> "$config_file"
 	fi
 	banner
-	echo "${R}[${C}-${R}]${Y}${BOLD} Do you want to add a Linux container (proot distro)${W}"
-	echo
-	echo "${R}[${C}-${R}]${G} It will help you to install those app which are not avilable in termux${W}"
-	echo
-	echo "${R}[${C}-${R}]${C} You can launch those installed apps from termux like other apps${W}"
-	echo
-	confirmation_y_or_n "Do you want to continue" distro_add_answer
+	echo -e "
+${R}[${C}-${R}]${G}${BOLD} Linux Distro Container (proot distro):- ${W}
+
+It will help you to install app that aren't avilable in termux.
+So it will setup a linux distro container and add option to install those apps.
+Also you can launch those installed apps from termux like other apps.
+"
+echo "Learn More:- https://github.com/sabamdarif/termux-desktop/blob/main/proot-caontainer.md"
+echo
+	confirmation_y_or_n "Do you want to add a Linux container" distro_add_answer
 	echo "distro_add_answer=\"$distro_add_answer\"" >> "$config_file"
-	clear
+	banner
+echo -e "${R}[${C}-${R}]${G}${BOLD} Extra App Suite:- ${W}
+It will install this listed apps:-
+
+- Gedit (Text Editor)
+- Rhythmbox (Music Player)
+- Xpdf Reader
+- Thunderbird (Email Client)
+- Transmission (Bittorrent Client)
+"
+if [[ "$distro_add_answer" == "y" ]]; then
+echo -e "apps that will be installed using linux distro container (proot distro):-
+- Libreoffice (Office Suite)
+"
+fi
+echo
+confirmation_y_or_n "Do you want to install extra app suite" extra_app_suite
+	banner
 	if ! type -p pacman >/dev/null 2>&1; then
 	echo "${R}[${C}-${R}]${R}${BOLD} Read This Carefully${W}"
 	echo -e "
+${R}[${C}-${R}]${G}${BOLD} Mesa Vulkan ICD-Wrapper:- ${W}
+
 In my tests, I achieved 1000+ FPS in vkmark on all my devices. I tried it on an 
 - Adreno 619 (everything work fine)
 - Adreno 750 (good overall but with few issues)
@@ -1529,7 +1554,7 @@ wait_for_keypress
 
 function install_required_packages() {
     banner
-    echo "${R}[${C}-${R}]${Y}${BOLD} Installing required packages...${W}"
+    echo "${R}[${C}-${R}]${G}${BOLD} Installing required packages...${W}"
     echo
 
     if [[ "$PACKAGE_MANAGER" == "pacman" ]]; then
@@ -1818,11 +1843,6 @@ function distro_container_setup() {
                 if [[ "$change_old_distro_installer" == "y" ]]; then
                     check_and_backup "${current_path}/distro-container-setup"
                     download_file "${current_path}/distro-container-setup" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/distro-container-setup"
-
-                    # Check if arguments are passed
-                    if [[ ("$1" == "--change" || "$1" == "-c") && ("$2" == "distro" || "$2" == "pd") ]]; then
-                        sed -i 's/\(call_from_change_pd="\)[^"]*/\1y/' "${current_path}/distro-container-setup"
-                    fi
 
                     chmod +x "${current_path}/distro-container-setup"
                     . "${current_path}/distro-container-setup"
@@ -2470,6 +2490,31 @@ function setup_synaptic() {
 
 #########################################################################
 #
+# Install Extra Apps
+#
+#########################################################################
+
+function install_extra_apps() {
+	if [[ "$extra_app_suite" == "y" ]]; then
+		banner
+    	echo "${R}[${C}-${R}]${C} Installing The Extra App Suite...${W}"
+		echo
+		package_install_and_check "gedit rhythmbox xpdf thunderbird transmission-gtk "
+		if [[ "$distro_add_answer" == "y" ]]; then
+			echo "${R}[${C}-${R}]${G} Installing Libreoffice ${W}"
+			echo
+			if [[ "$selected_distro" == "archlinux" ]]; then
+				$selected_distro install libreoffice-fresh -y
+			else
+				$selected_distro install libreoffice -y
+			fi
+		fi
+	fi
+
+}
+
+#########################################################################
+#
 # Setup Zsh And Terminal and File Manager Utility
 #
 #########################################################################
@@ -2528,6 +2573,8 @@ function terminal_utility_setup() {
 	check_and_create_directory "$HOME/.termux"
 	check_and_backup "$HOME/.termux/colors.properties $HOME/.termux/termux.properties $HOME/.aliases"
 
+	check_and_create_directory "$HOME/.config/fastfetch"
+	download_file "$HOME/.config/fastfetch/config.jsonc" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/other/config.jsonc" 
 	download_file "$HOME/.termux/termux.properties" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/other/termux.properties"
 	download_file "$HOME/.aliases" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/other/.aliases"
 	download_file "$HOME/.termux/colors.properties" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/other/colors.properties"
@@ -2643,7 +2690,7 @@ function install_fm_tools() {
 		banner
 		echo "${R}[${C}-${R}]${G}${BOLD} Installing File Manager Tools...${W}"
 		check_and_backup "nautilus-scripts"
-		git clone https://github.com/cfgnunes/nautilus-scripts
+		git clone https://github.com/sabamdarif/nautilus-scripts
 		cd nautilus-scripts
     	wget --tries=5 --retry-connrefused https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/other/setup-termux.sh
 		bash setup-termux.sh
@@ -2671,9 +2718,6 @@ function setup_fonts() {
 	check_and_delete "$HOME/.fonts/README.md $HOME/.fonts/LICENSE"
 	cp "$HOME/.fonts/0xProtoNerdFont-Regular.ttf" "$HOME/.termux/font.ttf"
 	fc-cache -f
-	check_and_create_directory "$HOME/.config/fastfetch"
-	banner
-	download_file "$HOME/.config/fastfetch/config.jsonc" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/other/config.jsonc" 
 	fi
 }
 
@@ -3076,6 +3120,7 @@ function change_distro() {
 	read_conf
 	banner
 	if [[ "$distro_add_answer" == "y" ]]; then
+		call_from_change_pd="y"
 	    if [[ -d "$PREFIX/var/lib/proot-distro/installed-rootfs/$selected_distro" ]] ;then
 		echo "${R}[${C}-${R}]${G} Your currently installed distro is :${C}${BOLD}${selected_distro}${W}"
 		echo
@@ -3195,6 +3240,8 @@ function change_display() {
     		done
 			setup_tx11start_cmd
 			echo "display_number=\"$display_number\"" >> "$config_file"
+			sed -i "s|DISPLAY=:[0-9]*|DISPLAY=:$display_number|" "${PREFIX}/bin/pdrun"
+			sed -i "s|DISPLAY=:[0-9]*|DISPLAY=:$display_number|" "${PREFIX}/bin/$selected_distro"
 			print_log "Type the Display Port number: $display_number"
 		fi
 	else
@@ -3504,6 +3551,7 @@ sleep 2
 check_and_create_directory "$PREFIX/etc/termux-desktop"
 touch "$config_file"
 print_basic_details
+add_common_function
 install_required_packages
 questions
 if [[ "$distro_add_answer" == "y" ]]; then
@@ -3530,8 +3578,10 @@ else
 setup_config
 fi
 banner
+call_from_change_pd="n"
 distro_container_setup
 gui_launcher
+install_extra_apps
 terminal_utility_setup
 if [[ "$de_name" != "mate" ]]; then
 install_fm_tools
@@ -3541,7 +3591,6 @@ some_fixes
 preprocess_conf
 cleanup_cache
 termux-wake-unlock
-add_common_function
 add_installer
 notes
 print_log "$(cat $config_file)"

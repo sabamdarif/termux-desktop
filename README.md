@@ -58,12 +58,12 @@
 ##### 4. View Supported Apps:
    - Full list available [here](applist.md).
 
-##### 5. Start Installation:
+##### 5. Start Installation: 
+> Full Installation YouTube Video Guide:- [Here](https://youtu.be/SlR9f9hl5CQ?si=7O13ZAzdAnB_wwWw)
 
 > **Note:** Fresh installations are recommended for best results.
 
-> **Note:** If you are in android 12 or higher then first disable *Phantom Process Killer*
-   **Guide:-** [Here](https://github.com/atamshkai/Phantom-Process-Killer)
+> **Note:** If you are in android 12 or higher then first disable *Phantom Process Killer* **Guide:-** [Here](https://github.com/atamshkai/Phantom-Process-Killer)
    ```bash
    curl -Lf https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop -o setup-termux-desktop && chmod +x setup-termux-desktop && ./setup-termux-desktop
    ```
