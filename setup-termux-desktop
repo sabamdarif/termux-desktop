@@ -1228,7 +1228,7 @@ function choose_distro() {
 	echo " "
 	echo "${Y}3. Arch (Unstable)${W}"
 	echo " "
-	echo "${Y}4. Apline${W}"
+	echo "${Y}4. Alpine${W}"
 	echo " "
 	echo "${Y}5. Fedora${W}"
 	echo " "
@@ -1605,6 +1605,8 @@ function set_config_dir() {
 	config_dirs=(fontconfig gtk-3.0 lxqt pcmanfm-qt QtProject.conf glib-2.0 Kvantum openbox qterminal.org)
 	elif [[ "$de_name" == "openbox" ]]; then
 	config_dirs=(dconf gedit Kvantum openbox pulse rofi xfce4 enchant gtk-3.0 mimeapps.list polybar QtProject.conf Thunar)
+	elif [[ "$de_name" == "mate" ]]; then
+	config_dirs=(caja dconf galculator gtk-3.0 Kvantum lximage-qt menus Mousepad pavucontrol.ini xfce4)
     fi
 }
 
@@ -2354,6 +2356,61 @@ EOF
 	cp "$PREFIX/share/applications/killgui.desktop" "$HOME/Desktop/"
 }
 
+function check_desktop_process() {
+	banner
+	echo "${R}[${C}-${R}]${G} Checking Termux:X11 and $de_name setup or not... ${W}"
+	echo
+    sleep 0.5
+	# check tx11start file and run it to ckeck termux x11 process
+	if [[ -f "${PREFIX}/bin/tx11start" ]]; then
+        print_status "ok" "Found tx11start file."
+		echo "${R}[${C}-${R}]${G} Starting Termux:X11 for checkup...${W}"
+		tax11start
+		print_log "$(cat $PREFIX/bin/tx11start)"
+		termux_x11_pid=$(pgrep -f "/system/bin/app_process / com.termux.x11.Loader :1.0")
+		if [[ -n "$termux_x11_pid" ]]; then
+        	print_status "ok" "Termux:X11 Working"
+		else
+			print_status "error" "No Termux:X11 process found."
+		fi
+	fi
+
+	# check for the desktop environment related process
+	case "$de_name" in
+	    xfce)
+	        de_pid="$(pgrep xfce4)"
+	        ;;
+	    lxqt|openbox|mate)
+	        de_pid="$(pgrep $de_name)"
+	        ;;
+	    *)
+	        print_status "error" "Unknown desktop environment: $de_name"
+	        sleep 0.2
+	        ;;
+	esac
+
+	if [[ -n "$de_pid" ]]; then
+	    print_status "ok" "$de_name is running fine"
+		sleep 0.2
+	else
+	    print_status "error" "No $de_name process found"
+		sleep 0.2
+	fi
+
+	# check tx11stop file and run it to ckeck if there any termux x11 process exist or not
+	if [[ -f "${PREFIX}/bin/tx11stop" ]]; then
+		print_status "ok" "Found tx11stop file."
+		tx11stop
+		print_log "$(cat $PREFIX/bin/tx11stop)"
+		termux_x11_pid=$(pgrep -f "/system/bin/app_process / com.termux.x11.Loader :1.0")
+		if [[ -z "$termux_x11_pid" ]]; then
+        	print_status "ok" "Tx11stop command working"
+		else
+			print_status "error" "Tx11stop command not working"
+		fi
+	fi
+}
+
 #########################################################################
 #
 # Install Browser
@@ -2363,7 +2420,7 @@ EOF
 function browser_installer() {
 	banner
 	if [[ ${browser_answer} == "1" ]]; then
-		package_install_and_check "firefox"
+	package_install_and_check "firefox"
 	echo "installed_browser=\"firefox\"" >> "$config_file"
 	elif [[ ${browser_answer} == "2" ]]; then
 	package_install_and_check "chromium"
@@ -3581,6 +3638,7 @@ banner
 call_from_change_pd="n"
 distro_container_setup
 gui_launcher
+check_desktop_process
 install_extra_apps
 terminal_utility_setup
 if [[ "$de_name" != "mate" ]]; then
