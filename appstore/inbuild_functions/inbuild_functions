@@ -1,0 +1,422 @@
+#!/data/data/com.termux/files/usr/bin/bash
+
+termux_desktop_path="$PREFIX/etc/termux-desktop"
+config_file="$termux_desktop_path/configuration.conf"
+log_file="$HOME/.appstore/app-install.log"
+
+function print_log() {
+    local call_stack=""
+
+    for ((i = 1; i < ${#FUNCNAME[@]}; i++)); do
+        if [[ -n "${FUNCNAME[$i]}" ]]; then
+            call_stack+="${FUNCNAME[$i]} -> "
+        fi
+    done
+
+    # Remove the trailing " -> "
+    call_stack="${call_stack::-4}"
+
+    # Print the logs in a structured way
+    {
+      	echo "========== $(date '+%Y-%m-%d %H:%M:%S') under ${call_stack:-main} =========="
+
+        # If multiple arguments are passed, print each on a new line
+        if [[ $# -gt 1 ]]; then
+            for arg in "$@"; do
+                echo "$arg"
+            done
+        else
+            # Print single argument as-is
+            echo "$1"
+        fi
+
+		echo "========================================"
+    } >> "$log_file"
+}
+
+function print_success() {
+	local msg
+	msg="$1"
+	echo "[✓] $msg"
+	print_log "$msg"
+}
+
+function print_failed() {
+	local msg
+	msg="$1"
+	echo "[☓] $msg"
+	print_log "$msg"
+}
+
+function print_warn() {
+	local msg
+	msg="$1"
+	echo "[!] $msg"
+	print_log "$msg"
+}
+
+function wait_for_keypress() {
+	read -n1 -s -r -p "Press any key to continue..."
+	echo
+}
+
+function check_and_create_directory() {
+    if [[ ! -d "$1" ]]; then
+        mkdir -p "$1"
+		print_log "$1"
+    fi
+}
+
+# first check then delete
+function check_and_delete() {
+    local file
+	local files_folders
+    for files_folders in "$@"; do
+        for file in $files_folders; do
+            if [[ -e "$file" ]]; then
+                if [[ -d "$file" ]]; then
+                    rm -rf "$file" >/dev/null 2>&1
+                elif [[ -f "$file" ]]; then
+                    rm "$file" >/dev/null 2>&1
+                fi
+            fi
+		print_log "$file"
+        done
+    done
+}
+
+# first check then backup
+function check_and_backup() {
+	local file
+	local files_folders
+    for files_folders in "$@"; do
+        for file in $files_folders; do
+            if [[ -e "$file" ]]; then
+            local date_str
+			date_str=$(date +"%d-%m-%Y")
+			local backup="${file}-${date_str}.bak"
+			    if [[ -e "$backup" ]]; then
+				echo "Backup file ${backup} already exists"
+				echo
+				fi
+		    echo "backing up file $file"
+			mv "$1" "$backup"
+			print_log "$1 $backup"
+            fi
+        done
+    done
+}
+
+function download_file() {
+    local url="$1"
+    local file_name="$(basename "$url")"
+
+    print_status "Downloading: $url"
+
+    # First check if aria2c is installed
+    if ! command -v aria2c &> /dev/null; then
+        print_status "Installing aria2 for faster downloads..."
+        package_install_and_check "aria2"
+    fi
+
+    # Try aria2c first
+    if command -v aria2c &> /dev/null; then
+        aria2c --summary-interval=1 \
+               --max-connection-per-server=5 \
+               --max-concurrent-downloads=5 \
+               --retry-wait=15 \
+               --max-tries=5 \
+               --dir="./" \
+               "$url"
+        
+        if [[ -f "$file_name" ]]; then
+            print_success "Download completed: $file_name"
+            return 0
+        fi
+    fi
+
+    # Fallback to wget if aria2c fails or isn't available
+    print_status "Falling back to wget..."
+    wget -O "$file_name" "$url"
+
+    if [[ -f "$file_name" ]]; then
+        print_success "Download completed: $file_name"
+        return 0
+    else
+        print_failed "Download failed: $file_name"
+        return 1
+    fi
+}
+
+# find a backup file which end with a number pattern and restore it
+function check_and_restore() {
+    local target_path="$1"
+    local dir
+    local base_name
+
+    dir=$(dirname "$target_path")
+    base_name=$(basename "$target_path")
+
+    local latest_backup
+   latest_backup=$(find "$dir" -maxdepth 1 -type f -name "$base_name-[0-9][0-9]-[0-9][0-9]-[0-9][0-9][0-9][0-9].bak" 2>/dev/null | sort | tail -n 1)
+
+    if [[ -z "$latest_backup" ]]; then
+        print_failed "No backup file found for ${target_path}."
+		echo
+        return 1
+    fi
+
+    if [[ -e "$target_path" ]]; then
+        print_failed "Original file or directory ${target_path} already exists."
+		echo
+    else
+        mv "$latest_backup" "$target_path"
+        print_success "Restored ${latest_backup} to ${target_path}"
+		echo
+    fi
+	print_log "$target_path $dir $base_name $latest_backup"
+}
+
+function detact_package_manager() {
+	source "/data/data/com.termux/files/usr/bin/termux-setup-package-manager"
+	if [[ "$TERMUX_APP_PACKAGE_MANAGER" == "apt" ]]; then
+	PACKAGE_MANAGER="apt"
+	elif [[ "$TERMUX_APP_PACKAGE_MANAGER" == "pacman" ]]; then
+	PACKAGE_MANAGER="pacman"
+	else
+	print_failed " Could not detact your package manager, Switching To pkg " 
+	fi
+	print_log "$PACKAGE_MANAGER"
+}
+
+# will check if the package is already installed or not, if it installed then it will reinstall it and at the end it will print success/failed message
+function package_install_and_check() {
+    packs_list=($@)
+    for package_name in "${packs_list[@]}"; do
+        echo " Processing package: $package_name"
+
+        if [[ "$PACKAGE_MANAGER" == "pacman" ]]; then
+            if pacman -Qi "$package_name" >/dev/null 2>&1; then
+				print_log "$package_name = already_exist"
+                continue
+            fi
+
+            if [[ $package_name == *"*"* ]]; then
+                echo " Processing wildcard pattern: $package_name"
+				print_log "Processing wildcard pattern: $package_name"
+                packages=$(pacman -Ssq "${package_name%*}" 2>/dev/null)
+                for pkgs in $packages; do
+                    echo " Installing matched package: $pkgs"
+                    pacman -Sy --noconfirm --overwrite '*' "$pkgs"
+                done
+            else
+                pacman -Sy --noconfirm --overwrite '*' "$package_name"
+            fi
+
+        else
+            if [[ $package_name == *"*"* ]]; then
+                echo " Processing wildcard pattern: $package_name"
+				print_log "Processing wildcard pattern: $package_name"
+                packages_by_name=$(apt-cache search "${package_name%*}" | awk "/^${package_name}/ {print \$1}")
+				packages_by_description=$(apt-cache search "${package_name%*}" | grep -Ei "\b${package_name%*}\b" | awk '{print $1}')
+				packages=$(echo -e "${packages_by_name}\n${packages_by_description}" | sort -u)
+                for pkgs in $packages; do
+                    echo " Installing matched package: $pkgs"
+                    if dpkg -s "$pkgs" >/dev/null 2>&1; then
+						print_log "$pkgs = already_exist"
+                        pkg reinstall "$pkgs" -y
+                    else
+                        pkg install "$pkgs" -y
+                    fi
+                done
+            else
+                if dpkg -s "$package_name" >/dev/null 2>&1; then
+					print_log "$package_name = already_exist"
+                    pkg reinstall "$package_name" -y
+                else
+                    pkg install "$package_name" -y
+                fi
+            fi
+        fi
+
+        # Check installation success
+        if [ $? -ne 0 ]; then
+            echo " Error detected during installation of: $package_name"
+			print_log "Error detected during installation of: $package_name"
+            if [[ "$PACKAGE_MANAGER" == "pacman" ]]; then
+                pacman -Sy --overwrite '*' "$package_name"
+                pacman -Sy --noconfirm "$package_name"
+            else
+                apt --fix-broken install -y
+                dpkg --configure -a
+                pkg install "$package_name" -y
+            fi
+        fi
+
+        # Final verification
+		if [[ $package_name != *"*"* ]]; then
+        	if [[ "$PACKAGE_MANAGER" == "pacman" ]]; then
+        	    if pacman -Qi "$package_name" >/dev/null 2>&1; then
+        	        print_success "$package_name installed successfully"
+        	    else
+        	        print_failed "$package_name installation failed "
+        	    fi
+        	else
+        	    if dpkg -s "$package_name" >/dev/null 2>&1; then
+        	        print_success "$package_name installed successfully"
+        	    else
+        	        print_failed "$package_name installation failed "
+        	    fi
+        	fi
+		fi
+    done
+    echo ""
+	print_log "package list: $packs_list"
+}
+
+# will check the package is installed or not then remove it
+function package_remove_and_check() {
+    packs_list=($@)
+    for package_name in "${packs_list[@]}"; do
+        echo " Processing package: $package_name"
+
+        if [[ $package_name == *"*"* ]]; then
+            echo " Processing wildcard pattern: $package_name"
+			print_log "Processing wildcard pattern: $package_name"
+            if [[ "$PACKAGE_MANAGER" == "pacman" ]]; then
+                packages=$(pacman -Qq | grep -E "${package_name//\*/.*}")
+            else
+                packages=$(dpkg --get-selections | awk '{print $1}' | grep -E "${package_name//\*/.*}")
+            fi
+
+            for pkg in $packages; do
+                echo " Removing matched package: $pkg"
+                if [[ "$PACKAGE_MANAGER" == "pacman" ]]; then
+                    if pacman -Qi "$pkg" >/dev/null 2>&1; then
+                        pacman -Rnds --noconfirm "$pkg"
+                        if [ $? -eq 0 ]; then
+                            print_success "$pkg removed successfully"
+							print_log "Processing wildcard pattern: $package_name"
+                        else
+                            print_failed "Failed to remove $pkg "
+                        fi
+                    fi
+                else
+                    if dpkg -s "$pkg" >/dev/null 2>&1; then
+                        apt autoremove "$pkg" -y
+                        if [ $? -eq 0 ]; then
+                            print_success "$pkg removed successfully"
+                        else
+                            print_failed "Failed to remove $pkg "
+                        fi
+                    fi
+                fi
+            done
+        else
+            if [[ "$PACKAGE_MANAGER" == "pacman" ]]; then
+                if pacman -Qi "$package_name" >/dev/null 2>&1; then
+                    echo " Removing package: $package_name"
+                    pacman -Rnds --noconfirm "$package_name"
+                    if [ $? -eq 0 ]; then
+                        print_success "$package_name removed successfully"
+                    else
+                        print_failed "Failed to remove $package_name "
+                    fi
+                fi
+            else
+                if dpkg -s "$package_name" >/dev/null 2>&1; then
+                    echo " Removing package: $package_name"
+                    apt autoremove "$package_name" -y
+                    if [ $? -eq 0 ]; then
+                        print_success "$package_name removed successfully"
+                    else
+                        print_failed "Failed to remove $package_name "
+                    fi
+                fi
+            fi
+        fi
+    done
+    echo ""
+	print_log "$package_name"
+}
+
+function get_file_name_number() {
+    current_file=$(basename "$0")
+    folder_name="${current_file%.sh}"
+    theme_number=$(echo "$folder_name" | grep -oE '[1-9][0-9]*')
+	print_log "$theme_number"
+}
+
+# get the latest version from a github releases
+# ex. latest_tag=$(get_latest_release "$repo_owner" "$repo_name")
+function get_latest_release() {
+	local repo_owner="$1"
+	local repo_name="$2"
+	curl -s "https://api.github.com/repos/$repo_owner/$repo_name/releases/latest" |
+	grep '"tag_name":' |
+	sed -E 's/.*"v?([^"]+)".*/\1/'
+}
+
+function preprocess_conf() {
+    # Preprocess configuration file:
+    # 1. Remove lines where keys contain dashes (-).
+    # 2. Remove quotes from keys and values.
+	echo " Prepering config file..."
+    sed -i -E '/^[[:space:]]*[^#=]+-.*=/d; s/^([[:space:]]*[^#=]+)="([^"]*)"/\1=\2/g' "$config_file"
+}
+
+function read_conf() {
+    if [[ ! -f "$config_file" ]]; then
+        print_failed " Configuration file $config_file not found"
+		exit 0
+    fi
+
+	source "$config_file"
+    print_success "Configuration variables loaded"
+}
+
+function update_sys() {
+    echo "Updating system repositories..."
+    
+    if [[ "$PACKAGE_MANAGER" == "pacman" ]]; then
+        pacman -Syu --noconfirm
+    else
+        pkg update -y -o Dpkg::Options::="--force-confnew"
+        pkg upgrade -y -o Dpkg::Options::="--force-confnew"
+    fi
+}
+
+function fix_exec() {
+    sed -i -E 's|^Exec=([^ ]+)(.*)|Exec=pdrun \1\2 '"$2"'|' "/data/data/com.termux/files/usr/share/applications/$1"
+}
+
+function distro_run() {
+    proot-distro login "$selected_distro" --shared-tmp -- /bin/bash -c "$1"
+}
+
+function install_appimage() {
+    local appimage_file_name="$1"
+    appimage_name="$2"
+    local appimage_path="$distro_path/opt/AppImageLauncher/$appimage_name"
+    check_and_create_directory "$distro_path/opt/AppImageLauncher"
+    if [[ -f "$appimage_path" ]]; then
+        check_and_delete "$appimage_path"
+    fi
+    mv -f "$appimage_file_name" "$distro_path/opt/AppImageLauncher"
+
+cat << EOF >> "$distro_path/opt/AppImageLauncher/install_appimage.sh"
+#!/bin/bash
+cd /opt/AppImageLauncher
+chmod +x "${appimage_file_name}"
+./"${appimage_file_name}" --appimage-extract
+mv -f squashfs-root "$appimage_name"
+rm -f "${appimage_file_name}"
+EOF
+
+    proot-distro login "$selected_distro" --shared-tmp -- /bin/bash -c "bash /opt/AppImageLauncher/install_appimage.sh"
+    check_and_delete "$distro_path/opt/AppImageLauncher/install_appimage.sh"
+}
+
+read_conf
+distro_path="$PREFIX/var/lib/proot-distro/installed-rootfs/$selected_distro"
+
