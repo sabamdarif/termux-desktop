@@ -911,8 +911,6 @@ function questions() {
 	echo
 	select_an_option 4 1 wine_answer
 	banner
-	confirmation_y_or_n "Do you want to install a graphical package manager [Synaptic]" synaptic_answer
-	banner
 	echo "${R}[${C}-${R}]${G} By Default it only add 4 - 5 wallpaper${W}"
 	echo
 	confirmation_y_or_n "Do you want to add some more wallpaper" ext_wall_answer
@@ -993,23 +991,6 @@ echo "Learn More:- https://github.com/sabamdarif/termux-desktop/blob/main/proot-
 echo
 	confirmation_y_or_n "Do you want to add a Linux container" distro_add_answer
 	echo "distro_add_answer=\"$distro_add_answer\"" >> "$config_file"
-	banner
-echo -e "${R}[${C}-${R}]${G}${BOLD} Extra App Suite:- ${W}
-It will install this listed apps:-
-
-- Gedit (Text Editor)
-- Rhythmbox (Music Player)
-- Xpdf Reader
-- Thunderbird (Email Client)
-- Transmission (Bittorrent Client)
-"
-if [[ "$distro_add_answer" == "y" ]]; then
-echo -e "apps that will be installed using linux distro container (proot distro):-
-- Libreoffice (Office Suite)
-"
-fi
-echo
-confirmation_y_or_n "Do you want to install extra app suite" extra_app_suite
 	banner
 	if ! type -p pacman >/dev/null 2>&1; then
 	echo "${R}[${C}-${R}]${R}${BOLD} Read This Carefully${W}"
@@ -1226,9 +1207,9 @@ function choose_distro() {
 	echo " "
 	echo "${Y}2. Ubuntu${W}"
 	echo " "
-	echo "${Y}3. Arch (Unstable)${W}"
+	echo "${Y}3. Arch (Unstable | Doen't Suppoted By AppStore)${W}"
 	echo " "
-	echo "${Y}4. Alpine${W}"
+	echo "${Y}4. Alpine (Doen't Suppoted By AppStore)${W}"
 	echo " "
 	echo "${Y}5. Fedora${W}"
 	echo " "
@@ -2530,44 +2511,36 @@ function photo_editor_installer() {
 #
 #########################################################################
 
-function setup_synaptic() {
+function install_termux_desktop_appstore() {
 	banner
-    if [[ "$synaptic_answer" == "n" ]]; then
-	banner
-    echo "${R}[${C}-${R}]${C} Skipping Synaptic Setup..${W}"
+	echo "${R}[${C}-${R}]${C} Setting up AppStore...${W}"
 	echo
-    sleep 1.5
-	else
-	echo "${R}[${C}-${R}]${G} Installing Synaptic Graphical Package Manager...${W}"
+	echo "${R}[${C}-${R}]${C} Keep in mind that the AppStore is still in the early development stage. Bugs are expected.${W}"
 	echo
-	package_install_and_check "synaptic"
-	fi
-	echo "install_synaptic=\"$synaptic_answer\"" >> "$config_file"
-}
+	sleep 1
 
-#########################################################################
-#
-# Install Extra Apps
-#
-#########################################################################
+	package_install_and_check "aria2 python python3 cloneit"
+	check_and_create_directory "${PREFIX}/opt/appstore"
+	cd ${PREFIX}/opt/appstore
+	cloneit https://github.com/sabamdarif/Termux-AppStore/tree/main/src
+	cd src
+	mv -f * ${PREFIX}/opt/appstore/
+	cd ..
+	check_and_delete "src"
+	check_and_create_directory "$HOME/.appstore"
+	check_and_create_directory "$HOME/.termux_appstore"
 
-function install_extra_apps() {
-	if [[ "$extra_app_suite" == "y" ]]; then
-		banner
-    	echo "${R}[${C}-${R}]${C} Installing The Extra App Suite...${W}"
-		echo
-		package_install_and_check "gedit rhythmbox xpdf thunderbird transmission-gtk "
-		if [[ "$distro_add_answer" == "y" ]]; then
-			echo "${R}[${C}-${R}]${G} Installing Libreoffice ${W}"
-			echo
-			if [[ "$selected_distro" == "archlinux" ]]; then
-				$selected_distro install libreoffice-fresh -y
-			else
-				$selected_distro install libreoffice -y
-			fi
-		fi
-	fi
+	# Install Python dependencies with retry logic
+	echo "${R}[${C}-${R}]${C} Installing Python dependencies...${W}"
+	pip install -r requirements.txt || {
+	    print_failed "Initial pip install failed. Retrying..."
+	    sleep 0.3
+	    pip install -r requirements.txt
+	}
 
+	mv -f org.sabamdarif.termux.appstore.desktop "${PREFIX}/share/applications/"
+	chmod +x "${PREFIX}/opt/appstore/inbuild_functions/inbuild_functions"
+	cd "${HOME}"
 }
 
 #########################################################################
@@ -3024,10 +2997,6 @@ function remove_termux_desktop() {
 	elif [[ "$installed_photo_editor" == "both" ]]; then
 	package_check_and_remove "gimp audacious"
 	fi
-	#remove synaptic
-	if [[ "$install_synaptic" == "y" ]]; then
-	package_check_and_remove "synaptic"
-	fi
 	#remove wine
 	if [[ "$setup_wine" == "default-wine" ]]; then
 	package_check_and_remove "wine winetricks"
@@ -3073,6 +3042,10 @@ function remove_termux_desktop() {
 	elif [[ "$gui_mode" == "both" ]]; then
 	package_check_and_remove "termux-x11-nightly tigervnc xorg-xhost"
 	check_and_delete "$PREFIX/bin/tx11start $PREFIX/bin/tx11stop $HOME/.vnc/xstartup $PREFIX/bin/vncstart $PREFIX/bin/vncstop $PREFIX/bin/gui $PREFIX/bin/tx11start $PREFIX/bin/tx11stop"
+	# remove appstore
+	package_check_and_remove "aria2 python python3 cloneit"
+	check_and_delete "${PREFIX}/opt/appstore"
+	check_and_delete "${PREFIX}/share/applications/org.sabamdarif.termux.appstore.desktop"
 	fi
 	check_and_delete "$PREFIX/etc/termux-desktop $PREFIX/bin/setup-termux-desktop"
 	clear
@@ -3624,7 +3597,6 @@ browser_installer
 ide_installer
 media_player_installer
 photo_editor_installer
-setup_synaptic
 setup_wine
 if [[ "$style_answer" == "0" ]]; then
 banner
@@ -3639,11 +3611,11 @@ call_from_change_pd="n"
 distro_container_setup
 gui_launcher
 check_desktop_process
-install_extra_apps
 terminal_utility_setup
 if [[ "$de_name" != "mate" ]]; then
 install_fm_tools
 fi
+install_termux_desktop_appstore
 add_to_autostart
 some_fixes
 preprocess_conf

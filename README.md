@@ -20,6 +20,7 @@
 - :mechanical_arm: **Hardware Acceleration:** Enhances performance for supported hardware.
 - :paperclips: **GUI Access:** Supports Termux:X11 and VNC.
 - :package: **Package Management:** Compatible with both APT and [PACMAN](https://youtu.be/ditNvG5Nxj0).
+- :shopping: **App Store:** A appstore to install apps from termux and suppoted proot-distro.
 - :jigsaw: **One-Click App Installation:**
   - Browsers: Firefox, Chromium
   - Code Editors: VS Code, Geany
@@ -55,10 +56,7 @@
    - Learn more about [hardware acceleration](hw-acceleration.md).
    - Check out [distro container usage](proot-caontainer.md).
 
-##### 4. View Supported Apps:
-   - Full list available [here](applist.md).
-
-##### 5. Start Installation: 
+##### 4. Start Installation: 
 > Full Installation YouTube Video Guide:- [Here](https://youtu.be/SlR9f9hl5CQ?si=7O13ZAzdAnB_wwWw)
 
 > **Note:** Fresh installations are recommended for best results.
@@ -68,7 +66,7 @@
    curl -Lf https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop -o setup-termux-desktop && chmod +x setup-termux-desktop && ./setup-termux-desktop
    ```
 
-##### 6. Usage Instructions:
+##### 5. Usage Instructions:
    - Commands for starting and stopping Termux:X11 and VNC sessions are provided below.
 
 ---
@@ -201,7 +199,19 @@ Options:
 |OPENBOX|MATE|
 |![img](images/openbox/look_1/desktop.png)|![img](images/mate/look_1/desktop.png)|
 
-### Supported Apps:- [Here](applist.md)
+### App Store:
+<img src="images/termux-app-store.png">
+
+<details>
+<summary><b style="font-style: bold">Appstore UI:</b></summary>
+
+|Loading|Installing|
+|--|--|
+|![img](images/appstore-loading.png)|![img](images/appstore-app-installing.png)|
+|Installed|Prompt|
+|![img](images/appstore-app-installed.png)|![img](images/appstore-prmpt.png)|
+</details>
+
 ---
 
 ## Advanced Topics:
@@ -216,6 +226,12 @@ Install additional apps like LibreOffice. Details [here](proot-caontainer.md).
 Enhance performance with GPU acceleration. Learn more [here](hw-acceleration.md).
 
 ---
+
+## Associated Repos:
+- [Termux-AppStore](https://github.com/sabamdarif/Termux-AppStore)
+- [nautilus-scripts](https://github.com/sabamdarif/nautilus-scripts/tree/test)
+
+___
 
 ## Acknowledgments:
 Special thanks to:

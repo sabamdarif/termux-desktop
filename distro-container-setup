@@ -1306,6 +1306,24 @@ chmod +x "$PREFIX/bin/pdrun"
 
 #########################################################################
 #
+# Install zlib-devel
+#
+#########################################################################
+
+function install_appimage_related_pack() {
+    if [[ "$selected_distro" == "ubuntu" ]]; then
+        pd_root_package_install_and_check "zlib1g-dev fuse"
+    elif [[ "$selected_distro" == "fedora" ]]; then
+        pd_root_package_install_and_check "zlib-devel fuse"
+    elif [[ "$selected_distro" == "archlinux" ]]; then
+        pd_root_package_install_and_check "zlib fuse2"
+    elif [[ "$selected_distro" == "alpine" ]]; then
+        pd_root_package_install_and_check "zlib-dev fuse"
+    fi
+}
+
+#########################################################################
+#
 # Distro Folders , Theme And Icon Link
 #
 #########################################################################
@@ -1342,6 +1360,7 @@ function install_distro_container() {
     distro_zsh_answer
     distro_terminal_utility_setup
     distro_create_app_installer
+    install_appimage_related_pack
     distro_app_launch_setup
     distro_folders_link
 }
