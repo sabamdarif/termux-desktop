@@ -634,8 +634,8 @@ elif [[ "\$1" = "install" ]]; then
         fi
     done
 
-    # Install the packages using the package manager
-    proot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp -- env DISPLAY=:$display_number sudo "$package_manager" install "\${options[@]}" "\${packages[@]}"
+# Install the packages using the package manager
+proot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp -- env DISPLAY=:$display_number sudo "$package_manager" install "\${options[@]}" "\${packages[@]}"
 
     # Generate the packinstall.sh script
 cat <<EOF > "$save_root_path/packinstall.sh"
@@ -679,8 +679,6 @@ elif [[ "\$1" = "remove" ]] || [[ "\$1" = "autoremove" ]]; then
         fi
     done
 
-    # Remove the packages using the package manager
-    proot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp -- env DISPLAY=:$display_number sudo "$package_manager" \$1 "\${options[@]}" "\${packages[@]}"
 cat <<EOF > "$save_root_path/packremove.sh"
 #!/bin/bash
 
@@ -704,7 +702,11 @@ for package_name in "\${packages[@]}"; do
 done
 rm packremove.sh
 EOF
-    proot-distro login "$selected_distro" --shared-tmp -- /bin/bash -c 'export DISPLAY=:$display_number; export XDG_RUNTIME_DIR=$TMPDIR; bash packremove.sh'
+proot-distro login "$selected_distro" --shared-tmp -- /bin/bash -c 'export DISPLAY=:$display_number; export XDG_RUNTIME_DIR=$TMPDIR; bash packremove.sh'
+
+# Remove the packages using the package manager
+proot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp -- env DISPLAY=:$display_number sudo "$package_manager" \$1 "\${options[@]}" "\${packages[@]}"
+
 elif [[ "\$1" = "update" ]]; then
     proot-distro login --user $final_user_name "$selected_distro" --shared-tmp -- env DISPLAY=:$display_number sudo $package_manager update
 fi
@@ -742,8 +744,8 @@ elif [[ "\$1" = "install" ]]; then
         fi
     done
 
-    # Install the packages using the package manager
-    proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:$display_number sudo pacman -S"\${options[@]}" --noconfirm  "\${packages[@]}"
+# Install the packages using the package manager
+proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:$display_number sudo pacman -S"\${options[@]}" --noconfirm  "\${packages[@]}"
     
 cat <<EOF > "$save_root_path/packinstall.sh"
 #!/bin/bash
@@ -770,7 +772,7 @@ done
 rm packinstall.sh
 EOF
 
-    proot-distro login $selected_distro --shared-tmp -- /bin/bash -c 'export DISPLAY=:$display_number; export XDG_RUNTIME_DIR=$TMPDIR; bash packinstall.sh'
+proot-distro login $selected_distro --shared-tmp -- /bin/bash -c 'export DISPLAY=:$display_number; export XDG_RUNTIME_DIR=$TMPDIR; bash packinstall.sh'
 
 elif [[ "\$1" = "remove" ]]; then
 
@@ -784,9 +786,6 @@ elif [[ "\$1" = "remove" ]]; then
             packages+=("\$arg") # Add to packages otherwise
         fi
     done
-
-    # Remove the packages using the package manager
-    proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:$display_number sudo pacman -R"\${options[@]}" --noconfirm "\${packages[@]}"
     
 cat <<EOF > "$save_root_path/packremove.sh"
 #!/bin/bash
@@ -812,7 +811,11 @@ done
 rm packremove.sh
 EOF
 
-    proot-distro login $selected_distro --shared-tmp -- /bin/bash -c 'export DISPLAY=:$display_number; export XDG_RUNTIME_DIR=$TMPDIR; bash packremove.sh'
+proot-distro login $selected_distro --shared-tmp -- /bin/bash -c 'export DISPLAY=:$display_number; export XDG_RUNTIME_DIR=$TMPDIR; bash packremove.sh'
+
+# Remove the packages using the package manager
+proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:$display_number sudo pacman -R"\${options[@]}" --noconfirm "\${packages[@]}"
+
 elif [[ "\$1" = "update" ]]; then
     proot-distro login --user $final_user_name "$selected_distro" --shared-tmp -- env DISPLAY=:$display_number sudo pacman -Su
 fi
@@ -851,8 +854,8 @@ elif [[ "\$1" = "install" ]]; then
         fi
     done
 
-    # Install the packages using the package manager
-    proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:$display_number sudo apk add "\${options[@]}" "\${packages[@]}"
+# Install the packages using the package manager
+proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:$display_number sudo apk add "\${options[@]}" "\${packages[@]}"
     
 cat <<EOF > "$save_root_path/packinstall.sh"
 #!/bin/bash
@@ -878,7 +881,7 @@ done
 rm packinstall.sh
 EOF
 
-    proot-distro login $selected_distro --shared-tmp -- /bin/bash -c 'export DISPLAY=:$display_number; export XDG_RUNTIME_DIR=$TMPDIR; bash packinstall.sh'
+proot-distro login $selected_distro --shared-tmp -- /bin/bash -c 'export DISPLAY=:$display_number; export XDG_RUNTIME_DIR=$TMPDIR; bash packinstall.sh'
 
 elif [[ "\$1" = "remove" ]]; then
 
@@ -892,9 +895,6 @@ elif [[ "\$1" = "remove" ]]; then
             packages+=("\$arg") # Add to packages otherwise
         fi
     done
-
-    # Remove the packages using the package manager
-    proot-distro login --user $final_user_name "$selected_distro" --shared-tmp -- env DISPLAY=:$display_number sudo apk del "\${options[@]}" "\${packages[@]}"
 
 cat <<EOF > "$save_root_path/packremove.sh"
 #!/bin/bash
@@ -919,7 +919,10 @@ done
 rm packremove.sh
 EOF
 
-    proot-distro login $selected_distro --shared-tmp -- /bin/bash -c 'export DISPLAY=:$display_number; export XDG_RUNTIME_DIR=$TMPDIR; bash packremove.sh'
+proot-distro login $selected_distro --shared-tmp -- /bin/bash -c 'export DISPLAY=:$display_number; export XDG_RUNTIME_DIR=$TMPDIR; bash packremove.sh'
+
+# Remove the packages using the package manager
+proot-distro login --user $final_user_name "$selected_distro" --shared-tmp -- env DISPLAY=:$display_number sudo apk del "\${options[@]}" "\${packages[@]}"
 
 if [[ \$1 = "install" ]] || [[ \$1 = "remove" ]]; then
     gtk-update-icon-cache
@@ -955,8 +958,8 @@ elif [[ "\$1" = "install" ]]; then
         fi
     done
 
-    # Install the packages using the package manager
-    proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:$display_number sudo dnf install "\${options[@]}" "\${packages[@]}"
+# Install the packages using the package manager
+proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:$display_number sudo dnf install "\${options[@]}" "\${packages[@]}"
 
 cat <<EOF > "$save_root_path/packinstall.sh"
 #!/bin/bash
@@ -984,8 +987,8 @@ done
 rm packinstall.sh
 EOF
 
-    # Execute the script inside the proot-distro container
-    proot-distro login $selected_distro --shared-tmp -- /bin/bash -c 'export DISPLAY=:$display_number; export XDG_RUNTIME_DIR=$TMPDIR; bash packinstall.sh'
+# Execute the script inside the proot-distro container
+proot-distro login $selected_distro --shared-tmp -- /bin/bash -c 'export DISPLAY=:$display_number; export XDG_RUNTIME_DIR=$TMPDIR; bash packinstall.sh'
 
 elif [[ "\$1" = "remove" ]]; then
 
@@ -999,9 +1002,6 @@ elif [[ "\$1" = "remove" ]]; then
             packages+=("\$arg") # Add to packages otherwise
         fi
     done
-
-    # Remove the packages using the package manager
-    proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:$display_number sudo dnf remove "\${options[@]}" "\${packages[@]}"
 
 cat <<EOF > "$save_root_path/packremove.sh"
 #!/bin/bash
@@ -1028,7 +1028,10 @@ done
 rm packremove.sh
 EOF
 
-    proot-distro login $selected_distro --shared-tmp -- /bin/bash -c 'export DISPLAY=:$display_number; export XDG_RUNTIME_DIR=$TMPDIR; bash packremove.sh'
+proot-distro login $selected_distro --shared-tmp -- /bin/bash -c 'export DISPLAY=:$display_number; export XDG_RUNTIME_DIR=$TMPDIR; bash packremove.sh'
+
+# Remove the packages using the package manager
+proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:$display_number sudo dnf remove "\${options[@]}" "\${packages[@]}"
 
 fi
 

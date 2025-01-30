@@ -203,7 +203,7 @@ Options:
 <img src="images/termux-app-store.png">
 
 <details>
-<summary><b style="font-style: bold">Appstore UI:</b></summary>
+<summary><b>Appstore UI:</b></summary>
 
 |Loading|Installing|
 |--|--|
