@@ -1,17 +1,23 @@
 import os
 import shutil
 import gi
+import sys
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, GLib, Gdk, Gio
 
 class Add2MenuWindow(Gtk.ApplicationWindow):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, app):
+        Gtk.ApplicationWindow.__init__(
+            self,
+            application=app,
+            title="Add To Menu"
+        )
         
-        # Window setup
-        self.set_title("Add To Menu")
+        # Set window properties
+        self.set_wmclass("add2menu", "Add To Menu")
+        self.set_role("add2menu")
         self.set_default_size(600, 500)
-        self.set_border_width(0)
+        self.set_position(Gtk.WindowPosition.CENTER)
         
         # Constants
         self.PREFIX = os.getenv("PREFIX", "/data/data/com.termux/files/usr")
@@ -37,6 +43,12 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
         self.setup_header_bar()
         self.setup_status_bar()
         self.setup_main_content()
+
+        # Initial load
+        self.refresh_list()
+        
+        # Show all widgets
+        self.show_all()
 
     def setup_css(self):
         css = """
@@ -126,6 +138,12 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
         content_box.set_margin_top(20)
         content_box.set_margin_bottom(20)
         
+        # Select all checkbox at top
+        self.select_all_check = Gtk.CheckButton(label="Select All")
+        self.select_all_check.connect("toggled", self.on_select_all_toggled)
+        self.select_all_check.set_halign(Gtk.Align.START)  # Align to the left
+        content_box.pack_start(self.select_all_check, False, False, 0)
+        
         # Apps list
         scroll = Gtk.ScrolledWindow()
         scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
@@ -150,7 +168,13 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
         renderer_text.set_property("ellipsize", "end")
         column_text = Gtk.TreeViewColumn("Application", renderer_text, text=1)
         column_text.set_expand(True)
+        column_text.set_clickable(True)
+        column_text.connect("clicked", self.on_column_clicked)
+        
         self.treeview.append_column(column_text)
+        
+        # Connect single click handler
+        self.treeview.connect("button-press-event", self.on_single_click)
         
         scroll.add(self.treeview)
         content_box.pack_start(scroll, True, True, 0)
@@ -166,9 +190,6 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
         
         content_box.pack_start(button_box, False, False, 0)
         self.main_box.pack_start(content_box, True, True, 0)
-        
-        # Initial load
-        self.refresh_list()
 
     def setup_status_bar(self):
         self.status_bar = Gtk.Statusbar()
@@ -338,24 +359,63 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
         else:
             self.remove_applications(selected)
 
+    def on_select_all_toggled(self, button):
+        is_active = button.get_active()
+        for row in self.liststore:
+            row[0] = is_active
+        self.update_status()
+
     def add_applications(self, selected):
-        os.makedirs(self.ADDED_DIR, exist_ok=True)
-        for name, filepath in selected:
-            new_path = os.path.join(self.ADDED_DIR, os.path.basename(filepath))
-            shutil.copy(filepath, new_path)
-            with open(new_path, "r+") as f:
-                content = f.read()
-                content = content.replace("Exec=", "Exec=pdrun ")
-                f.seek(0)
-                f.write(content)
-                f.truncate()
+        try:
+            os.makedirs(self.ADDED_DIR, exist_ok=True)
+            desktop_dir = os.path.join(os.path.expanduser("~"), "Desktop")
+            
+            for name, filepath in selected:
+                new_path = os.path.join(self.ADDED_DIR, os.path.basename(filepath))
+                desktop_path = os.path.join(desktop_dir, os.path.basename(filepath))
                 
-        self.update_system_and_show_success()
+                # Skip if already exists in either location
+                if os.path.exists(new_path) or os.path.exists(desktop_path):
+                    print(f"Skipping {name} - already exists")
+                    continue
+                
+                # Copy and modify the file
+                shutil.copy(filepath, new_path)
+                with open(new_path, "r+") as f:
+                    content = f.read()
+                    content = content.replace("Exec=", "Exec=pdrun ")
+                    f.seek(0)
+                    f.write(content)
+                    f.truncate()
+                
+                # Copy to desktop
+                shutil.copy2(new_path, desktop_path)
+                os.chmod(desktop_path, 0o755)  # Make executable
+                
+            self.update_system_and_show_success()
+        except Exception as e:
+            self.show_message_dialog(f"Error adding applications: {str(e)}", "Error")
+            print(f"Error adding applications: {str(e)}")
 
     def remove_applications(self, selected):
-        for _, filepath in selected:
-            os.remove(filepath)
-        self.update_system_and_show_success()
+        try:
+            desktop_dir = os.path.join(os.path.expanduser("~"), "Desktop")
+            
+            for _, filepath in selected:
+                # Remove from pd_added directory if exists
+                if os.path.exists(filepath):
+                    os.remove(filepath)
+                
+                # Remove from Desktop directory if exists
+                desktop_file = os.path.basename(filepath)
+                desktop_filepath = os.path.join(desktop_dir, desktop_file)
+                if os.path.exists(desktop_filepath):
+                    os.remove(desktop_filepath)
+                    
+            self.update_system_and_show_success()
+        except Exception as e:
+            self.show_message_dialog(f"Error removing applications: {str(e)}", "Error")
+            print(f"Error removing applications: {str(e)}")
 
     def update_system_and_show_success(self):
         try:
@@ -402,21 +462,52 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
         dialog.run()
         dialog.destroy()
 
+    def on_single_click(self, treeview, event):
+        if event.button == 1:  # Left click
+            path = treeview.get_path_at_pos(int(event.x), int(event.y))
+            if path is not None:
+                path = path[0]  # Get the path from the tuple
+                model = treeview.get_model()
+                model[path][0] = not model[path][0]
+                self.update_status()
+                return True
+        return False
+
+    def on_column_clicked(self, column):
+        self.liststore.set_sort_column_id(1, Gtk.SortType.ASCENDING)
+
 class Add2MenuApplication(Gtk.Application):
     def __init__(self):
-        super().__init__(application_id="com.termux.add2menu",
-                        flags=Gio.ApplicationFlags.FLAGS_NONE)
+        Gtk.Application.__init__(
+            self,
+            application_id="org.sabamdarif.termux.add2menu",
+            flags=Gio.ApplicationFlags.FLAGS_NONE
+        )
+        self.window = None
+
+    def do_startup(self):
+        Gtk.Application.do_startup(self)
+        # Set application name
+        GLib.set_application_name("Add To Menu")
+        # Set the application icon
+        icon_theme = Gtk.IconTheme.get_default()
+        try:
+            icon = icon_theme.load_icon("edit-move", 128, 0)
+            Gtk.Window.set_default_icon(icon)
+        except Exception as e:
+            print(f"Failed to set application icon: {e}")
 
     def do_activate(self):
-        win = self.props.active_window
-        if not win:
-            win = Add2MenuWindow(application=self)
-            win.show_all()
-        win.present()
+        if not self.window:
+            self.window = Add2MenuWindow(self)
+        self.window.present()
 
 def main():
     app = Add2MenuApplication()
-    app.run(None)
+    return app.run(sys.argv)
 
 if __name__ == "__main__":
-    main()
+    try:
+        sys.exit(main())
+    except KeyboardInterrupt:
+        sys.exit(0)

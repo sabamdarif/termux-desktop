@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Add To Menu
+Comment=Add proot-distro's apps to Termux menu
+Exec=python /data/data/com.termux/files/usr/opt/add2menu/add2menu.py
+Icon=edit-move
+Terminal=false
+Categories=System;Settings;
+StartupWMClass=add2menu
+X-GNOME-SingleWindow=true 
