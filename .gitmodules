@@ -1,0 +1,3 @@
+[submodule "appstore"]
+	path = appstore
+	url = https://github.com/sabamdarif/Termux-AppStore.git
