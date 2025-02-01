@@ -203,13 +203,32 @@ _step_install_dependencies() {
 }
 
 _make_supported_for_termux() {
-    cd "$SCRIPT_DIR"
-    wget --tries=5 --retry-connrefused https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patches/fix-nautilus-scripts.patch
-    patch -p1 < fix-nautilus-scripts.patch
-    rm fix-nautilus-scripts.patch
+    # Download the patch file
+    if ! wget --tries=5 --retry-connrefused https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patches/fix-nautilus-scripts.patch; then
+        _print_failed "Failed to download the patch file"
+        return 1
+    fi
+
+    # Try to apply patch with different strip levels
+    for strip_level in 0 1 2 3; do
+        if patch -p${strip_level} -N --dry-run < fix-nautilus-scripts.patch >/dev/null 2>&1; then
+            echo "${R}[${G}-${R}]${G} Applying patch with -p${strip_level}...${W}"
+            if patch -p${strip_level} < fix-nautilus-scripts.patch; then
+                _print_success "Patch applied successfully"
+                break
+            fi
+        fi
+        if [ $strip_level -eq 3 ]; then
+            _print_failed "Failed to apply patch with any strip level"
+            return 1
+        fi
+    done
+
+    # Cleanup
+    rm -f fix-nautilus-scripts.patch
     rm -rf "Security and recovery"
     find "$SCRIPT_DIR" -type f -name "*.orig" -exec rm -f {} \;
-    find "$SCRIPT_DIR" -type f -name "*.rej   " -exec rm -f {} \;
+    find "$SCRIPT_DIR" -type f -name "*.rej" -exec rm -f {} \;
 }
 
 _setup_file_manager() {

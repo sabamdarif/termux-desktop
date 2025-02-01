@@ -50,33 +50,78 @@ function check_termux() {
 #########################################################################
 
 function print_log() {
+    local timestamp="$(date '+%Y-%m-%d %H:%M:%S')"
+    local log_level="${2:-INFO}"  # Default log level is INFO
     local call_stack=""
-
+    local line_number="${BASH_LINENO[0]}"
+    
+    # Build call stack
     for ((i = 1; i < ${#FUNCNAME[@]}; i++)); do
         if [[ -n "${FUNCNAME[$i]}" ]]; then
-            call_stack+="${FUNCNAME[$i]} -> "
+            call_stack+="${FUNCNAME[$i]}:${BASH_LINENO[$i-1]} -> "
         fi
     done
+    call_stack="${call_stack::-4}"  # Remove trailing " -> "
 
-    # Remove the trailing " -> "
-    call_stack="${call_stack::-4}"
-
-    # Print the logs in a structured way
+    # Format the log entry
     {
-     	echo "========== $(date '+%Y-%m-%d %H:%M:%S') under ${call_stack:-main} =========="
-
-        # If multiple arguments are passed, print each on a new line
+        echo "========== $timestamp =========="
+        echo "Level: $log_level"
+        echo "Function: ${FUNCNAME[1]:-main}"
+        echo "Line: $line_number"
+        echo "Call Stack: ${call_stack:-main}"
+        
+        # Log arguments
+        echo "Details:"
         if [[ $# -gt 1 ]]; then
+            # Skip the log level if it was provided
+            shift
             for arg in "$@"; do
-                echo "$arg"
+                echo "  $arg"
             done
         else
-            # Print single argument as-is
-            echo "$1"
+            echo "  $1"
         fi
-
-	echo "========================================"
+        
+        # Add command exit status if available
+        if [[ -n "$PIPESTATUS" ]]; then
+            echo "Last Command Status: ${PIPESTATUS[@]}"
+        fi
+        
+        echo "========================================"
+        echo
     } >> "$log_file"
+}
+
+# Helper functions for different log levels
+function log_info() {
+    local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
+    echo "========================================" >> "$log_file"
+    echo "Time: $timestamp" >> "$log_file"
+    echo "Type: Info" >> "$log_file"
+    echo "Message: $1" >> "$log_file"
+    echo "Status: $?" >> "$log_file"
+    echo "========================================" >> "$log_file"
+    echo >> "$log_file"
+}
+
+function log_warn() {
+    print_log "$1" "WARNING" "${@:2}"
+}
+
+function log_error() {
+    print_log "$1" "ERROR" "${@:2}"
+}
+
+function log_debug() {
+    local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
+    echo "========================================" >> "$log_file"
+    echo "Time: $timestamp" >> "$log_file"
+    echo "Type: Debug" >> "$log_file"
+    echo "Message: $1" >> "$log_file"
+    echo "Status: $?" >> "$log_file"
+    echo "========================================" >> "$log_file"
+    echo >> "$log_file"
 }
 
 function print_success() {
@@ -229,19 +274,23 @@ function detact_package_manager() {
 
 # will check if the package is already installed or not, if it installed then it will reinstall it and at the end it will print success/failed message
 function package_install_and_check() {
+    log_info "Starting package installation" "Packages: $*"
+    
     packs_list=($@)
     for package_name in "${packs_list[@]}"; do
+        log_debug "Processing package" "Package: $package_name"
+        
         echo "${R}[${C}-${R}]${G}${BOLD} Processing package: ${C}$package_name ${W}"
 
         if [[ "$PACKAGE_MANAGER" == "pacman" ]]; then
             if pacman -Qi "$package_name" >/dev/null 2>&1; then
-				print_log "$package_name = already_exist"
+                log_info "Package already installed" "Package: $package_name"
                 continue
             fi
-
+            
             if [[ $package_name == *"*"* ]]; then
+                log_debug "Processing wildcard pattern" "Pattern: $package_name"
                 echo "${R}[${C}-${R}]${C} Processing wildcard pattern: $package_name ${W}"
-				print_log "Processing wildcard pattern: $package_name"
                 packages=$(pacman -Ssq "${package_name%*}" 2>/dev/null)
                 for pkgs in $packages; do
                     echo "${R}[${C}-${R}]${G}${BOLD} Installing matched package: ${C}$pkgs ${W}"
@@ -250,18 +299,17 @@ function package_install_and_check() {
             else
                 pacman -Sy --noconfirm --overwrite '*' "$package_name"
             fi
-
         else
             if [[ $package_name == *"*"* ]]; then
+                log_debug "Processing wildcard pattern" "Pattern: $package_name"
                 echo "${R}[${C}-${R}]${C} Processing wildcard pattern: $package_name ${W}"
-				print_log "Processing wildcard pattern: $package_name"
                 packages_by_name=$(apt-cache search "${package_name%*}" | awk "/^${package_name}/ {print \$1}")
-				packages_by_description=$(apt-cache search "${package_name%*}" | grep -Ei "\b${package_name%*}\b" | awk '{print $1}')
-				packages=$(echo -e "${packages_by_name}\n${packages_by_description}" | sort -u)
+                packages_by_description=$(apt-cache search "${package_name%*}" | grep -Ei "\b${package_name%*}\b" | awk '{print $1}')
+                packages=$(echo -e "${packages_by_name}\n${packages_by_description}" | sort -u)
                 for pkgs in $packages; do
                     echo "${R}[${C}-${R}]${G}${BOLD} Installing matched package: ${C}$pkgs ${W}"
                     if dpkg -s "$pkgs" >/dev/null 2>&1; then
-						print_log "$pkgs = already_exist"
+                        log_info "Package already installed" "Package: $pkgs"
                         pkg reinstall "$pkgs" -y
                     else
                         pkg install "$pkgs" -y
@@ -269,7 +317,7 @@ function package_install_and_check() {
                 done
             else
                 if dpkg -s "$package_name" >/dev/null 2>&1; then
-					print_log "$package_name = already_exist"
+                    log_info "Package already installed" "Package: $package_name"
                     pkg reinstall "$package_name" -y
                 else
                     pkg install "$package_name" -y
@@ -279,36 +327,13 @@ function package_install_and_check() {
 
         # Check installation success
         if [ $? -ne 0 ]; then
-            echo "${R}[${C}-${R}]${G}${BOLD} Error detected during installation of: ${C}$package_name ${W}"
-			print_log "Error detected during installation of: $package_name"
-            if [[ "$PACKAGE_MANAGER" == "pacman" ]]; then
-                pacman -Sy --overwrite '*' "$package_name"
-                pacman -Sy --noconfirm "$package_name"
-            else
-                apt --fix-broken install -y
-                dpkg --configure -a
-                pkg install "$package_name" -y
-            fi
+            log_error "Installation failed" "Package: $package_name" "Exit code: $?"
+        else
+            log_info "Installation successful" "Package: $package_name"
         fi
-
-        # Final verification
-		if [[ $package_name != *"*"* ]]; then
-        	if [[ "$PACKAGE_MANAGER" == "pacman" ]]; then
-        	    if pacman -Qi "$package_name" >/dev/null 2>&1; then
-        	        print_success "$package_name installed successfully"
-        	    else
-        	        print_failed "$package_name installation failed ${W}"
-        	    fi
-        	else
-        	    if dpkg -s "$package_name" >/dev/null 2>&1; then
-        	        print_success "$package_name installed successfully"
-        	    else
-        	        print_failed "$package_name installation failed ${W}"
-        	    fi
-        	fi
-		fi
     done
     echo ""
+    log_info "Package installation completed"
 	print_log "package list: $packs_list"
 }
 
@@ -846,7 +871,7 @@ function questions() {
 	echo
 	print_success "Continuing with answer: ${style_answer}.$style_name"
 	echo "style_answer=\"$style_answer\"" >> "$config_file"
-	echo "style_name=\'$style_name\'" >> "$config_file"
+	echo "style_name=\"$style_name\"" >> "$config_file"
 	sleep 0.2
 	banner
 	echo "${R}[${C}-${R}]${G}${BOLD} Select browser you want to install${W}"
@@ -1547,11 +1572,12 @@ function install_required_packages() {
 }
 
 function install_desktop() {
+    log_info "Starting desktop installation" "Desktop: $de_name"
+    
     banner
-
     if [[ "$desktop_answer" == "1" ]]; then
+        log_info "Installing XFCE4"
         echo "${R}[${C}-${R}]${G}${BOLD} Installing Xfce4 Desktop${W}"
-        echo
         package_install_and_check "xfce4 xfce4-goodies"
     elif [[ "$desktop_answer" == "2" ]]; then
         echo "${R}[${C}-${R}]${G}${BOLD} Installing Lxqt Desktop${W}"
@@ -1572,6 +1598,8 @@ function install_desktop() {
     # if [[ "$distro_add_answer" == "y" ]]; then
     #     package_install_and_check "xdg-utils"
     # fi
+
+    log_info "Desktop installation completed"
 }
 
 #########################################################################
@@ -1592,6 +1620,7 @@ function set_config_dir() {
 }
 
 function theme_installer() {
+    log_info "Starting theme installation" "Theme: $style_name"
     banner
     echo "${R}[${C}-${R}]${G}${BOLD} Configuring Theme: ${C}${style_name}${W}"
     echo
@@ -1651,6 +1680,12 @@ function theme_installer() {
         download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-files/${de_name}/look_${style_answer}/config.tar.gz" "$HOME"
     else
         download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-files/${de_name}/look_${style_answer}/config.tar.gz" "$HOME/.config/"
+    fi
+
+    if [ $? -ne 0 ]; then
+        log_error "Theme installation failed" "Theme: $style_name"
+    else
+        log_info "Theme installation completed successfully"
     fi
 }
 
@@ -2512,35 +2547,50 @@ function photo_editor_installer() {
 #########################################################################
 
 function install_termux_desktop_appstore() {
-	banner
-	echo "${R}[${C}-${R}]${C} Setting up AppStore...${W}"
-	echo
-	echo "${R}[${C}-${R}]${C} Keep in mind that the AppStore is still in the early development stage. Bugs are expected.${W}"
-	echo
-	sleep 1
+    banner
+    echo "${R}[${C}-${R}]${C} Setting up AppStore...${W}"
+    echo
+    echo "${R}[${C}-${R}]${C} Keep in mind that the AppStore is still in the early development stage. Bugs are expected.${W}"
+    echo
+    sleep 1
 
-	package_install_and_check "aria2 python python3 cloneit"
-	check_and_create_directory "${PREFIX}/opt/appstore"
-	cd ${PREFIX}/opt/appstore
-	cloneit https://github.com/sabamdarif/Termux-AppStore/tree/main/src
-	cd src
-	mv -f * ${PREFIX}/opt/appstore/
-	cd ..
-	check_and_delete "src"
-	check_and_create_directory "$HOME/.appstore"
-	check_and_create_directory "$HOME/.termux_appstore"
+    package_install_and_check "aria2 python python3 cloneit"
+    check_and_create_directory "${PREFIX}/opt/appstore"
+    cd ${PREFIX}/opt/appstore || return
+    cloneit https://github.com/sabamdarif/Termux-AppStore/tree/main/src
+    cd src || return
+    mv -f * ${PREFIX}/opt/appstore/
+    cd .. || return
+    check_and_delete "src"
+    check_and_create_directory "$HOME/.appstore"
+    check_and_create_directory "$HOME/.termux_appstore"
 
-	# Install Python dependencies with retry logic
-	echo "${R}[${C}-${R}]${C} Installing Python dependencies...${W}"
-	pip install -r requirements.txt || {
-	    print_failed "Initial pip install failed. Retrying..."
-	    sleep 0.3
-	    pip install -r requirements.txt
-	}
+    # Install Python dependencies only if not already installed
+    echo "${R}[${C}-${R}]${C} Checking Python dependencies...${W}"
+    while IFS= read -r module; do
+        if [[ -n "$module" && ! "$module" =~ ^[[:space:]]*# ]]; then  # Skip empty lines and comments
+            if ! pip show "${module%[>=<]*}" >/dev/null 2>&1; then
+                echo "${R}[${C}-${R}]${G} Installing ${module}...${W}"
+                pip install "$module" || {
+                    print_failed "Failed to install $module. Retrying..."
+                    sleep 0.3
+                    pip install "$module" || {
+                        print_failed "Failed to install $module after retry. Continuing..."
+                    }
+                }
+            else
+                echo "${R}[${C}-${R}]${G} ${module%[>=<]*} is already installed${W}"
+            fi
+        fi
+    done < requirements.txt
 
-	mv -f org.sabamdarif.termux.appstore.desktop "${PREFIX}/share/applications/"
-	chmod +x "${PREFIX}/opt/appstore/inbuild_functions/inbuild_functions"
-	cd "${HOME}"
+    # Move desktop file only if it doesn't exist
+    if [[ ! -f "${PREFIX}/share/applications/org.sabamdarif.termux.appstore.desktop" ]]; then
+        mv -f org.sabamdarif.termux.appstore.desktop "${PREFIX}/share/applications/"
+    fi
+
+    chmod +x "${PREFIX}/opt/appstore/inbuild_functions/inbuild_functions"
+    cd "${HOME}" || return
 }
 
 #########################################################################
@@ -3445,6 +3495,12 @@ function add_installer() {
 	fi
 }
 
+#########################################################################
+#
+# Update Task
+#
+#########################################################################
+
 # check for the changes in the installer file
 function check_for_update_and_update_installer() {
     if [[ -e "$PREFIX/bin/setup-termux-desktop" ]]; then
@@ -3453,6 +3509,7 @@ function check_for_update_and_update_installer() {
 
         check_and_create_directory "$termux_desktop_path"
         local current_script_hash
+		local update_installer
 		current_script_hash=$(curl -sL https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop | sha256sum | cut -d ' ' -f 1)
         local local_script_hash
 		local_script_hash=$(basename "$(sha256sum "$PREFIX/bin/setup-termux-desktop" | cut -d ' ' -f 1)")
@@ -3497,6 +3554,72 @@ function check_installer_status() {
             echo "${R}[${C}-${R}]${G}${BOLD} Update check skipped${W}"
             echo "${R}[${C}-${R}]${G}${BOLD} Use ${C}--update ${G}to force update check${W}"
         fi
+    fi
+}
+
+function check_for_appstore_update() {
+    if [[ ! -d "$PREFIX/opt/appstore" ]]; then
+        return
+    fi
+
+    echo "${R}[${C}-${R}]${G} Checking for appstore updates...${W}"
+    echo
+
+    local files_to_check=(
+        "gtk_app_store.py"
+        "inbuild_functions/inbuild_functions"
+        "requirements.txt" 
+        "style/style.css"
+    )
+    
+    local update_needed=false
+    local failed_hash_checks=()
+
+    # Check each file's hash against GitHub version
+    for file in "${files_to_check[@]}"; do
+        local github_hash
+        local local_hash
+        
+        # Get GitHub file hash
+        if [[ "$file" == "gtk_app_store.py" ]]; then
+            github_hash=$(curl -sL "https://raw.githubusercontent.com/sabamdarif/Termux-AppStore/main/src/${file}" | sha256sum | cut -d ' ' -f 1)
+        else
+            github_hash=$(curl -sL "https://raw.githubusercontent.com/sabamdarif/Termux-AppStore/main/src/${file}" | sha256sum | cut -d ' ' -f 1)
+        fi
+
+        # Get local file hash
+        if [[ -f "$PREFIX/opt/appstore/$file" ]]; then
+            local_hash=$(sha256sum "$PREFIX/opt/appstore/$file" | cut -d ' ' -f 1)
+        else
+            failed_hash_checks+=("$file")
+            update_needed=true
+            continue
+        fi
+
+        # Compare hashes
+        if [[ "$local_hash" != "$github_hash" ]]; then
+            update_needed=true
+            failed_hash_checks+=("$file")
+        fi
+    done
+
+    if [[ "$update_needed" == true ]]; then
+        echo "${R}[${C}-${R}]${Y} Updates found for the following files:${W}"
+        printf '%s\n' "${failed_hash_checks[@]}"
+        echo
+        
+        confirmation_y_or_n "Would you like to update the appstore to the latest version" update_appstore
+
+        if [[ "$update_appstore" == "y" ]]; then
+            echo "${R}[${C}-${R}]${G} Updating appstore...${W}"
+            check_and_delete "$PREFIX/opt/appstore"
+            install_termux_desktop_appstore
+            echo "${R}[${C}-${R}]${G} Appstore updated successfully${W}"
+        else
+            echo "${R}[${C}-${R}]${C} Skipping appstore update${W}"
+        fi
+    else
+        echo "${R}[${C}-${R}]${G}${BOLD} You are using the latest version${W}"
     fi
 }
 
@@ -3731,6 +3854,7 @@ case $1 in
         ;;
 	--update)
 	check_for_update_and_update_installer "$1"
+	check_for_appstore_update
 	;;
     --help|-h)
         show_help
