@@ -54,7 +54,7 @@
 
 ##### 3. Hardware Acceleration and Distro Container:
    - Learn more about [hardware acceleration](hw-acceleration.md).
-   - Check out [distro container usage](proot-caontainer.md).
+   - Check out [distro container usage](proot-container.md).
 
 ##### 4. Start Installation: 
 > Full Installation YouTube Video Guide:- [Here](https://youtu.be/SlR9f9hl5CQ?si=7O13ZAzdAnB_wwWw)
@@ -220,7 +220,7 @@ Options:
 Run Windows applications seamlessly. Learn more [here](https://github.com/sabamdarif/termux-desktop/blob/main/wine.md#wine_glasslearn-about-wine).
 
 ### Distro Containers:
-Install additional apps like LibreOffice. Details [here](proot-caontainer.md).
+Install additional apps like LibreOffice. Details [here](proot-container.md).
 
 ### Hardware Acceleration:
 Enhance performance with GPU acceleration. Learn more [here](hw-acceleration.md).
