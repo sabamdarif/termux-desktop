@@ -53,7 +53,6 @@ fi
 }
 
 zsh_setup() {
-	clear
 	echo "${Y}please wait ......"${W}
 	sleep 1.3
 	cd ~
@@ -113,7 +112,6 @@ EOF
 }
 
 print_success() {
-	clear
 	rm install-zsh.sh
 	echo -e "${G}ZSH SETUP SUCCESSFUL${W} ${C}Now Restart the Terminal${W}"
 	echo -e "${C}Or Log Out And Log Back In Again${W}"

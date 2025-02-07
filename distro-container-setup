@@ -211,10 +211,12 @@ function pd_package_install_and_check() {
 
 # Create Shell Setup Script
 function create_shell_script() {
-    local script_path
-    script_path="$1"
-    local shell_setup_content
-    shell_setup_content="$2"  
+    local script_path="$1"
+    local shell_setup_content="$2"
+
+    # Create directory if it doesn't exist
+    mkdir -p "$(dirname "$script_path")"
+
 cat << 'EOF' > "$script_path"
 #!/bin/bash
 
@@ -225,8 +227,17 @@ C="$(printf '\033[1;36m')"
 W="$(printf '\033[0m')"
 BOLD="$(printf '\033[1m')"
 EOF
-    typeset -f banner print_log print_success print_failed check_and_delete get_latest_release pd_package_install_and_check >> "$script_path"
+    typeset -f banner print_log print_success print_failed check_and_delete pd_package_install_and_check >> "$script_path"
     echo "$shell_setup_content" >> "$script_path"
+    
+    # Make script executable
+    chmod +x "$script_path"
+    
+    # Verify script was created
+    if [[ ! -f "$script_path" ]]; then
+        print_failed "Failed to create script at $script_path"
+        return 1
+    fi
 }
 
 function distro_basic_task() {
@@ -1296,25 +1307,32 @@ chmod +x "$PREFIX/bin/pdrun"
 #########################################################################
 
 function install_appimage_related_pack() {
+    local appimage_related_pack_list=""
+    
     if [[ "$selected_distro" == "ubuntu" ]] || [[ "$selected_distro" == "debian" ]]; then
-        appimage_related_pack_list "zlib1g zlib1g-dev fuse"
+        appimage_related_pack_list="zlib1g zlib1g-dev fuse"
     elif [[ "$selected_distro" == "fedora" ]]; then
-        appimage_related_pack_list "zlib-devel fuse"
+        appimage_related_pack_list="zlib-devel fuse"
     elif [[ "$selected_distro" == "archlinux" ]]; then
-        appimage_related_pack_list "zlib fuse2"
+        appimage_related_pack_list="zlib fuse2"
     elif [[ "$selected_distro" == "alpine" ]]; then
-        appimage_related_pack_list "zlib-dev fuse"
+        appimage_related_pack_list="zlib-dev fuse"
     fi
 
-banner
-echo "${R}[${C}-${R}]${G} Installing AppImage related packages${W}"
-pd_setup_appimage_related_pack=$(cat <<EOF
-pd_package_install_and_check --root "${appimage_related_pack_list}"
+    if [[ -z "$appimage_related_pack_list" ]]; then
+        print_failed "No packages defined for $selected_distro"
+        return 1
+    fi
+
+    banner
+    echo "${R}[${C}-${R}]${G} Installing AppImage related packages${W}"
+    pd_setup_appimage_related_pack=$(cat <<EOF
+pd_package_install_and_check --root "$appimage_related_pack_list"
 rm appimage_related_pack.sh > /dev/null 2>&1
 EOF
 )
-create_shell_script "$distro_path/root/appimage_related_pack.sh" "$pd_setup_appimage_related_pack"
-proot-distro login "$selected_distro" -- /bin/bash -c 'bash appimage_related_pack.sh'
+    create_shell_script "$distro_path/root/appimage_related_pack.sh" "$pd_setup_appimage_related_pack"
+    proot-distro login "$selected_distro" -- /bin/bash -c 'bash appimage_related_pack.sh'
 }
 
 #########################################################################

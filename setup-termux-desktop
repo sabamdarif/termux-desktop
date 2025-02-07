@@ -14,9 +14,9 @@ W="$(printf '\033[0m')"
 BOLD="$(printf '\033[1m')"
 
 cd "$HOME" || exit
-termux_desktop_path="$PREFIX/etc/termux-desktop"
+termux_desktop_path="/data/data/com.termux/files/usr/etc/termux-desktop"
 config_file="$termux_desktop_path/configuration.conf"
-log_file="$HOME/termux-desktop.log"
+log_file="/data/data/com.termux/files/home/termux-desktop.log"
 
 # create log
 function debug() {
@@ -51,77 +51,34 @@ function check_termux() {
 
 function print_log() {
     local timestamp="$(date '+%Y-%m-%d %H:%M:%S')"
-    local log_level="${2:-INFO}"  # Default log level is INFO
-    local call_stack=""
-    local line_number="${BASH_LINENO[0]}"
+    local log_level="${2:-INFO}"  # Default log level is INFO if not specified
+    local message="$1"
     
-    # Build call stack
-    for ((i = 1; i < ${#FUNCNAME[@]}; i++)); do
-        if [[ -n "${FUNCNAME[$i]}" ]]; then
-            call_stack+="${FUNCNAME[$i]}:${BASH_LINENO[$i-1]} -> "
-        fi
-    done
-    call_stack="${call_stack::-4}"  # Remove trailing " -> "
-
-    # Format the log entry
-    {
-        echo "========== $timestamp =========="
-        echo "Level: $log_level"
-        echo "Function: ${FUNCNAME[1]:-main}"
-        echo "Line: $line_number"
-        echo "Call Stack: ${call_stack:-main}"
-        
-        # Log arguments
-        echo "Details:"
-        if [[ $# -gt 1 ]]; then
-            # Skip the log level if it was provided
-            shift
-            for arg in "$@"; do
-                echo "  $arg"
-            done
-        else
-            echo "  $1"
-        fi
-        
-        # Add command exit status if available
-        if [[ -n "$PIPESTATUS" ]]; then
-            echo "Last Command Status: ${PIPESTATUS[@]}"
-        fi
-        
-        echo "========================================"
-        echo
-    } >> "$log_file"
+    echo "[${timestamp}] ${log_level}: ${message}" >> "$log_file"
 }
 
-# Helper functions for different log levels
 function log_info() {
     local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
-    echo "========================================" >> "$log_file"
-    echo "Time: $timestamp" >> "$log_file"
-    echo "Type: Info" >> "$log_file"
-    echo "Message: $1" >> "$log_file"
-    echo "Status: $?" >> "$log_file"
-    echo "========================================" >> "$log_file"
-    echo >> "$log_file"
+    local message="$1"
+    echo "[${timestamp}] INFO: ${message}" >> "$log_file"
 }
 
 function log_warn() {
-    print_log "$1" "WARNING" "${@:2}"
+    local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
+    local message="$1"
+    echo "[${timestamp}] WARN: ${message}" >> "$log_file"
 }
 
 function log_error() {
-    print_log "$1" "ERROR" "${@:2}"
+    local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
+    local message="$1"
+    echo "[${timestamp}] ERROR: ${message}" >> "$log_file"
 }
 
 function log_debug() {
     local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
-    echo "========================================" >> "$log_file"
-    echo "Time: $timestamp" >> "$log_file"
-    echo "Type: Debug" >> "$log_file"
-    echo "Message: $1" >> "$log_file"
-    echo "Status: $?" >> "$log_file"
-    echo "========================================" >> "$log_file"
-    echo >> "$log_file"
+    local message="$1"
+    echo "[${timestamp}] DEBUG: ${message}" >> "$log_file"
 }
 
 function print_success() {
@@ -274,30 +231,40 @@ function detact_package_manager() {
 
 # will check if the package is already installed or not, if it installed then it will reinstall it and at the end it will print success/failed message
 function package_install_and_check() {
-    log_info "Starting package installation" "Packages: $*"
+    print_log "Starting package installation for: $*" "INFO"
     
     packs_list=($@)
     for package_name in "${packs_list[@]}"; do
-        log_debug "Processing package" "Package: $package_name"
+        print_log "Processing package: $package_name" "DEBUG"
         
         echo "${R}[${C}-${R}]${G}${BOLD} Processing package: ${C}$package_name ${W}"
 
         if [[ "$PACKAGE_MANAGER" == "pacman" ]]; then
             if pacman -Qi "$package_name" >/dev/null 2>&1; then
-                log_info "Package already installed" "Package: $package_name"
+                print_log "Package already installed: $package_name" "INFO"
                 continue
             fi
             
             if [[ $package_name == *"*"* ]]; then
-                log_debug "Processing wildcard pattern" "Pattern: $package_name"
+                print_log "Processing wildcard pattern: $package_name" "DEBUG"
                 echo "${R}[${C}-${R}]${C} Processing wildcard pattern: $package_name ${W}"
                 packages=$(pacman -Ssq "${package_name%*}" 2>/dev/null)
                 for pkgs in $packages; do
                     echo "${R}[${C}-${R}]${G}${BOLD} Installing matched package: ${C}$pkgs ${W}"
                     pacman -Sy --noconfirm --overwrite '*' "$pkgs"
+                    if [ $? -eq 0 ]; then
+                        print_log "Successfully installed package: $pkgs" "INFO"
+                    else
+                        print_log "Failed to install package: $pkgs" "ERROR"
+                    fi
                 done
             else
                 pacman -Sy --noconfirm --overwrite '*' "$package_name"
+                if [ $? -eq 0 ]; then
+                    print_log "Successfully installed package: $package_name" "INFO"
+                else
+                    print_log "Failed to install package: $package_name" "ERROR"
+                fi
             fi
         else
             if [[ $package_name == *"*"* ]]; then
@@ -332,9 +299,8 @@ function package_install_and_check() {
             log_info "Installation successful" "Package: $package_name"
         fi
     done
-    echo ""
-    log_info "Package installation completed"
-	print_log "package list: $packs_list"
+    
+    print_log "Package installation completed for: ${packs_list[*]}" "INFO"
 }
 
 # will check the package is installed or not then remove it
@@ -956,7 +922,7 @@ function questions_setup_manual() {
 	echo
 	print_success "Continuing with answer: ${style_answer}.$style_name"
 	echo "style_answer=\"$style_answer\"" >> "$config_file"
-	printf 'style_name="%s"\n' "${style_name}" >> "$config_file"
+	printf 'style_name="%s"\n' "'${style_name}'" >> "$config_file"
 	sleep 0.2
 	banner
 	echo "${R}[${C}-${R}]${G}${BOLD} Select browser you want to install${W}"
@@ -1550,13 +1516,14 @@ function ask_to_chose_de() {
 
 	check_and_delete "${current_path}/styles.md"
 	
-	printf 'style_name="%s"\n' "${style_name}" >> "$config_file"
+	printf 'style_name="%s"\n' "'${style_name}'" >> "$config_file"
 
 }
 
 function setup_device_gpu_model() {
 	if [[ "$gpu_name" == "unknown" ]]; then
 		while true; do
+		banner
     	echo -e "${R}[${C}-${R}]${G} Unable to auto detect GPU\n ${W}"
     	echo "${R}[${C}-${R}]${G}${BOLD} Please Select Your Device GPU${W}"
     	echo
@@ -1766,7 +1733,7 @@ function questions_install_type() {
 		echo
 		echo "${G}Desktop Environment${W}"
 		echo "   • Desktop: $(echo "$de_name" | tr '[:lower:]' '[:upper:]')"
-		echo "   • Desktop Style: ${style_answer}.${style_name}"
+		echo "   • Desktop Style: ${style_answer}) ${style_name}"
 		echo "   • GUI Access: Termux:X11"
 		echo "   • Auto-start: No"
 		sleep 0.015
@@ -1809,7 +1776,7 @@ function questions_install_type() {
 			echo "   • Vulkan Driver: Not available"
 			echo "   • OpenGL Driver: VIRGL"
 		fi
-		echo "   • Shell: Bash (Zsh not installed)"
+		echo "   • Shell: Zsh"
 		echo "   • Terminal Utilities: Not installed"
 		sleep 0.015
 		# Re-enable keyboard interruptions
@@ -1918,13 +1885,14 @@ function questions_install_type() {
 		banner
 		echo "${R}[${C}-${R}]${G} Installation Configuration Summary${W}"
 		echo
-		echo "${B}Desktop Environment${W}"
+		echo "${G}Desktop Environment${W}"
 		echo "   • Desktop: $(echo "$de_name" | tr '[:lower:]' '[:upper:]')"
+		echo "   • Desktop Style: ${style_answer}) ${style_name}"
 		echo "   • GUI Access: Termux:X11"
 		echo "   • Auto-start: No"
 		sleep 0.015
 
-		echo "${B}Applications${W}"
+		echo "${G}Applications${W}"
 		echo "   • Browser: Firefox & Chromium"
 		echo "   • Media Player: VLC"
 		echo "   • Image Editor: GIMP"
@@ -1932,23 +1900,23 @@ function questions_install_type() {
 		echo "   • WINE: Not installed"
 		sleep 0.015
 
-		echo "${B}Customization${W}"
+		echo "${G}Customization${W}"
 		echo "   • Extra Wallpapers: No"
 		echo "   • File Manager Tools: Yes"
 		sleep 0.015
 
-		echo "${B}Terminal Setup${W}"
+		echo "${G}Terminal Setup${W}"
 		echo "   • Shell: Zsh"
 		echo "   • Terminal Utilities: Yes"
 		sleep 0.015
 
-		echo "${B}Hardware Acceleration${W}"
+		echo "${G}Hardware Acceleration${W}"
 		echo "   • Status: Disabled"
 		echo "   • Vulkan Support: No"
 		echo "   • OpenGL Support: No"
 		sleep 0.015
 
-		echo "${B}Linux Container${W}"
+		echo "${G}Linux Container${W}"
 		echo "   • Distribution: Debian"
 		echo "   • Audio Support: Yes"
 		echo "   • Distro Username: $user_name"
@@ -1957,7 +1925,7 @@ function questions_install_type() {
 		echo "   • Hardware Acceleration: Disabled"
 		echo "   • Vulkan Support: No"
 		echo "   • OpenGL Support: No"
-		echo "   • Shell: Bash (Zsh not installed)"
+		echo "   • Shell: Zsh"
 		echo "   • Terminal Utilities: Not installed"
 		sleep 0.015
 		# Re-enable keyboard interruptions
@@ -3420,8 +3388,10 @@ function setup_zsh() {
 	package_install_and_check "zsh git"
 	wget --tries=5 --retry-connrefused https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/other/install-zsh.sh
 	if [[ "$distro_add_answer" == "y" ]]; then
+	banner
 	bash install-zsh.sh -u "$user_name"
 	else
+	banner
 	bash install-zsh.sh
 	fi
 	check_and_delete "install-zsh.sh"
@@ -3745,9 +3715,9 @@ W="$(printf '\033[0m')"
 BOLD="$(printf '\033[1m')"
 
 cd "$HOME" || exit
-termux_desktop_path="$PREFIX/etc/termux-desktop"
+termux_desktop_path="/data/data/com.termux/files/usr/etc/termux-desktop"
 config_file="$termux_desktop_path/configuration.conf"
-log_file="$HOME/termux-desktop.log"
+log_file="/data/data/com.termux/files/home/termux-desktop.log"
 EOF
 typeset -f check_termux print_log print_success print_failed wait_for_keypress check_and_create_directory check_and_delete check_and_backup download_file check_and_restore detact_package_manager package_install_and_check package_check_and_remove get_file_name_number extract_zip_with_progress extract_archive download_and_extract count_subfolders confirmation_y_or_n get_latest_release install_font_for_style select_an_option preprocess_conf read_conf >> "$PREFIX/etc/termux-desktop/common_functions"
 chmod +x "$PREFIX/etc/termux-desktop/common_functions"
