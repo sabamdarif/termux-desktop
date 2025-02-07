@@ -229,7 +229,7 @@ Enhance performance with GPU acceleration. Learn more [here](hw-acceleration.md)
 
 ## Associated Repos:
 - [Termux-AppStore](https://github.com/sabamdarif/Termux-AppStore)
-- [nautilus-scripts](https://github.com/sabamdarif/nautilus-scripts/tree/test)
+- [sabamdarif/nautilus-scripts](https://github.com/sabamdarif/nautilus-scripts/tree/test)
 
 ___
 

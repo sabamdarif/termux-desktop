@@ -538,11 +538,9 @@ cat <<EOF >> "$save_path/.${pd_shell_name}rc"
 export DISPLAY=:$display_number
 
 case \$1 in
-    tx11start|tx11stop|vncstart|vncstop)
-        case \$2 in
-            --help|-h|--nogpu|-f) ;;
-        esac
-	echo "please run it from termux, not inside proot distro."
+    tx11start|tx11stop|vncstart|vncstop|pdrun)
+        echo "${R}Error: These commands can only be run from Termux, not inside proot distro.${W}"
+        exit 1
     ;;
 esac
 EOF

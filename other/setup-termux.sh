@@ -190,16 +190,35 @@ INSTALL_DIR=""
 
 _step_install_dependencies() {
     echo "${R}[${G}-${R}]${G} Installing the dependencies...${W}"
-    _package_install_and_check "zenity xclip bzip2 gzip tar unzip zip xorriso optipng ghostscript qpdf perl rhash pandoc p7zip imagemagick xz-utils poppler ffmpeg rdfind exiftool"
+    
+    # Core utilities
+    _package_install_and_check "zenity xclip"
+    
+    # Archive handling
+    _package_install_and_check "bzip2 gzip tar unzip zip xorriso"
+    
+    # Image processing
+    _package_install_and_check "optipng imagemagick"
+    
+    # Document processing
+    _package_install_and_check "ghostscript qpdf poppler"
+    
+    # Multimedia
+    _package_install_and_check "ffmpeg"
+    
+    # File utilities
+    _package_install_and_check "rdfind exiftool"
+    
+    # Other utilities
+    _package_install_and_check "perl rhash pandoc p7zip xz-utils"
 
-    # Fix permissions in ImageMagick to write PDF files.
+    # Fix ImageMagick PDF permissions
     local imagemagick_config="/data/data/com.termux/files/usr/etc/ImageMagick-7/policy.xml"
     if [[ -f "$imagemagick_config" ]]; then
         echo "${R}[${G}-${R}]${G} Fixing write permission with PDF in ImageMagick...${W}"
         sed -i 's/rights="none" pattern="PDF"/rights="read|write" pattern="PDF"/g' "$imagemagick_config"
         sed -i 's/".GiB"/"8GiB"/g' "$imagemagick_config"
     fi
-
 }
 
 _setup_file_manager() {
@@ -271,6 +290,8 @@ _step_install_shortcuts_gnome2() {
         done < <(find -L "$INSTALL_DIR" -mindepth 2 -type f ! -path "*.git*" ! -path "*.assets*" -print0 2>/dev/null | sort --zero-terminated)
 
     } >"$accels_file"
+
+    echo "${R}[${G}✓${R}]${G} Keyboard shortcuts installed successfully${W}"
 }
 
 _step_install_shortcuts_thunar() {
@@ -330,7 +351,8 @@ _step_install_menus_pcmanfm() {
 
     local desktop_menus_dir="$HOME/.local/share/file-manager/actions"
     _check_and_create_directory "$desktop_menus_dir"
-    mkdir --parents "$desktop_menus_dir"
+    _check_and_backup "$desktop_menus_dir"/*.desktop
+    _check_and_delete "$desktop_menus_dir"/*.desktop
 
     # Create the 'Scripts.desktop' menu.
     {
@@ -400,12 +422,6 @@ _step_install_menus_pcmanfm() {
             # shellcheck disable=SC2001
             par_select_mime=$(sed "s|/;|/*;|g" <<<"$par_select_mime")
 
-            # Set the min/max files requirements.
-            local par_min_items=""
-            local par_max_items=""
-            par_min_items=$(_get_script_parameter_value "$filename" "par_min_items")
-            par_max_items=$(_get_script_parameter_value "$filename" "par_max_items")
-
             local desktop_filename=""
             desktop_filename="${desktop_menus_dir}/${name}.desktop"
             {
@@ -420,138 +436,85 @@ _step_install_menus_pcmanfm() {
             } >"$desktop_filename"
             chmod +x "$desktop_filename"
         done < <(find -L "$INSTALL_DIR" -mindepth 2 -type f ! -path "*.git*" ! -path "*.assets*" -print0 2>/dev/null | sort --zero-terminated)
+
+    echo "${R}[${G}✓${R}]${G} PCManFM-Qt menus installed successfully${W}"
 }
 
 _step_install_menus_thunar() {
     echo "${R}[${G}-${R}]${G} Installing Thunar actions...${W}"
 
     local menus_file="$HOME/.config/Thunar/uca.xml"
-
-    # Create a backup of older custom actions.
+    local accels_file="$HOME/.config/Thunar/accels.scm"
+    
+    # Create directories if they don't exist
+    mkdir -p "$(dirname "$menus_file")"
+    
+    # Backup existing files
     _check_and_backup "$menus_file"
-    _check_and_delete "$menus_file"
+    _check_and_backup "$accels_file"
+    
+    # First create the menu actions
+    echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" > "$menus_file"
+    echo "<actions>" >> "$menus_file"
 
-    _check_and_create_directory "$HOME/.config/Thunar"
-
-    {
-        printf "%s\n" "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
-        printf "%s\n" "<actions>"
-        printf "%s\n" "<action>"
-        printf "\t%s\n" "<icon>utilities-terminal</icon>"
-        printf "\t%s\n" "<name>Open Terminal Here</name>"
-        printf "\t%s\n" "<submenu></submenu>"
-        printf "\t%s\n" "<unique-id>1-1</unique-id>"
-        printf "\t%s\n" "<command>exo-open --working-directory %f --launch TerminalEmulator</command>"
-        printf "\t%s\n" "<description>Open terminal in containing directory</description>"
-        printf "\t%s\n" "<range></range>"
-        printf "\t%s\n" "<patterns>*</patterns>"
-        printf "\t%s\n" "<startup-notify/>"
-        printf "\t%s\n" "<directories/>"
-        printf "%s\n" "</action>"
-        printf "%s\n" "<action>"
-        printf "\t%s\n" "<icon>edit-find</icon>"
-        printf "\t%s\n" "<name>Find in this folder</name>"
-        printf "\t%s\n" "<submenu></submenu>"
-        printf "\t%s\n" "<unique-id>3-3</unique-id>"
-        printf "\t%s\n" "<command>catfish --path=%f</command>"
-        printf "\t%s\n" "<description>Search for files within this folder</description>"
-        printf "\t%s\n" "<range></range>"
-        printf "\t%s\n" "<patterns>*</patterns>"
-        printf "\t%s\n" "<directories/>"
-        printf "%s\n" "</action>"
-        printf "%s\n" "<action>"
-        printf "\t%s\n" "<icon>document-print</icon>"
-        printf "\t%s\n" "<name>Print file(s)</name>"
-        printf "\t%s\n" "<submenu></submenu>"
-        printf "\t%s\n" "<unique-id>4-4</unique-id>"
-        printf "\t%s\n" "<command>thunar-print %F</command>"
-        printf "\t%s\n" "<description>Send one or multiple files to the default printer</description>"
-        printf "\t%s\n" "<range></range>"
-        printf "\t%s\n" "<patterns>*.asc;*.brf;*.css;*.doc;*.docm;*.docx;*.dotm;*.dotx;*.fodg;*.fodp;*.fods;*.fodt;*.gif;*.htm;*.html;*.jpe;*.jpeg;*.jpg;*.odb;*.odf;*.odg;*.odm;*.odp;*.ods;*.odt;*.otg;*.oth;*.otp;*.ots;*.ott;*.pbm;*.pdf;*.pgm;*.png;*.pnm;*.pot;*.potm;*.potx;*.ppm;*.ppt;*.pptm;*.pptx;*.rtf;*.shtml;*.srt;*.text;*.tif;*.tiff;*.txt;*.xbm;*.xls;*.xlsb;*.xlsm;*.xlsx;*.xltm;*.xltx;*.xpm;*.xwd</patterns>"
-        printf "\t%s\n" "<image-files/>"
-        printf "\t%s\n" "<other-files/>"
-        printf "\t%s\n" "<text-files/>"
-        printf "%s\n" "</action>"
-
-        local filename=""
-        local name=""
-        local submenu=""
+    # Process each script file for menu actions
+    while IFS= read -r -d '' script_file; do
+        local menu_name=""
+        local menu_path=""
         local unique_id=""
-        while IFS="" read -r -d "" filename; do
-                name=$(basename -- "$filename")
-                submenu=$(dirname -- "$filename" | sed "s|.*scripts/|Scripts/|g")
+        
+        menu_name=$(basename -- "$script_file")
+        menu_path=$(dirname -- "$script_file" | sed "s|$INSTALL_DIR/||" | sed 's|/|/|g')
+        menu_path="Scripts/$menu_path"
+        unique_id=$(echo -n "$menu_path$menu_name" | md5sum | sed "s|[^0-9]*||g" | cut -c 1-8)
 
-                printf "%s\n" "<action>"
-                printf "\t%s\n" "<icon></icon>"
-                printf "\t%s\n" "<name>$name</name>"
-                printf "\t%s\n" "<submenu>$submenu</submenu>"
+        # Add to uca.xml
+        {
+            echo "<action>"
+            echo "    <icon></icon>"
+            echo "    <name>$menu_name</name>"
+            echo "    <submenu>$menu_path</submenu>"
+            echo "    <unique-id>$unique_id</unique-id>"
+            echo "    <command>bash &quot;$script_file&quot; %F</command>"
+            echo "    <description></description>"
+            echo "    <range></range>"
+            echo "    <patterns>*</patterns>"
+            echo "    <directories/>"
+            echo "    <audio-files/>"
+            echo "    <image-files/>"
+            echo "    <text-files/>"
+            echo "    <video-files/>"
+            echo "    <other-files/>"
+            echo "</action>"
+        } >> "$menus_file"
 
-                # Generate a unique id.
-                unique_id=$(md5sum <<<"$submenu$name" 2>/dev/null | sed "s|[^0-9]*||g" | cut -c 1-8)
-                printf "\t%s\n" "<unique-id>$unique_id</unique-id>"
+    done < <(find -L "$INSTALL_DIR" -mindepth 2 -type f ! -path "*.git*" ! -path "*.assets*" -print0 2>/dev/null | sort --zero-terminated)
 
-                printf "\t%s\n" "<command>bash &quot;$filename&quot; %F</command>"
-                printf "\t%s\n" "<description></description>"
+    echo "</actions>" >> "$menus_file"
 
-                # Set the min/max files requirements.
-                local par_min_items=""
-                local par_max_items=""
-                par_min_items=$(_get_script_parameter_value "$filename" "par_min_items")
-                par_max_items=$(_get_script_parameter_value "$filename" "par_max_items")
-                if [[ -n "$par_min_items" ]] && [[ -n "$par_max_items" ]]; then
-                    printf "\t%s\n" "<range>$par_min_items-$par_max_items</range>"
-                else
-                    printf "\t%s\n" "<range></range>"
-                fi
+    # Then set up the keyboard shortcuts
+    _step_install_shortcuts_thunar "$accels_file"
 
-                printf "\t%s\n" "<patterns>*</patterns>"
-
-                # Set the type requirements.
-                local par_recursive=""
-                local par_type=""
-                par_recursive=$(_get_script_parameter_value "$filename" "par_recursive")
-                par_type=$(_get_script_parameter_value "$filename" "par_type")
-                if [[ "$par_type" == "all" ]] || [[ "$par_type" == "directory" ]] || [[ "$par_recursive" == "true" ]]; then
-                    printf "\t%s\n" "<directories/>"
-                fi
-
-                # Set the type requirements.
-                local par_select_mime=""
-                par_select_mime=$(_get_script_parameter_value "$filename" "par_select_mime")
-
-                if [[ -n "$par_select_mime" ]]; then
-                    if [[ "$par_select_mime" == *"audio"* ]]; then
-                        printf "\t%s\n" "<audio-files/>"
-                    fi
-                    if [[ "$par_select_mime" == *"image"* ]]; then
-                        printf "\t%s\n" "<image-files/>"
-                    fi
-                    if [[ "$par_select_mime" == *"text"* ]]; then
-                        printf "\t%s\n" "<text-files/>"
-                    fi
-                    if [[ "$par_select_mime" == *"video"* ]]; then
-                        printf "\t%s\n" "<video-files/>"
-                    fi
-                else
-                    printf "\t%s\n" "<audio-files/>"
-                    printf "\t%s\n" "<image-files/>"
-                    printf "\t%s\n" "<text-files/>"
-                    printf "\t%s\n" "<video-files/>"
-                fi
-                printf "\t%s\n" "<other-files/>"
-                printf "%s\n" "</action>"
-            done < <(find -L "$INSTALL_DIR" -mindepth 2 -type f ! -path "*.git*" ! -path "*.assets*" -print0 2>/dev/null | sort --zero-terminated)
-
-        printf "%s\n" "<actions>"
-    } >"$menus_file"
+    # Set proper permissions
+    chmod 644 "$menus_file" "$accels_file"
 }
 
 _step_install_menus() {
     # Install menus for specific file managers.
+    echo "${R}[${G}-${R}]${G} Installing file manager menus...${W}"
 
     case "$FILE_MANAGER" in
-    "pcmanfm-qt") _step_install_menus_pcmanfm ;;
-    "thunar") _step_install_menus_thunar ;;
+    "pcmanfm-qt") 
+        _step_install_menus_pcmanfm 
+        ;;
+    "thunar") 
+        # First create menus, then shortcuts
+        _step_install_menus_thunar
+        _step_install_shortcuts_thunar "$HOME/.config/Thunar/accels.scm"
+        ;;
+    "caja")
+        _step_install_shortcuts_gnome2 "$HOME/.config/caja/accels"
+        ;;
     esac
 }
 
@@ -617,13 +580,40 @@ _check_files_copied_successfully() {
     fi
 }
 
+main() {
+    echo "${R}[${G}*${R}]${G} Starting installation...${W}"
+    
+    # First check and setup file manager
+    _setup_file_manager || {
+        _print_failed "Failed to setup file manager"
+        exit 1
+    }
+
+    # Then install scripts to $INSTALL_DIR
+    _step_install_scripts || {
+        _print_failed "Failed to install scripts"
+        exit 1
+    }
+
+    # After scripts are copied, install menus and shortcuts
+    _step_install_menus || {
+        _print_failed "Failed to install menus"
+        exit 1
+    }
+
+    # Finally restart the file manager
+    _step_close_filemanager || {
+        _print_failed "Failed to restart file manager"
+        exit 1
+    }
+
+    _check_files_copied_successfully
+
+    _print_success "Installation completed successfully!"
+    echo "${R}[${G}*${R}]${G} Please restart your file manager to see the changes${W}"
+}
 
 _check_termux
 _detact_package_manager
 _step_install_dependencies
-_setup_file_manager
-_step_install_menus
-_step_install_shortcuts
-_step_install_scripts
-_step_close_filemanager
-_check_files_copied_successfully
+main

@@ -1063,7 +1063,7 @@ ${B}Key Features:${W}
 ${B}How to Access:${W}
 Access these features through the 'Scripts' menu in your file manager's right-click context menu.
 ${W}"
-	confirmation_y_or_n "Do you want to Configuring File Manager Tools (Testing)" fm_tools
+	confirmation_y_or_n "Do you want to Configuring File Manager Tools" fm_tools
 	fi
 	banner
 	echo "${R}[${C}-${R}]${G}${BOLD} Select Gui Mode${W}"
@@ -1380,7 +1380,7 @@ function distro_questions() {
 
 	if [[ "$distro_add_answer" == "y" ]] && [[ "$zsh_answer" == "y" ]]; then
 	banner
-	confirmation_y_or_n "Do you want to Configuring Zsh also for Linux distro container ${C}(take longer time to login into distro)" distro_zsh_answer
+	confirmation_y_or_n "Do you want to Configuring Zsh also for Linux distro container" distro_zsh_answer
 	else
 	distro_zsh_answer="$zsh_answer"
 	fi
@@ -1568,8 +1568,7 @@ function setup_device_gpu_model() {
     	echo
     	echo "${Y}4. Others (Unstable)${W}"
     	echo
-
-    	read -p "Enter your choice (1-4): " device_gpu_model
+    	read -p "${Y}Enter your choice (1-4): ${W}" device_gpu_model
 
     		if [[ "$device_gpu_model" =~ ^[1-4]$ ]]; then
     		    print_success "Continuing with answer: $device_gpu_model"
@@ -1627,8 +1626,8 @@ function questions_install_type() {
     
     echo "${R}[${Y}!${R}]${G} Important Note: ${W}"
     echo "While 'Generic with Hardware Acceleration' works well on most modern devices,"
-    echo "it may not be compatible with all hardware. If you're familiar with GPU drivers"
-    echo "and system configurations, then please use the custom option."
+    echo -e "it may not be compatible with all hardware. If you're familiar with GPU drivers and system configurations stuff\n"
+    echo "Then please use the custom option."
     echo
     
     # Show selection options
@@ -1651,7 +1650,7 @@ function questions_install_type() {
 		ask_to_chose_de
 		setup_device_gpu_model
 		# browser selection
-		browser_answer=1
+		browser_answer=3
 		echo "browser_answer=\"$browser_answer\"" >> "$config_file"
 		# ide selection
 		ide_answer=4
@@ -1689,8 +1688,8 @@ function questions_install_type() {
 		echo "de_on_startup=\"$de_on_startup\"" >> "$config_file"
 		# Linux container
 		distro_add_answer=y
-		distro_answer=2
-		selected_distro="ubuntu"
+		distro_answer=1
+		selected_distro="debian"
 		echo "distro_add_answer=\"$distro_add_answer\"" >> "$config_file"
 		echo "distro_answer=\"$distro_answer\"" >> "$config_file"
 		echo "selected_distro=\"$selected_distro\"" >> "$config_file"
@@ -1721,7 +1720,7 @@ function questions_install_type() {
 		pd_audio_config_answer=y
 		echo "pd_audio_config_answer=\"$pd_audio_config_answer\"" >> "$config_file"
 		# Linux distro container zsh setup
-		distro_zsh_answer=n
+		distro_zsh_answer=y
 		echo "distro_zsh_answer=\"$distro_zsh_answer\"" >> "$config_file"
 		# Linux distro container terminal utility setup
 		distro_terminal_utility_setup_answer=n
@@ -1773,7 +1772,7 @@ function questions_install_type() {
 		sleep 0.015
 
 		echo "${G}Applications${W}"
-		echo "   • Browser: Firefox"
+		echo "   • Browser: Firefox & Chromium"
 		echo "   • Media Player: VLC"
 		echo "   • Image Editor: GIMP"
 		echo "   • IDE: Not installed"
@@ -1782,7 +1781,7 @@ function questions_install_type() {
 
 		echo "${G}Customization${W}"
 		echo "   • Extra Wallpapers: No"
-		echo "   • File Manager Tools: Yes (Installer have some bug right now)"
+		echo "   • File Manager Tools: Yes"
 		sleep 0.015
 
 		echo "${G}Terminal Setup${W}"
@@ -1798,7 +1797,7 @@ function questions_install_type() {
 		sleep 0.015
 
 		echo "${G}Linux Distro Container${W}"
-		echo "   • Distribution: Ubuntu"
+		echo "   • Distribution: Debian"
 		echo "   • Distro Username: $user_name"
 		echo "   • Distro Default Pass: root"
 		echo "   • Audio Support: Yes"
@@ -1823,7 +1822,7 @@ function questions_install_type() {
 ######################################################################
 		ask_to_chose_de
 		# browser selection
-		browser_answer=1
+		browser_answer=3
 		echo "browser_answer=\"$browser_answer\"" >> "$config_file"
 		# ide selection
 		ide_answer=4
@@ -1861,8 +1860,8 @@ function questions_install_type() {
 		echo "de_on_startup=\"$de_on_startup\"" >> "$config_file"
 		# Linux container
 		distro_add_answer=y
-		distro_answer=2
-		selected_distro="ubuntu"
+		distro_answer=1
+		selected_distro="debian"
 		echo "distro_add_answer=\"$distro_add_answer\"" >> "$config_file"
 		echo "distro_answer=\"$distro_answer\"" >> "$config_file"
 		echo "selected_distro=\"$selected_distro\"" >> "$config_file"
@@ -1873,7 +1872,7 @@ function questions_install_type() {
 		pd_audio_config_answer=y
 		echo "pd_audio_config_answer=\"$pd_audio_config_answer\"" >> "$config_file"
 		# Linux distro container zsh setup
-		distro_zsh_answer=n
+		distro_zsh_answer=y
 		echo "distro_zsh_answer=\"$distro_zsh_answer\"" >> "$config_file"
 		# Linux distro container terminal utility setup
 		distro_terminal_utility_setup_answer=n
@@ -1926,7 +1925,7 @@ function questions_install_type() {
 		sleep 0.015
 
 		echo "${B}Applications${W}"
-		echo "   • Browser: Firefox"
+		echo "   • Browser: Firefox & Chromium"
 		echo "   • Media Player: VLC"
 		echo "   • Image Editor: GIMP"
 		echo "   • IDE: Not installed"
@@ -1935,7 +1934,7 @@ function questions_install_type() {
 
 		echo "${B}Customization${W}"
 		echo "   • Extra Wallpapers: No"
-		echo "   • File Manager Tools: Yes (Installer have some bug right now)"
+		echo "   • File Manager Tools: Yes"
 		sleep 0.015
 
 		echo "${B}Terminal Setup${W}"
@@ -1950,7 +1949,7 @@ function questions_install_type() {
 		sleep 0.015
 
 		echo "${B}Linux Container${W}"
-		echo "   • Distribution: Ubuntu"
+		echo "   • Distribution: Debian"
 		echo "   • Audio Support: Yes"
 		echo "   • Distro Username: $user_name"
 		echo "   • Default Password: root"
@@ -3579,7 +3578,6 @@ function install_fm_tools() {
         cd nautilus-scripts
         
         # Download required files
-        wget --tries=5 --retry-connrefused https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/other/setup-termux.sh
         if ! wget --tries=5 --retry-connrefused https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patches/fix-nautilus-scripts.patch; then
             print_failed "Failed to download the patch file"
         fi
@@ -3589,24 +3587,9 @@ function install_fm_tools() {
         rm -rf 'Security and recovery'
         find . -type f -name "*.orig" -exec rm -f {} \;
         find . -type f -name "*.rej" -exec rm -f {} \;
-		echo "${R}[${C}-${R}]${G}${BOLD} Starting Termux:x11 to install File Manager Tools...${W}"
-		termux-x11 :${display_number} &
-		sleep 2
-    	env DISPLAY=:${display_number} dbus-launch --exit-with-session xfce4-session > /dev/null 2>&1 &
-		sleep 7
-		local file_manager
-		if [[ "$de_name" == "xfce" ]]; then
-			file_manager=thunar
-		elif [[ "$de_name" == "lxqt" ]]; then
-			file_manager=pcmanfm-qt
-		elif [[ "$de_name" == "openbox" ]]; then
-			file_manager=thunar
-		fi
-		env DISPLAY=:${display_number} dbus-launch $file_manager > /dev/null 2>&1 &
-		sleep 3
         # Run setup script and move files
+		wget --tries=5 --retry-connrefused https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/other/setup-termux.sh
         bash setup-termux.sh
-		tx11stop -f
         cd "$HOME"
         check_and_delete "nautilus-scripts"
     fi
@@ -4274,15 +4257,13 @@ function some_fixes() {
     	env DISPLAY=:${display_number} dbus-launch --exit-with-session xfce4-session > /dev/null 2>&1 &
 		sleep 7
 		echo "${R}[${C}-${R}]${G} Disabling custom font size...${W}"
-		export DISPLAY=${display_number}
-		dbus-launch xfconf-query -c xfce4-desktop -p /desktop-icons/use-custom-font-size -s false -t bool
-		print_success "Custom font size has been disabled."
-		echo "${R}[${C}-${R}]${G} Setting up a random wallpaper..${W}"
-		local WALLPAPER
-		WALLPAPER=$(find "$PREFIX/share/backgrounds" -type f \( -iname "*.jpg" -o -iname "*.png" -o -iname "*.jpeg" \) | shuf -n 1)
-		# Set the random wallpaper using xfconf-query
-		dbus-launch xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor0/workspace0/last-image -s "$WALLPAPER"
-		tx11stop -f
+		env DISPLAY=:${display_number} dbus-launch xfconf-query -c xfce4-desktop -p /desktop-icons/use-custom-font-size -s false -t bool > /dev/null 2>&1
+		# echo "${R}[${C}-${R}]${G} Setting up a random wallpaper..${W}"
+		# local WALLPAPER
+		# WALLPAPER=$(find "$PREFIX/share/backgrounds" -type f \( -iname "*.jpg" -o -iname "*.png" -o -iname "*.jpeg" \) | shuf -n 1)
+		# # Set the random wallpaper using xfconf-query
+		# env DISPLAY=:${display_number} dbus-launch xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor0/workspace0/last-image -s "$WALLPAPER" > /dev/null 2>&1
+		tx11stop -f > /dev/null 2>&1
 	fi
 	# tx11start and vncstart
 	if [[ $termux_hw_answer == "freedreno" ]] || [[ $termux_hw_answer == "zink_with_mesa" ]] || [[ $termux_hw_answer == "zink_with_mesa_zink" ]]; then
@@ -4597,9 +4578,7 @@ terminal_utility_setup
 install_termux_desktop_appstore
 add_to_autostart
 check_desktop_process
-if [[ "$de_name" != "mate" ]]; then
-	install_fm_tools
-fi
+install_fm_tools
 some_fixes
 preprocess_conf
 cleanup_cache

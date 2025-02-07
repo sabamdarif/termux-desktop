@@ -29,9 +29,10 @@ check_prefix() {
                     ;;
             esac
         done
+        final_user_name="${user_name}@termux"
         ;;
     *)
-        user_name="${selected_distro}-$(whoami)"
+        final_user_name="$(whoami)@${selected_distro}"
         ;;
 esac
 }
@@ -73,7 +74,7 @@ zsh_setup() {
 setup_theme() {
 	cat << EOF > ~/.oh-my-zsh/themes/kalistyle.zsh-theme
 	local return_code="%(?..%{\$fg[red]%}%? ↵%{\$reset_color%})"
-local user="$user_name@localhost"  # Replace with your desired name
+local user="$final_user_name"  # Replace with your desired name
 
 local user_host="%B%F{green}┌──(%F{reset}\$user%F{green})-%F{green}[%F{reset}%B%{\$fg[blue]%}%~%b%F{blue}%B%F{green}]%F{reset}"
 
@@ -124,6 +125,7 @@ check_paramitter() {
     if [[ "$HOME" == *termux* && -z "$user_name" ]]; then
       read -p "${G}Please enter your user name: ${W}" user_name
     fi
+    final_user_name="${user_name}@termux"
     return
   fi
 
