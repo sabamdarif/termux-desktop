@@ -182,15 +182,6 @@ function setup_gpu_specific_environment_variables() {
 	fi
 }
 
-
-# function set_mesa_extension() {
-#     if [[ virgl d3d ]]; then
-#     export MESA_EXTENSION_OVERRIDE="+GL_3DFX_texture_compression_FXT1 +GL_AMD_vertex_shader_viewport_index +GL_AMD_vertex_shader_layer +GL_ARB_vertex_type_10f_11f_11f_rev +GL_ARB_texture_view +GL_ARB_texture_query_lod +GL_ARB_texture_filter_minmax  +GL_ARB_shading_language_100 +GL_ARB_shader_viewport_layer_array +GL_ARB_shader_texture_image_samples +GL_ARB_shader_stencil_export +GL_ARB_shader_group_vote +GL_ARB_compute_shader +GL_ARB_compute_variable_group_size +GL_ARB_shader_draw_parameters +GL_ARB_seamless_cubemap_per_texture +GL_ARB_depth_clamp +GL_ARB_blend_func_extended +GL_ARB_ES3_1_compatibility +GL_ARB_ES3_compatibility +GL_ARM_shader_framebuffer_fetch_depth_stencil +GL_ARB_shader_atomic_counters +GL_ARB_shader_atomic_counter_ops"
-#     else
-#     export MESA_EXTENSION_OVERRIDE="+GL_3DFX_texture_compression_FXT1 +GL_AMD_vertex_shader_viewport_index +GL_AMD_vertex_shader_layer +GL_ARB_vertex_type_10f_11f_11f_rev +GL_ARB_texture_view +GL_ARB_texture_query_lod +GL_ARB_texture_filter_minmax +GL_ARB_shading_language_100 +GL_ARB_shader_viewport_layer_array +GL_ARB_shader_texture_image_samples +GL_ARB_shader_stencil_export +GL_ARB_shader_group_vote +GL_ARB_compute_shader +GL_ARB_compute_variable_group_size +GL_ARB_shader_draw_parameters +GL_ARB_seamless_cubemap_per_texture +GL_ARB_depth_clamp +GL_ARB_blend_func_extended +GL_ARB_ES3_1_compatibility +GL_ARB_ES3_compatibility -GL_EXT_texture_sRGB -GL_EXT_texture_sRGB_R8 -GL_EXT_texture_sRGB_RG8 +GL_ARM_shader_framebuffer_fetch_depth_stencil +GL_ARB_shader_atomic_counters +GL_ARB_shader_atomic_counter_ops" 
-#     fi
-# }
-
 #########################################################################
 #
 # Setup Turnip

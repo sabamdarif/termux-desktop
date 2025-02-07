@@ -574,78 +574,6 @@ function install_font_for_style() {
 	cd "$HOME" || return
 }
 
-function download_github_action_artifact() {
-    # Parse arguments passed to the function
-    while [[ "$#" -gt 0 ]]; do
-        case "$1" in
-            --user)
-                GITHUB_USER="$2"
-                shift 2
-                ;;
-            --repo)
-                REPO="$2"
-                shift 2
-                ;;
-            --workflow-name)
-                WORKFLOW_NAME="$2" # The name of the CI workflow
-                shift 2
-                ;;
-            --run-name)
-                RUN_NAME="$2" # Specific name/description of the workflow run
-                shift 2
-                ;;
-            --artifact-name)
-                ARTIFACT_NAME="$2" # Artifact name prefix (can be modified as needed)
-                shift 2
-                ;;
-            *)
-                echo "${R}[${R}☓${R}]Unknown option: $1${W}"
-                shift
-                ;;
-        esac
-    done
-
-    # Get the workflow ID using the workflow name
-    WORKFLOW_ID=$(gh api repos/$GITHUB_USER/$REPO/actions/workflows --jq ".workflows[] | select(.name == \"$WORKFLOW_NAME\") | .id")
-    # Check if WORKFLOW_ID is found
-    if [ -z "$WORKFLOW_ID" ]; then
-        print_failed " Workflow '$WORKFLOW_NAME' not found."
-        exit 1
-    fi
-
-    # Display the workflow ID
-    echo "${R}[${C}-${R}]${G} Workflow ID for ${W}'$WORKFLOW_NAME' ${G}is ${W}$WORKFLOW_ID"
-
-    # Get the latest workflow run ID with the specific display title
-    WORKFLOW_RUN_ID=$(gh api repos/$GITHUB_USER/$REPO/actions/workflows/$WORKFLOW_ID/runs --paginate --jq ".workflow_runs[] | select(.display_title == \"$RUN_NAME\") | .id" | head -n 1)
-    # Check if WORKFLOW_RUN_ID is obtained
-    if [ -z "$WORKFLOW_RUN_ID" ]; then
-        print_failed " No workflow run found with the name '$RUN_NAME' for workflow '$WORKFLOW_NAME'."
-        exit 1
-    fi
-
-    # List artifacts for the found run
-    ARTIFACT_URL=$(gh api repos/$GITHUB_USER/$REPO/actions/runs/$WORKFLOW_RUN_ID/artifacts --jq ".artifacts[] | select(.name == \"$ARTIFACT_NAME\") | .archive_download_url")
-    # If no exact match, look for an artifact starting with ARTIFACT_NAME
-    if [ -z "$ARTIFACT_URL" ]; then
-        echo "${R}[${C}-${R}]${C} Artifact with the exact name '$ARTIFACT_NAME' not found. Looking for artifacts starting with '$ARTIFACT_NAME'...${W}"
-        ARTIFACT_URL=$(gh api repos/$GITHUB_USER/$REPO/actions/runs/$WORKFLOW_RUN_ID/artifacts --jq ".artifacts[] | select(.name | startswith(\"$ARTIFACT_NAME\")) | .archive_download_url" | head -n 1)
-    fi
-
-    # Check if ARTIFACT_URL is found
-    if [ -z "$ARTIFACT_URL" ]; then
-        print_failed " No artifact found starting with '$ARTIFACT_NAME'."
-        exit 1
-    fi
-
-    # Download the artifact using the URL
-    print_success "Downloading artifact from run '$RUN_NAME'..."
-    curl -# -L -H "Authorization: Bearer $(gh auth token)" -o artifact.zip "$ARTIFACT_URL"
-
-    # Extract the artifact
-    extract_archive "artifact.zip"
-}
-
 function print_status() {
     local status
 	status=$1
@@ -698,22 +626,6 @@ function read_conf() {
     fi
 
 	source "$config_file"
-
-    # Process each line of the file
-    # while IFS='=' read -r key value; do
-    #     # Trim whitespace and surrounding quotes from key and value
-    #     key=$(echo "$key" | xargs | sed 's/"//g')
-    #     value=$(echo "$value" | xargs | sed 's/"//g')
-
-    #     # Skip empty lines and comments
-    #     if [[ -z "$key" || "$key" =~ ^# ]]; then
-    #         continue
-    #     fi
-
-    #     # Dynamically create variables
-    #     export "$key"="$value"
-    # done < "$config_file"
-
     print_success "Configuration variables loaded"
 }
 
@@ -4228,6 +4140,7 @@ function some_fixes() {
 		sleep 7
 		echo "${R}[${C}-${R}]${G} Disabling custom font size...${W}"
 		env DISPLAY=:${display_number} dbus-launch xfconf-query -c xfce4-desktop -p /desktop-icons/use-custom-font-size -s false -t bool > /dev/null 2>&1
+		sleep 3
 		# echo "${R}[${C}-${R}]${G} Setting up a random wallpaper..${W}"
 		# local WALLPAPER
 		# WALLPAPER=$(find "$PREFIX/share/backgrounds" -type f \( -iname "*.jpg" -o -iname "*.png" -o -iname "*.jpeg" \) | shuf -n 1)

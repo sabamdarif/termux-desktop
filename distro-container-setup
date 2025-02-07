@@ -270,7 +270,7 @@ function distro_basic_task() {
     echo "pd_audio_config_answer=\"${pd_audio_config_answer}\"" >> "$config_file"
 pd_basic_setup_content=$(cat <<EOF
 pd_package_install_and_check --root "${distro_packs}"
-rm pd_basic_setup.sh > /dev/null 2>&1
+check_and_delete "pd_basic_setup.sh"
 EOF
 )
 create_shell_script "$distro_path/root/pd_basic_setup.sh" "$pd_basic_setup_content"
@@ -1203,6 +1203,16 @@ case $1 in
     --help|-h)
         echo "${C}add2menu launch command ${G}to start with gpu acceleration${W}"
         echo "${C}add2menu ---nogpu launch command ${G}to start without gpu acceleration${W}"
+        echo "${C}add2menu --add-new ${G}To add new add2menu program${W}"
+        ;;
+    --add-new)
+        rm $PREFIX/share/applications/add2menu.desktop
+        rm $HOME/Desktop/add2menu.desktop > /dev/null 2>&1
+        mkdir -p $PREFIX/opt/add2menu
+        wget -O $PREFIX/opt/add2menu/add2menu.py https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/add2menu/add2menu.py
+        wget -O $PREFIX/share/applications/org.sabamdarif.termux.add2menu.desktop https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/add2menu/org.sabamdarif.termux.add2menu.desktop
+        cp $PREFIX/share/applications/org.sabamdarif.termux.add2menu.desktop $HOME/Desktop/
+        chmod +x $HOME/Desktop/org.sabamdarif.termux.add2menu.desktop
         ;;
     *)
         add2menu_f
@@ -1227,8 +1237,8 @@ Path=
 Terminal=false
 StartupNotify=false
 EOF
-chmod 644 "$PREFIX/share/applications/add2menu.desktop"
 cp "$PREFIX/share/applications/add2menu.desktop" "$HOME/Desktop/"
+chmod +x "$HOME/Desktop/add2menu.desktop"
 }
 
 #########################################################################
@@ -1328,7 +1338,7 @@ function install_appimage_related_pack() {
     echo "${R}[${C}-${R}]${G} Installing AppImage related packages${W}"
     pd_setup_appimage_related_pack=$(cat <<EOF
 pd_package_install_and_check --root "$appimage_related_pack_list"
-rm appimage_related_pack.sh > /dev/null 2>&1
+check_and_delete "appimage_related_pack.sh"
 EOF
 )
     create_shell_script "$distro_path/root/appimage_related_pack.sh" "$pd_setup_appimage_related_pack"
