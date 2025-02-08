@@ -2060,9 +2060,9 @@ function install_required_packages() {
     echo
 
     if [[ "$PACKAGE_MANAGER" == "pacman" ]]; then
-        package_install_and_check "wget pv jq curl pulseaudio termux-am"
+        package_install_and_check "wget pv jq curl termux-am"
     else
-        package_install_and_check "wget pv jq curl pulseaudio tar xz-utils gzip termux-am x11-repo tur-repo"
+        package_install_and_check "wget pv jq curl tar xz-utils gzip termux-am x11-repo tur-repo"
     fi
 }
 
@@ -2088,7 +2088,7 @@ function install_desktop() {
         package_install_and_check "mate*"
         package_install_and_check "marco mousepad xfce4-taskmanager lximage-qt"
     fi
-	package_install_and_check "kvantum xwayland file-roller pavucontrol gnome-font-viewer atril galculator gdk-pixbuf libwayland-protocols xorg-xrdb"
+	package_install_and_check "kvantum xwayland pulseaudio file-roller pavucontrol gnome-font-viewer atril galculator gdk-pixbuf libwayland-protocols xorg-xrdb"
     # Uncomment if additional package installation is needed
     # if [[ "$distro_add_answer" == "y" ]]; then
     #     package_install_and_check "xdg-utils"
@@ -3653,9 +3653,25 @@ function notes() {
 	sleep 2
 	echo "${R}[${C}-${R}]${C}${BOLD} Now Restart Termux ${G}(Must)${W}"
 	echo
+	echo "${R}[${C}-${R}]${C}${BOLD} Some basic commands:-${G}(Must)${W}"
+	echo
+	echo "${R}[${C}-${R}]${G} tx11start        to start the gui with termux:x11${W}"
+	echo
+	echo "${R}[${C}-${R}]${G} tx11stop         to stop the gui with termux:x11${W}"
+	echo
+	echo "${R}[${C}-${R}]${G} tx11stop -f      to force stop the gui with termux:x11${W}"
+	echo
+	if [[ "$gui_mode" == "both" ]]; then
+	echo "${R}[${C}-${R}]${G} vncstart         to start the gui with vnc${W}"
+	echo
+	echo "${R}[${C}-${R}]${G} vncstop          to stop the gui with vnc${W}"
+	echo
+	fi
+	echo "${R}[${C}-${R}]${C} $selected_distro to login into $selected_distro${W}"
+	echo
 	echo "${R}[${C}-${R}]${C}${BOLD} See Uses Section in github to know how to use it${W}"
 	echo
-	echo "${R}[${C}-${R}]${C} URL:- ${B}https://github.com/sabamdarif/termux-desktop/blob/main/README.md#uses${W}"
+	echo "${R}[${C}-${R}]${C} URL:- ${B}https://github.com/sabamdarif/termux-desktop/blob/main/README.md#5-usage-instructions${W}"
 	echo
 	if [[ "$distro_add_answer" == "y" ]]; then
 	echo "${R}[${C}-${R}]${C}${BOLD} See how to use Linux distro container${W}"
@@ -3784,9 +3800,6 @@ function remove_termux_desktop() {
 	if [[ "$gui_mode" == "termux_x11" ]]; then
 	package_check_and_remove "termux-x11-nightly xorg-xhost"
 	check_and_delete "$PREFIX/bin/tx11start $PREFIX/bin/tx11stop"
-	elif [[ "$gui_mode" == "vnc" ]]; then
-	package_check_and_remove "tigervnc xorg-xhost"
-	check_and_delete "$HOME/.vnc/xstartup $PREFIX/bin/vncstart $PREFIX/bin/vncstop $PREFIX/bin/gui $PREFIX/bin/tx11start $PREFIX/bin/tx11stop"
 	elif [[ "$gui_mode" == "both" ]]; then
 	package_check_and_remove "termux-x11-nightly tigervnc xorg-xhost"
 	check_and_delete "$PREFIX/bin/tx11start $PREFIX/bin/tx11stop $HOME/.vnc/xstartup $PREFIX/bin/vncstart $PREFIX/bin/vncstop $PREFIX/bin/gui $PREFIX/bin/tx11start $PREFIX/bin/tx11stop"

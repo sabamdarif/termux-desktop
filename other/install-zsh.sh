@@ -48,7 +48,7 @@ if [ -e "install.sh" ]; then
   sleep 1.2 
   echo -e "${G}The existing file has been renamed to ${C}$renamed_file${W}."
 else
-  echo -e "${Y}No file named install.sh found in the current directory.${W}"
+  echo -e "${G}No file named install.sh found in the current directory.${W}"
 fi
 }
 
