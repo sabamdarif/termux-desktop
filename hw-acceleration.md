@@ -40,15 +40,39 @@ When setting up hardware acceleration in Termux, follow these steps for optimal 
 
 ### Manual Configuration
 1. **Install Required Packages.**
+`pkg install mesa virglrenderer vulkan-loader-generic angle-android virglrenderer-android`
 2. Navigate to `$PREFIX/bin` and edit the following files using `nano` or `vim`:
    - `vncstart`
    - `tx11start`
    - `pdrun`
-3. Look for the line:
+3. Look for the line at the bottom of tx11start:
+   there will be some lines like this 
+
    ```bash
-   GALLIUM_DRIVER=
+   export MESA_NO_ERROR=1 MESA_GL_VERSION_OVERRIDE=4.1COMPAT MESA_GLES_VERSION_OVERRIDE=3.2 MESA_GLSL_VERSION_OVERRIDE=410 LIBGL_DRI3_DISABLE=1 EPOXY_USE_ANGLE=1 LD_LIBRARY_PATH=/data/data/com.termux/files/usr/opt/angle-android/vulkan               
+   virgl_test_server --use-egl-surfaceless --use-gles &
+   sleep 1                                   
+   XDG_RUNTIME_DIR=${TMPDIR} termux-x11 :0 &         
+   sleep 1                                           
+   am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1 &                  
+   sleep 1                                    
+   env DISPLAY=:0 XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg VK_ICD_FILENAMES=/data/data/com.termux/files/usr/share/vulkan/icd.d/wrapper_icd.aarch64.json MESA_VK_WSI_PRESENT_MODE=mailbox MESA_VK_WSI_DEBUG=blit MESA_SHADER_CACHE=512MB MESA_SHADER_CACHE_DISABLE=false vblank_mode=0 GALLIUM_DRIVER=virpipe dbus-launch --exit-with-session xfce4-session > /dev/null 2>&1 &
    ```
-   Replace the value after `=` with either `zink` or `virpipe` as desired.
+
+- you need to change the `export` , `virgl_test_server --use-egl-surfaceless --use-gles &` and the `GALLIUM_DRIVER=virpipe` value
+
+- **How you will get this values:-**
+- [See this function](https://github.com/sabamdarif/termux-desktop/blob/6eb295a2d31bc8f7fff018e2b6168e24a2014f24/enable-hw-acceleration#L104)
+- here the value under `set_to_export=` will replace the word after `export` in the tx11start file
+- here the value under `hw_method=` will replace the `GALLIUM_DRIVER=virpipe` text
+- here the value under `initialize_server_method=` will replace the `virgl_test_server --use-egl-surfaceless --use-gles &`
+
+- then save and exit
+
+- **For file `pdrun` :-**
+- at the top there will be `selected_pd_hw_method="GALLIUM_DRIVER=virpipe MESA_GL_VERSION_OVERRIDE=4.0"`
+- change the `GALLIUM_DRIVER=virpipe MESA_GL_VERSION_OVERRIDE=4.0` with the value under `hw_method=`
+- then save and exit
 
 ### Automatic Configuration
 Run the following command to change drivers:
