@@ -887,7 +887,7 @@ function questions_setup_manual() {
 	banner
 	echo "${R}[${C}-${R}]${G}${BOLD} Do you want to install wine in termux ${C}(without proot-distro)${W}"
 	echo
-	echo "${Y}1. Natively ${C}(can run only arm64 based exe)${W}"
+	echo "${Y}1. Native ${C}(can run only arm64 based exe)${W}"
 	echo
 	echo "${Y}2. Using Mobox ${C}${W}"
 	echo
@@ -912,7 +912,6 @@ function questions_setup_manual() {
 	echo "${R}[${C}-${R}]${B} Know More About Terminal Utility:- https://github.com/sabamdarif/termux-desktop/blob/main/see-more.md#hammer_and_wrenchlearn-about-terminal-utilities${W}"
 	echo
 	confirmation_y_or_n "Do you want install some terminal utility to make better terminal exprience" terminal_utility_setup_answer
-	if [[ "$de_name" != "mate" ]]; then
 	banner
 		echo -e "${R}[${C}-${R}]${B} File Manager Tools Enhancement${W}
 
@@ -942,7 +941,6 @@ ${B}How to Access:${W}
 Access these features through the 'Scripts' menu in your file manager's right-click context menu.
 ${W}"
 	confirmation_y_or_n "Do you want to Configuring File Manager Tools" fm_tools
-	fi
 	banner
 	echo "${R}[${C}-${R}]${G}${BOLD} Select Gui Mode${W}"
 	echo
@@ -956,11 +954,13 @@ ${W}"
 	if [[ "$gui_mode_num" == "1" ]]; then
 		gui_mode="termux_x11"
 		display_number="0"
+		gui_mode_name="Termux:x11"
 		echo "gui_mode=\"$gui_mode\"" >> "$config_file"
 		echo "display_number=\"$display_number\"" >> "$config_file"
 	elif [[ "$gui_mode_num" == "2" ]]; then
 		gui_mode="both"
 		display_number="0"
+		gui_mode_name="Both"
 		echo "gui_mode=\"$gui_mode\"" >> "$config_file"
 		echo "display_number=\"$display_number\"" >> "$config_file"
 	fi
@@ -1157,8 +1157,8 @@ function exp_hwa_support() {
     	echo
     	echo "${Y}4. Others (Unstable)${W}"
     	echo
-
-    	read -p "Enter your choice (1-4): " device_gpu_model
+		
+		read -p "${Y}Enter your choice (1-4): ${W}" device_gpu_model
 
     		if [[ "$device_gpu_model" =~ ^[1-4]$ ]]; then
     		    print_success "Continuing with answer: $device_gpu_model"
@@ -1351,6 +1351,243 @@ function distro_questions() {
 	    fi
 
 	fi
+}
+
+function define_value_name() {
+	# Gui mode
+	if [[ "$gui_mode_num" == "1" ]]; then
+	gui_mode_name="Termux:x11"
+	elif [[ "$gui_mode_num" == "2" ]]; then
+	gui_mode_name="Both"
+	fi
+	# autostart value
+	if [[ "$de_on_startup" == "y" ]]; then
+	autostart_value="Yes"
+	elif [[ "$de_on_startup" == "n" ]]; then
+	autostart_value="No"
+	fi
+	# browser
+	if [[ "$browser_answer" == "1" ]]; then
+	browser_name="Firefox"
+	elif [[ "$browser_answer" == "2" ]]; then
+	browser_name="Chromium"
+	elif [[ "$browser_answer" == "3" ]]; then
+	browser_name="Both Firefox and Chromium"
+	elif [[ "$browser_answer" == "4" ]]; then
+	browser_name="Skip"
+	fi
+	# media player
+	if [[ "$player_answer" == "1" ]]; then
+	media_player_name="Vlc"
+	elif [[ "$player_answer" == "2" ]]; then
+	media_player_name="Audacious"
+	elif [[ "$player_answer" == "3" ]]; then
+	media_player_name="Both Vlc and Audacious"
+	elif [[ "$player_answer" == "4" ]]; then
+	media_player_name="Skip"
+	fi
+	# Image Editor
+	if [[ "$photo_editor_answer" == "1" ]]; then
+	photo_editor_name="GIMP"
+	elif [[ "$photo_editor_answer" == "2" ]]; then
+	photo_editor_name="Inkscape"
+	elif [[ "$photo_editor_answer" == "3" ]]; then
+	photo_editor_name="Both GIMP and Inkscape"
+	elif [[ "$photo_editor_answer" == "4" ]]; then
+	photo_editor_name="Skip"
+	fi
+	# IDE
+	if [[ "$ide_answer" == "1" ]]; then
+	ide_name="VS Code (code-oss)"
+	elif [[ "$ide_answer" == "2" ]]; then
+	ide_name="Geany"
+	elif [[ "$ide_answer" == "3" ]]; then
+	ide_name="Both VS Code and Geany"
+	elif [[ "$ide_answer" == "4" ]]; then
+	ide_name="Skip"
+	fi
+	# WINE
+	if [[ "$browser_answer" == "1" ]]; then
+	wine_type_name="Native"
+	elif [[ "$browser_answer" == "2" ]]; then
+	wine_type_name="Mobox"
+	elif [[ "$browser_answer" == "3" ]]; then
+	wine_type_name="Wine Hangover"
+	elif [[ "$browser_answer" == "4" ]]; then
+	wine_type_name="Skip"
+	fi
+	# Extra Wallpapers
+	if [[ "$ext_wall_answer" == "y" ]]; then
+	ext_wall_answer_confirmation="Yes"
+	elif [[ "$ext_wall_answer" == "n" ]]; then
+	ext_wall_answer_confirmation="No"
+	fi
+	# File Manager Tools
+	if [[ "$fm_tools" == "y" ]]; then
+	fm_tools_confirmation="Yes"
+	elif [[ "$fm_tools" == "n" ]]; then
+	fm_tools_confirmation="No"
+	fi
+	# Shell
+	if [[ "$zsh_answer" == "y" ]]; then
+	current_shell_name="Zsh"
+	elif [[ "$zsh_answer" == "n" ]]; then
+	current_shell_name="Bash"
+	fi
+	# Terminal Utilities
+	if [[ "$terminal_utility_setup_answer" == "y" ]]; then
+	terminal_utility_setup_confirmation="Yes"
+	elif [[ "$terminal_utility_setup_answer" == "n" ]]; then
+	terminal_utility_setup_confirmation="No"
+	fi
+	# Hardware Acceleration Status
+	if [[ "$enable_hw_acc" == "y" ]]; then
+	hw_acc_confirmation="Enabled"
+	elif [[ "$enable_hw_acc" == "n" ]]; then
+	hw_acc_confirmation="Disabled"
+	fi
+	# Vulkan Driver
+	if [[ "$confirmation_mesa_vulkan_icd_wrapper" == "y" ]]; then
+	vulkan_driver_name="Vulkan ICD Wrapper"
+	else
+	vulkan_driver_name="Not Supported"
+	fi
+	# OpenGL Driver
+	if [[ "$exp_termux_gl_hw_answer" == "zink" ]]; then
+	opengl_driver_name="Zink"
+	elif [[ "$exp_termux_gl_hw_answer" == "virgl" ]]; then
+	opengl_driver_name="Virgl"
+	elif [[ "$exp_termux_gl_hw_answer" == "virgl_vulkan" ]]; then
+	opengl_driver_name="VIRGL ANGLE (Vulkan)"
+	elif [[ "$exp_termux_gl_hw_answer" == "zink_virgl" ]]; then
+	opengl_driver_name="OpenGL ES (ZINK VIRGL)"
+	elif [[ "$exp_termux_gl_hw_answer" == "zink_with_mesa" ]]; then
+	opengl_driver_name="The Vulkan-Icd-Wrapper Driver With Mesa"
+	elif [[ "$exp_termux_gl_hw_answer" == "zink_with_mesa_zink" ]]; then
+	opengl_driver_name="The Vulkan-Icd-Wrapper Driver With Mesa-Zink"
+	elif [[ "$exp_termux_gl_hw_answer" == "freedreno" ]]; then
+	opengl_driver_name="Freedreno KGSL"
+	fi
+	# Linux Distro Container
+	if [[ "$distro_add_answer" == "y" ]]; then
+	distro_container_confirmation="Yes"
+	elif [[ "$distro_add_answer" == "n" ]]; then
+	distro_container_confirmation="No"
+	fi
+	# Distro User and Pass
+	if [[ "$pd_useradd_answer" == "y" ]]; then
+	distro_user_add_confirmation="Yes"
+	distro_user_name="${user_name}"
+		if [[ -z "$pass" ]]; then
+		distro_pass="root"
+		else
+		distro_pass="${pass}"
+		fi
+	elif [[ "$pd_useradd_answer" == "n" ]]; then
+	distro_user_add_confirmation="No"
+	distro_user_name="Null"
+	distro_pass="Null"
+	fi
+	# Distro Audio Support
+	if [[ "$pd_audio_config_answer" == "y" ]]; then
+	pd_audio_config_confirmation="Yes"
+	elif [[ "$pd_audio_config_answer" == "n" ]]; then
+	pd_audio_config_confirmation="No"
+	fi
+	# Distro Hardware Acceleration
+	if [[ "$enable_hw_acc" == "y" ]]; then
+	distro_hw_acc_confirmation="Enabled"
+	elif [[ "$enable_hw_acc" == "n" ]]; then
+	distro_hw_acc_confirmation="Disabled"
+	fi
+	# Distro Vulkan Driver
+	if [[ "$pd_hw_answer" == "zink" ]]; then
+	distro_vulkan_driver="Not Supported"
+	elif [[ "$pd_hw_answer" == "zink_virgl" ]]; then
+	distro_vulkan_driver="Not Supported"
+	elif [[ "$pd_hw_answer" == "turnip" ]]; then
+	distro_vulkan_driver="Turnip"
+	elif [[ "$pd_hw_answer" == "freedreno" ]]; then
+	distro_vulkan_driver="Freedreno"
+	fi
+	# Distro OpenGL Driver
+	if [[ "$pd_hw_answer" == "zink" ]]; then
+	distro_opengl_driver="Zink"
+	elif [[ "$pd_hw_answer" == "zink_virgl" ]]; then
+	distro_opengl_driver="Zink Virgl"
+	elif [[ "$pd_hw_answer" == "virgl" ]]; then
+	distro_opengl_driver="Virgl"
+	elif [[ "$pd_hw_answer" == "turnip" ]]; then
+	distro_opengl_driver="Turnip"
+	elif [[ "$pd_hw_answer" == "freedreno" ]]; then
+	distro_opengl_driver="Freedreno"
+	fi
+	# Distro Shell
+	if [[ "$distro_zsh_answer" == "y" ]]; then
+	distro_current_shell="Zsh"
+	elif [[ "$distro_zsh_answer" == "n" ]]; then
+	distro_current_shell="Bash"
+	fi
+	# Distro Terminal Utilities
+	if [[ "$distro_terminal_utility_setup_answer" == "y" ]]; then
+	distro_terminal_utility_setup_confirmation="Yes"
+	elif [[ "$distro_terminal_utility_setup_answer" == "n" ]]; then
+	distro_terminal_utility_setup_confirmation="No"
+	fi
+}
+
+function print_conf_info() {
+	define_value_name
+	trap '' SIGINT SIGTSTP
+		banner
+		echo "${R}[${C}-${R}]${G} Installation Configuration Summary${W}"
+		echo
+		echo "${G}Desktop Environment${W}"
+		echo "   • Desktop: $(echo "$de_name" | tr '[:lower:]' '[:upper:]')"
+		echo "   • Desktop Style: ${style_answer}) ${style_name}"
+		echo "   • GUI Access: ${gui_mode_name}"
+		echo "   • Auto-start: ${autostart_value}"
+		sleep 0.015
+
+		echo "${G}Applications${W}"
+		echo "   • Browser: ${browser_name}"
+		echo "   • Media Player: ${media_player_name}"
+		echo "   • Image Editor: ${photo_editor_name}"
+		echo "   • IDE: ${ide_name}"
+		echo "   • WINE: ${wine_type_name}"
+		sleep 0.015
+
+		echo "${G}Customization${W}"
+		echo "   • Extra Wallpapers: ${ext_wall_answer_confirmation}"
+		echo "   • File Manager Tools: ${fm_tools_confirmation}"
+		sleep 0.015
+
+		echo "${G}Terminal Setup${W}"
+		echo "   • Shell: ${current_shell_name}"
+		echo "   • Terminal Utilities: ${terminal_utility_setup_confirmation}"
+		sleep 0.015
+
+		echo "${G}Hardware Acceleration${W}"
+		echo "   • Status: ${hw_acc_confirmation}"
+		echo "   • GPU: $(echo "$device_gpu_model_name" | tr '[:lower:]' '[:upper:]')"
+		echo "   • Vulkan Driver: ${vulkan_driver_name}"
+		echo "   • OpenGL Driver: ${opengl_driver_name}"
+		sleep 0.015
+
+		echo "${G}Linux Distro Container${W}"
+		echo "   • Distribution: ${selected_distro}"
+		echo "   • Distro Username: $user_name"
+		echo "   • Distro Pass: ${distro_pass}"
+		echo "   • Audio Support: ${pd_audio_config_confirmation}"
+		echo "   • Hardware Acceleration: ${distro_hw_acc_confirmation}"
+		echo "   • Vulkan Driver: ${distro_vulkan_driver}"
+		echo "   • OpenGL Driver: ${distro_opengl_driver}"
+		echo "   • Shell: ${distro_current_shell}"
+		echo "   • Terminal Utilities: ${distro_terminal_utility_setup_confirmation}"
+		sleep 0.015
+		# Re-enable keyboard interruptions
+		trap - SIGINT SIGTSTP
+		wait_for_keypress
 }
 
 function ask_to_chose_de() {
@@ -1639,61 +1876,6 @@ function questions_install_type() {
 			esac
 		done
 
-		trap '' SIGINT SIGTSTP
-		banner
-		echo "${R}[${C}-${R}]${G} Installation Configuration Summary${W}"
-		echo
-		echo "${G}Desktop Environment${W}"
-		echo "   • Desktop: $(echo "$de_name" | tr '[:lower:]' '[:upper:]')"
-		echo "   • Desktop Style: ${style_answer}) ${style_name}"
-		echo "   • GUI Access: Termux:X11"
-		echo "   • Auto-start: No"
-		sleep 0.015
-
-		echo "${G}Applications${W}"
-		echo "   • Browser: Firefox & Chromium"
-		echo "   • Media Player: VLC"
-		echo "   • Image Editor: GIMP"
-		echo "   • IDE: Not installed"
-		echo "   • WINE: Not installed"
-		sleep 0.015
-
-		echo "${G}Customization${W}"
-		echo "   • Extra Wallpapers: No"
-		echo "   • File Manager Tools: Yes"
-		sleep 0.015
-
-		echo "${G}Terminal Setup${W}"
-		echo "   • Shell: Zsh"
-		echo "   • Terminal Utilities: Yes"
-		sleep 0.015
-
-		echo "${G}Hardware Acceleration${W}"
-		echo "   • Status: Enabled"
-		echo "   • GPU: $(echo "$device_gpu_model_name" | tr '[:lower:]' '[:upper:]')"
-		echo "   • Vulkan Driver: Mesa Vulkan ICD Wrapper"
-		echo "   • OpenGL Driver: VIRGL (vulkan)"
-		sleep 0.015
-
-		echo "${G}Linux Distro Container${W}"
-		echo "   • Distribution: Debian"
-		echo "   • Distro Username: $user_name"
-		echo "   • Distro Default Pass: root"
-		echo "   • Audio Support: Yes"
-		echo "   • Hardware Acceleration: Enabled"
-		if [[ "$device_gpu_model_name" == "adreno" ]] && [[ "$app_arch" == "aarch64" ]]; then
-			echo "   • Vulkan Driver: Turnip"
-			echo "   • OpenGL Driver: Turnip"
-		else
-			echo "   • Vulkan Driver: Not available"
-			echo "   • OpenGL Driver: VIRGL"
-		fi
-		echo "   • Shell: Zsh"
-		echo "   • Terminal Utilities: Not installed"
-		sleep 0.015
-		# Re-enable keyboard interruptions
-		trap - SIGINT SIGTSTP
-		wait_for_keypress
 	elif [[ "$install_type_answer" == "2" ]]; then
 
 ######################################################################
@@ -1792,57 +1974,7 @@ function questions_install_type() {
 			esac
 		done
 
-		# print configuration
-		trap '' SIGINT SIGTSTP
-		banner
-		echo "${R}[${C}-${R}]${G} Installation Configuration Summary${W}"
-		echo
-		echo "${G}Desktop Environment${W}"
-		echo "   • Desktop: $(echo "$de_name" | tr '[:lower:]' '[:upper:]')"
-		echo "   • Desktop Style: ${style_answer}) ${style_name}"
-		echo "   • GUI Access: Termux:X11"
-		echo "   • Auto-start: No"
-		sleep 0.015
-
-		echo "${G}Applications${W}"
-		echo "   • Browser: Firefox & Chromium"
-		echo "   • Media Player: VLC"
-		echo "   • Image Editor: GIMP"
-		echo "   • IDE: Not installed"
-		echo "   • WINE: Not installed"
-		sleep 0.015
-
-		echo "${G}Customization${W}"
-		echo "   • Extra Wallpapers: No"
-		echo "   • File Manager Tools: Yes"
-		sleep 0.015
-
-		echo "${G}Terminal Setup${W}"
-		echo "   • Shell: Zsh"
-		echo "   • Terminal Utilities: Yes"
-		sleep 0.015
-
-		echo "${G}Hardware Acceleration${W}"
-		echo "   • Status: Disabled"
-		echo "   • Vulkan Support: No"
-		echo "   • OpenGL Support: No"
-		sleep 0.015
-
-		echo "${G}Linux Container${W}"
-		echo "   • Distribution: Debian"
-		echo "   • Audio Support: Yes"
-		echo "   • Distro Username: $user_name"
-		echo "   • Default Password: root"
-		echo "   • Audio Support: Yes"
-		echo "   • Hardware Acceleration: Disabled"
-		echo "   • Vulkan Support: No"
-		echo "   • OpenGL Support: No"
-		echo "   • Shell: Zsh"
-		echo "   • Terminal Utilities: Not installed"
-		sleep 0.015
-		# Re-enable keyboard interruptions
-		trap - SIGINT SIGTSTP
-		wait_for_keypress
+		
 	elif [[ "$install_type_answer" == "3" ]]; then
 		questions_setup_manual
 	fi
@@ -1928,8 +2060,14 @@ function check_system_requirements() {
 	print_status "ok" "Device: ${W}$model"
 	sleep 0.2
 	PROCESSOR_BRAND_NAME="$(getprop ro.soc.manufacturer)"
-	PROCESSOR_NAME="$(getprop ro.soc.model)"
-	print_status "ok" "SOC: ${W}$PROCESSOR_BRAND_NAME $PROCESSOR_NAME"
+    PROCESSOR_NAME="$(getprop ro.soc.model)"
+    HARDWARE="$(getprop ro.hardware)"
+    
+    if [[ -n "$PROCESSOR_BRAND_NAME" && -n "$PROCESSOR_NAME" ]]; then
+        print_status "ok" "SOC: ${W}$PROCESSOR_BRAND_NAME $PROCESSOR_NAME"
+    else
+        print_status "ok" "SOC: ${W}$HARDWARE"
+    fi
 	sleep 0.2
 	# Check GPU
 	gpu_egl=$(getprop ro.hardware.egl)
@@ -3867,8 +4005,8 @@ function change_hw() {
 	    echo -e "${C} It looks like you haven't installed the desktop yet\n Please install the desktop first${W}"
 	    exit 0
 	else
+		read_conf
 		if [[ "$enable_hw_acc"  == "y" ]]; then
-		    read_conf
 		    banner
 		    echo "${R}[${C}-${R}]${G} Your current hardware acceleration method for Termux is: ${C}${BOLD}${termux_hw_answer}${W}"
 		    echo
@@ -4053,6 +4191,8 @@ function change_display() {
 					echo "${R}[${C}-${R}]${R} Please enter a valid number between 0-9 ${W}"
 				fi
     		done
+			call_from_change_display=y
+			hw_config
 			setup_tx11start_cmd
 			echo "display_number=\"$display_number\"" >> "$config_file"
 			sed -i "s|DISPLAY=:[0-9]*|DISPLAY=:$display_number|" "${PREFIX}/bin/pdrun"
@@ -4469,6 +4609,7 @@ if [[ "$install_type_answer" == "3" ]]; then
 		hw_questions
 	fi
 fi
+print_conf_info
 setup_folder
 setup_zsh
 setup_fonts

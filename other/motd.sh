@@ -14,9 +14,14 @@ termux_build=$(echo "$TERMUX_APK_RELEASE" | awk '{print tolower($0)}' | awk '{fo
 cpu=$(</sys/class/thermal/thermal_zone0/temp)
 TEMP=$(echo $cpu | cut -c 1-2)
 PROCESSOR_BRAND_NAME="$(getprop ro.soc.manufacturer)"
-PROCESSOR_NAME="$(getprop ro.soc.model)" # getprop ro.hardware
+PROCESSOR_NAME="$(getprop ro.soc.model)"
+HARDWARE="$(getprop ro.hardware)"
+if [[ -n "$PROCESSOR_BRAND_NAME" && -n "$PROCESSOR_NAME" ]]; then
+   soc_details="$PROCESSOR_BRAND_NAME $PROCESSOR_NAME"
+else
+    soc_details="$HARDWARE"
+fi
 PROCESSOR_COUNT=$(grep -ioP 'processor\t:' /proc/cpuinfo | wc -l)
-
 if [[ "$TEMP" -lt "20" ]]; then
 FG="${C}"
 elif [[ "$TEMP" -gt "20" && "$TEMP" -lt "60" ]]; then
@@ -44,7 +49,7 @@ ${W}${BOLD}System Info:
 $C System          : $G  ${W}$DISTRO
 $C Host            : $G  ${W}$MODEL
 $C Kernel          : $G  ${W}$(uname -sr)
-$C CPU             : $G  ${W}${PROCESSOR_BRAND_NAME} ${PROCESSOR_NAME} ($G$PROCESSOR_COUNT$W vCPU)
+$C CPU             : $G  ${W}${soc_details} ($G$PROCESSOR_COUNT$W vCPU)
 $C Termux Version  : $G  ${W}${TERMUX_VERSION}-${termux_build}$W
 $C Memory          : $G  ${G}$USED$W used, $G$TOTAL$W total$W
 $C Temperature     : $FG  ${TEMP}°c$W"

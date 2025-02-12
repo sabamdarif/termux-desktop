@@ -205,9 +205,14 @@ function setup_turnip_proot() {
 }
 
 check_termux
+if [[ "$call_from_change_display" == "y" ]]; then
+setup_hw_environment_variables
+setup_gpu_specific_environment_variables
+else
 hw_install_required_packages
 setup_hw_environment_variables
 setup_gpu_specific_environment_variables
 if [[ "$pd_hw_answer" == "turnip" ]] || [[ "$device_gpu_model_name" == "adreno" && "$pd_hw_answer" == "turnip" ]]; then
     setup_turnip_proot
+fi
 fi
