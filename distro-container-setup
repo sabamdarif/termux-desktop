@@ -258,6 +258,8 @@ function distro_basic_task() {
     proot-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:$display_number apk update
     proot-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:$display_number apk upgrade
     elif [[ "$selected_distro" == "fedora" ]]; then
+    proot-distro login "$selected_distro" -- /bin/bash -c "sed -i 's/^max_parallel_downloads=.*/max_parallel_downloads=10/' '/etc/dnf/dnf.conf'"
+    proot-distro login "$selected_distro" -- /bin/bash -c "sed -i 's/^fastestmirror=.*/fastestmirror=True/' '/etc/dnf/dnf.conf'"
     proot-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:$display_number dnf update -y
     proot-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:$display_number dnf upgrade -y
     fi
@@ -272,7 +274,7 @@ function distro_basic_task() {
     elif [[ "$pd_audio_config_answer" == "n" ]]; then
     distro_packs="sudo"
     fi
-    echo "pd_audio_config_answer=\"${pd_audio_config_answer}\"" >> "$config_file"
+    print_to_config "pd_audio_config_answer"
 pd_basic_setup_content=$(cat <<EOF
 pd_package_install_and_check --root "${distro_packs}"
 check_and_delete "pd_basic_setup.sh"
@@ -285,7 +287,7 @@ proot-distro login "$selected_distro" -- /bin/bash -c 'bash pd_basic_setup.sh'
     elif [[ "$pd_useradd_answer" == "y" ]]; then
     final_user_name="${user_name}"
     fi
-    echo "final_user_name=\"$final_user_name\"" >> "$config_file"
+    print_to_config "final_user_name"
     if [[ "$pd_pass_type" == "2" ]]; then
     final_pass="${pass}"
     else
@@ -561,7 +563,7 @@ case \$1 in
 esac
 EOF
 
-echo "pd_shell_name=\"$pd_shell_name\"" >> "$config_file"
+print_to_config "pd_shell_name"
 
 }
 
@@ -1052,7 +1054,7 @@ function remove_distro_container() {
                     fi
                 done
                 print_success "$selected_distro removed successfully"
-                echo "distro_add_answer=\"n\"" >> $config_file
+                print_to_config "distro_add_answer" "n"
             else
                 print_failed "$selected_distro does not exist"
             fi
