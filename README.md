@@ -1,5 +1,6 @@
 <br>
-<center><img src="images/xfce/look_1/desktop.png"></center>
+<center><img src="https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/xfce/look_1/desktop.png
+"></center>
 <br>
 
 <p align="center"><b style="font-size: x-large">Easily Install Termux GUI Desktop</b></p>
@@ -195,9 +196,9 @@ Options:
 
 |XFCE|LXQT|
 |--|--|
-|![img](images/xfce/look_1/look.png)|![img](images/lxqt/look_2/start-menu.png)|
+|![img](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/xfce/look_1/look.png)|![img](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/lxqt/look_2/start-menu.png)|
 |OPENBOX|MATE|
-|![img](images/openbox/look_1/desktop.png)|![img](images/mate/look_1/desktop.png)|
+|![img](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/openbox/look_1/desktop.png)|![img](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/mate/look_1/desktop.png)|
 
 ### App Store:
 <img src="images/termux-app-store.png">

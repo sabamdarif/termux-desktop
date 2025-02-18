@@ -232,7 +232,7 @@ config_file="$termux_desktop_path/configuration.conf"
 log_file="/data/data/com.termux/files/home/termux-desktop.log"
 
 EOF
-    typeset -f banner print_log print_success print_failed check_and_delete pd_package_install_and_check >> "$script_path"
+    typeset -f banner print_log print_success print_failed check_and_delete get_latest_release pd_package_install_and_check >> "$script_path"
     echo "$shell_setup_content" >> "$script_path"
     
     # Make script executable
@@ -258,8 +258,8 @@ function distro_basic_task() {
     proot-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:$display_number apk update
     proot-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:$display_number apk upgrade
     elif [[ "$selected_distro" == "fedora" ]]; then
-    proot-distro login "$selected_distro" -- /bin/bash -c "sed -i 's/^max_parallel_downloads=.*/max_parallel_downloads=10/' '/etc/dnf/dnf.conf'"
-    proot-distro login "$selected_distro" -- /bin/bash -c "sed -i 's/^fastestmirror=.*/fastestmirror=True/' '/etc/dnf/dnf.conf'"
+    proot-distro login "$selected_distro" -- /bin/bash -c "echo 'max_parallel_downloads=10/' >> '/etc/dnf/dnf.conf'"
+    proot-distro login "$selected_distro" -- /bin/bash -c "echo 'fastestmirror=True/' >> '/etc/dnf/dnf.conf'"
     proot-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:$display_number dnf update -y
     proot-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:$display_number dnf upgrade -y
     fi

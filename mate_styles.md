@@ -1,13 +1,13 @@
 ## 0. Stock:
 
-<center><img src="images/mate/look_0/desktop.png"></center>
+<center><img src="https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/mate/look_0/desktop.png"></center>
 
 <details style ="font-size: larger">
 <summary><b style ="font-size: larger">Screenshots: </b></summary>
 
 |Apps| Menu|
 |--|--|
-|![img](images/mate/look_0/apps.png)|![img](images/mate/look_0/menu.png)|
+|![img](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/mate/look_0/apps.png)|![img](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/mate/look_0/menu.png)|
 
 </details>
 <br>
@@ -32,14 +32,14 @@ Cursor Theme:
 </details>
 <br>
 
-<center><img src="images/mate/look_1/desktop.png"></center>
+<center><img src="https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/mate/look_1/desktop.png"></center>
 
 <details style ="font-size: larger">
 <summary><b style ="font-size: larger">Screenshots: </b></summary>
 
 |Apps| Menu|
 |--|--|
-|![img](images/mate/look_1/apps.png)|![img](images/mate/look_1/menu.png)|
+|![img](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/mate/look_1/apps.png)|![img](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/mate/look_1/menu.png)|
 
 </details>
 <br>

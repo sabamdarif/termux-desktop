@@ -1,13 +1,13 @@
 ## 0. Stock:
 
-<center><img src="images/lxqt/look_0/desktop.png"></center>
+<center><img src="https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/lxqt/look_0/desktop.png"></center>
 
 <details style ="font-size: larger">
 <summary><b style ="font-size: larger">Screenshots: </b></summary>
 
 |Apps|Start Menu|
 |--|--|
-|![img](images/lxqt/look_0/apps.png)|![img](images/lxqt/look_0/start-menu.png)|
+|![img](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/lxqt/look_0/apps.png)|![img](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/lxqt/look_0/start-menu.png)|
 
 </details>
 <br>
@@ -33,14 +33,14 @@ Icon Used:
 </details>
 <br>
 
-<center><img src="images/lxqt/look_1/desktop.png"></center>
+<center><img src="https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/lxqt/look_1/desktop.png"></center>
 
 <details style ="font-size: larger">
 <summary><b style ="font-size: larger">Screenshots: </b></summary>
 
 |Apps|Start Menu|
 |--|--|
-|![img](images/lxqt/look_1/apps.png)|![img](images/lxqt/look_1/start-menu.png)|
+|![img](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/lxqt/look_1/apps.png)|![img](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/lxqt/look_1/start-menu.png)|
 
 </details>
 
@@ -67,14 +67,14 @@ Icon Used:
 </details>
 <br>
 
-<center><img src="images/lxqt/look_2/desktop.png"></center>
+<center><img src="https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/lxqt/look_2/desktop.png"></center>
 
 <details style ="font-size: larger">
 <summary><b style ="font-size: larger">Screenshots: </b></summary>
 
 |Apps|Start Menu|
 |--|--|
-|![img](images/lxqt/look_2/apps.png)|![img](images/lxqt/look_2/start-menu.png)|
+|![img](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/lxqt/look_2/apps.png)|![img](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/lxqt/look_2/start-menu.png)|
 
 </details>
 
