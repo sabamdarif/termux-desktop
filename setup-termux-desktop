@@ -512,18 +512,31 @@ function count_subfolders() {
     local owner="$1"
     local repo="$2"
     local path="$3"
-    local url="https://api.github.com/repos/$owner/$repo/contents/$path"
+    local branch="$4"
+    
+    # GitHub API URL with branch reference
+    local url="https://api.github.com/repos/$owner/$repo/contents/$path?ref=$branch"
+    
+    # Get the response from the GitHub API
     local response
-	response=$(curl -s "$url")
-    local subfolder_count
-	subfolder_count=$(echo "$response" | jq -r '.[] | select(.type == "dir") | .name' | wc -l)
+    response=$(curl -s "$url")
+    
+    # Check for API errors (e.g., rate limiting or wrong path)
+    if echo "$response" | jq -e 'has("message")' >/dev/null; then
+        echo "Error: $(echo "$response" | jq -r '.message')"
+        return 1
+    fi
+    
+    # Extract and count directories
+#    local subfolder_count
+    subfolder_count=$(echo "$response" | jq -r '.[] | select(.type == "dir") | .name' | wc -l)
 
+    # Default to 0 if no subfolders are found
     if [[ -z "$subfolder_count" || "$subfolder_count" -eq 0 ]]; then
         subfolder_count=0
     fi
 
     echo "$subfolder_count"
-	print_log "$url $response $subfolder_count"
 }
 
 # create a yes / no confirmation prompt
@@ -736,10 +749,13 @@ function validate_required_vars() {
 # in the style readme file the name must use this'## number name :' pattern, like:- ## 1. Basic Style:
 function questions_theme_select() {
     local owner="sabamdarif"
-    local repo="termux-desktop"
-    local main_folder="setup-files/$de_name"
-    local subfolder_count_value
-    subfolder_count_value=$(count_subfolders "$owner" "$repo" "$main_folder" 2>/dev/null)
+	local repo="termux-desktop"
+	local main_folder="setup-files/$de_name"
+	local branch="setup-files"
+
+	# Call the count_subfolders function with the branch parameter
+	subfolder_count_value=$(count_subfolders "$owner" "$repo" "$main_folder" "$branch" 2>/dev/null)
+
     cd "$HOME" || return
     echo "${R}[${C}-${R}]${G} Downloading list of available styles...${W}"
     check_and_backup "${current_path}/styles.md"
@@ -4632,28 +4648,28 @@ case $1 in
             style)
                 change_style
                 ;;
-			distro|pd)
+            distro|pd)
                 change_distro "$1" "$2"
                 ;;
-			hw|hwa)
+            hw|hwa)
                 change_hw
                 ;;
-			autostart)
+            autostart)
                 change_autostart
                 ;;
-			display)
+            display)
                 change_display
                 ;;
-			h|help|-h|--help)
-			    show_change_help
+            h|help|-h|--help)
+                show_change_help
                 ;;
             *)
                 print_failed "${BOLD} Invalid option: ${C}$2"
-				echo "${R}[${C}-${R}]${G} Use --change help to show help${W}"
+                echo "${R}[${C}-${R}]${G} Use --change help to show help${W}"
                 ;;
         esac
         ;;
-		--reinstall|-ri)
+    --reinstall|-ri)
         IFS=',' read -ra OPTIONS <<< "$2"
         for option in "${OPTIONS[@]}"; do
             case $option in
@@ -4667,27 +4683,32 @@ case $1 in
                     reinstall_config
                     ;;
                 h|help|-h|--help)
-				    show_reinstall_help
+                    show_reinstall_help
                     exit
                     ;;
                 *)
                     print_failed "${BOLD} Invalid option: ${C}$option"
-					echo "${R}[${C}-${R}]${G} Use --reinstall help to show help${W}"
+                    echo "${R}[${C}-${R}]${G} Use --reinstall help to show help${W}"
                     ;;
             esac
         done
         ;;
-	--update)
-	check_for_update_and_update_installer "$1"
-	check_for_appstore_update
-	;;
+    --update)
+        check_for_update_and_update_installer "$1"
+        check_for_appstore_update
+        ;;
     --help|-h)
         show_help
         ;;
-	--reset)
-	    reset_changes
-		;;
+    --reset)
+        reset_changes
+        ;;
     *)
-        install_termux_desktop
+        if [[ -n "$1" ]]; then
+            print_failed "${BOLD} Invalid option: ${C}$1"
+            show_help
+        else
+            install_termux_desktop
+        fi
         ;;
 esac

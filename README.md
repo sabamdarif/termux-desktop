@@ -1,9 +1,4 @@
-<br>
-<center><img src="https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/xfce/look_1/desktop.png
-"></center>
-<br>
-
-<p align="center"><b style="font-size: x-large">Easily Install Termux GUI Desktop</b></p>
+<p align="center"><b style="font-size: xx-large">Easily Install Termux GUI Desktop</b></p>
 
 <div align="center">
 
