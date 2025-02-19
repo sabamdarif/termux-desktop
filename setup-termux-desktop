@@ -845,7 +845,7 @@ function questions_setup_manual() {
 	banner
 	questions_theme_select
 	echo
-	print_success "Continuing with answer: ${style_answer}.$style_name"
+	print_success "Continuing with answer: ${style_answer})$style_name"
 	print_to_config "style_answer"
 	sleep 0.2
 	banner
@@ -2294,21 +2294,9 @@ function additional_required_package_installler() {
 	if [[ "$de_name" == "xfce" ]]; then
     echo "${R}[${C}-${R}]${G}${BOLD} Installing Additional Packages If Required...${W}"
 	echo
-	if [[ "$style_answer" == "2" ]] || [[ "$style_answer" == "5" ]] || [[ "$style_answer" == "6" ]]; then
-	package_install_and_check "cairo-dock-core"
-	elif [[ "$style_answer" == "2" ]] || [[ "$style_answer" == "6" ]]; then
-	package_install_and_check "rofi"
-	elif [[ "$style_answer" == "2" ]]; then
-	package_install_and_check "fluent-icon-theme vala-panel-appmenu"
-	elif [[ "$style_answer" == "4" ]]; then
     package_install_and_check "gtk2-engines-murrine"
-	elif [[ "$style_answer" == "5" ]] || [[ "$style_answer" == "6" ]]; then
-	cp "$HOME/.config/xpple_menu/applications/*" "$PREFIX/share/applications/"
-	elif [[ "$style_answer" == "7" ]]; then
+	if [[ "$style_answer" == "7" ]]; then
 	install_font_for_style "7"
-	else
-	echo "${R}[${C}-${R}]${G} No Additional Packages Required For Theme: ${style_answer}${W}"
-	sleep 1
 	fi
 	elif [[ "$de_name" == "openbox" ]]; then
 	    if [[ "$style_answer" == "1" ]]; then
@@ -2363,7 +2351,7 @@ function setup_folder() {
 	termux-reload-settings
 	directories=(Music Download Pictures Videos)
 	for dir in "${directories[@]}"; do
-	check_and_create_directory "$HOME/storage/shared/$dir"
+	check_and_create_directory "/sdcard/$dir"
 	done
 	check_and_create_directory "$HOME/Desktop"
 	ln -s "$HOME/storage/shared/Music" "$HOME/"
@@ -4202,25 +4190,21 @@ function reinstall_icons() {
 	tmp_icons_folder="$PREFIX/tmp/icons"
 	check_and_create_directory "$tmp_icons_folder"
 	package_install_and_check "gdk-pixbuf"
-	if [[ "$style_answer" == "2" ]]; then
-	package_install_and_check "fluent-icon-theme"
-	else
 	echo "${R}[${C}-${R}]${G} Reinstalling Icons...${W}"
 	download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/setup-files/setup-files/${de_name}/look_${style_answer}/icon.tar.gz" "$tmp_icons_folder"
 	local icon_themes_names
 	icon_themes_names=$(ls "$tmp_icons_folder")
 	local icon_theme
-	for icon_theme in $icon_themes_names; do
-	check_and_delete "$icons_folder/$icon_theme"
-	mv "$tmp_icons_folder/$icon_theme" "$icons_folder/"
-	echo "${R}[${C}-${R}]${G} Creating icon cache...${W}"
-	if [[ "$de_name" == "xfce" ]]; then
-	gtk-update-icon-cache -f -t "$icons_folder/$icons_theme"
-	fi
-	gtk-update-icon-cache -f -t "$PREFIX/share/icons/$icons_theme"
-	done
+		for icon_theme in $icon_themes_names; do
+		check_and_delete "$icons_folder/$icon_theme"
+		mv "$tmp_icons_folder/$icon_theme" "$icons_folder/"
+		echo "${R}[${C}-${R}]${G} Creating icon cache...${W}"
+			if [[ "$de_name" == "xfce" ]]; then
+			gtk-update-icon-cache -f -t "$icons_folder/$icons_theme"
+			fi
+		gtk-update-icon-cache -f -t "$PREFIX/share/icons/$icons_theme"
+		done
 	echo "${R}[${C}-${R}]${G}${BOLD} Icons reinstall successfully${W}"
-	fi
 }
 
 #########################################################################
@@ -4265,23 +4249,6 @@ function some_fixes() {
 	device_brand_name=$(getprop ro.product.brand | cut -d ' ' -f 1)
 	if [[ $device_brand_name == samsung* && $android_version -ge 14 ]]; then
     grep -q "LD_PRELOAD=/system/lib64/libskcodec.so" "$shell_rc_file" || echo "LD_PRELOAD=/system/lib64/libskcodec.so" >> "$shell_rc_file"
-	fi
-
-	if [[ "$de_name" == "xfce" ]]; then
-		echo "${R}[${C}-${R}]${G} Starting termux:x11 to fix some stuff...${W}"
-		termux-x11 :${display_number} &
-		sleep 2
-    	env DISPLAY=:${display_number} dbus-launch --exit-with-session xfce4-session > /dev/null 2>&1 &
-		sleep 7
-		echo "${R}[${C}-${R}]${G} Disabling custom font size...${W}"
-		env DISPLAY=:${display_number} dbus-launch xfconf-query -c xfce4-desktop -p /desktop-icons/use-custom-font-size -s false -t bool > /dev/null 2>&1
-		sleep 3
-		# echo "${R}[${C}-${R}]${G} Setting up a random wallpaper..${W}"
-		# local WALLPAPER
-		# WALLPAPER=$(find "$PREFIX/share/backgrounds" -type f \( -iname "*.jpg" -o -iname "*.png" -o -iname "*.jpeg" \) | shuf -n 1)
-		# # Set the random wallpaper using xfconf-query
-		# env DISPLAY=:${display_number} dbus-launch xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor0/workspace0/last-image -s "$WALLPAPER" > /dev/null 2>&1
-		tx11stop -f > /dev/null 2>&1
 	fi
 	# tx11start and vncstart
 	if [[ $termux_hw_answer == "freedreno" ]] || [[ $termux_hw_answer == "zink_with_mesa" ]] || [[ $termux_hw_answer == "zink_with_mesa_zink" ]]; then
