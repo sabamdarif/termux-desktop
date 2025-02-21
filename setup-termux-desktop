@@ -527,8 +527,7 @@ function count_subfolders() {
         return 1
     fi
     
-    # Extract and count directories
-#    local subfolder_count
+    # Extract and count directoriest
     subfolder_count=$(echo "$response" | jq -r '.[] | select(.type == "dir") | .name' | wc -l)
 
     # Default to 0 if no subfolders are found
@@ -645,13 +644,15 @@ function read_conf() {
 function print_to_config() {
     local var_name="$1"
     local var_value="${2:-${!var_name}}"
-    
+    local IFS=$' \t\n'
+  
     if grep -q "^${var_name}=" "$config_file" 2>/dev/null; then
         sed -i "s|^${var_name}=.*|${var_name}=\"${var_value}\"|" "$config_file"
     else
         echo "${var_name}=\"${var_value}\"" >> "$config_file"
     fi
-    print_log "$var_name $var_value"
+    
+    print_log "$var_name \"$var_value\""
 }
 
 function validate_required_vars() {
@@ -807,6 +808,7 @@ function questions_theme_select() {
                 echo
             fi
         done
+		print_to_config "style_answer"
 		print_to_config "style_name"
         check_and_delete "${current_path}/styles.md"
     else
@@ -862,7 +864,6 @@ function questions_setup_manual() {
 	questions_theme_select
 	echo
 	print_success "Continuing with answer: ${style_answer})$style_name"
-	print_to_config "style_answer"
 	sleep 0.2
 	banner
 	echo "${R}[${C}-${R}]${G}${BOLD} Select browser you want to install${W}"
@@ -1031,22 +1032,16 @@ echo
 if [[ "$enable_hw_acc" == "y" ]]; then
 	banner
 	if ! type -p pacman >/dev/null 2>&1; then
-	echo "${R}[${C}-${R}]${R}${BOLD} Read This Carefully${W}"
+	echo "${R}[${C}-${R}]${R}${BOLD} Read This Carefully:-${W}"
 	echo -e "
-${R}[${C}-${R}]${G}${BOLD} Mesa Vulkan ICD-Wrapper:- ${W}
+${R}[${C}-${R}]${G}${BOLD} Mesa Vulkan ICD-Wrapper ${W}
 
-In my tests, I achieved 1000+ FPS in vkmark on all my devices. I tried it on an 
-- Adreno 619 (everything work fine)
-- Adreno 750 (good overall but with few issues)
-- Mali G76 (similar issue like Adreno 750).
-- Mali G57 everything work with this driver\n
-
-Also if you have Adreno GPU then please select ubuntu or debian as Linux container so it can use ternip in the Linux container.\n
+If you have Adreno GPU then please select ubuntu or debian as Linux container so it can use ternip in the Linux container.\n
 Sadly for other then adreno, GPU might / might not work on the Linux container./n
 
 If you type 'n/N' then it will use the old virtualizing way to setup Hardware Acceleration
 
-Also type 'n/N' for Freedreno KGSL (Adreno GPU Only)./n
+Also type 'n/N' If you want to use Freedreno KGSL (Adreno GPU Only)./n
 "
 	confirmation_y_or_n "Do you want to install the new mesa-vulkan-icd-wrapper Driver" confirmation_mesa_vulkan_icd_wrapper
 	print_to_config "confirmation_mesa_vulkan_icd_wrapper"
@@ -1527,7 +1522,7 @@ function define_value_name() {
 	# Distro Vulkan Driver
 	if [[ "$pd_hw_answer" == "zink" ]]; then
 	distro_vulkan_driver="Not Supported"
-	elif [[ "$pd_hw_answer" == "zink_virgl" ]]; then
+	elif [[ "$pd_hw_answer" == "zink_virgl" ]] || [[ "$pd_hw_answer" == "virgl" ]]; then
 	distro_vulkan_driver="Not Supported"
 	elif [[ "$pd_hw_answer" == "turnip" ]]; then
 	distro_vulkan_driver="Turnip"
@@ -1704,23 +1699,18 @@ function questions_install_type() {
     echo
     sleep 0.2
 
-    echo "${G}Key Terms:${W}"
-    echo "   • Generic: Pre-configured options that so far work best in most of the devices"
-    echo "   • Recommended: Tested configurations with minimal known issues"
-    echo "   • Hardware Acceleration: Uses your device's GPU for better graphics render"
-	echo "   • Custom: Full control over all installation options"
-    echo
-    
-    echo "${R}[${Y}!${R}]${R} Important Note: ${W}"
-    echo -e "${B}
-While 'Generic with Hardware Acceleration' works well on most modern devices, it may not be compatible with all hardware. 
-
-Generic is only recomended for beginners
-\n"
-    echo -e "
+    echo -e "${G} Key Terms:${W}
+• Generic: Pre-configured options that so far work best in most of the devices\n
+• Recommended: Tested configurations with minimal known issues\n
+• Hardware Acceleration: Uses your device's GPU for better graphics render\n
+• Custom: Full control over all installation options\n
+"
+echo "${R}[${Y}!${R}]${R} Important Note: ${W}"
+echo -e "${B}
+Generic is only recomended for beginners\n
 For most of the user who are familiar with termux, custom option recomended for them. 
 
-Also most the installer's features are only available in custom option
+${C}So use the ${G}3. Custom${C} option, it's best
 ${W}"
     
     # Show selection options
@@ -2188,7 +2178,7 @@ function install_desktop() {
     if [[ "$desktop_answer" == "1" ]]; then
         log_info "Installing XFCE4"
         echo "${R}[${C}-${R}]${G}${BOLD} Installing Xfce4 Desktop${W}"
-        package_install_and_check "xfce4 xfce4-goodies xfce4-pulseaudio-plugin"
+        package_install_and_check "xfce4*"
     elif [[ "$desktop_answer" == "2" ]]; then
         echo "${R}[${C}-${R}]${G}${BOLD} Installing Lxqt Desktop${W}"
         echo
@@ -2209,7 +2199,7 @@ function install_desktop() {
     #     package_install_and_check "xdg-utils"
     # fi
 
-    log_info "Desktop installation completed"
+    log_info "Desktop installation process done"
 }
 
 #########################################################################
@@ -2219,7 +2209,7 @@ function install_desktop() {
 #########################################################################
 function set_config_dir() {
 	if [[ "$de_name" == "xfce" ]]; then
-	config_dirs=(autostart cairo-dock dconf gtk-3.0 Mousepad pulse Thunar menu ristretto rofi xfce4)
+	config_dirs=(autostart cairo-dock eww picom dconf gtk-3.0 Mousepad pulse Thunar menu ristretto rofi xfce4)
 	elif [[ "$de_name" == "lxqt" ]]; then
 	config_dirs=(fontconfig gtk-3.0 lxqt pcmanfm-qt QtProject.conf glib-2.0 Kvantum openbox qterminal.org)
 	elif [[ "$de_name" == "openbox" ]]; then
@@ -2236,7 +2226,7 @@ function theme_installer() {
     echo
 
     if [[ "$de_name" == "xfce" ]] || [[ "$de_name" == "openbox" ]]; then
-        package_install_and_check "gnome-themes-extra"
+        package_install_and_check "gnome-themes-extra gtk2-engines-murrine"
     fi
 
     sleep 3
@@ -2301,19 +2291,21 @@ function theme_installer() {
 
 #########################################################################
 #
-# Install Additional Packages For Theme
+# Install Additional Packages For Setup
 #
 #########################################################################
 
-function additional_required_package_installler() {
+function additional_required_steps() {
     banner
 	if [[ "$de_name" == "xfce" ]]; then
     echo "${R}[${C}-${R}]${G}${BOLD} Installing Additional Packages If Required...${W}"
 	echo
-    package_install_and_check "gtk2-engines-murrine"
-	if [[ "$style_answer" == "7" ]]; then
-	install_font_for_style "7"
-	fi
+		if [[ "$style_answer" == "4" ]] || [[ "$style_answer" == "5" ]]; then
+		install_font_for_style "${style_answer}"
+		fi
+		if [[ "$style_answer" == "5" ]]; then
+		package_install_and_check "eww"
+		fi
 	elif [[ "$de_name" == "openbox" ]]; then
 	    if [[ "$style_answer" == "1" ]]; then
 	    install_font_for_style "1"
@@ -2336,7 +2328,9 @@ function setup_config() {
 	banner
 	echo "${R}[${C}-${R}]${G}${BOLD} Installing $de_name Style: ${C}${style_answer}${W}"
 	theme_installer
-	additional_required_package_installler
+	additional_required_steps
+	else
+	print_failed "Failed to select style..."
 	fi
 	if [[ "$ext_wall_answer" == "n" ]]; then
 	echo "${R}[${C}-${R}]${C} Skipping Extra Wallpapers Setup...${W}"
@@ -4507,7 +4501,7 @@ function reset_changes() {
 
         if [[ "$shell_name" == "zsh" ]]; then
             chsh -s bash
-            rm -rf "$HOME/.oh-my-zsh"
+            check_and_delete "$HOME/.oh-my-zsh"
         fi
 
         check_and_delete "$shell_rc_file"
@@ -4568,6 +4562,7 @@ if [[ "$style_answer" == "0" ]]; then
 	banner
 	echo "${R}[${C}-${R}]${G}${BOLD} Configuring Stock $de_name Style...${W}"
 	echo
+	print_to_config "style_answer"
 	print_to_config "style_name" "Stock"
 else
 	setup_config
