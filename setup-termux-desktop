@@ -2165,9 +2165,9 @@ function install_required_packages() {
     echo
 
     if [[ "$PACKAGE_MANAGER" == "pacman" ]]; then
-        package_install_and_check "wget pv jq curl termux-am"
+        package_install_and_check "wget git pv jq curl termux-am termux-api"
     else
-        package_install_and_check "wget pv jq curl tar xz-utils gzip termux-am x11-repo tur-repo"
+        package_install_and_check "wget git pv jq curl tar xz-utils gzip termux-am x11-repo tur-repo termux-api"
     fi
 }
 
@@ -2178,7 +2178,7 @@ function install_desktop() {
     if [[ "$desktop_answer" == "1" ]]; then
         log_info "Installing XFCE4"
         echo "${R}[${C}-${R}]${G}${BOLD} Installing Xfce4 Desktop${W}"
-        package_install_and_check "xfce4*"
+        package_install_and_check "xfce4 xfce4-goodies xfce4-pulseaudio-plugin xfce4-battery-plugin xfce4-docklike-plugin xfce4-notifyd-static"
     elif [[ "$desktop_answer" == "2" ]]; then
         echo "${R}[${C}-${R}]${G}${BOLD} Installing Lxqt Desktop${W}"
         echo
@@ -2186,7 +2186,7 @@ function install_desktop() {
     elif [[ "$desktop_answer" == "3" ]]; then
         echo "${R}[${C}-${R}]${G}${BOLD} Installing Openbox WM${W}"
         echo
-        package_install_and_check "openbox polybar xorg-xsetroot lxappearance wmctrl feh termux-api thunar firefox mpd rofi bmon xcompmgr xfce4-settings gtk3 gedit"
+        package_install_and_check "openbox polybar xorg-xsetroot lxappearance wmctrl feh thunar firefox mpd rofi bmon xcompmgr xfce4-settings gtk3 gedit"
     elif [[ "$desktop_answer" == "4" ]]; then
         echo "${R}[${C}-${R}]${G}${BOLD} Installing MATE${W}"
         echo

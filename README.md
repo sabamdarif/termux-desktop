@@ -31,16 +31,16 @@
 
 ##### 1. Ensure Requirements Are Met:
    - Android 8+ device
-   - [Termux](https://termux.dev/en/) (download from [GitHub](https://github.com/termux/termux-app/releases) or [F-Droid](https://f-droid.org/en/packages/com.termux/))
+   - **[Termux](https://termux.dev/en/)** (download from [GitHub](https://github.com/termux/termux-app/releases) or [F-Droid](https://f-droid.org/en/packages/com.termux/))
       >NOTE: This Only Works On Termux From Github Or Fdroid
 
      > Avoid using Termux from Google Play due to API limitations.
+   - **[Termux:X11](https://github.com/termux/termux-x11/releases)**
+   - **[Termux-API](https://github.com/termux/termux-api/releases)**
    - Minimum 2GB of RAM (3GB recommended)
    - 1.5-2GB of Internet data
    - 3-4GB of free storage
-   - VNC Client ([RealVNC](https://play.google.com/store/apps/details?id=com.realvnc.viewer.android) or [NetHunter Kex](https://store.nethunter.com/en/packages/com.offsec.nethunter.kex/))
-   - [Termux:X11](https://github.com/termux/termux-x11/releases)
-   - [Termux-API](https://github.com/termux/termux-api/releases) (Openbox only)
+   - VNC Client [RealVNC](https://play.google.com/store/apps/details?id=com.realvnc.viewer.android) or [NetHunter Kex](https://store.nethunter.com/en/packages/com.offsec.nethunter.kex/) _(Optional)_
 
 ##### 2. Explore Desktop Styles:
    - **[XFCE](xfce_styles.md)**
@@ -191,9 +191,11 @@ Options:
 
 |XFCE|LXQT|
 |--|--|
-|![img](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/xfce/look_1/look.png)|![img](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/lxqt/look_2/start-menu.png)|
+|![img](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/xfce/look_5/desktop.png)|![img](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/lxqt/look_2/start-menu.png)|
 |OPENBOX|MATE|
 |![img](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/openbox/look_1/desktop.png)|![img](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/mate/look_1/desktop.png)|
+
+#### [See More..](https://github.com/sabamdarif/termux-desktop?tab=readme-ov-file#2-explore-desktop-styles)
 
 ### App Store:
 <img src="images/termux-app-store.png">
