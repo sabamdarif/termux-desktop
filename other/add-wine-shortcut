@@ -7,8 +7,14 @@ function check_termux() {
 	fi
 }
 
+if [[ "$wine_answer" == "3" ]]; then
+wine_cmd="hangover-wine"
+else
+wine_cmd="wine"
+fi
+
 function wine_shortcut() {
-check_and_backup "$PREFIX/share/applications/wine-explorer.desktop $PREFIX/share/applications/wine-winecfg.desktop $PREFIX/share/applications/wine-uninstaller.desktop $PREFIX/share/applications/wine-regedit.desktop $PREFIX/share/applications/wine-wineboot.desktop"
+rm -rf "$PREFIX/share/applications/wine-explorer.desktop $PREFIX/share/applications/wine-winecfg.desktop $PREFIX/share/applications/wine-uninstaller.desktop $PREFIX/share/applications/wine-regedit.desktop $PREFIX/share/applications/wine-wineboot.desktop" >/dev/null 2>&1
 
 cat << EOF > "$PREFIX/share/applications/wine-explorer.desktop"
 [Desktop Entry]
@@ -16,7 +22,7 @@ Name=Wine File
 Comment=Wine File Browser
 Name[ar]=مدير ملفات واين
 Comment[ar]=إدارة الملفات بطريقة واين
-Exec=wine explorer
+Exec=${wine_cmd} explorer
 Icon=winefile
 Terminal=false
 Type=Application
@@ -30,7 +36,7 @@ Name=Wine Configuration
 Comment=Interface to set wine parameters
 Name[ar]=إعدادات واين
 Comment[ar]=لوحة تحكم بمنظومة واين
-Exec=wine winecfg
+Exec=${wine_cmd} winecfg
 Icon=winecfg
 Terminal=false
 Type=Application
@@ -46,7 +52,7 @@ Name=Wine Software Uninstaller
 Comment=Interface to uninstall software
 Name[ar]=مزيل التطبيقات من واين
 Comment[ar]=واجهة إزالة التّطبيقات من واين
-Exec=wine uninstaller
+Exec=${wine_cmd} uninstaller
 Icon=msiexec
 Terminal=false
 Type=Application
@@ -62,7 +68,7 @@ Name=Regedit
 Comment=Wine registry editor
 Name[ar]=محرر السّجل
 Comment[ar]=محرر لسجلات واين
-Exec=wine regedit
+Exec=${wine_cmd} regedit
 Icon=regedit
 Terminal=false
 Type=Application
@@ -78,7 +84,7 @@ Name=Wine Boot
 Comment=Simulate restart
 Name[ar]=إقلاع واين
 Comment[ar]=محاكاة إعادة التشغيل لواين
-Exec=wine wineboot
+Exec=${wine_cmd} wineboot
 Icon=wine
 Terminal=false
 Type=Application

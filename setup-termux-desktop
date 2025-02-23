@@ -1102,6 +1102,10 @@ function distro_hw_questions() {
                 echo "${Y}2. Turnip (Adreno GPU Only)${W}"
                 echo
                 select_an_option 2 1 pd_hw_answer_num
+				case "$pd_hw_answer_num" in
+                1) pd_hw_answer="virgl" ;;
+                2) pd_hw_answer="turnip" ;;
+            	esac
                 pd_hw_answer=$([ "$pd_hw_answer_num" == "1" ] && echo "virgl" || echo "turnip")
             else
                 pd_hw_answer="virgl"
@@ -1156,17 +1160,17 @@ function exp_termux_gl_hw_support() {
 	echo
 	echo "${Y}1. Vulkan (ZINK)${W}"
 	echo
-	echo "${Y}2. OpenGL (VIRGL ANGLE)${W}"
+	echo "${Y}2. OpenGL (VIRGL)${W}"
 	echo
-	echo "${Y}3. Vulkan (VIRGL ANGLE)${W}"
+	echo "${Y}3. OpenGL (VIRGL ANGLE)${W}"
 	echo
-	echo "${Y}4. OpenGL ES (ZINK VIRGL)${W}"
+	echo "${Y}4. Vulkan (VIRGL ANGLE)${W}"
 	echo
-	echo "${Y}5. The Vulkan-Icd-Wrapper Driver With Mesa${W}"
+	echo "${Y}5. OpenGL ES (ZINK VIRGL)${W}"
 	echo
-	echo "${Y}6. The Vulkan-Icd-Wrapper Driver With Mesa-Zink${W}"
+	echo "${Y}6. The Vulkan-Icd-Wrapper Driver With Mesa${W}"
 	echo
-	echo "${Y}7. Freedreno KGSL (Unstable | Adreno GPU Only)${W}"
+	echo "${Y}7. The Vulkan-Icd-Wrapper Driver With Mesa-Zink${W}"
 	echo
 	select_an_option 7 1 exp_termux_gl_hw_answer_num
 	print_to_config "exp_termux_gl_hw_answer_num"
@@ -1174,12 +1178,12 @@ function exp_termux_gl_hw_support() {
 	# set gpu api name
 	case "$exp_termux_gl_hw_answer_num" in
 	    1) exp_termux_gl_hw_answer="zink" ;;
-	    2) exp_termux_gl_hw_answer="virgl" ;;
-	    3) exp_termux_gl_hw_answer="virgl_vulkan" ;;
-	    4) exp_termux_gl_hw_answer="zink_virgl" ;;
-	    5) exp_termux_gl_hw_answer="zink_with_mesa" ;;
-	    6) exp_termux_gl_hw_answer="zink_with_mesa_zink" ;;
-	    7) exp_termux_gl_hw_answer="freedreno" ;;
+		2) exp_termux_gl_hw_answer="virgl" ;;
+	    3) exp_termux_gl_hw_answer="virgl_angle" ;;
+	    4) exp_termux_gl_hw_answer="virgl_vulkan" ;;
+	    5) exp_termux_gl_hw_answer="zink_virgl" ;;
+	    6) exp_termux_gl_hw_answer="zink_with_mesa" ;;
+	    7) exp_termux_gl_hw_answer="zink_with_mesa_zink" ;;
 	esac
 	print_to_config "exp_termux_gl_hw_answer"
 	termux_hw_answer="${exp_termux_gl_hw_answer}"
@@ -1215,13 +1219,15 @@ function hw_questions() {
     echo
 	echo "${Y}1. Vulkan (ZINK)${W}"
 	echo
-    echo "${Y}2. OpenGL (VIRGL ANGLE)${W}"
+	echo "${Y}2. OpenGL (VIRGL)${W}"
 	echo
-	echo "${Y}3. Vulkan (VIRGL ANGLE)${W}"
+    echo "${Y}3. OpenGL (VIRGL ANGLE)${W}"
 	echo
-	echo "${Y}4. OpenGL ES (ZINK VIRGL)${W}"
+	echo "${Y}4. Vulkan (VIRGL ANGLE)${W}"
 	echo
-	echo "${Y}5. Freedreno KGSL (Unstable | Adreno GPU Only)${W}"
+	echo "${Y}5. OpenGL ES (ZINK VIRGL)${W}"
+	echo
+	echo "${Y}6. Freedreno KGSL (Unstable | Adreno GPU Only)${W}"
 	echo
 	select_an_option 5 1 termux_hw_answer_num
 	print_to_config "termux_hw_answer_num"
@@ -1230,9 +1236,10 @@ function hw_questions() {
 	case "$termux_hw_answer_num" in
 	    1) termux_hw_answer="zink" ;;
 	    2) termux_hw_answer="virgl" ;;
-	    3) termux_hw_answer="virgl_vulkan" ;;
-	    4) termux_hw_answer="zink_virgl" ;;
-	    5) termux_hw_answer="freedreno" ;;
+		3) termux_hw_answer="virgl_angle" ;;
+	    4) termux_hw_answer="virgl_vulkan" ;;
+	    5) termux_hw_answer="zink_virgl" ;;
+	    6) termux_hw_answer="freedreno" ;;
 	esac
 		distro_hw_questions
 	fi
@@ -1474,6 +1481,8 @@ function define_value_name() {
 	opengl_driver_name="Zink"
 	elif [[ "$termux_hw_answer" == "virgl" ]]; then
 	opengl_driver_name="Virgl"
+	elif [[ "$termux_hw_answer" == "virgl_angle" ]]; then
+	opengl_driver_name="Virgl Angle"
 	elif [[ "$termux_hw_answer" == "virgl_vulkan" ]]; then
 	opengl_driver_name="VIRGL ANGLE (Vulkan)"
 	elif [[ "$termux_hw_answer" == "zink_virgl" ]]; then
@@ -1783,8 +1792,13 @@ ${W}"
 		# hw acc termux
 		confirmation_mesa_vulkan_icd_wrapper=y
 		exp_termux_gl_hw_answer_num=3
-		exp_termux_gl_hw_answer="virgl_vulkan"
-		termux_hw_answer="virgl_vulkan"
+		if [[ "$device_gpu_model_name" == "adreno" ]]; then
+		exp_termux_gl_hw_answer="virgl"
+		termux_hw_answer="virgl"
+		else
+		exp_termux_gl_hw_answer="virgl_angle"
+		termux_hw_answer="virgl_angle"
+		fi
 		print_to_config "confirmation_mesa_vulkan_icd_wrapper"
 		print_to_config "exp_termux_gl_hw_answer_num"
 		print_to_config "exp_termux_gl_hw_answer"
@@ -3603,9 +3617,9 @@ function setup_fonts() {
 #########################################################################
 
 function run_wine_shortcut_script() {
-	download_file "${current_path}/add-wine-shortcut" https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/other/add-wine-shortcut
-	chmod +x "${current_path}/add-wine-shortcut"
-    . ${current_path}/add-wine-shortcut
+	download_file "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/other/add-wine-shortcut"
+	chmod +x "add-wine-shortcut"
+    ./add-wine-shortcut
 	check_and_delete "add-wine-shortcut"
 }
 
@@ -3627,11 +3641,13 @@ function setup_wine() {
 	sleep 4
 	download_file "$PREFIX/bin/wine" "https://raw.githubusercontent.com/LinuxDroidMaster/Termux-Desktops/main/scripts/termux_native/mobox_run.sh"
 	chmod +x "$PREFIX/bin/wine"
+	print_success "Adding wine desktop shortcuts..."
 	run_wine_shortcut_script
 	cp "$PREFIX/share/applications/wine-explorer.desktop" "$HOME/Desktop/MoboxExplorer.desktop"
 	print_to_config "setup_wine" "mobox"
 	elif [[ "$wine_answer" == "3" ]]; then
 	package_install_and_check "hangover hangover-wine winetricks"
+	print_success "Adding wine desktop shortcuts..."
 	run_wine_shortcut_script
 	print_to_config "setup_wine" "hangover-wine"
 	elif [[ "$wine_answer" == "4" ]]; then
@@ -3641,6 +3657,7 @@ function setup_wine() {
     echo "${R}[${C}-${R}]${G} Installing Wine Natively In Termux${W}"
 	echo
 	package_install_and_check "wine-stable winetricks"
+	print_success "Adding wine desktop shortcuts..."
 	run_wine_shortcut_script
 	print_to_config "setup_wine" "default-wine"
 	fi

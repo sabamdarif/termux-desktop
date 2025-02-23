@@ -43,14 +43,9 @@ function hw_install_required_packages() {
                 package_install_and_check "mesa-zink virglrenderer-mesa-zink vulkan-loader-generic angle-android virglrenderer-android"
                 ;;
             "zink_with_mesa")
-                # if [[ "$archtype" == "aarch64" || "$archtype" == "arm" ]]; then
-                #     wget -O mesa.deb https://github.com/sabamdarif/termux-desktop/releases/download/mesa-vulkan/mesa_24.2.6-1_${archtype}.deb
-                #     apt install ./mesa.deb -y
-                #     check_and_delete "mesa.deb"
-                # fi
                 package_install_and_check "mesa virglrenderer vulkan-loader-generic angle-android virglrenderer-android"
                 ;;
-            "virgl")
+            "virgl"|"virgl_angle")
                 package_install_and_check "angle-android virglrenderer-android"
                 ;;
             "virgl_vulkan")
@@ -110,7 +105,13 @@ case "$termux_hw_answer" in
     pd_hw_method="${hw_method}"
     ;;
     "virgl")
-    set_to_export="MESA_NO_ERROR=1 MESA_GL_VERSION_OVERRIDE=4.1COMPAT MESA_GLES_VERSION_OVERRIDE=3.2"
+    set_to_export="MESA_NO_ERROR=1 MESA_GL_VERSION_OVERRIDE=4.3COMPAT MESA_GLES_VERSION_OVERRIDE=3.2 LIBGL_DRI3_DISABLE=1 "
+    hw_method="GALLIUM_DRIVER=virpipe"
+    initialize_server_method="virgl_test_server_android"
+    pd_hw_method="${hw_method}"
+    ;;
+    "virgl_angle")
+    set_to_export="MESA_NO_ERROR=1 MESA_GL_VERSION_OVERRIDE=4.3COMPAT MESA_GLES_VERSION_OVERRIDE=3.2 LIBGL_DRI3_DISABLE=1"
     hw_method="GALLIUM_DRIVER=virpipe"
     initialize_server_method="virgl_test_server_android --angle-gl"
     pd_hw_method="${hw_method}"

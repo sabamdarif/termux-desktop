@@ -191,11 +191,11 @@ Options:
 
 |XFCE|LXQT|
 |--|--|
-|![img](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/xfce/look_5/desktop.png)|![img](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/lxqt/look_2/start-menu.png)|
+|![img](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/xfce/look_1/desktop.png)|![img](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/lxqt/look_2/start-menu.png)|
 |OPENBOX|MATE|
 |![img](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/openbox/look_1/desktop.png)|![img](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/mate/look_1/desktop.png)|
 
-#### [See More..](https://github.com/sabamdarif/termux-desktop?tab=readme-ov-file#2-explore-desktop-styles)
+#### [See More...](https://github.com/sabamdarif/termux-desktop?tab=readme-ov-file#2-explore-desktop-styles)
 
 ### App Store:
 <img src="images/termux-app-store.png">
