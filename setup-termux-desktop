@@ -3626,7 +3626,7 @@ function setup_fonts() {
 
 function run_wine_shortcut_script() {
 	print_success "Adding wine desktop shortcuts..."
-	download_file "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/other/add-wine-shortcut"
+	download_file "add-wine-shortcut" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/other/add-wine-shortcut"
 	chmod +x "add-wine-shortcut"
     . add-wine-shortcut
 	check_and_delete "add-wine-shortcut"
