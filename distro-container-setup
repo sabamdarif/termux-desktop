@@ -380,7 +380,7 @@ if [[ "$distro_zsh_answer" == "y" ]]; then
     zsh_setup_content=$(cat <<EOF
 selected_distro=${selected_distro}
 pd_package_install_and_check "git zsh wget"
-wget --tries=5 --retry-connrefused https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/other/install-zsh.sh
+wget --tries=5 --retry-connrefused https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/other/install-zsh.sh
 chmod +x install-zsh.sh
 . install-zsh.sh
 check_and_delete "pd_zsh_install.sh"
@@ -1216,8 +1216,8 @@ case $1 in
         rm $PREFIX/share/applications/add2menu.desktop
         rm $HOME/Desktop/add2menu.desktop > /dev/null 2>&1
         mkdir -p $PREFIX/opt/add2menu
-        wget -O $PREFIX/opt/add2menu/add2menu.py https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/add2menu/add2menu.py
-        wget -O $PREFIX/share/applications/org.sabamdarif.termux.add2menu.desktop https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/add2menu/org.sabamdarif.termux.add2menu.desktop
+        wget -O $PREFIX/opt/add2menu/add2menu.py https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/add2menu/add2menu.py
+        wget -O $PREFIX/share/applications/org.sabamdarif.termux.add2menu.desktop https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/add2menu/org.sabamdarif.termux.add2menu.desktop
         cp $PREFIX/share/applications/org.sabamdarif.termux.add2menu.desktop $HOME/Desktop/
         chmod +x $HOME/Desktop/org.sabamdarif.termux.add2menu.desktop
         ;;

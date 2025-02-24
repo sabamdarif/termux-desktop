@@ -771,7 +771,7 @@ function questions_theme_select() {
     cd "$HOME" || return
     echo "${R}[${C}-${R}]${G} Downloading list of available styles...${W}"
     check_and_backup "${current_path}/styles.md"
-    download_file "${current_path}/styles.md" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/${de_name}_styles.md"
+    download_file "${current_path}/styles.md" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/${de_name}_styles.md"
 
     banner
 
@@ -2406,7 +2406,7 @@ function hw_config() {
 
     if [[ -f ${current_path}/enable-hw-acceleration ]]; then
         local current_script_hash
-        current_script_hash=$(curl -sL https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/enable-hw-acceleration | sha256sum | cut -d ' ' -f 1)
+        current_script_hash=$(curl -sL https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/enable-hw-acceleration | sha256sum | cut -d ' ' -f 1)
         local local_script_hash
         local_script_hash=$(sha256sum "${current_path}/enable-hw-acceleration" | cut -d ' ' -f 1)
 
@@ -2418,7 +2418,7 @@ function hw_config() {
 
             if [[ "$change_old_hw_installer" == "y" ]]; then
                 check_and_backup "${current_path}/enable-hw-acceleration"
-                download_file "${current_path}/enable-hw-acceleration" https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/enable-hw-acceleration
+                download_file "${current_path}/enable-hw-acceleration" https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/enable-hw-acceleration
 				chmod +x "${current_path}/enable-hw-acceleration"
                 . "${current_path}"/enable-hw-acceleration
             else
@@ -2434,7 +2434,7 @@ function hw_config() {
             . "${current_path}"/enable-hw-acceleration
         fi
     else
-        download_file "${current_path}/enable-hw-acceleration" https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/enable-hw-acceleration
+        download_file "${current_path}/enable-hw-acceleration" https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/enable-hw-acceleration
 		chmod +x "${current_path}/enable-hw-acceleration"
         . "${current_path}"/enable-hw-acceleration
     fi
@@ -2465,7 +2465,7 @@ function distro_container_setup() {
 
         if [[ -f "${current_path}/distro-container-setup" ]]; then
             local current_script_hash
-            current_script_hash=$(curl -sL https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/distro-container-setup | sha256sum | cut -d ' ' -f 1)
+            current_script_hash=$(curl -sL https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/distro-container-setup | sha256sum | cut -d ' ' -f 1)
             local local_script_hash
             local_script_hash=$(basename "$(sha256sum "${current_path}/distro-container-setup" | cut -d ' ' -f 1)")
 
@@ -2476,7 +2476,7 @@ function distro_container_setup() {
 
                 if [[ "$change_old_distro_installer" == "y" ]]; then
                     check_and_backup "${current_path}/distro-container-setup"
-                    download_file "${current_path}/distro-container-setup" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/distro-container-setup"
+                    download_file "${current_path}/distro-container-setup" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/distro-container-setup"
 
                     chmod +x "${current_path}/distro-container-setup"
                     . "${current_path}/distro-container-setup"
@@ -2493,7 +2493,7 @@ function distro_container_setup() {
                 . "${current_path}/distro-container-setup"
             fi
         else
-            download_file "${current_path}/distro-container-setup" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/distro-container-setup"
+            download_file "${current_path}/distro-container-setup" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/distro-container-setup"
 
             # Check if arguments are passed
             if [[ ("$1" == "--change" || "$1" == "-c") && ("$2" == "distro" || "$2" == "pd") ]]; then
@@ -3417,7 +3417,7 @@ function setup_zsh() {
 	echo "${R}[${C}-${R}]${G}${BOLD} Configuring Zsh..${W}"
 	echo
 	package_install_and_check "zsh git"
-	wget --tries=5 --retry-connrefused https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/other/install-zsh.sh
+	wget --tries=5 --retry-connrefused https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/other/install-zsh.sh
 	if [[ "$distro_add_answer" == "y" ]]; then
 	banner
 	bash install-zsh.sh -u "$user_name"
@@ -3445,7 +3445,7 @@ function terminal_utility_setup() {
 	check_and_backup "$PREFIX/etc/motd"
 	check_and_backup "$PREFIX/etc/motd-playstore"
     check_and_backup "$PREFIX/etc/motd.sh"
-	download_file "$PREFIX/etc/motd.sh" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/other/motd.sh"
+	download_file "$PREFIX/etc/motd.sh" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/other/motd.sh"
 	if grep -q "motd.sh$" "$PREFIX/etc/termux-login.sh"; then
 	sed -i "s|.*motd\.sh$|bash $PREFIX/etc/motd.sh|" "$PREFIX/etc/termux-login.sh"
     else
@@ -3455,10 +3455,10 @@ function terminal_utility_setup() {
 	check_and_backup "$HOME/.termux/colors.properties $HOME/.termux/termux.properties $HOME/.aliases"
 
 	check_and_create_directory "$HOME/.config/fastfetch"
-	download_file "$HOME/.config/fastfetch/config.jsonc" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/other/config.jsonc" 
-	download_file "$HOME/.termux/termux.properties" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/other/termux.properties"
-	download_file "$HOME/.aliases" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/other/.aliases"
-	download_file "$HOME/.termux/colors.properties" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/other/colors.properties"
+	download_file "$HOME/.config/fastfetch/config.jsonc" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/other/config.jsonc" 
+	download_file "$HOME/.termux/termux.properties" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/other/termux.properties"
+	download_file "$HOME/.aliases" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/other/.aliases"
+	download_file "$HOME/.termux/colors.properties" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/other/colors.properties"
 	download_file "$PREFIX/bin/termux-ssh" "https://raw.githubusercontent.com/sabamdarif/simple-linux-scripts/main/termux-ssh" && chmod +x "$PREFIX/bin/termux-ssh"
 	cp "$shell_rc_file" "${shell_rc_file}-2"
 	check_and_backup "$shell_rc_file"
@@ -3579,7 +3579,7 @@ function install_fm_tools() {
         cd nautilus-scripts
         
         # Download required files
-        if ! wget --tries=5 --retry-connrefused https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/patches/fix-nautilus-scripts.patch; then
+        if ! wget --tries=5 --retry-connrefused https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/patches/fix-nautilus-scripts.patch; then
             print_failed "Failed to download the patch file"
         fi
 		patch -p1 < fix-nautilus-scripts.patch
@@ -3589,7 +3589,7 @@ function install_fm_tools() {
         find . -type f -name "*.orig" -exec rm -f {} \;
         find . -type f -name "*.rej" -exec rm -f {} \;
         # Run setup script and move files
-		wget --tries=5 --retry-connrefused https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/other/setup-termux.sh
+		wget --tries=5 --retry-connrefused https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/other/setup-termux.sh
         bash setup-termux.sh
         cd "$HOME"
         check_and_delete "nautilus-scripts"
@@ -3626,7 +3626,7 @@ function setup_fonts() {
 
 function run_wine_shortcut_script() {
 	print_success "Adding wine desktop shortcuts..."
-	download_file "add-wine-shortcut" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/other/add-wine-shortcut"
+	download_file "add-wine-shortcut" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/other/add-wine-shortcut"
 	chmod +x "add-wine-shortcut"
     . add-wine-shortcut
 	check_and_delete "add-wine-shortcut"
@@ -4334,7 +4334,7 @@ EOF
 function add_installer() {
 	if [[ ! -e "$PREFIX/bin/setup-termux-desktop" ]]; then
 		echo "${R}[${C}-${R}]${G} Adding setup-termux-desktop installer to bin${W}"
-    	download_file "$PREFIX/bin/setup-termux-desktop" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop"
+    	download_file "$PREFIX/bin/setup-termux-desktop" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/setup-termux-desktop"
     	chmod +x "$PREFIX/bin/setup-termux-desktop"
 	fi
 }
@@ -4355,7 +4355,7 @@ function check_for_update_and_update_installer() {
         check_and_create_directory "$termux_desktop_path"
         local current_script_hash
 		local update_installer
-		current_script_hash=$(curl -sL https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop | sha256sum | cut -d ' ' -f 1)
+		current_script_hash=$(curl -sL https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/setup-termux-desktop | sha256sum | cut -d ' ' -f 1)
         local local_script_hash
 		local_script_hash=$(basename "$(sha256sum "$PREFIX/bin/setup-termux-desktop" | cut -d ' ' -f 1)")
 
