@@ -754,6 +754,17 @@ function questions_theme_select() {
 	local main_folder="setup-files/$de_name"
 	local branch="setup-files"
 
+	# set default style value based on de
+	if [[ "$de_name" == "xfce" ]]; then
+		default_selection="1"
+	elif [[ "$de_name" == "lxqt" ]]; then
+		default_selection="2"
+	elif [[ "$de_name" == "mate" ]]; then
+		default_selection="1"
+	elif [[ "$de_name" == "openbox" ]]; then
+		default_selection="1"
+	fi
+
 	# Call the count_subfolders function with the branch parameter
 	subfolder_count_value=$(count_subfolders "$owner" "$repo" "$main_folder" "$branch" 2>/dev/null)
 
@@ -762,52 +773,51 @@ function questions_theme_select() {
     check_and_backup "${current_path}/styles.md"
     download_file "${current_path}/styles.md" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/${de_name}_styles.md"
 
-    clear
     banner
 
     if [[ -n "$subfolder_count_value" ]]; then
-        echo "${R}[${C}-${R}]${G} Check the $de_name styles section in GitHub${W}"
+        echo "${R}[${C}-${R}]${G} Check the $de_name styles preview${W}"
         echo
-        echo "${R}[${C}-${R}]${B} https://github.com/sabamdarif/termux-desktop/blob/main/${de_name}_styles.md${W}"
+        echo "${R}[${C}-${R}]${G} From Here:- ${B}https://github.com/sabamdarif/termux-desktop/blob/main/${de_name}_styles.md${W}"
         echo
         echo "${R}[${C}-${R}]${G} Number of available custom styles for $de_name is: ${C}${subfolder_count_value}${W}"
         echo
-        echo "${R}[${C}-${R}]${G} Available Styles:${W}"
+        echo "${R}[${C}-${R}]${G} Available Styles Are:${W}"
         echo
         grep -oP '## \d+\..+?(?=(\n## \d+\.|\Z))' styles.md | while read -r style; do
             echo "${Y}${style#### }${W}"
         done
+		while true; do
+		    echo
+		    read -r -p "${R}[${C}-${R}]${Y} Type number of the style (Just Press Enter to select default): ${W}" style_answer
+		    style_answer="${style_answer:-$default_selection}"
 
-        while true; do
-            echo
-            read -r -p "${R}[${C}-${R}]${Y} Type number of the style: ${W}" style_answer
+		    if [[ "$style_answer" =~ ^[0-9]+$ ]] && [[ "$style_answer" -ge 0 ]] && [[ "$style_answer" -le "$subfolder_count_value" ]]; then
+		        style_name=$(grep -oP "^## $style_answer\..+?(?=(\n## \d+\.|\Z))" "${current_path}/styles.md" | sed -e "s/^## $style_answer\. //" -e "s/:$//" -e 's/^[[:space:]]*//;s/[[:space:]]*$//')
 
-            if [[ -z "$style_answer" ]]; then
-                echo
-                print_failed "Input cannot be empty. Please type a number"
-                continue
-            fi
+		        # Print confirmation message
+		        echo
+		        print_success "Continuing with style number ${C}$style_answer${W} (Style: ${C}$style_name${W})"
+		        echo
+		        break
+		    else
+		        echo
+		        print_failed "The entered style number is incorrect"
+		        echo
+		        if [[ "$subfolder_count_value" == "0" ]]; then
+		            echo "${R}[${C}-${R}]${Y} Please enter 0 because for $de_name only stock style is available${W}"
+		            echo
+		        else
+		            echo "${R}[${C}-${R}]${Y} Please enter a number between 0 to ${subfolder_count_value}${W}"
+		            echo
+		        fi
+		        echo "${R}[${C}-${R}]${G} Check the $de_name styles section in GitHub${W}"
+		        echo
+		        echo "${R}[${C}-${R}]${B} https://github.com/sabamdarif/termux-desktop/blob/main/${de_name}_styles.md${W}"
+		        echo
+		    fi
+		done
 
-            if [[ "$style_answer" =~ ^[0-9]+$ ]] && [[ "$style_answer" -ge 0 ]] && [[ "$style_answer" -le "$subfolder_count_value" ]]; then
-                style_name=$(grep -oP "^## $style_answer\..+?(?=(\n## \d+\.|\Z))" "${current_path}/styles.md" | sed -e "s/^## $style_answer\. //" -e "s/:$//" -e 's/^[[:space:]]*//;s/[[:space:]]*$//')
-                break
-            else
-                echo
-                print_failed "The entered style number is incorrect"
-                echo
-                if [[ "$subfolder_count_value" == "0" ]]; then
-                    echo "${R}[${C}-${R}]${Y} Please enter 0 because for $de_name only stock style is available${W}"
-                    echo
-                else
-                    echo "${R}[${C}-${R}]${Y} Please enter a number between 0 to ${subfolder_count_value}${W}"
-                    echo
-                fi
-                echo "${R}[${C}-${R}]${G} Check the $de_name styles section in GitHub${W}"
-                echo
-                echo "${R}[${C}-${R}]${B} https://github.com/sabamdarif/termux-desktop/blob/main/${de_name}_styles.md${W}"
-                echo
-            fi
-        done
 		print_to_config "style_answer"
 		print_to_config "style_name"
         check_and_delete "${current_path}/styles.md"
@@ -1314,41 +1324,65 @@ function distro_questions() {
 	print_to_config "pd_pass_type"
 	    if [[ "$pd_pass_type" == "1" ]]; then
 	    while true; do
-		echo " "
-		echo "${R}[${C}-${R}]${G} Default Password Will Be Set, Because Sometimes It Might Ask You For Password${W}"
-		echo
-		echo "${R}[${C}-${R}]${G} Password:-${C}root${W}"
-		echo
-	    read -r -p "${R}[${C}-${R}]${G} Input username [Lowercase]: ${W}" user_name
-	    echo
-	    read -r -p "${R}[${C}-${R}]${Y} Do you want to continue with username ${C}$user_name ${Y}? (y/n) : ${W}" choice
-	    echo
-	    choice="${choice:-y}"
-	    echo
-	    print_success "Continuing with answer: $choice"
-	    sleep 0.2
-	    case $choice in
-	    [yY]* )
-	    print_success "Continuing with username ${C}$user_name"
-	    break;;
-	    [nN]* )
-	    echo "${R}[${C}-${R}]${G}Please provide username again.${W}"
-	    echo
-	    ;;
-	    * )
-	    print_failed "Invalid input, Please enter y or n"
-	    ;;
-	    esac
-	    done
+        echo " "
+        echo "${R}[${C}-${R}]${G} Default Password Will Be Set, Because Sometimes It Might Ask You For Password${W}"
+        echo
+        echo "${R}[${C}-${R}]${G} Password:-${C}root${W}"
+        echo
+        	while true; do
+        	    read -r -p "${R}[${C}-${R}]${G} Input username [Lowercase]: ${W}" user_name
+        	    if [[ -n "$user_name" ]]; then
+        	        break
+        	    else
+        	        print_warn "You can't leave the username empty. Please enter a valid username."
+        	    fi
+        	done
+        echo
+        read -r -p "${R}[${C}-${R}]${Y} Do you want to continue with username ${C}$user_name ${Y}? (y/n) : ${W}" choice
+        echo
+        choice="${choice:-y}"
+        echo
+        print_success "Continuing with answer: $choice"
+        sleep 0.2
+        	case $choice in
+        	    [yY]* )
+        	        print_success "Continuing with username ${C}$user_name"
+        	        break;;
+        	    [nN]* )
+        	        echo "${R}[${C}-${R}]${G}Please provide username again.${W}"
+        	        echo
+        	        ;;
+        	    * )
+        	        print_failed "Invalid input, Please enter y or n"
+        	        ;;
+        	esac
+    	done
 	    print_to_config "user_name"
 	    elif [[ "$pd_pass_type" == "2" ]]; then
 	    echo
 	    echo "${R}[${C}-${R}]${G}${BOLD} Create user account${W}"
 	    echo
 	    while true; do
-	    read -r -p "${R}[${C}-${R}]${G}Input username [Lowercase]: ${W}" user_name
-	    echo
-	    read -r -p "${R}[${C}-${R}]${G}Input Password: ${W}" pass
+    		while true; do
+    		    read -r -p "${R}[${C}-${R}]${G}Input username [Lowercase]: ${W}" user_name
+    		    if [[ -n "$user_name" ]]; then
+    		        break
+    		    else
+    		        print_warn "You can't leave the username empty. Please enter a valid username."
+    		    fi
+    		done
+    		echo
+	    	while true; do
+	    	    read -r -p "${R}[${C}-${R}]${G}Input Password (Minimum 4 characters): ${W}" pass
+	    	    if [[ -z "$pass" ]]; then
+	    	        print_warn "You can't leave the password empty. Please enter a valid password."
+	    	    elif [[ ${#pass} -lt 4 ]]; then
+	    	        print_warn "Password must be at least 4 characters long. Please enter a longer password."
+	    	    else
+	    	        break
+	    	    fi
+	    	done
+
 	    echo
 	    read -r -p "${R}[${C}-${R}]${Y}Do you want to continue with username ${C}$user_name ${Y}and password ${C}$pass${Y} ? (y/n) : ${W}" choice
 	    echo
@@ -1357,19 +1391,21 @@ function distro_questions() {
 	    print_success "Continuing with answer: $choice"
 	    echo ""
 	    sleep 0.2
-	    case $choice in
-	    [yY]* )
-	    print_success "Continuing with username ${C}$user_name ${G}and password ${C}$pass"
-	    break;;
-	    [nN]* )
-	    echo "${R}[${C}-${R}]${G}Please provide username and password again.${W}"
-	    echo
-	    ;;
-	    * )
-	    print_failed "Invalid input, Please enter y or n"
-	    ;;
-	    esac
-	    done
+
+	    	case $choice in
+	    	    [yY]* )
+	    	        print_success "Continuing with username ${C}$user_name ${G}and password ${C}$pass"
+	    	        break;;
+	    	    [nN]* )
+	    	        echo "${R}[${C}-${R}]${G}Please provide username and password again.${W}"
+	    	        echo
+	    	        ;;
+	    	    * )
+	    	        print_failed "Invalid input, Please enter y or n"
+	    	        ;;
+	    	esac
+		done
+
 	    print_to_config "user_name"
 	    print_to_config "pass"
 	    fi
@@ -1669,36 +1705,7 @@ function ask_to_chose_de() {
 	print_to_config "de_name"
 	print_to_config "themes_folder"
 	print_to_config "icons_folder"
-	print_to_config "style_answer"
-
-	# Get Style name
-	local owner="sabamdarif"
-	local repo="termux-desktop"
-	local main_folder="setup-files/$de_name"
-
-	echo "${R}[${C}-${R}]${G} Downloading list of available styles...${W}"
-	check_and_backup "${current_path}/styles.md"
-	if ! download_file "${current_path}/styles.md" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/${de_name}_styles.md"; then
-	    print_failed "Failed to download styles list"
-    	return 1
-	fi
-
-	if [[ -f "${current_path}/styles.md" ]]; then
-    	style_name=$(grep -oP "^## $style_answer\..+?(?=(\n## \d+\.|\Z))" "${current_path}/styles.md" | sed -e "s/^## $style_answer\. //" -e "s/:$//" -e 's/^[[:space:]]*//;s/[[:space:]]*$//')
-    	if [[ -z "$style_name" ]]; then
-        	print_failed "Failed to get style name for style number $style_answer"
-        	check_and_delete "${current_path}/styles.md"
-        	return 1
-    	fi
-	else
-    	print_failed "Styles list file not found"
-    	return 1
-	fi
-
-	check_and_delete "${current_path}/styles.md"
-	
-	print_to_config "style_name"
-
+	questions_theme_select
 }
 
 function questions_install_type() {
@@ -2167,6 +2174,7 @@ echo
 echo "${G}Important Notes:${W}"
 echo "   • Keep Termux open during the entire installation"
 echo "   • Review all README documentation carefully"
+echo "   • In the multi selection option press a blank enter to go with the default option"
 echo
 # Re-enable keyboard interruptions
 trap - SIGINT SIGTSTP
@@ -2179,7 +2187,7 @@ function install_required_packages() {
     echo
 
     if [[ "$PACKAGE_MANAGER" == "pacman" ]]; then
-        package_install_and_check "wget git pv jq curl termux-am termux-api"
+        package_install_and_check "wget git pv jq curl tar xz-utils gzip termux-am termux-api"
     else
         package_install_and_check "wget git pv jq curl tar xz-utils gzip termux-am x11-repo tur-repo termux-api"
     fi
@@ -3342,7 +3350,7 @@ function install_termux_desktop_appstore() {
     echo
     sleep 1
 
-    package_install_and_check "aria2 python python3 cloneit"
+    package_install_and_check "aria2 python python3 cloneit pygobject python-pillow"
     check_and_create_directory "${PREFIX}/opt/appstore"
     cd ${PREFIX}/opt/appstore || return
     cloneit https://github.com/sabamdarif/Termux-AppStore/tree/main/src
@@ -3617,50 +3625,45 @@ function setup_fonts() {
 #########################################################################
 
 function run_wine_shortcut_script() {
+	print_success "Adding wine desktop shortcuts..."
 	download_file "https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/other/add-wine-shortcut"
 	chmod +x "add-wine-shortcut"
-    ./add-wine-shortcut
+    . add-wine-shortcut
 	check_and_delete "add-wine-shortcut"
 }
 
 function setup_wine() {
 	banner
     if [[ "$wine_answer" == "1" ]]; then
-	echo "${R}[${C}-${R}]${G}${BOLD} Installing Wine Natively In Termux${W}"
-	echo
-	package_install_and_check "wine-stable winetricks"
-	run_wine_shortcut_script
-	print_to_config "setup_wine" "default-wine"
+		echo "${R}[${C}-${R}]${G}${BOLD} Installing Wine Natively In Termux${W}"
+		echo
+		package_install_and_check "wine-stable"
+		print_to_config "setup_wine" "default-wine"
 	elif [[ "$wine_answer" == "2" ]]; then
-	echo "${R}[${C}-${R}]${G}${BOLD} Addind Mobox Launch Option To Termux${W}"
-	echo
-	echo "${R}[${C}-${R}]${C}${BOLD} After the installation finishes, make sure to install Mobox using their official instructions${W}"
-	echo
-	echo "${R}[${C}-${R}]${G}${BOLD} Mobox:- ${C}https://github.com/olegos2/mobox${W}"
-	echo
-	sleep 4
-	download_file "$PREFIX/bin/wine" "https://raw.githubusercontent.com/LinuxDroidMaster/Termux-Desktops/main/scripts/termux_native/mobox_run.sh"
-	chmod +x "$PREFIX/bin/wine"
-	print_success "Adding wine desktop shortcuts..."
-	run_wine_shortcut_script
-	cp "$PREFIX/share/applications/wine-explorer.desktop" "$HOME/Desktop/MoboxExplorer.desktop"
-	print_to_config "setup_wine" "mobox"
+		echo "${R}[${C}-${R}]${G}${BOLD} Addind Mobox Launch Option To Termux${W}"
+		echo
+		echo "${R}[${C}-${R}]${C}${BOLD} After the installation finishes, make sure to install Mobox using their official instructions${W}"
+		echo
+		echo "${R}[${C}-${R}]${G}${BOLD} Mobox:- ${C}https://github.com/olegos2/mobox${W}"
+		echo
+		sleep 4
+		download_file "$PREFIX/bin/wine" "https://raw.githubusercontent.com/LinuxDroidMaster/Termux-Desktops/main/scripts/termux_native/mobox_run.sh"
+		chmod +x "$PREFIX/bin/wine"
+		cp "$PREFIX/share/applications/wine-explorer.desktop" "$HOME/Desktop/MoboxExplorer.desktop"
+		print_to_config "setup_wine" "mobox"
 	elif [[ "$wine_answer" == "3" ]]; then
-	package_install_and_check "hangover hangover-wine winetricks"
-	print_success "Adding wine desktop shortcuts..."
-	run_wine_shortcut_script
-	print_to_config "setup_wine" "hangover-wine"
+		package_install_and_check "hangover hangover-wine"
+		print_to_config "setup_wine" "hangover-wine"
 	elif [[ "$wine_answer" == "4" ]]; then
-	echo "${R}[${C}-${R}]${C} Skipping wine Installation...${W}"
-	print_to_config "setup_wine" "skip"
+		echo "${R}[${C}-${R}]${C} Skipping wine Installation...${W}"
+		print_to_config "setup_wine" "skip"
 	else
-    echo "${R}[${C}-${R}]${G} Installing Wine Natively In Termux${W}"
-	echo
-	package_install_and_check "wine-stable winetricks"
-	print_success "Adding wine desktop shortcuts..."
-	run_wine_shortcut_script
-	print_to_config "setup_wine" "default-wine"
+    	echo "${R}[${C}-${R}]${G} Installing Wine Natively In Termux${W}"
+		echo
+		package_install_and_check "wine-stable"
+		print_to_config "setup_wine" "default-wine"
 	fi
+	run_wine_shortcut_script
 }
 
 #########################################################################
@@ -3822,7 +3825,7 @@ function remove_termux_desktop() {
 	package_check_and_remove "pulseaudio x11-repo tur-repo"
 	#remove desktop related packages
 	if [[ "$de_name" == "xfce" ]]; then
-	package_check_and_remove "xfce4 xfce4-goodies xwayland kvantum"
+	package_check_and_remove "xfce4 xfce4-goodies xfce4-pulseaudio-plugin xfce4-battery-plugin xfce4-docklike-plugin xfce4-notifyd-static kvantum gtk2-engines-murrine"
 	elif [[ "$de_name" == "lxqt" ]]; then
 	package_check_and_remove "lxqt xorg-xsetroot papirus-icon-theme xwayland kvantum"
 	elif [[ "$de_name" == "openbox" ]]; then
@@ -3831,7 +3834,7 @@ function remove_termux_desktop() {
 	#remove zsh
 	if [[ "$zsh_answer" == "y" ]]; then
 	package_check_and_remove "zsh"
-	check_and_delete ".oh-my-zsh .zsh_history .zshrc"
+	check_and_delete "$HOME/.oh-my-zsh $HOME/.zsh_history $HOME/.zshrc"
 	fi
 	#remove terminal utility
 	if [[ "$terminal_utility_setup_answer" == "y" ]]; then
@@ -3879,24 +3882,18 @@ function remove_termux_desktop() {
 	fi
 	#remove wine
 	if [[ "$setup_wine" == "default-wine" ]]; then
-	package_check_and_remove "wine winetricks"
+	package_check_and_remove "wine"
 	elif [[ "$setup_wine" == "mobox" ]]; then
 	echo "${R}[${C}-${R}]${C}${BOLD} Make Sure To Uninstall Mobox Using Their Instruction${W}"
 	check_and_delete "$HOME/Desktop/MoboxExplorer.desktop"
 	sleep 4
 	elif [[ "$setup_wine" == "hangover-wine" ]]; then
-	package_check_and_remove "hangover-wine winetricks"
+	package_check_and_remove "hangover-wine"
 	fi
 	check_and_delete "$PREFIX/bin/wine $PREFIX/share/applications/wine-*"
 	#remove styles
-	if [[ "$style_name" == "Modern Style" ]] || [[ "$style_name" == "MacOS Inspired-1 Style" ]] || [[ "$style_name" == "MacOS Inspired-2 Style" ]]; then
-	package_check_and_remove "cairo-dock-core"
-	elif [[ "$style_name" == "Modern Style" ]] || [[ "$style_name" == "MacOS Inspired-2 Style" ]]; then
-	package_check_and_remove "rofi"
-	elif [[ "$style_name" == "Modern Style" ]]; then
-	package_check_and_remove "fluent-icon-theme vala-panel-appmenu"
-	elif [[ "$style_name" == "Windows10 Style" ]]; then
-	package_check_and_remove "gtk2-engines-murrine"
+	if [[ "$style_name" == "Modern Style" ]]; then
+	package_check_and_remove "eww"
 	fi
 	#Remove folders and other files
 	check_and_delete "$PREFIX/share/backgrounds $themes_folder $icons_folder $PREFIX/etc/termux-desktop"
