@@ -43,12 +43,13 @@ make install
 ## :wine_glass:Learn about Wine:
 
 <center><img src="images/apps/wine.png"></center>
+
+#### Using XoW64-wine
+-  **Xow64-wine:-** easy to configure and fast with good compatibility using newer version of wine and box64, support most graphic drivers for both termux glibc and proot **[Install From Here](https://github.com/ar37-rs/xow64-wine)**
     
 #### There is three type of wine intallation options
 
- - **Native:-** it can run apps based on your cpu architecture, like in arm based cpu you can only install windows [arm apps](https://armrepo.ver.lt/)
+ - **Native:-** it can run apps based on your cpu architecture, like in arm based cpu you can only install windows **[arm apps](https://armrepo.ver.lt/)**
  - **Mobox:-** it can run x86_64 windows apps in aarch64 device with good performance
  > **:warning: You need to set up Mobox after the termux-desktop installation finishes [From Here](https://github.com/olegos2/mobox)**
  - **Hangover-wine:-** do the same thing like mobox
-
----
