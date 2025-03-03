@@ -1140,7 +1140,7 @@ cat <<EOF >> "$PREFIX/bin/add2menu"
 #!/data/data/com.termux/files/usr/bin/bash
 
 export distro_name="${selected_distro}"
-case $1 in
+case \$1 in
     --legacy)
     ./data/data/com.termux/files/usr/opt/add2menu/add2menu_legacy
     ;;

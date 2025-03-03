@@ -724,7 +724,6 @@ function validate_required_vars() {
 
 	if [[ "$enable_hw_acc" == "y" ]] && [[ "$distro_add_answer" == "y" ]]; then
 		required_vars+=(
-				"pd_hw_answer_num"
 				"pd_hw_answer"
     	    )
 	fi
