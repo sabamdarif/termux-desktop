@@ -155,6 +155,7 @@ Options:
 - `--change hw`: Modify hardware acceleration settings.
 - `--reset`: Reset all changes.
 - `--remove`: Uninstall Termux Desktop.
+- `--local-config` Start the installation from pre made config file
 - `--help`: To show help.
 
 <details>
@@ -175,6 +176,9 @@ Options:
 <br>
 
 - `setup-termux-desktop --remove / -r` *To Remove Termux Desktop*
+<br>
+
+- `setup-termux-desktop --local-config / -config` 	*Start the installation from pre made config file*
 <br>
 
 - `setup-termux-desktop --debug` **(At The Start)** *To generate a log file for any of the above command*

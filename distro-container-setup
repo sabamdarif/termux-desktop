@@ -19,6 +19,8 @@ function setup_distro() {
     banner
     echo "${R}[${C}-${R}]${G}${BOLD} Setting up Selected Linux Distro: ${C}${selected_distro}${W}"
     echo
+    print_to_config "distro_answer"
+    print_to_config "selected_distro"
 
     pd install "$selected_distro"
 
@@ -287,12 +289,14 @@ proot-distro login "$selected_distro" -- /bin/bash -c 'bash pd_basic_setup.sh'
     elif [[ "$pd_useradd_answer" == "y" ]]; then
     final_user_name="${user_name}"
     fi
+    print_to_config "pd_useradd_answer"
     print_to_config "final_user_name"
     if [[ "$pd_pass_type" == "2" ]]; then
     final_pass="${pass}"
     else
     final_pass="root"
     fi
+    print_to_config "pd_pass_type"
 if [[ "$pd_useradd_answer" == "y" ]]; then
 if [[ "$selected_distro" == "alpine" ]]; then
 
@@ -372,6 +376,7 @@ function assigne_value() {
     else
         pd_shell_name="bash"
     fi
+    print_to_config "distro_zsh_answer"
 }
 
 function distro_zsh_setup() {
@@ -564,6 +569,7 @@ esac
 EOF
 
 print_to_config "pd_shell_name"
+print_to_config "distro_terminal_utility_setup_answer"
 
 }
 
@@ -588,7 +594,12 @@ source $PREFIX/etc/termux-desktop/common_functions
 
 xhost + > /dev/null 2>&1
 if [[ "\$#" -eq 0 ]]; then
-    proot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp
+    if [[ "\$PWD" == "$HOME" ]]; then
+        proot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp
+    else
+        proot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp --work-dir "\$PWD"
+    fi
+
 elif [[ "\$1" = "install" ]]; then
     if [[ ! -d "/data/data/com.termux/files/usr/share/applications/pd_added" ]]; then
         mkdir -p "/data/data/com.termux/files/usr/share/applications/pd_added"
@@ -698,7 +709,12 @@ source $PREFIX/etc/termux-desktop/common_functions
 
 xhost + > /dev/null 2>&1
 if [[ "\$#" -eq 0 ]]; then
-    proot-distro login --user $final_user_name "$selected_distro" --shared-tmp
+    if [[ "\$PWD" == "$HOME" ]]; then
+        proot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp
+    else
+        proot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp --work-dir "\$PWD"
+    fi
+
 elif [[ "\$1" = "install" ]]; then
     if [[ ! -d "/data/data/com.termux/files/usr/share/applications/pd_added" ]]; then
         mkdir -p "/data/data/com.termux/files/usr/share/applications/pd_added"
@@ -807,7 +823,11 @@ source $PREFIX/etc/termux-desktop/common_functions
 
 xhost + > /dev/null 2>&1
 if [[ "\$#" -eq 0 ]]; then
-    proot-distro login --user $final_user_name $selected_distro --shared-tmp
+    if [[ "\$PWD" == "$HOME" ]]; then
+        proot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp
+    else
+        proot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp --work-dir "\$PWD"
+    fi
 
 elif [[ "\$1" = "install" ]]; then
     if [[ ! -d "/data/data/com.termux/files/usr/share/applications/pd_added" ]]; then
@@ -911,7 +931,11 @@ source $PREFIX/etc/termux-desktop/common_functions
 
 xhost + > /dev/null 2>&1
 if [[ "\$#" -eq 0 ]]; then
-    proot-distro login --user $final_user_name $selected_distro --shared-tmp
+    if [[ "\$PWD" == "$HOME" ]]; then
+        proot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp
+    else
+        proot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp --work-dir "\$PWD"
+    fi
 
 elif [[ "\$1" = "install" ]]; then
     if [[ ! -d "/data/data/com.termux/files/usr/share/applications/pd_added" ]]; then
@@ -1101,151 +1125,43 @@ package_install_and_check "zenity"
 
 check_and_create_directory "$PREFIX/share/applications/pd_added"
 
-echo "#!/data/data/com.termux/files/usr/bin/bash
-distro_path=$distro_path
-" > "$PREFIX/bin/add2menu"
+check_and_create_directory "$PREFIX/share/applications/"
+check_and_delete "$PREFIX/share/applications/add2menu.desktop"
+check_and_delete "$HOME/Desktop/add2menu.desktop"
+check_and_create_directory "$PREFIX/opt/add2menu"
+download_file "$PREFIX/opt/add2menu/add2menu.py" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/add2menu/add2menu.py"
+download_file "$PREFIX/opt/add2menu/add2menu_legacy" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/add2menu/add2menu_legacy"
+download_file "$PREFIX/share/applications/org.sabamdarif.termux.add2menu.desktop" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/add2menu/org.sabamdarif.termux.add2menu.desktop"
+cp $PREFIX/share/applications/org.sabamdarif.termux.add2menu.desktop $HOME/Desktop/
+chmod +x $HOME/Desktop/org.sabamdarif.termux.add2menu.desktop
+chmod +x "$PREFIX/opt/add2menu/add2menu_legacy"
 
-cat <<'EOF' >> "$PREFIX/bin/add2menu"
+cat <<EOF >> "$PREFIX/bin/add2menu"
+#!/data/data/com.termux/files/usr/bin/bash
 
-function add2menu_f() {
-# Function to list displayable .desktop files
-list_desktop_files_with_name() {
-    find "$1" -name "*.desktop" -type f -exec awk -F '=' '
-    /^Name=/ {name=$2}
-    /^NoDisplay=/ {no_display=$2}
-    END {
-        if (no_display != "true") {
-            gsub(/.desktop$/, "", name);
-            print name ";;" FILENAME
-        }
-    }' {} \;
-}
-
-# Main action selection
-action=$(zenity --list --title="Choose Action" --text="Select an action:" --radiolist --column="Select" --column="Action" \
-    TRUE "Add Application To Termux Menu" FALSE "Remove Application From Termux Menu")
-
-# Exit if no action is selected
-if [[ -z $action ]]; then
-    zenity --info --text="No action selected. Quitting..." --title="Operation Cancelled"
-    exit 0
-fi
-
-# Add applications
-if [[ $action == "Add Application To Termux Menu" ]]; then
-    # Fetch list of displayable .desktop files
-    files=$(list_desktop_files_with_name "$distro_path/usr/share/applications/")
-
-    # Check if there are any files to add
-    if [[ -z $files ]]; then
-        zenity --info --text="No applications found to add. Quitting..." --title="Operation Cancelled"
-        exit 0
-    fi
-
-    # Display apps in checklist
-    selected_names=$(zenity --list --title="Add To Termux Menu" --text="Select Applications to Add:" \
-        --checklist --column="Include" --column="Name" --separator="," $files)
-
-    # Exit if no files are selected
-    if [[ -z $selected_names ]]; then
-        zenity --info --text="No applications selected. Quitting..." --title="Operation Cancelled"
-        exit 0
-    fi
-
-    # Process each selected .desktop file
-    IFS=',' read -ra selected_names_array <<< "$selected_names"
-    for selected_item in "${selected_names_array[@]}"; do
-        selected_name=${selected_item%%;;*}
-        selected_file=${selected_item##*;;}
-
-        # Copy and modify the .desktop file
-        cp "$selected_file" "$PREFIX/share/applications/pd_added/"
-        sed -i 's/^Exec=/Exec=pdrun /' "$PREFIX/share/applications/pd_added/${selected_file##*/}"
-    done
-
-    update-desktop-database "$PREFIX/share/applications/"
-    gtk-update-icon-cache "$PREFIX/share/icons/hicolor"
-
-    zenity --info --text="Selected applications added successfully!" --title="Success"
-
-# Remove applications
-elif [[ $action == "Remove Application From Termux Menu" ]]; then
-    # List existing applications in Termux menu
-    files=$(list_desktop_files_with_name "$PREFIX/share/applications/pd_added/")
-
-    # Check if there are any files to remove
-    if [[ -z $files ]]; then
-        zenity --info --text="No applications found to remove. Quitting..." --title="Operation Cancelled"
-        exit 0
-    fi
-
-    # Display apps in checklist for removal
-    selected_names=$(zenity --list --title="Remove From Termux Menu" --text="Select Applications to Remove:" \
-        --checklist --column="Include" --column="Name" --separator="," $files)
-
-    # Exit if no files are selected
-    if [[ -z $selected_names ]]; then
-        zenity --info --text="No applications selected. Quitting..." --title="Operation Cancelled"
-        exit 0
-    fi
-
-    # Process each selected .desktop file for removal
-    IFS=',' read -ra selected_names_array <<< "$selected_names"
-    for selected_item in "${selected_names_array[@]}"; do
-        selected_file=${selected_item##*;;}
-        rm "$selected_file"
-    done
-
-    update-desktop-database "$PREFIX/share/applications/"
-    gtk-update-icon-cache "$PREFIX/share/icons/hicolor"
-
-    zenity --info --text="Selected applications removed successfully!" --title="Success"
-fi
-}
-
+export distro_name="${selected_distro}"
 case $1 in
-    --nogpu)
-        LIBGL_ALWAYS_SOFTWARE=1 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe add2menu_f
-        ;;
-    --help|-h)
-        echo "${C}add2menu launch command ${G}to start with gpu acceleration${W}"
-        echo "${C}add2menu ---nogpu launch command ${G}to start without gpu acceleration${W}"
-        echo "${C}add2menu --add-new ${G}To add new add2menu program${W}"
-        ;;
-    --add-new)
-        rm $PREFIX/share/applications/add2menu.desktop
-        rm $HOME/Desktop/add2menu.desktop > /dev/null 2>&1
-        mkdir -p $PREFIX/opt/add2menu
-        wget -O $PREFIX/opt/add2menu/add2menu.py https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/add2menu/add2menu.py
-        wget -O $PREFIX/share/applications/org.sabamdarif.termux.add2menu.desktop https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/add2menu/org.sabamdarif.termux.add2menu.desktop
-        cp $PREFIX/share/applications/org.sabamdarif.termux.add2menu.desktop $HOME/Desktop/
-        chmod +x $HOME/Desktop/org.sabamdarif.termux.add2menu.desktop
-        ;;
+    --legacy)
+    ./data/data/com.termux/files/usr/opt/add2menu/add2menu_legacy
+    ;;
+    --legacy-nogpu)
+    ./data/data/com.termux/files/usr/opt/add2menu/add2menu_legacy --nogpu
+    ;;
+    --hellp|-h)
+echo -e "
+--legacy            To launch the old add2menu (uses zenity)
+--legacy-nogpu      To launch the old add2menu without gpu acceleration (uses zenity)
+--help,-h           To show help
+"
+    ;;
     *)
-        add2menu_f
-        ;;
+    python /data/data/com.termux/files/usr/opt/add2menu/add2menu.py
+    ;;
 esac
 
 EOF
 
 chmod +x "$PREFIX/bin/add2menu"
-
-check_and_create_directory "$PREFIX/share/applications/"
-cat <<EOF > "$PREFIX/share/applications/add2menu.desktop"
-[Desktop Entry]
-Version=1.0
-Type=Application
-Name=Add To Menu
-Comment=Add proot-distro's apps to Termux menu
-Exec=add2menu --nogpu
-Icon=edit-move
-Categories=System;
-Path=
-Terminal=false
-StartupNotify=false
-EOF
-cp "$PREFIX/share/applications/add2menu.desktop" "$HOME/Desktop/"
-chmod +x "$HOME/Desktop/add2menu.desktop"
 }
 
 #########################################################################
@@ -1387,6 +1303,7 @@ function install_distro_container() {
         if [[ "$enable_hw_acc" == "y" ]]; then
             hw_config
         fi
+	    print_to_config "enable_hw_acc"
     fi
     assigne_value
     distro_zsh_setup

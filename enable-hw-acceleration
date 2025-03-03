@@ -33,6 +33,7 @@ function hw_install_required_packages() {
             check_and_delete "mesa-vulkan-icd-wrapper.deb"
         fi
     fi
+	print_to_config "confirmation_mesa_vulkan_icd_wrapper"
         # Remove existing conflicting packages if using pacman
         if [[ "$PACKAGE_MANAGER" == "pacman" ]]; then
             package_check_and_remove "mesa vulkan-loader"
@@ -147,12 +148,15 @@ case "$termux_hw_answer" in
     pd_hw_method="${hw_method}"
     ;;
 esac
+print_to_config "exp_termux_gl_hw_answer_num"
+print_to_config "exp_termux_gl_hw_answer"
+print_to_config "termux_hw_answer"
 
 case "$pd_hw_answer" in
     "zink")
     pd_hw_method="GALLIUM_DRIVER=zink MESA_GL_VERSION_OVERRIDE=4.0"
     ;;
-    virgl|zink_virgl)
+    virgl)
     pd_hw_method="GALLIUM_DRIVER=virpipe MESA_GL_VERSION_OVERRIDE=4.0"
     ;;
     "turnip")
@@ -166,6 +170,8 @@ case "$pd_hw_answer" in
     echo
     ;;
 esac
+print_to_config "pd_hw_answer_num"
+print_to_config "pd_hw_answer"
 
 }
 

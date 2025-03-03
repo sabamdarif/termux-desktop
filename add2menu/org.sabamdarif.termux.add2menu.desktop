@@ -3,9 +3,25 @@ Version=1.0
 Type=Application
 Name=Add To Menu
 Comment=Add proot-distro's apps to Termux menu
-Exec=python /data/data/com.termux/files/usr/opt/add2menu/add2menu.py
+Exec=add2menu
 Icon=edit-move
 Terminal=false
 Categories=System;Settings;
 StartupWMClass=add2menu
-X-GNOME-SingleWindow=true 
+X-GNOME-SingleWindow=true
+Actions=Add;AddLegacy;AddLegacyNoGPU;
+
+[Desktop Action Add]
+Name=Add to Menu
+Exec=add2menu
+Icon=edit-move
+
+[Desktop Action AddLegacy]
+Name=Add to Menu (Legacy)
+Exec=add2menu --legacy
+Icon=edit-move
+
+[Desktop Action AddLegacyNoGPU]
+Name=Add to Menu (Legacy NoGPU)
+Exec=add2menu --legacy-nogpu
+Icon=edit-move

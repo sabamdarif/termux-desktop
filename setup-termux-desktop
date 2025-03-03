@@ -645,14 +645,14 @@ function print_to_config() {
     local var_name="$1"
     local var_value="${2:-${!var_name}}"
     local IFS=$' \t\n'
-  
+
     if grep -q "^${var_name}=" "$config_file" 2>/dev/null; then
-        sed -i "s|^${var_name}=.*|${var_name}=\"${var_value}\"|" "$config_file"
+        sed -i "s|^${var_name}=.*|${var_name}=${var_value}|" "$config_file"
     else
-        echo "${var_name}=\"${var_value}\"" >> "$config_file"
+        echo "${var_name}=${var_value}" >> "$config_file"
     fi
     
-    print_log "$var_name \"$var_value\""
+    print_log "$var_name $var_value"
 }
 
 function validate_required_vars() {
@@ -665,50 +665,71 @@ function validate_required_vars() {
         
         # Display and GUI variables
         "display_number"
+		"gui_mode_num"
         "gui_mode"
         "de_name"
-        "de_startup"
+		"de_startup"
+        "de_on_startup"
         
         # Hardware acceleration variables
         "enable_hw_acc"
+		"device_gpu_model"
         "device_gpu_model_name"
-        "app_arch"
         
         # Configuration paths
         "config_file"
         "themes_folder"
         "icons_folder"
+
+		# apps
+		"browser_answer"
+		"ide_answer"
+		"player_answer"
+		"photo_editor_answer"
+		"wine_answer"
+
+		# extra
+		"ext_wall_answer"
+		"zsh_answer"
+		"terminal_utility_setup_answer"
+		"fm_tools"
+
+		# Distro
+		"distro_add_answer"
     )
 
     # If hardware acceleration is enabled, add required variables
     if [[ "$enable_hw_acc" == "y" ]]; then
         required_vars+=(
             "termux_hw_answer"
-            "pd_hw_answer"
             "confirmation_mesa_vulkan_icd_wrapper"
-            "hw_method"
-            "initialize_server_method"
+			"exp_termux_gl_hw_answer_num"
+			"exp_termux_gl_hw_answer"
+			"termux_hw_answer"
         )
     fi
 
     # If a distro is enabled, add required variables
     if [[ "$distro_add_answer" == "y" ]]; then
         required_vars+=(
+			"distro_answer"
             "selected_distro"
             "pd_audio_config_answer"
+			"distro_zsh_answer"
+			"distro_terminal_utility_setup_answer"
             "pd_useradd_answer"
             "user_name"
         )
     fi
 
-    local optional_vars=(
-        "pd_hw_method"
-        "gpu_environment_variable"
-        "pass"  # Only required if pd_pass_type=2
-        "distro_path"
-    )
+	if [[ "$enable_hw_acc" == "y" ]] && [[ "$distro_add_answer" == "y" ]]; then
+		required_vars+=(
+				"pd_hw_answer_num"
+				"pd_hw_answer"
+    	    )
+	fi
 
-    echo "${R}[${C}-${R}]${G} Validating required variables...${W}"
+    echo "${R}[${C}-${R}]${G} Validating required configuration values...${W}"
     
     local missing_vars=()
     for var in "${required_vars[@]}"; do
@@ -718,21 +739,12 @@ function validate_required_vars() {
     done
 
     if (( ${#missing_vars[@]} > 0 )); then
-        print_failed "The following required variables are not set:"
+        print_failed "The following required configuration values are not set:"
         for var in "${missing_vars[@]}"; do
             echo "  - $var"
+			print_log "$var"
+			exit 1
         done
-        exit 1
-    fi
-
-    # Additional validation for specific variables
-    if [[ "$enable_hw_acc" == "y" && -z "$termux_hw_answer" ]]; then
-        print_failed "Hardware acceleration is enabled but termux_hw_answer is not set"
-        exit 1
-    fi
-
-    if [[ "$enable_hw_acc" == "y" && "$distro_add_answer" == "y" && -z "$pd_hw_answer" ]]; then
-        print_failed "Hardware acceleration is enabled but pd_hw_answer is not set"
         exit 1
     fi
 
@@ -797,7 +809,7 @@ function questions_theme_select() {
 
 		        # Print confirmation message
 		        echo
-		        print_success "Continuing with style number ${C}$style_answer${W} (Style: ${C}$style_name${W})"
+		        print_success "Continuing with style number ${C}$style_answer (Style: $style_name${W})"
 		        echo
 		        break
 		    else
@@ -819,7 +831,6 @@ function questions_theme_select() {
 		done
 
 		print_to_config "style_answer"
-		print_to_config "style_name"
         check_and_delete "${current_path}/styles.md"
     else
         print_failed "Failed to get total available styles value"
@@ -828,7 +839,8 @@ function questions_theme_select() {
     print_log "$style_answer $subfolder_count_value"
 }
 
-function questions_setup_manual() {
+function ask_to_chose_de() {
+	# Setlect Desktop Environment
 	banner
 	echo "${R}[${C}-${R}]${G} Select Desktop Environment${W}"
 	echo " "
@@ -841,6 +853,7 @@ function questions_setup_manual() {
 	echo "${Y}4. MATE (Unstable)${W}"
 	echo
 	select_an_option 4 1 desktop_answer
+	echo
 	# set the variables based on chosen de
 	sys_icons_folder="$PREFIX/share/icons"
 	sys_themes_folder="$PREFIX/share/themes"
@@ -869,9 +882,12 @@ function questions_setup_manual() {
 	print_to_config "de_name"
 	print_to_config "themes_folder"
 	print_to_config "icons_folder"
-
 	banner
 	questions_theme_select
+}
+
+function questions_setup_manual() {
+	ask_to_chose_de
 	echo
 	print_success "Continuing with answer: ${style_answer})$style_name"
 	sleep 0.2
@@ -932,14 +948,13 @@ function questions_setup_manual() {
 	echo
 	echo "${R}[${C}-${R}]${B} Know More About Mobox:- https://github.com/olegos2/mobox/${W}"
 	echo
-	echo "${Y}3. Wine Hangover (Best)${W}"
+	echo "${Y}3. Wine Hangover${W}"
 	echo
 	echo "${Y}4. Skip${W}"
 	echo
 	select_an_option 4 1 wine_answer
 	banner
 	confirmation_y_or_n "Do you want to Configure Hardware Acceleration" enable_hw_acc
-	print_to_config "enable_hw_acc"
 	banner
 	echo "${R}[${C}-${R}]${G} By default, it only adds 4-5 wallpapers${W}"
 	echo
@@ -994,16 +1009,11 @@ ${W}"
 		gui_mode="termux_x11"
 		display_number="0"
 		gui_mode_name="Termux:x11"
-		print_to_config "gui_mode"
-		print_to_config "display_number"
 	elif [[ "$gui_mode_num" == "2" ]]; then
 		gui_mode="both"
 		display_number="0"
 		gui_mode_name="Both"
-		print_to_config "gui_mode"
-		print_to_config "display_number"
 	fi
-	print_to_config "gui_mode_num"
 
 	banner
 	confirmation_y_or_n "Do you want to start the desktop at Termux startup" de_on_startup
@@ -1025,7 +1035,6 @@ ${W}"
 			default_gui_mode="vnc"
 		fi
 
-	print_to_config "default_gui_mode"
 	fi
 	banner
 	echo -e "
@@ -1038,7 +1047,6 @@ Also, you can launch those installed apps from Termux like other apps.
 echo "Learn More:- https://github.com/sabamdarif/termux-desktop/blob/main/proot-container.md"
 echo
 	confirmation_y_or_n "Do you want to add a Linux container" distro_add_answer
-	print_to_config "distro_add_answer"
 if [[ "$enable_hw_acc" == "y" ]]; then
 	banner
 	if ! type -p pacman >/dev/null 2>&1; then
@@ -1134,7 +1142,7 @@ function distro_hw_questions() {
             echo
             echo "${Y}1. Vulkan (ZINK)${W}"
             echo
-            echo "${Y}2. OpenGL ES (ZINK VIRGL)${W}"
+            echo "${Y}2. OpenGL (VIRGL)${W}"
             echo
             echo "${Y}3. Turnip (Adreno GPU Only)${W}"
             echo
@@ -1144,7 +1152,7 @@ function distro_hw_questions() {
 
             case "$pd_hw_answer_num" in
                 1) pd_hw_answer="zink" ;;
-                2) pd_hw_answer="zink_virgl" ;;
+                2) pd_hw_answer="virgl" ;;
                 3) pd_hw_answer="turnip" ;;
             esac
             ;;
@@ -1191,13 +1199,14 @@ function exp_termux_gl_hw_support() {
 		2) exp_termux_gl_hw_answer="virgl" ;;
 	    3) exp_termux_gl_hw_answer="virgl_angle" ;;
 	    4) exp_termux_gl_hw_answer="virgl_vulkan" ;;
-	    5) exp_termux_gl_hw_answer="zink_virgl" ;;
+	    5) exp_termux_gl_hw_answer="virgl" ;;
 	    6) exp_termux_gl_hw_answer="zink_with_mesa" ;;
 	    7) exp_termux_gl_hw_answer="zink_with_mesa_zink" ;;
 	esac
 	print_to_config "exp_termux_gl_hw_answer"
 	termux_hw_answer="${exp_termux_gl_hw_answer}"
 	print_to_config "exp_termux_gl_hw_answer"
+	print_to_config "termux_hw_answer"
 
     if [[ "$distro_add_answer" == "y" ]]; then
         case "$exp_termux_gl_hw_answer" in
@@ -1248,9 +1257,10 @@ function hw_questions() {
 	    2) termux_hw_answer="virgl" ;;
 		3) termux_hw_answer="virgl_angle" ;;
 	    4) termux_hw_answer="virgl_vulkan" ;;
-	    5) termux_hw_answer="zink_virgl" ;;
+	    5) termux_hw_answer="virgl" ;;
 	    6) termux_hw_answer="freedreno" ;;
 	esac
+	print_to_config "termux_hw_answer"
 		distro_hw_questions
 	fi
 }
@@ -1263,9 +1273,9 @@ function choose_distro() {
 	echo " "
 	echo "${Y}2. Ubuntu${W}"
 	echo " "
-	echo "${Y}3. Arch (Unstable | Doen't Suppoted By AppStore)${W}"
+	echo "${Y}3. Arch (Unstable | Doesn't Suppoted By AppStore)${W}"
 	echo " "
-	echo "${Y}4. Alpine (Doen't Suppoted By AppStore)${W}"
+	echo "${Y}4. Alpine (Doesn't Suppoted By AppStore)${W}"
 	echo " "
 	echo "${Y}5. Fedora${W}"
 	echo " "
@@ -1296,7 +1306,6 @@ function distro_questions() {
 	else
 	distro_zsh_answer="$zsh_answer"
 	fi
-	print_to_config "distro_zsh_answer"
 
 	if [[ "$distro_add_answer" == "y" ]] && [[ "$terminal_utility_setup_answer" == "y" ]]; then
 	banner
@@ -1304,11 +1313,9 @@ function distro_questions() {
 	else
 	distro_terminal_utility_setup_answer="$terminal_utility_setup_answer"
 	fi
-	print_to_config "distro_terminal_utility_setup_answer"
 
 	banner
 	confirmation_y_or_n "Do you want to create a normal user account ${C}(Recomended)" pd_useradd_answer
-	print_to_config "pd_useradd_answer"
 	echo
 
 	if [[ "$pd_useradd_answer" == "n" ]]; then
@@ -1321,7 +1328,6 @@ function distro_questions() {
 	echo "${Y}2. User with password confirmation${W}"
 	echo
 	select_an_option 2 1 pd_pass_type
-	print_to_config "pd_pass_type"
 	    if [[ "$pd_pass_type" == "1" ]]; then
 	    while true; do
         echo " "
@@ -1567,7 +1573,7 @@ function define_value_name() {
 	# Distro Vulkan Driver
 	if [[ "$pd_hw_answer" == "zink" ]]; then
 	distro_vulkan_driver="Not Supported"
-	elif [[ "$pd_hw_answer" == "zink_virgl" ]] || [[ "$pd_hw_answer" == "virgl" ]]; then
+	elif [[ "$pd_hw_answer" == "virgl" ]]; then
 	distro_vulkan_driver="Not Supported"
 	elif [[ "$pd_hw_answer" == "turnip" ]]; then
 	distro_vulkan_driver="Turnip"
@@ -1579,8 +1585,8 @@ function define_value_name() {
 	# Distro OpenGL Driver
 	if [[ "$pd_hw_answer" == "zink" ]]; then
 	distro_opengl_driver="Zink"
-	elif [[ "$pd_hw_answer" == "zink_virgl" ]]; then
-	distro_opengl_driver="Zink Virgl"
+	elif [[ "$pd_hw_answer" == "virgl" ]]; then
+	distro_opengl_driver="Virgl"
 	elif [[ "$pd_hw_answer" == "virgl" ]]; then
 	distro_opengl_driver="Virgl"
 	elif [[ "$pd_hw_answer" == "turnip" ]]; then
@@ -1658,55 +1664,11 @@ function print_conf_info() {
 		wait_for_keypress
 }
 
-function ask_to_chose_de() {
-	# Setlect Desktop Environment
-	banner
-	echo "${R}[${C}-${R}]${G} Select Desktop Environment${W}"
-	echo " "
-	echo "${Y}1. XFCE${W}"
-	echo
-	echo "${Y}2. LXQT${W}"
-	echo
-	echo "${Y}3. OPENBOX WM${W}"
-	echo
-	echo "${Y}4. MATE (Unstable)${W}"
-	echo
-	select_an_option 4 1 desktop_answer
-	echo
-	# set the variables based on chosen de
-	sys_icons_folder="$PREFIX/share/icons"
-	sys_themes_folder="$PREFIX/share/themes"
-	if [[ "$desktop_answer" == "1" ]]; then
-	de_name="xfce"
-	themes_folder="$HOME/.themes"
-	icons_folder="$HOME/.icons"
-	de_startup="xfce4-session"
-	style_answer=1
-	elif [[ "$desktop_answer" == "2" ]]; then
-	de_name="lxqt"
-	themes_folder="$sys_themes_folder"
-	icons_folder="$sys_icons_folder"
-	de_startup="startlxqt"
-	style_answer=2
-	elif [[ "$desktop_answer" == "3" ]]; then
-	de_name="openbox"
-	themes_folder="$sys_themes_folder"
-	icons_folder="$sys_icons_folder"
-	de_startup="openbox-session"
-	style_answer=1
-	elif [[ "$desktop_answer" == "4" ]]; then
-	de_name="mate"
-	themes_folder="$HOME/.themes"
-	icons_folder="$HOME/.icons"
-	de_startup="mate-session"
-	style_answer=1
-	fi
-	print_to_config "de_startup"
-	print_to_config "de_name"
-	print_to_config "themes_folder"
-	print_to_config "icons_folder"
-	questions_theme_select
-}
+#########################################################################
+#
+# Select Install Type and load config
+#
+#########################################################################
 
 function questions_install_type() {
     banner
@@ -1715,7 +1677,7 @@ function questions_install_type() {
     echo
     sleep 0.2
 
-    echo -e "${G} Key Terms:${W}
+echo -e "${G} Key Terms:${W}
 • Generic: Pre-configured options that so far work best in most of the devices\n
 • Recommended: Tested configurations with minimal known issues\n
 • Hardware Acceleration: Uses your device's GPU for better graphics render\n
@@ -1726,9 +1688,9 @@ echo -e "${B}
 Generic is only recomended for beginners\n
 For most of the user who are familiar with termux, custom option recomended for them. 
 
-${C}So use the ${G}3. Custom${C} option, it's best
+${C}So use the 3. Custom option, it's best
 ${W}"
-    
+
     # Show selection options
     echo "${R}[${C}-${R}]${G} Select Install Type${W}"
     echo " "
@@ -1738,7 +1700,7 @@ ${W}"
 	echo " "
     echo "${Y}3. Custom${W}"
     echo " "
-    
+
     select_an_option 3 1 install_type_answer
 
 	if [[ "$install_type_answer" == "1" ]]; then
@@ -1748,92 +1710,15 @@ ${W}"
 ######################################################################
 		ask_to_chose_de
 		setup_device_gpu_model
-		# browser selection
-		browser_answer=3
-		print_to_config "browser_answer"
-		# ide selection
-		ide_answer=4
-		print_to_config "ide_answer"
-		# media player selection
-		player_answer=1
-		print_to_config "player_answer"
-		# photo editor selection
-		photo_editor_answer=1
-		print_to_config "photo_editor_answer"
-		# wine selection
-		wine_answer=4
-		print_to_config "wine_answer"
-		# extra walllpaper
-		ext_wall_answer=n
-		print_to_config "ext_wall_answer"
-		# zsh selection
-		zsh_answer=y
-		print_to_config "zsh_answer"
-		# Terminal Utility selection
-		terminal_utility_setup_answer=y
-		print_to_config "terminal_utility_setup_answer"
-		# file manager tools
-		fm_tools=y
-		print_to_config "fm_tools"
-		# Gui Mode
-		gui_mode_num=1
-		gui_mode="termux_x11"
-		display_number="0"
-		print_to_config "gui_mode_num"
-		print_to_config "gui_mode"
-		print_to_config "display_number"
-		# de on startup
-		de_on_startup=n
-		print_to_config "de_on_startup"
-		# Linux container
-		distro_add_answer=y
-		distro_answer=1
-		selected_distro="debian"
-		print_to_config "distro_add_answer"
-		print_to_config "distro_answer"
-		print_to_config "selected_distro"
-		# Hw enable question
-		enable_hw_acc=y
-		print_to_config "enable_hw_acc"
-		print_to_config "device_gpu_model_name"
-		# hw acc termux
-		confirmation_mesa_vulkan_icd_wrapper=y
-		exp_termux_gl_hw_answer_num=3
+		# download configuration
 		if [[ "$device_gpu_model_name" == "adreno" ]]; then
-		exp_termux_gl_hw_answer="virgl"
-		termux_hw_answer="virgl"
+		download_file "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/configuration/generic/hwa/adreno/configuration.conf"
+		elif [[ "$device_gpu_model_name" == "mali" ]]; then
+		download_file "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/configuration/generic/hwa/mali/configuration.conf"
 		else
-		exp_termux_gl_hw_answer="virgl_angle"
-		termux_hw_answer="virgl_angle"
+		download_file "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/configuration/generic/hwa/configuration.conf"
 		fi
-		print_to_config "confirmation_mesa_vulkan_icd_wrapper"
-		print_to_config "exp_termux_gl_hw_answer_num"
-		print_to_config "exp_termux_gl_hw_answer"
-		if [[ "$device_gpu_model_name" == "adreno" ]] && [[ "$app_arch" == "aarch64" ]]; then
-			# hw acc termux
-			pd_hw_answer_num=2
-			pd_hw_answer="turnip"
-		else
-			# hw acc termux
-			pd_hw_answer_num=2
-			pd_hw_answer="zink_virgl"
-		fi
-		print_to_config "pd_hw_answer_num"
-		print_to_config "pd_hw_answer"
-		# configure audio support for Linux distro container
-		pd_audio_config_answer=y
-		print_to_config "pd_audio_config_answer"
-		# Linux distro container zsh setup
-		distro_zsh_answer=y
-		print_to_config "distro_zsh_answer"
-		# Linux distro container terminal utility setup
-		distro_terminal_utility_setup_answer=n
-		print_to_config "distro_terminal_utility_setup_answer"
-		# Linux distro container create a normal user account
-		pd_useradd_answer=y
-		pd_pass_type=1
-		# Print Configuration
-
+		source configuration.conf
 		# create username for distro
 		banner
 		echo "${R}[${C}-${R}]${G} Please type the username for the linux distro container${W}"
@@ -1863,75 +1748,16 @@ ${W}"
 			;;
 			esac
 		done
-
+		print_to_config "user_name"
 	elif [[ "$install_type_answer" == "2" ]]; then
 
 ######################################################################
 # ******* Generic Recomended Without Hardware Acceleration ********* #
 ######################################################################
 		ask_to_chose_de
-		# browser selection
-		browser_answer=3
-		print_to_config "browser_answer"
-		# ide selection
-		ide_answer=4
-		print_to_config "ide_answer"
-		# media player selection
-		player_answer=1
-		print_to_config "player_answer"
-		# photo editor selection
-		photo_editor_answer=1
-		print_to_config "photo_editor_answer"
-		# wine selection
-		wine_answer=4
-		print_to_config "wine_answer"
-		# extra walllpaper
-		ext_wall_answer=n
-		print_to_config "ext_wall_answer"
-		# zsh selection
-		zsh_answer=n
-		print_to_config "zsh_answer"
-		# Terminal Utility selection
-		terminal_utility_setup_answer=n
-		print_to_config "terminal_utility_setup_answer"
-		# file manager tools
-		fm_tools=n
-		print_to_config "fm_tools"
-		# Gui Mode
-		gui_mode_num=1
-		gui_mode="termux_x11"
-		display_number="0"
-		print_to_config "gui_mode_num"
-		print_to_config "gui_mode"
-		print_to_config "display_number"
-		# de on startup
-		de_on_startup=n
-		print_to_config "de_on_startup"
-		# Linux container
-		distro_add_answer=y
-		distro_answer=1
-		selected_distro="debian"
-		print_to_config "distro_add_answer"
-		print_to_config "distro_answer"
-		print_to_config "selected_distro"
-		# Hw enable question
-		enable_hw_acc=n
-		print_to_config "enable_hw_acc"
-		# configure audio support for Linux distro container
-		pd_audio_config_answer=y
-		print_to_config "pd_audio_config_answer"
-		# Linux distro container zsh setup
-		distro_zsh_answer=y
-		print_to_config "distro_zsh_answer"
-		# Linux distro container terminal utility setup
-		distro_terminal_utility_setup_answer=n
-		print_to_config "distro_terminal_utility_setup_answer"
-		# Linux distro container create a normal user account
-		pd_useradd_answer=y
-		pd_pass_type=1
-		print_to_config "pd_useradd_answer"
-		print_to_config "pd_pass_type"
-
+		# download configuration
+		download_file "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/configuration/generic/nohwa/configuration.conf"
+		source configuration.conf
 		# create username for distro
 		banner
 		echo "${R}[${C}-${R}]${G} Please type the username for the linux distro container${W}"
@@ -1961,16 +1787,43 @@ ${W}"
 			;;
 			esac
 		done
-
-		
+		print_to_config "user_name"
 	elif [[ "$install_type_answer" == "3" ]]; then
 		questions_setup_manual
 	fi
 }
 
+
+function load_local_config() {
+	banner
+    local config_path="$1"
+
+    # Check if the file exists
+    if [[ ! -f "$config_path" ]]; then
+        print_failed "$config_path does not exist."
+        exit 1
+    fi
+
+    # Check if the file has a .conf extension
+    if [[ "$config_path" != *.conf ]]; then
+        print_failed "$config_path does not have a .conf extension."
+        exit 1
+    fi
+
+    # Check if the file is not empty (not 0KB)
+    if [[ ! -s "$config_path" ]]; then
+        print_failed "$config_path is empty."
+        exit 1
+    fi
+	print_success "Using a local configuration file..."
+    source "$config_path"
+	sleep 3
+	validate_required_vars
+}
+
 #########################################################################
 #
-# Update System And Install Required Packages Repo And Bssic Task
+# Update System, Install Required Packages Repo, Requirements checkup
 #
 #########################################################################
 
@@ -2197,19 +2050,19 @@ function install_desktop() {
     log_info "Starting desktop installation" "Desktop: $de_name"
     
     banner
-    if [[ "$desktop_answer" == "1" ]]; then
+    if [[ "$de_name" == "xfce" ]]; then
         log_info "Installing XFCE4"
         echo "${R}[${C}-${R}]${G}${BOLD} Installing Xfce4 Desktop${W}"
-        package_install_and_check "xfce4 xfce4-goodies xfce4-pulseaudio-plugin xfce4-battery-plugin xfce4-docklike-plugin xfce4-notifyd-static"
-    elif [[ "$desktop_answer" == "2" ]]; then
+        package_install_and_check "xfce4 xfce4-goodies xfce4-pulseaudio-plugin xfce4-battery-plugin xfce4-docklike-plugin xfce4-notifyd-static xfce4-cpugraph-plugin"
+    elif [[ "$de_name" == "lxqt" ]]; then
         echo "${R}[${C}-${R}]${G}${BOLD} Installing Lxqt Desktop${W}"
         echo
         package_install_and_check "lxqt openbox gtk3 papirus-icon-theme xorg-xsetroot"
-    elif [[ "$desktop_answer" == "3" ]]; then
+    elif [[ "$de_name" == "openbox" ]]; then
         echo "${R}[${C}-${R}]${G}${BOLD} Installing Openbox WM${W}"
         echo
         package_install_and_check "openbox polybar xorg-xsetroot lxappearance wmctrl feh thunar firefox mpd rofi bmon xcompmgr xfce4-settings gtk3 gedit"
-    elif [[ "$desktop_answer" == "4" ]]; then
+    elif [[ "$de_name" == "mate" ]]; then
         echo "${R}[${C}-${R}]${G}${BOLD} Installing MATE${W}"
         echo
         package_install_and_check "mate*"
@@ -2354,6 +2207,7 @@ function setup_config() {
 	else
 	print_failed "Failed to select style..."
 	fi
+	print_to_config "ext_wall_answer"
 	if [[ "$ext_wall_answer" == "n" ]]; then
 	echo "${R}[${C}-${R}]${C} Skipping Extra Wallpapers Setup...${W}"
 	echo
@@ -2458,6 +2312,7 @@ function distro_container_setup() {
 		if [[ "$enable_hw_acc" == "y" ]]; then
         	hw_config
 		fi
+		print_to_config "enable_hw_acc"
     else
         banner
         echo "${R}[${C}-${R}]${G}${BOLD} Configuring Linux Distro Container${W}"
@@ -3106,18 +2961,18 @@ function gui_launcher() {
 	package_install_and_check "xorg-xhost"
 	if [[ "$gui_mode" == "termux_x11" ]]; then
 	setup_termux_x11
-	print_to_config "gui_mode" "termux_x11"
 	gui_termux_x11
 	elif [[ "$gui_mode" == "both" ]]; then
 	setup_termux_x11
 	setup_vnc
-	print_to_config "gui_mode" "both"
 	gui_both
 	else
 	setup_termux_x11
-	print_to_config "gui_mode" "termux_x11"
 	gui_termux_x11
 	fi
+	print_to_config "gui_mode_num"
+	print_to_config "gui_mode"
+	print_to_config "display_number"
 	chmod +x "$PREFIX/bin/gui"
 	check_and_create_directory "$PREFIX/share/applications/"
 cat <<EOF > "$PREFIX/share/applications/killgui.desktop"
@@ -3231,6 +3086,7 @@ function check_desktop_process() {
 
 function browser_installer() {
 	banner
+	print_to_config "browser_answer"
 	if [[ ${browser_answer} == "1" ]]; then
 	package_install_and_check "firefox"
 	print_to_config "installed_browser" "firefox"
@@ -3259,14 +3115,15 @@ function browser_installer() {
 
 function ide_installer() {
 	banner
+	print_to_config "ide_answer"
 	if [[ ${ide_answer} == "1" ]]; then
-		package_install_and_check "code-oss code-is-code-oss"
+	package_install_and_check "code-oss code-is-code-oss"
 	print_to_config "installed_ide" "code"
 	elif [[ ${ide_answer} == "2" ]]; then
-		package_install_and_check "geany"
+	package_install_and_check "geany"
 	print_to_config "installed_ide" "geany"
 	elif [[ ${ide_answer} == "3" ]]; then
-		package_install_and_check "code-oss code-is-code-oss geany"
+	package_install_and_check "code-oss code-is-code-oss geany"
 	print_to_config "installed_ide" "both"
 	elif [[ ${ide_answer} == "4" ]]; then
     echo "${R}[${C}-${R}]${C} Skipping Ide Installation...${W}"
@@ -3274,7 +3131,7 @@ function ide_installer() {
 	print_to_config "installed_ide" "skip"
 	sleep 2
 	else
-		package_install_and_check "code-oss code-is-code-oss"
+	package_install_and_check "code-oss code-is-code-oss"
 	print_to_config "installed_ide" "code"
 	fi
 }
@@ -3287,14 +3144,15 @@ function ide_installer() {
 
 function media_player_installer() {
 	banner
+	print_to_config "player_answer"
 	if [[ ${player_answer} == "1" ]]; then
-		package_install_and_check "vlc-qt-static"
+	package_install_and_check "vlc-qt-static"
 	print_to_config "installed_media_player" "vlc"
 	elif [[ ${player_answer} == "2" ]]; then
-		package_install_and_check "audacious"
+	package_install_and_check "audacious"
 	print_to_config "installed_media_player" "audacious"
 	elif [[ ${player_answer} == "3" ]]; then
-		package_install_and_check "vlc-qt-static audacious"
+	package_install_and_check "vlc-qt-static audacious"
 	print_to_config "installed_media_player" "both"
 	elif [[ ${player_answer} == "4" ]]; then
     echo "${R}[${C}-${R}]${C} Skipping Media Player Installation...${W}"
@@ -3302,7 +3160,7 @@ function media_player_installer() {
 	sleep 2
 	print_to_config "installed_media_player" "skip"
 	else
-		package_install_and_check "vlc-qt-static"
+	package_install_and_check "vlc-qt-static"
 	print_to_config "installed_media_player" "vlc"
 	fi
 }
@@ -3315,14 +3173,15 @@ function media_player_installer() {
 
 function photo_editor_installer() {
 	banner
+	print_to_config "photo_editor_answer"
 	if [[ ${photo_editor_answer} == "1" ]]; then
-		package_install_and_check "gimp"
+	package_install_and_check "gimp"
 	print_to_config "installed_photo_editor" "gimp"
 	elif [[ ${photo_editor_answer} == "2" ]]; then
-		package_install_and_check "inkscape"
+	package_install_and_check "inkscape"
 	print_to_config "installed_photo_editor" "inkscape"
 	elif [[ ${photo_editor_answer} == "3" ]]; then
-		package_install_and_check "gimp inkscape"
+	package_install_and_check "gimp inkscape"
 	print_to_config "installed_photo_editor" "both"
 	elif [[ ${photo_editor_answer} == "4" ]]; then
     echo "${R}[${C}-${R}]${C} Skipping Photo Editor Installation...${W}"
@@ -3330,10 +3189,9 @@ function photo_editor_installer() {
 	sleep 2
 	print_to_config "installed_photo_editor" "skip"
 	else
-		package_install_and_check "gimp"
+	package_install_and_check "gimp"
 	print_to_config "installed_photo_editor" "gimp"
 	fi
-
 }
 
 #########################################################################
@@ -3594,6 +3452,7 @@ function install_fm_tools() {
         cd "$HOME"
         check_and_delete "nautilus-scripts"
     fi
+	print_to_config "fm_tools"
 }
 
 #########################################################################
@@ -3634,6 +3493,7 @@ function run_wine_shortcut_script() {
 
 function setup_wine() {
 	banner
+	print_to_config "wine_answer"
     if [[ "$wine_answer" == "1" ]]; then
 		echo "${R}[${C}-${R}]${G}${BOLD} Installing Wine Natively In Termux${W}"
 		echo
@@ -3704,6 +3564,7 @@ EOF
 }
 
 function add_to_autostart() {
+	print_to_config "de_on_startup"
 	if [[ "$de_on_startup" == "y" ]]; then
 		if [[ "$default_gui_mode" == "vnc" ]]; then
 			add_vnc_autostart
@@ -3712,8 +3573,8 @@ function add_to_autostart() {
 		elif [[ "$default_gui_mode" == "termux_x11" ]]; then
 			add_tx11_autostart
 		fi
+	print_to_config "default_gui_mode"
 	fi
-	print_to_config "de_on_startup"
 }
 
 
@@ -3745,7 +3606,6 @@ C="$(printf '\033[1;36m')"
 W="$(printf '\033[0m')"
 BOLD="$(printf '\033[1m')"
 
-cd "$HOME" || exit
 termux_desktop_path="/data/data/com.termux/files/usr/etc/termux-desktop"
 config_file="$termux_desktop_path/configuration.conf"
 log_file="/data/data/com.termux/files/home/termux-desktop.log"
@@ -3892,7 +3752,7 @@ function remove_termux_desktop() {
 	fi
 	check_and_delete "$PREFIX/bin/wine $PREFIX/share/applications/wine-*"
 	#remove styles
-	if [[ "$style_name" == "Modern Style" ]]; then
+	if [[ "$style_answer" == "5" ]]; then
 	package_check_and_remove "eww"
 	fi
 	#Remove folders and other files
@@ -3952,17 +3812,19 @@ function change_style() {
 	read_conf
 	gui_check_up
 	banner
+	download_file "${current_path}/styles.md" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/${de_name}_styles.md"
+	style_name=$(grep -oP "^## $style_answer\..+?(?=(\n## \d+\.|\Z))" "${current_path}/styles.md" | sed -e "s/^## $style_answer\. //" -e "s/:$//" -e 's/^[[:space:]]*//;s/[[:space:]]*$//')
+	check_and_delete "${current_path}/styles.md"
 	echo "${R}[${C}-${R}]${G} Your currently installed style is ${C}${BOLD}$style_name ${W}"
 	echo
 	sleep 2
+	unset style_name
 	questions_theme_select
 	rm -rf ~/.cache/sessions/x*
 	setup_config
 	banner
 	echo "${R}[${C}-${R}]${G} Style changed successfully${W}"
 	echo
-	unset style_name
-	read_conf
 	echo "${R}[${C}-${R}]${G} Your currently installed style is ${C}${BOLD}$style_name ${W}"
 	fi
 }
@@ -4131,10 +3993,10 @@ function change_autostart() {
 				elif [[ "$autostart_gui_mode_num" == "2" ]]; then
 					default_gui_mode="vnc"
 				fi
+				print_to_config "gui_mode_num"
 				print_to_config "default_gui_mode"
 			fi
-		de_on_startup=y
-		print_to_config "de_on_startup"
+		print_to_config "de_on_startup" "y"
 		add_to_autostart
 		else
 		echo "${R}[${C}-${R}]${G} Keeping auto start disabled${W}"
@@ -4416,7 +4278,7 @@ function check_for_appstore_update() {
         "requirements.txt" 
         "style/style.css"
     )
-    
+
     local update_needed=false
     local failed_hash_checks=()
 
@@ -4424,7 +4286,7 @@ function check_for_appstore_update() {
     for file in "${files_to_check[@]}"; do
         local github_hash
         local local_hash
-        
+
         # Get GitHub file hash
         if [[ "$file" == "gtk_app_store.py" ]]; then
             github_hash=$(curl -sL "https://raw.githubusercontent.com/sabamdarif/Termux-AppStore/main/src/${file}" | sha256sum | cut -d ' ' -f 1)
@@ -4452,7 +4314,7 @@ function check_for_appstore_update() {
         echo "${R}[${C}-${R}]${Y} Updates found for the following files:${W}"
         printf '%s\n' "${failed_hash_checks[@]}"
         echo
-        
+
         confirmation_y_or_n "Would you like to update the appstore to the latest version" update_appstore
 
         if [[ "$update_appstore" == "y" ]]; then
@@ -4534,15 +4396,17 @@ function reset_changes() {
 #
 #########################################################################
 check_termux
+detact_package_manager
 if [[ -z "$1" ]] || [[ "$1" == "--install" ]] || [[ "$1" == "-i" ]]; then
 	check_installer_status "$1"
 fi
 current_path=$(pwd)
 function install_termux_desktop() {
-print_recomended_msg
+if [[ "$1" != "--local-config" && "$1" != "--config" && "$1" != "-config" ]]; then
+    print_recomended_msg
+fi
 banner
 cleanup_cache
-detact_package_manager
 termux-wake-lock
 sleep 1
 check_and_create_directory "$PREFIX/etc/termux-desktop"
@@ -4551,16 +4415,23 @@ print_basic_details
 add_common_function
 update_sys
 install_required_packages
+if [[ "$1" != "--local-config" && "$1" != "--config" && "$1" != "-config" ]]; then
 questions_install_type
-if [[ "$install_type_answer" == "3" ]]; then
-	if [[ "$distro_add_answer" == "y" ]]; then
-		distro_questions
-	fi
+	if [[ "$install_type_answer" == "3" ]]; then
+		if [[ "$distro_add_answer" == "y" ]]; then
+			distro_questions
+		fi
 
-	if [[ "$enable_hw_acc" == "y" ]]; then
-		setup_device_gpu_model
-		hw_questions
+		if [[ "$enable_hw_acc" == "y" ]]; then
+			setup_device_gpu_model
+			hw_questions
+		fi
 	fi
+fi
+if [[ "$1" = "--local-config" ]] || [[ "$1" = "--config" ]] || [[ "$1" = "-config" ]]; then
+	download_file "${current_path}/styles.md" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/${de_name}_styles.md"
+	style_name=$(grep -oP "^## $style_answer\..+?(?=(\n## \d+\.|\Z))" "${current_path}/styles.md" | sed -e "s/^## $style_answer\. //" -e "s/:$//" -e 's/^[[:space:]]*//;s/[[:space:]]*$//')
+	check_and_delete "${current_path}/styles.md"
 fi
 print_conf_info
 setup_folder
@@ -4577,7 +4448,6 @@ if [[ "$style_answer" == "0" ]]; then
 	echo "${R}[${C}-${R}]${G}${BOLD} Configuring Stock $de_name Style...${W}"
 	echo
 	print_to_config "style_answer"
-	print_to_config "style_name" "Stock"
 else
 	setup_config
 fi
@@ -4602,13 +4472,14 @@ delete_installer_file
 
 function show_help() {
 echo -e "
---debug           to create a log file
--i,--install      to start installation
--r,--remove       to remove termux desktop
--c,--change       to change some previous configuration
--ri,--reinstall   to reinstall some previously install stuff
---reset           to reset all changes made by this script without uninstalling any package
--h,--help         to show help
+--debug           		to create a log file
+-i,--install      		to start installation
+-r,--remove       		to remove termux desktop
+-c,--change       		to change some previous configuration
+-ri,--reinstall   		to reinstall some previously install stuff
+--reset           		to reset all changes made by this script without uninstalling any package
+--local-config,-config	to start the installation from pre made config file
+-h,--help         		to show help
 "
 }
 
@@ -4650,7 +4521,7 @@ case $1 in
         remove_termux_desktop
         ;;
     --install|-i)
-        install_termux_desktop
+        install_termux_desktop "$1"
         ;;
     --change|-c)
         case $2 in
@@ -4712,12 +4583,17 @@ case $1 in
     --reset)
         reset_changes
         ;;
+	--local-config|--config|-config)
+	print_recomended_msg
+	load_local_config "$2"
+	install_termux_desktop "$1"
+		;;
     *)
         if [[ -n "$1" ]]; then
             print_failed "${BOLD} Invalid option: ${C}$1"
             show_help
         else
-            install_termux_desktop
+            install_termux_desktop "$1"
         fi
         ;;
 esac

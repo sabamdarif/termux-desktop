@@ -21,7 +21,7 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
         
         # Constants
         self.PREFIX = os.getenv("PREFIX", "/data/data/com.termux/files/usr")
-        self.DISTRO_NAME = os.getenv("distro_name", "fedora")
+        self.DISTRO_NAME = os.getenv("distro_name", "debian")
         self.DISTRO_PATH = os.getenv("distro_path", f"/data/data/com.termux/files/usr/var/lib/proot-distro/installed-rootfs/{self.DISTRO_NAME}")
         self.APPLICATIONS_DIR = os.path.join(self.PREFIX, "share/applications")
         self.ADDED_DIR = os.path.join(self.APPLICATIONS_DIR, "pd_added")
