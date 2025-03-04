@@ -157,33 +157,35 @@ function check_and_backup() {
 function download_file() {
     local dest
     local url
-    dest="$1"
-    url="$2"
-	print_log "$dest"
-	print_log "$url"
-    if [[ -z "$dest" ]]; then
-        wget --tries=5 --timeout=15 --retry-connrefused "$url"
+
+    if [[ -z "$2" ]]; then
+        # If only one argument is provided, treat it as the URL and use its basename as the destination
+        url="$1"
+        dest="$(basename "$url")"
     else
-        wget --tries=5 --timeout=15 --retry-connrefused -O "$dest" "$url"
+        dest="$1"
+        url="$2"
     fi
 
+    if [[ -z "$url" ]]; then
+        print_failed "No URL provided!"
+        return 1
+    fi
+
+    wget --tries=5 --timeout=15 --retry-connrefused -O "$dest" "$url"
+
     # Check if the file was downloaded successfully
-    if [[ -f "$dest" || -f "$(basename "$url")" ]]; then
+    if [[ -f "$dest" ]]; then
         print_success "Successfully downloaded the file"
     else
         print_failed "Failed to download the file, retrying..."
-        if [[ -z "$dest" ]]; then
-            wget --tries=5 --timeout=15 --retry-connrefused "$url"
-        else
-            wget --tries=5 --timeout=15 --retry-connrefused -O "$dest" "$url"
-        fi
+        wget --tries=5 --timeout=15 --retry-connrefused -O "$dest" "$url"
 
-        # Final check
-        if [[ -f "$dest" || -f "$(basename "$url")" ]]; then
+        if [[ -f "$dest" ]]; then
             print_success "Successfully downloaded the file after retry"
         else
             print_failed "Failed to download the file after retry"
-            exit 0
+            exit 1
         fi
     fi
 }
@@ -2385,6 +2387,7 @@ vncstop -f
 fi
 
 pulseaudio --start --exit-idle-time=-1
+pactl load-module module-sles-source > /dev/null 2>&1
 
 case \$1 in
 --help|-h)
@@ -2409,6 +2412,7 @@ vncstop -f
 fi
 
 pulseaudio --start --exit-idle-time=-1
+pactl load-module module-sles-source > /dev/null 2>&1
 
 case \$1 in
 --nogpu)
@@ -2483,6 +2487,7 @@ kill -9 \$de_pid > /dev/null 2>&1
 fi
 
 pulseaudio --start --exit-idle-time=-1
+pactl load-module module-sles-source > /dev/null 2>&1
 
 ###########################################################
 #                                                         #
@@ -2675,6 +2680,7 @@ kill -9 \$de_pid > /dev/null 2>&1
 fi
 
 pulseaudio --start --exit-idle-time=-1
+pactl load-module module-sles-source > /dev/null 2>&1
 
 ###########################################################
 #                                                         #

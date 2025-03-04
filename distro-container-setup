@@ -41,7 +41,6 @@ function distro_fix_sound_issue() {
 cat <<EOF > "$HOME/.pd-sound-service"
 #!/data/data/com.termux/files/usr/bin/bash
 
-pulseaudio --start --exit-idle-time=-1
 pacmd load-module module-native-protocol-tcp auth-ip-acl=127.0.0.1 auth-anonymous=1
 EOF
 }
@@ -642,7 +641,7 @@ for package_name in "\${packages[@]}"; do
         done
     fi
 done
-rm packinstall.sh
+check_and_delete 'packinstall.sh'
 EOF
 
 # Execute the script inside the proot-distro container
@@ -682,7 +681,7 @@ for package_name in "\${packages[@]}"; do
         done
     fi
 done
-rm packremove.sh
+check_and_delete 'packremove.sh'
 EOF
 proot-distro login "$selected_distro" --shared-tmp -- /bin/bash -c 'export DISPLAY=:$display_number; export XDG_RUNTIME_DIR=$TMPDIR; bash packremove.sh'
 
@@ -756,7 +755,7 @@ for package_name in "\${packages[@]}"; do
         done
     fi
 done
-rm packinstall.sh
+check_and_delete 'packinstall.sh'
 EOF
 
 proot-distro login $selected_distro --shared-tmp -- /bin/bash -c 'export DISPLAY=:$display_number; export XDG_RUNTIME_DIR=$TMPDIR; bash packinstall.sh'
@@ -795,7 +794,7 @@ for package_name in "\${packages[@]}"; do
         done
     fi
 done
-rm packremove.sh
+check_and_delete 'packremove.sh'
 EOF
 
 proot-distro login $selected_distro --shared-tmp -- /bin/bash -c 'export DISPLAY=:$display_number; export XDG_RUNTIME_DIR=$TMPDIR; bash packremove.sh'
@@ -869,7 +868,7 @@ for package_name in "\${packages[@]}"; do
         done
     fi
 done
-rm packinstall.sh
+check_and_delete 'packinstall.sh'
 EOF
 
 proot-distro login $selected_distro --shared-tmp -- /bin/bash -c 'export DISPLAY=:$display_number; export XDG_RUNTIME_DIR=$TMPDIR; bash packinstall.sh'
@@ -907,7 +906,7 @@ for package_name in "\${packages[@]}"; do
         done
     fi
 done
-rm packremove.sh
+check_and_delete 'packremove.sh'
 EOF
 
 proot-distro login $selected_distro --shared-tmp -- /bin/bash -c 'export DISPLAY=:$display_number; export XDG_RUNTIME_DIR=$TMPDIR; bash packremove.sh'
@@ -1020,7 +1019,7 @@ for package_name in "\${packages[@]}"; do
         done
     fi
 done
-rm packremove.sh
+check_and_delete 'packremove.sh'
 EOF
 
 proot-distro login $selected_distro --shared-tmp -- /bin/bash -c 'export DISPLAY=:$display_number; export XDG_RUNTIME_DIR=$TMPDIR; bash packremove.sh'
@@ -1235,21 +1234,21 @@ chmod +x "$PREFIX/bin/pdrun"
 
 #########################################################################
 #
-# Install zlib-devel
+# Install some required packages
 #
 #########################################################################
 
-function install_appimage_related_pack() {
+function install_some_required_pack() {
     local appimage_related_pack_list=""
     
     if [[ "$selected_distro" == "ubuntu" ]] || [[ "$selected_distro" == "debian" ]]; then
-        appimage_related_pack_list="zlib1g zlib1g-dev fuse"
+        appimage_related_pack_list="zlib1g zlib1g-dev fuse xdg-utils glib2.0 dbus"
     elif [[ "$selected_distro" == "fedora" ]]; then
-        appimage_related_pack_list="zlib-devel fuse"
+        appimage_related_pack_list="zlib-devel fuse xdg-utils glib2 dbus"
     elif [[ "$selected_distro" == "archlinux" ]]; then
-        appimage_related_pack_list="zlib fuse2"
+        appimage_related_pack_list="zlib fuse2 xdg-utils glib2 dbus"
     elif [[ "$selected_distro" == "alpine" ]]; then
-        appimage_related_pack_list="zlib-dev fuse"
+        appimage_related_pack_list="zlib-dev fuse xdg-utils glib dbus"
     fi
 
     if [[ -z "$appimage_related_pack_list" ]]; then
@@ -1309,7 +1308,7 @@ function install_distro_container() {
     distro_zsh_setup
     distro_terminal_utility_setup
     distro_create_app_installer
-    install_appimage_related_pack
+    install_some_required_pack
     distro_app_launch_setup
     distro_folders_link
 }
