@@ -7,7 +7,6 @@ function check_termux() {
 	fi
 }
 
-
 function setup_distro() {
     banner
     echo "${R}[${C}-${R}]${G}${BOLD} Setting up ${C}proot-distro${W}"
@@ -81,12 +80,6 @@ function pd_package_install_and_check() {
             else
                 pacman -Sy --noconfirm "$package_name"
             fi
-        elif [[ "$ID" == "alpine" ]]; then
-            if $use_sudo; then
-                sudo apk add "$package_name"
-            else
-                apk add "$package_name"
-            fi
         elif [[ "$ID" == "fedora" ]]; then
             if $use_sudo; then
                 sudo dnf install "$package_name" -y
@@ -115,14 +108,6 @@ function pd_package_install_and_check() {
                 else
                     pacman -Syu --noconfirm
                     pacman -Sy --noconfirm "$package_name"
-                fi
-            elif [[ "$ID" == "alpine" ]]; then
-                if $use_sudo; then
-                    sudo apk fix
-                    sudo apk add "$package_name"
-                else
-                    apk fix
-                    apk add "$package_name"
                 fi
             elif [[ "$ID" == "fedora" ]]; then
                 if $use_sudo; then
@@ -154,14 +139,6 @@ function pd_package_install_and_check() {
                     pacman -Sy --noconfirm "$package_name"
                 fi
             fi
-        elif [[ "$ID" == "alpine" ]]; then
-            if ! apk info -e "$package_name"; then
-                if $use_sudo; then
-                    sudo apk add "$package_name"
-                else
-                    apk add "$package_name"
-                fi
-            fi
         elif [[ "$ID" == "fedora" ]]; then
             if ! rpm -q "$package_name" >/dev/null 2>&1; then
                 if $use_sudo; then
@@ -187,14 +164,6 @@ function pd_package_install_and_check() {
             else
                 if type -p "$package_name" &>/dev/null || ls "$PREFIX/bin/"*"$package_name"* >/dev/null 2>&1; then
                     print_success "$package_name installed successfully"
-                fi
-            fi
-        elif [[ "$ID" == "alpine" ]]; then
-            if apk info -e "$package_name"; then
-                print_success "$package_name installed success"
-            else
-                if type -p "$package_name" &>/dev/null || ls "$PREFIX/bin/"*"$package_name"* >/dev/null 2>&1; then
-                    print_success "$package_name installed success"
                 fi
             fi
         elif [[ "$ID" == "fedora" ]]; then
@@ -255,9 +224,6 @@ function distro_basic_task() {
     proot-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:$display_number apt upgrade -y
     elif [[ "$selected_distro" == "archlinux" ]]; then
     proot-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:$display_number pacman -Syu --noconfirm
-    elif [[ "$selected_distro" == "alpine" ]]; then
-    proot-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:$display_number apk update
-    proot-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:$display_number apk upgrade
     elif [[ "$selected_distro" == "fedora" ]]; then
     proot-distro login "$selected_distro" -- /bin/bash -c "echo 'max_parallel_downloads=10/' >> '/etc/dnf/dnf.conf'"
     proot-distro login "$selected_distro" -- /bin/bash -c "echo 'fastestmirror=True/' >> '/etc/dnf/dnf.conf'"
@@ -297,22 +263,6 @@ proot-distro login "$selected_distro" -- /bin/bash -c 'bash pd_basic_setup.sh'
     fi
     print_to_config "pd_pass_type"
 if [[ "$pd_useradd_answer" == "y" ]]; then
-if [[ "$selected_distro" == "alpine" ]]; then
-
-cat <<EOF > "$distro_path/root/useradd.sh"
-#!/bin/bash
-
-groupadd storage
-groupadd wheel
-mkdir -p /home/$final_user_name
-adduser -h /home/$final_user_name -s \$(which bash) -G users -D $final_user_name
-chown ${final_user_name}:users /home/$final_user_name
-echo "${final_user_name}:${final_pass}" | chpasswd
-rm useradd.sh
-EOF
-
-else
-
 cat <<EOF > "$distro_path/root/useradd.sh"
 #!/bin/bash
 
@@ -323,8 +273,6 @@ usermod -aG wheel,polkitd,audio,video,storage ${final_user_name}
 echo "${final_user_name}:${final_pass}" | chpasswd
 rm useradd.sh
 EOF
-
-fi
 
 proot-distro login "$selected_distro" -- /bin/sh -c 'bash useradd.sh'
 
@@ -814,114 +762,6 @@ fi
 TOP_EOF
 }
 
-function handel_alpine_based_app_installer() {
-    cat <<TOP_EOF > "$PREFIX/bin/$selected_distro"
-#!/data/data/com.termux/files/usr/bin/bash
-
-source $PREFIX/etc/termux-desktop/common_functions
-
-xhost + > /dev/null 2>&1
-if [[ "\$#" -eq 0 ]]; then
-    if [[ "\$PWD" == "$HOME" ]]; then
-        proot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp
-    else
-        proot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp --work-dir "\$PWD"
-    fi
-
-elif [[ "\$1" = "install" ]]; then
-    if [[ ! -d "/data/data/com.termux/files/usr/share/applications/pd_added" ]]; then
-        mkdir -p "/data/data/com.termux/files/usr/share/applications/pd_added"
-    fi
-
-    # Separate options and package names
-    options=()
-    packages=()
-    for arg in "\${@:2}"; do
-        if [[ "\$arg" == -* ]]; then
-            options+=("\$arg")  # Add to options if it starts with '-'
-        else
-            packages+=("\$arg") # Add to packages otherwise
-        fi
-    done
-
-# Install the packages using the package manager
-proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:$display_number sudo apk add "\${options[@]}" "\${packages[@]}"
-    
-cat <<EOF > "$save_root_path/packinstall.sh"
-#!/bin/bash
-
-source /data/data/com.termux/files/usr/etc/termux-desktop/common_functions
-packages=(\${packages[@]})
-EOF
-
-cat <<'EOF' >> "$save_root_path/packinstall.sh"
-for package_name in "\${packages[@]}"; do
-    desktop_files=\$(ls /usr/share/applications/ | grep "\$package_name.*\.desktop$")
-    if [ -z "\$desktop_files" ]; then
-        print_failed "No .desktop files found for package ${C} \$package_name ${R}in /usr/share/applications."
-    else
-        for desktop_files_name in \$desktop_files; do
-            desktop_files_without_ext="\${desktop_files_with_ext%.desktop}"
-            print_success "Adding ${C}\${desktop_files_without_ext} ${G}To Termux Menu"
-            sudo cp "/usr/share/applications/\${desktop_files_name}" "/data/data/com.termux/files/usr/share/applications/pd_added/"
-            sudo sed -i 's/Exec=/Exec=pdrun /g' "/data/data/com.termux/files/usr/share/applications/pd_added/\${desktop_files_name}"
-        done
-    fi
-done
-check_and_delete 'packinstall.sh'
-EOF
-
-proot-distro login $selected_distro --shared-tmp -- /bin/bash -c 'export DISPLAY=:$display_number; export XDG_RUNTIME_DIR=$TMPDIR; bash packinstall.sh'
-
-elif [[ "\$1" = "remove" ]]; then
-
-    # Separate options and package names
-    options=()
-    packages=()
-    for arg in "\${@:2}"; do
-        if [[ "\$arg" == -* ]]; then
-            options+=("\$arg")  # Add to options if it starts with '-'
-        else
-            packages+=("\$arg") # Add to packages otherwise
-        fi
-    done
-
-cat <<EOF > "$save_root_path/packremove.sh"
-#!/bin/bash
-
-source /data/data/com.termux/files/usr/etc/termux-desktop/common_functions
-packages=(\${packages[@]})
-EOF
-
-cat <<'EOF' >> "$save_root_path/packremove.sh"
-for package_name in "\${packages[@]}"; do
-    desktop_files=\$(ls /usr/share/applications/ | grep "\$package_name.*\.desktop\$")
-    if [ -z "\$desktop_files" ]; then
-        print_failed "No .desktop files found for package ${C} \$package_name ${R}in /usr/share/applications."
-    else
-        for desktop_files_name in \$desktop_files; do
-            desktop_files_without_ext="\${desktop_files_with_ext%.desktop}"
-            print_success "Removing ${C}\${desktop_files_without_ext} ${G}From Termux Menu"
-            sudo rm /data/data/com.termux/files/usr/share/applications/pd_added/\${desktop_files_with_ext}
-        done
-    fi
-done
-check_and_delete 'packremove.sh'
-EOF
-
-proot-distro login $selected_distro --shared-tmp -- /bin/bash -c 'export DISPLAY=:$display_number; export XDG_RUNTIME_DIR=$TMPDIR; bash packremove.sh'
-
-# Remove the packages using the package manager
-proot-distro login --user $final_user_name "$selected_distro" --shared-tmp -- env DISPLAY=:$display_number sudo apk del "\${options[@]}" "\${packages[@]}"
-
-if [[ \$1 = "install" ]] || [[ \$1 = "remove" ]]; then
-    gtk-update-icon-cache
-    update-desktop-database -q "$PREFIX/share/applications/pd_added"
-fi
-
-TOP_EOF
-}
-
 function handel_fedora_based_app_installer() {
     cat <<TOP_EOF > "$PREFIX/bin/$selected_distro"
 #!/data/data/com.termux/files/usr/bin/bash
@@ -1047,8 +887,6 @@ if [[ "$selected_distro" == "debian" ]] || [[ "$selected_distro" == "ubuntu" ]];
 handel_debian_based_app_installer
 elif [[ "$selected_distro" == "archlinux" ]]; then
 handel_arch_based_app_installer
-elif [[ "$selected_distro" == "alpine" ]]; then
-handel_alpine_based_app_installer
 elif [[ "$selected_distro" == "fedora" ]]; then
 handel_fedora_based_app_installer
 fi
@@ -1247,8 +1085,6 @@ function install_some_required_pack() {
         appimage_related_pack_list="zlib-devel fuse xdg-utils glib2 dbus"
     elif [[ "$selected_distro" == "archlinux" ]]; then
         appimage_related_pack_list="zlib fuse2 xdg-utils glib2 dbus"
-    elif [[ "$selected_distro" == "alpine" ]]; then
-        appimage_related_pack_list="zlib-dev fuse xdg-utils glib dbus"
     fi
 
     if [[ -z "$appimage_related_pack_list" ]]; then

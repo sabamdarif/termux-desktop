@@ -1274,21 +1274,18 @@ function choose_distro() {
 	echo " "
 	echo "${Y}2. Ubuntu${W}"
 	echo " "
-	echo "${Y}3. Arch (Unstable | Doesn't Suppoted By AppStore)${W}"
+	echo "${Y}3. Arch (Unstable | isn't fully suppoted by AppStore yet)${W}"
 	echo " "
-	echo "${Y}4. Alpine (Doesn't Suppoted By AppStore)${W}"
+	echo "${Y}4. Fedora${W}"
 	echo " "
-	echo "${Y}5. Fedora${W}"
-	echo " "
-	select_an_option 5 1 distro_answer
+	select_an_option 4 1 distro_answer
 	print_to_config "distro_answer"
 
 	case "$distro_answer" in
         1) selected_distro="debian" ;;
         2) selected_distro="ubuntu" ;;
         3) selected_distro="archlinux" ;;
-        4) selected_distro="alpine" ;;
-        5) selected_distro="fedora" ;;
+        4) selected_distro="fedora" ;;
         *) selected_distro="debian" ;;
     esac
     print_to_config "selected_distro"
