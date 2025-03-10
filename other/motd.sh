@@ -11,11 +11,23 @@ if [[ -d /system/app/ && -d /system/priv-app ]]; then
     MODEL="$(getprop ro.product.brand) $(getprop ro.product.model)"
 fi
 termux_build=$(echo "$TERMUX_APK_RELEASE" | awk '{print tolower($0)}' | awk '{for(i=1;i<=NF;i++) $i=toupper(substr($i,1,1)) substr($i,2)} 1')
-cpu=$(</sys/class/thermal/thermal_zone0/temp)
-TEMP=$(echo $cpu | cut -c 1-2)
-PROCESSOR_BRAND_NAME="$(getprop ro.soc.manufacturer)"
-PROCESSOR_NAME="$(getprop ro.soc.model)"
-HARDWARE="$(getprop ro.hardware)"
+for zone in /sys/class/thermal/thermal_zone*/temp; do
+    if [ -f "$zone" ]; then
+        cpu=$(cat "$zone")
+        break
+    fi
+done
+
+# Convert temperature format
+if [[ -n "$cpu" && "$cpu" =~ ^[0-9]+$ ]]; then
+    TEMP=$((cpu / 1000))  # Some devices store temp in millidegrees
+    [[ "$TEMP" -eq 0 ]] && TEMP=$((cpu / 100))
+else
+    TEMP="N/A"
+fi
+PROCESSOR_BRAND_NAME="$(getprop ro.soc.manufacturer | tr '[:lower:]' '[:upper:]')"
+PROCESSOR_NAME="$(getprop ro.soc.model | tr '[:lower:]' '[:upper:]')"
+HARDWARE="$(getprop ro.hardware | tr '[:lower:]' '[:upper:]')"
 if [[ -n "$PROCESSOR_BRAND_NAME" && -n "$PROCESSOR_NAME" ]]; then
    soc_details="$PROCESSOR_BRAND_NAME $PROCESSOR_NAME"
 else
@@ -30,6 +42,13 @@ elif [[ "$TEMP" -gt "60" ]]; then
 FG="${R}"
 fi
 
+cpu_arch=$(uname -m)
+
+if [[ "$cpu_arch" == "aarch64" ]]; then
+cpu_arch_icon="󰻠"
+else
+cpu_arch_icon="󰻟"
+fi
 clear
 
 LOGO="
@@ -50,8 +69,9 @@ $C System          : $G  ${W}$DISTRO
 $C Host            : $G  ${W}$MODEL
 $C Kernel          : $G  ${W}$(uname -sr)
 $C CPU             : $G  ${W}${soc_details} ($G$PROCESSOR_COUNT$W vCPU)
+$C Architectures   : $G${cpu_arch_icon}  ${W}$(uname -m | tr '[:lower:]' '[:upper:]')
 $C Termux Version  : $G  ${W}${TERMUX_VERSION}-${termux_build}$W
-$C Memory          : $G  ${G}$USED$W used, $G$TOTAL$W total$W
+$C Memory          : $G  ${G}$USED$W used, $G$TOTAL$W total$W
 $C Temperature     : $FG  ${TEMP}°c$W"
 
 max_usage=95

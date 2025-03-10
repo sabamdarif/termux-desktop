@@ -1,7 +1,7 @@
 #!/data/data/com.termux/files/usr/bin/bash
 
 function check_termux() {
-	if [[ $HOME != *termux* ]]; then
+	if [[ -z "$PREFIX" && "$PREFIX" != *"/com.termux/"* ]]; then
 	echo "${R}[${R}☓${R}]${R}${BOLD}Please run it inside termux${W}"
 	exit 0
 	fi
@@ -18,7 +18,6 @@ function setup_distro() {
     banner
     echo "${R}[${C}-${R}]${G}${BOLD} Setting up Selected Linux Distro: ${C}${selected_distro}${W}"
     echo
-    print_to_config "distro_answer"
     print_to_config "selected_distro"
 
     pd install "$selected_distro"
@@ -42,6 +41,7 @@ cat <<EOF > "$HOME/.pd-sound-service"
 
 pacmd load-module module-native-protocol-tcp auth-ip-acl=127.0.0.1 auth-anonymous=1
 EOF
+chmod +x "$HOME/.pd-sound-service"
 }
 
 #########################################################################
@@ -311,38 +311,25 @@ fi
 #
 #########################################################################
 
-function assigne_value() {
-    if [[ "$pd_useradd_answer" == "y" ]]; then
-        save_path="$distro_path/home/$final_user_name"
-    elif [[ "$pd_useradd_answer" == "n" ]]; then
-        save_path="$distro_path/root"
-    fi
-
-    if [[ "$distro_zsh_answer" == "y" ]]; then
-        pd_shell_name="zsh"
-    else
-        pd_shell_name="bash"
-    fi
-    print_to_config "distro_zsh_answer"
-}
-
 function distro_zsh_setup() {
 # ZSH Setup
 if [[ "$distro_zsh_answer" == "y" ]]; then
     zsh_setup_content=$(cat <<EOF
-selected_distro=${selected_distro}
 pd_package_install_and_check "git zsh wget"
-wget --tries=5 --retry-connrefused https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/other/install-zsh.sh
-chmod +x install-zsh.sh
-. install-zsh.sh
+
+if [[ "$selected_distro" == "debian" ]] || [[ "$selected_distro" == "ubuntu" ]]; then
+chsh -s /usr/bin/zsh ${final_user_name}
+else
+chsh -s /bin/zsh ${final_user_name}
+fi
 check_and_delete "pd_zsh_install.sh"
 EOF
 )
-create_shell_script "$save_path/pd_zsh_install.sh" "$zsh_setup_content"
+create_shell_script "$distro_path/root/pd_zsh_install.sh" "$zsh_setup_content"
 banner
 echo "${R}[${C}-${R}]${G}${BOLD} Setting up shell for ${selected_distro}...${W}"
 echo
-proot-distro login --user "$final_user_name" "$selected_distro" -- /bin/bash -c 'bash pd_zsh_install.sh'
+proot-distro login "$selected_distro" -- /bin/bash -c 'bash pd_zsh_install.sh'
 else
 echo "${R}[${C}-${R}]${C} Canceling ZSH setup...${W}"
 fi
@@ -350,11 +337,11 @@ fi
 
 function distro_terminal_utility_setup() {
 # Terminal Utility Setup
-if [[ "$distro_terminal_utility_setup_answer" == "y" ]]; then
+if [[ "$terminal_utility_setup_answer" == "y" ]]; then
 
 if [[ "$selected_distro" == "debian" ]] || [[ "$selected_distro" == "ubuntu" ]]; then
     terminal_utility_content=$(cat <<'EOF'
-pd_package_install_and_check "nala zoxide bat wget gpg fzf"
+pd_package_install_and_check "zoxide bat wget gpg fzf"
 device_arch=$(uname -m)
 case "$device_arch" in
     aarch64) archtype="aarch64" ;;
@@ -392,132 +379,11 @@ echo "${R}[${C}-${R}]${C} Configuring Terminal Utility For $selected_distro ...$
 echo
 proot-distro login --user "$final_user_name" "$selected_distro" -- /bin/bash -c 'bash pd_setup.sh'
 
-shell_rc_content=$(cat <<'EOF'
-# fzf
-alias preview="fzf --preview='bat --color=always --style=numbers --theme OneHalfDark {}' --preview-window=down"
-
-#System    
-alias q="exit"
-alias c="clear"
-alias sd="cd /sdcard"
-alias mkdir='mkdir -p'
-
-#Photos
-alias ss="cd /sdcard/Pictures/Screenshots/"
-
-#Movies
-alias ms="cd /sdcard/Movies"
-
-#Downloads
-alias dl="cd /sdcard/Download"
-
-#Documents
-alias ds="cd /sdcard/Documents"
-
-#Largest Files
-alias largefile="du -h -x -s -- * | sort -r -h | head -20"
-
-#System Information
-alias ls="eza --icons"
-alias la="eza --icons -lgha --group-directories-first"
-alias lt="eza --icons --tree"
-alias lta="eza --icons --tree -lgha"
-alias bat="bat --theme OneHalfDark"
-alias cat="bat --theme OneHalfDark -p $@"
-alias neofetch='fastfetch'
-#######################################################
-# SPECIAL FUNCTIONS
-#######################################################
-# Extracts any archive(s) (if unp isn't installed)
-extract() {
-    for archive in "$@"; do
-        if [ -f "$archive" ]; then
-            case $archive in
-            *.tar.bz2) tar xvjf $archive ;;
-            *.tar.xz) tar -xvf $archive ;;
-            *.tar.gz) tar -xzvf $archive ;;
-            *.bz2) bunzip2 $archive ;;
-            *.rar) rar x $archive ;;
-            *.tar) tar xvf $archive ;;
-            *.tbz2) tar xvjf $archive ;;
-            *.tgz) tar xvzf $archive ;;
-            *.zip) unzip $archive ;;
-            *.Z) uncompress $archive ;;
-            *.7z) 7z x $archive ;;
-            *) echo "don't know how to extract '$archive'..." ;;
-            esac
-        else
-            echo "'$archive' is not a valid file!"
-        fi
-    done
-}
-# Searches for text in all files in the current folder
-ftext() {
-    # -i case-insensitive
-    # -I ignore binary files
-    # -H causes filename to be printed
-    # -r recursive search
-    # -n causes line number to be printed
-    # optional: -F treat search term as a literal, not a regular expression
-    # optional: -l only print filenames and not the matching lines ex. grep -irl "$1" *
-    grep -iIHrn --color=always "$1" . | less -r
-}
-# Copy and go to the directory
-cpg() {
-    if [ -d "$2" ]; then
-        cp "$1" "$2" && cd "$2"
-    else
-        cp "$1" "$2"
-    fi
-}
-# Move and go to the directory
-mvg() {
-    if [ -d "$2" ]; then
-        mv "$1" "$2" && cd "$2"
-    else
-        mv "$1" "$2"
-    fi
-}
-# Create and go to the directory
-mkdirg() {
-    mkdir -p "$1"
-    cd "$1"
-}
-EOF
-)
-
-# Preserve old shell rc file
-cp "$save_path/.${pd_shell_name}rc" "$save_path/.${pd_shell_name}rc-2"
-check_and_backup "$save_path/.${pd_shell_name}rc"
-mv "$save_path/.${pd_shell_name}rc-2" "$save_path/.${pd_shell_name}rc"
-
-echo "$shell_rc_content" >> "$save_path/.${pd_shell_name}rc"
-if [[ "$selected_distro" == "debian" ]] || [[ "$selected_distro" == "ubuntu" ]]; then
-cat <<'EOF' >> "$save_path/.${pd_shell_name}rc"
-alias apt='sudo nala $@'
-alias apt-get='sudo nala $@'
-EOF
+if [[ "$zsh_answer" == "y" ]] && [[ "$distro_zsh_answer" == "n" ]]; then
+echo "source $HOME/.shell_rc_content" >> "$HOME/.bashrc"
+echo "source $HOME/.aliases" >> "$HOME/.bashrc"
 fi
-cat <<EOF >> "$save_path/.${pd_shell_name}rc"
-#set zoxide as cd
-eval "\$(zoxide init --cmd cd ${pd_shell_name})"
-EOF
 fi
-
-cat <<EOF >> "$save_path/.${pd_shell_name}rc"
-export DISPLAY=:$display_number
-
-case \$1 in
-    tx11start|tx11stop|vncstart|vncstop|pdrun)
-        echo "${R}Error: These commands can only be run from Termux, not inside proot distro.${W}"
-        exit 1
-    ;;
-esac
-EOF
-
-print_to_config "pd_shell_name"
-print_to_config "distro_terminal_utility_setup_answer"
-
 }
 
 #########################################################################
@@ -528,12 +394,6 @@ print_to_config "distro_terminal_utility_setup_answer"
 
 function handel_debian_based_app_installer() {
 
-    if [[ "$distro_terminal_utility_setup_answer" == "y" ]]; then
-        local package_manager="nala"
-    else
-        local package_manager="apt"
-    fi
-
     cat <<TOP_EOF > "$PREFIX/bin/$selected_distro"
 #!/data/data/com.termux/files/usr/bin/bash
 
@@ -542,9 +402,9 @@ source $PREFIX/etc/termux-desktop/common_functions
 xhost + > /dev/null 2>&1
 if [[ "\$#" -eq 0 ]]; then
     if [[ "\$PWD" == "$HOME" ]]; then
-        proot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp
+        proot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp --termux-home
     else
-        proot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp --work-dir "\$PWD"
+        proot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp --work-dir "\$PWD" --termux-home
     fi
 
 elif [[ "\$1" = "install" ]]; then
@@ -564,7 +424,7 @@ elif [[ "\$1" = "install" ]]; then
     done
 
 # Install the packages using the package manager
-proot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp -- env DISPLAY=:$display_number sudo "$package_manager" install "\${options[@]}" "\${packages[@]}"
+proot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp -- env DISPLAY=:$display_number sudo apt install "\${options[@]}" "\${packages[@]}"
 
     # Generate the packinstall.sh script
 cat <<EOF > "$save_root_path/packinstall.sh"
@@ -634,10 +494,10 @@ EOF
 proot-distro login "$selected_distro" --shared-tmp -- /bin/bash -c 'export DISPLAY=:$display_number; export XDG_RUNTIME_DIR=$TMPDIR; bash packremove.sh'
 
 # Remove the packages using the package manager
-proot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp -- env DISPLAY=:$display_number sudo "$package_manager" \$1 "\${options[@]}" "\${packages[@]}"
+proot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp -- env DISPLAY=:$display_number sudo apt \$1 "\${options[@]}" "\${packages[@]}"
 
 elif [[ "\$1" = "update" ]]; then
-    proot-distro login --user $final_user_name "$selected_distro" --shared-tmp -- env DISPLAY=:$display_number sudo $package_manager update
+    proot-distro login --user $final_user_name "$selected_distro" --shared-tmp -- env DISPLAY=:$display_number sudo apt update
 fi
 
 if [[ \$1 = "install" ]] || [[ \$1 = "remove" ]] || [[ \$1 = "autoremove" ]]; then
@@ -657,9 +517,9 @@ source $PREFIX/etc/termux-desktop/common_functions
 xhost + > /dev/null 2>&1
 if [[ "\$#" -eq 0 ]]; then
     if [[ "\$PWD" == "$HOME" ]]; then
-        proot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp
+        proot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp --termux-home
     else
-        proot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp --work-dir "\$PWD"
+        proot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp --work-dir "\$PWD" --termux-home
     fi
 
 elif [[ "\$1" = "install" ]]; then
@@ -771,9 +631,9 @@ source $PREFIX/etc/termux-desktop/common_functions
 xhost + > /dev/null 2>&1
 if [[ "\$#" -eq 0 ]]; then
     if [[ "\$PWD" == "$HOME" ]]; then
-        proot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp
+        proot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp --termux-home
     else
-        proot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp --work-dir "\$PWD"
+        proot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp --work-dir "\$PWD" --termux-home
     fi
 
 elif [[ "\$1" = "install" ]]; then
@@ -941,7 +801,7 @@ echo -e "
 }
 case \$1 in
 --root|-r)
-proot-distro sh "$selected_distro"
+proot-distro login --termux-home "$selected_distro"
 ;;
 --remove)
 remove_distro_container
@@ -1021,7 +881,7 @@ cat <<EOF > "$PREFIX/bin/pdrun"
 #!/data/data/com.termux/files/usr/bin/bash
 
 selected_pd_hw_method="$pd_hw_method"
-bash ~/.pd-sound-service
+bash $HOME/.pd-sound-service
 EOF
     fi
 
@@ -1029,13 +889,13 @@ cat <<EOF >> "$PREFIX/bin/pdrun"
 xhost + > /dev/null 2>&1
 case \$1 in
 --nogpu)
-proot-distro login --user $final_user_name "$selected_distro" --shared-tmp -- eval "env DISPLAY=:$display_number XDG_RUNTIME_DIR=\${TMPDIR} LIBGL_ALWAYS_SOFTWARE=1 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe \${@:2}"
+proot-distro login --user $final_user_name "$selected_distro" --shared-tmp --termux-home -- eval "env DISPLAY=:$display_number XDG_RUNTIME_DIR=\${TMPDIR} LIBGL_ALWAYS_SOFTWARE=1 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe \${@:2}"
 ;;
 --help|-h)
 echo "${G}Type ${C}pdrun launch command ${G}to start with GPU acceleration${W}"
 ;;
 *)
-proot-distro login --user $final_user_name "$selected_distro" --shared-tmp -- eval "env DISPLAY=:$display_number XDG_RUNTIME_DIR=\${TMPDIR} \$selected_pd_hw_method \$@"
+proot-distro login --user $final_user_name "$selected_distro" --shared-tmp --termux-home -- eval "env DISPLAY=:$display_number XDG_RUNTIME_DIR=\${TMPDIR} \$selected_pd_hw_method \$@"
 ;;
 esac
 EOF
@@ -1051,7 +911,7 @@ EOF
 cat <<EOF > "$PREFIX/bin/pdrun"
 #!/data/data/com.termux/files/usr/bin/bash
 
-bash ~/.pd-sound-service
+bash $HOME/.pd-sound-service
 EOF
     fi
 
@@ -1062,7 +922,7 @@ case \$1 in
 echo "${G}Type ${C}pdrun launch command ${G}to start with gpu acceleration${W}"
 ;;
 *)
-proot-distro login --user $final_user_name "$selected_distro" --shared-tmp -- eval "env DISPLAY=:$display_number XDG_RUNTIME_DIR=\${TMPDIR} \$@"
+proot-distro login --user $final_user_name "$selected_distro" --shared-tmp --termux-home -- eval "env DISPLAY=:$display_number XDG_RUNTIME_DIR=\${TMPDIR} \$@"
 ;;
 esac
 EOF
@@ -1077,58 +937,29 @@ chmod +x "$PREFIX/bin/pdrun"
 #########################################################################
 
 function install_some_required_pack() {
-    local appimage_related_pack_list=""
+    local some_required_pack_list=""
     
     if [[ "$selected_distro" == "ubuntu" ]] || [[ "$selected_distro" == "debian" ]]; then
-        appimage_related_pack_list="zlib1g zlib1g-dev fuse xdg-utils glib2.0 dbus"
+        some_required_pack_list="zlib1g zlib1g-dev fuse xdg-utils libglib2.0-0 libglib2.0-bin dbus"
     elif [[ "$selected_distro" == "fedora" ]]; then
-        appimage_related_pack_list="zlib-devel fuse xdg-utils glib2 dbus"
+        some_required_pack_list="zlib-devel fuse xdg-utils glib2 dbus"
     elif [[ "$selected_distro" == "archlinux" ]]; then
-        appimage_related_pack_list="zlib fuse2 xdg-utils glib2 dbus"
+        some_required_pack_list="zlib fuse2 xdg-utils glib2 dbus"
     fi
 
-    if [[ -z "$appimage_related_pack_list" ]]; then
+    if [[ -z "$some_required_pack_list" ]]; then
         print_failed "No packages defined for $selected_distro"
-        return 1
     fi
 
     banner
-    echo "${R}[${C}-${R}]${G} Installing AppImage related packages${W}"
-    pd_setup_appimage_related_pack=$(cat <<EOF
-pd_package_install_and_check --root "$appimage_related_pack_list"
-check_and_delete "appimage_related_pack.sh"
+    echo "${R}[${C}-${R}]${G} Installing some required packages${W}"
+    pd_setup_some_required_pack=$(cat <<EOF
+pd_package_install_and_check "$some_required_pack_list"
+check_and_delete "some_required_pack.sh"
 EOF
 )
-    create_shell_script "$distro_path/root/appimage_related_pack.sh" "$pd_setup_appimage_related_pack"
-    proot-distro login "$selected_distro" -- /bin/bash -c 'bash appimage_related_pack.sh'
-}
-
-#########################################################################
-#
-# Distro Folders , Theme And Icon Link
-#
-#########################################################################
-
-function distro_folders_link() {
-    echo "${R}[${C}-${R}]${G}${BOLD} Link Distro Directories With Internal Storage${W}"
-cat <<EOF > "$save_path/setup-folders.sh"
-#!/bin/bash
-
-directories=(Desktop Music Downloads Pictures Videos)
-for dir in "\${directories[@]}"; do
-ln -s "/data/data/com.termux/files/home/\$dir" "\$HOME/"
-done
-rm setup-folders.sh
-EOF
-proot-distro login --user $final_user_name $selected_distro -- /bin/sh -c 'bash setup-folders.sh'
-    echo "${R}[${C}-${R}]${G}${BOLD} Link Distro Termux Themes And Icons With $selected_distro ${W}"
-    sleep 0.5
-    check_and_create_directory "$HOME/.icons"
-    ln -s "$icons_folder" "$save_path"
-    check_and_create_directory "$HOME/.themes"
-    ln -s "$themes_folder" "$save_path"
-    ln -s /data/data/com.termux/files/home/.fonts "$save_path"
-
+    create_shell_script "$save_path/some_required_pack.sh" "$pd_setup_some_required_pack"
+    proot-distro login "$selected_distro" -- /bin/bash -c 'bash some_required_pack.sh'
 }
 
 function install_distro_container() {
@@ -1138,9 +969,8 @@ function install_distro_container() {
         if [[ "$enable_hw_acc" == "y" ]]; then
             hw_config
         fi
-	    print_to_config "enable_hw_acc"
     fi
-    assigne_value
+    save_path="$distro_path/root"
     distro_zsh_setup
     distro_terminal_utility_setup
     distro_create_app_installer
