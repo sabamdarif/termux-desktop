@@ -27,6 +27,7 @@
 - **listfont** To list all font
 - **largefile** To list large files
 - **preview** use fzf to search file and preview text file
+- **fcd** use fzf to search directories and cd into them
 
 ##### For more cat $HOME/.aliases
 ---

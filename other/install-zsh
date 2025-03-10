@@ -1,41 +1,4 @@
-#!/bin/bash
-
-R="$(printf '\033[1;31m')"
-G="$(printf '\033[1;32m')"
-Y="$(printf '\033[1;33m')"
-W="$(printf '\033[0m')"
-C="$(printf '\033[1;36m')"
-
-check_prefix() {
- case "$PREFIX" in
-    *com.termux*)
-        while true; do
-            read -p "${R}[${W}-${R}]${G}Input username [Lowercase]: ${W}" user_name
-            echo
-            read -p "${R}[${W}-${R}]${Y}Do you want to continue with username ${C}$user_name ${Y}? (y/n) : "${W} choice
-            choice="${choice:-y}"
-            echo "${R}[${W}-${R}]${G}Continuing with answer: $choice"${W}
-				sleep 0.3
-            case $choice in
-                [yY]* )
-                    echo "${R}[${W}-${R}]${G}Continuing with username ${C}$user_name"${W}
-                    break;;
-                [nN]* )
-                    echo "${G}Please provide username and password again."${W}
-                    echo
-                    ;;
-                * )
-                    echo "${R}Invalid input. Please enter 'y' or 'n'.${W}"
-                    ;;
-            esac
-        done
-        final_user_name="${user_name}@termux"
-        ;;
-    *)
-        final_user_name="$(whoami)@${selected_distro}"
-        ;;
-esac
-}
+#!/data/data/com.termux/files/usr/bin/bash
 
 check_file() {
 # Check if a file named "install.sh" exists in the current directory
@@ -71,9 +34,14 @@ zsh_setup() {
 }
 
 setup_theme() {
-	cat << EOF > ~/.oh-my-zsh/themes/kalistyle.zsh-theme
-	local return_code="%(?..%{\$fg[red]%}%? ↵%{\$reset_color%})"
-local user="$final_user_name"  # Replace with your desired name
+cat << EOF > ~/.oh-my-zsh/themes/kalistyle.zsh-theme
+local return_code="%(?..%{\$fg[red]%}%? ↵%{\$reset_color%})"
+
+if [[ \$HOME == *termux* ]]; then
+    user="${user_name}@termux"
+else
+    user="${user_name}@${selected_distro}"
+fi
 
 local user_host="%B%F{green}┌──(%F{reset}\$user%F{green})-%F{green}[%F{reset}%B%{\$fg[blue]%}%~%b%F{blue}%B%F{green}]%F{reset}"
 
@@ -109,28 +77,47 @@ ZSH_THEME_VIRTUAL_ENV_PROMPT_SUFFIX="› %{\$reset_color%}"
 ZSH_THEME_VIRTUALENV_PREFIX="\$ZSH_THEME_VIRTUAL_ENV_PROMPT_PREFIX"
 ZSH_THEME_VIRTUALENV_SUFFIX="\$ZSH_THEME_VIRTUAL_ENV_PROMPT_SUFFIX"
 EOF
-}
 
-print_success() {
-	rm install-zsh.sh
-	echo -e "${G}ZSH SETUP SUCCESSFUL${W} ${C}Now Restart the Terminal${W}"
-	echo -e "${C}Or Log Out And Log Back In Again${W}"
+print_success "zsh setup successfully"
 }
 
 check_paramitter() {
-  if [[ "$1" == "-u" ]]; then
-    user_name="$2"
-    if [[ "$HOME" == *termux* && -z "$user_name" ]]; then
-      read -p "${G}Please enter your user name: ${W}" user_name
+    if [[ -n "$PREFIX" && "$PREFIX" == *"/com.termux/"* && -z "$user_name" ]]; then
+      while true; do
+        echo " "
+        while true; do
+        	    read -r -p "${R}[${C}-${R}]${G} Input username [Lowercase]: ${W}" user_name
+        	    if [[ -n "$user_name" ]]; then
+        	        break
+        	    else
+        	        print_warn "You can't leave the username empty. Please enter a valid username."
+        	    fi
+        	done
+        echo
+        local choice
+        read -r -p "${R}[${C}-${R}]${Y} Do you want to continue with username ${C}$user_name ${Y}? (y/n) : ${W}" choice
+        echo
+        choice="${choice:-y}"
+        echo
+        print_success "Continuing with answer: $choice"
+        sleep 0.2
+        	case $choice in
+        	    [yY]* )
+        	        print_success "Continuing with username ${C}$user_name"
+        	        break;;
+        	    [nN]* )
+        	        echo "${R}[${C}-${R}]${G}Please provide username again.${W}"
+        	        echo
+        	        ;;
+        	    * )
+        	        print_failed "Invalid input, Please enter y or n"
+        	        ;;
+        	esac
+    	done
     fi
-    final_user_name="${user_name}@termux"
-    return
-  fi
-
-  check_prefix
+    final_user_name="${user_name}"
 }
 
-check_paramitter "$@"
+check_paramitter
 zsh_setup
 setup_theme
-print_success

@@ -1,7 +1,7 @@
 #!/data/data/com.termux/files/usr/bin/bash
 
 function check_termux() {
-	if [[ $HOME != *termux* ]]; then
+	if [[ -z "$PREFIX" && "$PREFIX" != *"/com.termux/"* ]]; then
 	echo "${R}[${R}☓${R}]${R}${BOLD}Please run it inside termux${W}"
 	exit 0
 	fi
@@ -148,7 +148,6 @@ case "$termux_hw_answer" in
     pd_hw_method="${hw_method}"
     ;;
 esac
-print_to_config "exp_termux_gl_hw_answer_num"
 print_to_config "exp_termux_gl_hw_answer"
 print_to_config "termux_hw_answer"
 
