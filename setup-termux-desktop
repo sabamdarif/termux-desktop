@@ -1829,7 +1829,6 @@ function check_system_requirements() {
 	PROCESSOR_BRAND_NAME="$(getprop ro.soc.manufacturer)"
     PROCESSOR_NAME="$(getprop ro.soc.model)"
     HARDWARE="$(getprop ro.hardware)"
-    
     if [[ -n "$PROCESSOR_BRAND_NAME" && -n "$PROCESSOR_NAME" ]]; then
         print_status "ok" "SOC: ${W}$PROCESSOR_BRAND_NAME $PROCESSOR_NAME"
     else
@@ -2448,7 +2447,6 @@ function setup_tx11start_cmd() {
 if [[ "$enable_hw_acc" == "y" ]]; then
 
 cat <<EOF > "$PREFIX/bin/tx11start"
-
 #!/data/data/com.termux/files/usr/bin/bash
 
 # Initialize flags
@@ -2499,24 +2497,34 @@ done
 pkill -f com.termux.x11 > /dev/null 2>&1
 pkill -9 "$de_startup" > /dev/null 2>&1
 
+# Ensure XDG_RUNTIME_DIR exists
+export XDG_RUNTIME_DIR=/data/data/com.termux/files/usr/tmp
+mkdir -p "\$XDG_RUNTIME_DIR"
+
+# Export DISPLAY variable
+export DISPLAY=:${display_number}
+
 # Start pulseaudio unless --help was given
 if [[ "\$1" != "--help" ]]; then
-	termux-wake-lock
+    termux-wake-lock
     pulseaudio --start --exit-idle-time=-1
-    pactl load-module module-sles-source > /dev/null 2>&1
-fi
-
-# Debug mode
-if \$use_debug; then
-    echo "Debugging mode enabled"
-    export TERMUX_X11_DEBUG=1
+	if \$use_debug; then
+    	pactl load-module module-sles-source
+	else
+    	pactl load-module module-sles-source > /dev/null 2>&1
+	fi
 fi
 
 # Set environment variables if NOT using --nogpu
 if ! \$use_nogpu; then
     export ${set_to_export}
-    ${initialize_server_method} &
+	if \$use_debug; then
+    	${initialize_server_method} &
+	else
+    	${initialize_server_method} > /dev/null 2>&1 &
+	fi
     export ${gpu_environment_variable}
+	export ${hw_method}
 else
     export LIBGL_ALWAYS_SOFTWARE=1
     export MESA_LOADER_DRIVER_OVERRIDE=llvmpipe
@@ -2526,25 +2534,53 @@ fi
 sleep 1
 
 # Construct X11 command
-x11_cmd="XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :${display_number}"
+x11_cmd="XDG_RUNTIME_DIR=\${XDG_RUNTIME_DIR} termux-x11 :0"
 
 if \$use_legacy; then
     x11_cmd+=" -legacy-drawing"
 fi
 
 # Start X11
-\$x11_cmd &
-sleep 3
+if \$use_debug; then
+	eval "\$x11_cmd" &
+else
+	eval "\$x11_cmd" > /dev/null 2>&1 &
+fi
+sleep 1
 
 # Start X11 Main Activity
-am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1
+if \$use_debug; then
+	am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity
+else
+	am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1
+fi
 sleep 1
 
 # Start the desktop environment
 if \$use_nodbus; then
-    env DISPLAY=:${display_number} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${hw_method} $de_startup &
+	if \$use_debug; then
+    	env DISPLAY=:${display_number} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg $de_startup &
+	else
+    	env DISPLAY=:${display_number} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg $de_startup > /dev/null 2>&1 &
+	fi
 else
-    env DISPLAY=:${display_number} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${hw_method} dbus-launch --exit-with-session $de_startup &
+	if \$use_debug; then
+    	env DISPLAY=:${display_number}  XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg dbus-launch --exit-with-session $de_startup &
+	else
+    	env DISPLAY=:${display_number}  XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg dbus-launch --exit-with-session $de_startup > /dev/null 2>&1 &
+	fi
+fi
+
+sleep 5
+
+# Kill xfce4-screensaver if running
+process_id=\$(ps aux | grep '[x]fce4-screensaver' | awk '{print \$2}')
+if [[ -n "\$process_id" ]]; then
+	if \$use_debug; then
+		kill "\$process_id"
+	else
+    	kill "\$process_id" > /dev/null 2>&1
+	fi
 fi
 
 EOF
@@ -2552,77 +2588,117 @@ EOF
 elif [[ "$enable_hw_acc" == "n" ]]; then
 
 cat <<EOF > "$PREFIX/bin/tx11start"
-
 #!/data/data/com.termux/files/usr/bin/bash
 
+# Initialize flags
 use_nodbus=false
 use_legacy=false
 use_debug=false
 
+# Function to show help
 function show_tx11start_help() {
-# Display help information
-echo -e "
+    echo -e "
 tx11start            - Start Termux:X11
 tx11start --nodbus   - Start without dbus
 tx11start --legacy   - Start with -legacy-drawing
 tx11start --debug    - Show debug log
 "
-exit 0
+    exit 0
 }
 
 # Parse arguments
 while ((\$# >= 1)); do
-	case "\$1" in
-		--help)
-			show_tx11start_help
-			;;
-		--nodbus)
-			use_nodbus=true
-			;;
-		--legacy)
-			use_legacy=true
-			;;
-			*)
-			echo "Invalid option: \$1"
-			show_tx11start_help
-	    	;;
-	esac
-	shift
+    case "\$1" in
+        --help)
+            show_tx11start_help
+            ;;
+        --nodbus)
+            use_nodbus=true
+            ;;
+        --legacy)
+            use_legacy=true
+            ;;
+        --debug)
+            use_debug=true
+            ;;
+        *)
+            echo "Invalid option: \$1"
+            show_tx11start_help
+            ;;
+    esac
+    shift
 done
 
 # Kill existing Termux X11 processes
 pkill -f com.termux.x11 > /dev/null 2>&1
 pkill -9 "$de_startup" > /dev/null 2>&1
 
+# Ensure XDG_RUNTIME_DIR exists
+export XDG_RUNTIME_DIR=/data/data/com.termux/files/usr/tmp
+mkdir -p "\$XDG_RUNTIME_DIR"
+
+# Export DISPLAY variable
+export DISPLAY=:${display_number}
+
 # Start pulseaudio unless --help was given
 if [[ "\$1" != "--help" ]]; then
-	termux-wake-lock
+    termux-wake-lock
     pulseaudio --start --exit-idle-time=-1
-    pactl load-module module-sles-source > /dev/null 2>&1
-fi
-
-# Debug mode
-if \$use_debug; then
-    echo "Debugging mode enabled"
-    export TERMUX_X11_DEBUG=1
+	if \$use_debug; then
+    	pactl load-module module-sles-source
+	else
+    	pactl load-module module-sles-source > /dev/null 2>&1
+	fi
 fi
 
 # Construct X11 command
-x11_cmd="XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :${display_number}"
+x11_cmd="XDG_RUNTIME_DIR=\${XDG_RUNTIME_DIR} termux-x11 :0"
+
+if \$use_legacy; then
+    x11_cmd+=" -legacy-drawing"
+fi
 
 # Start X11
-\$x11_cmd &
-sleep 3
+if \$use_debug; then
+	eval "\$x11_cmd" &
+else
+	eval "\$x11_cmd" > /dev/null 2>&1 &
+fi
+sleep 1
 
 # Start X11 Main Activity
-am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1
+if \$use_debug; then
+	am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity
+else
+	am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1
+fi
 sleep 1
 
 # Start the desktop environment
 if \$use_nodbus; then
-    env DISPLAY=:${display_number} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg $de_startup &
+	if \$use_debug; then
+    	env DISPLAY=:${display_number} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg $de_startup &
+	else
+    	env DISPLAY=:${display_number} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg $de_startup > /dev/null 2>&1 &
+	fi
 else
-    env DISPLAY=:${display_number} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg dbus-launch --exit-with-session $de_startup &
+	if \$use_debug; then
+    	env DISPLAY=:${display_number}  XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg dbus-launch --exit-with-session $de_startup &
+	else
+    	env DISPLAY=:${display_number}  XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg dbus-launch --exit-with-session $de_startup > /dev/null 2>&1 &
+	fi
+fi
+
+sleep 5
+
+# Kill xfce4-screensaver if running
+process_id=\$(ps aux | grep '[x]fce4-screensaver' | awk '{print \$2}')
+if [[ -n "\$process_id" ]]; then
+	if \$use_debug; then
+		kill "\$process_id"
+	else
+    	kill "\$process_id" > /dev/null 2>&1
+	fi
 fi
 
 EOF
