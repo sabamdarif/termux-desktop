@@ -648,7 +648,6 @@ function validate_required_vars() {
 		required_vars+=(
 		"termux_hw_answer"
 		"confirmation_mesa_vulkan_icd_wrapper"
-		"exp_termux_gl_hw_answer"
 		)
 	fi
 
@@ -1094,11 +1093,6 @@ function distro_hw_questions() {
             esac
             ;;
     esac
-
-    	# Save to config file if pd_hw_answer was set
-    	if [[ -n "$pd_hw_answer" ]]; then
-        	print_to_config "pd_hw_answer"
-    	fi
 	fi
 }
 
@@ -1150,7 +1144,6 @@ function exp_termux_gl_hw_support() {
 					distro_hw_questions
 				else
                 	pd_hw_answer="virgl"
-                	print_to_config "pd_hw_answer"
 				fi
                 ;;
             *)
@@ -1648,6 +1641,7 @@ ${W}"
 		download_file "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/configuration/generic/hwa/configuration.conf"
 		fi
 		source configuration.conf
+		check_and_delete "configuration.conf"
 		# create username for distro
 		banner
 		echo "${R}[${C}-${R}]${G} Please type the username for the linux distro container${W}"
@@ -1688,6 +1682,7 @@ ${W}"
 		# download configuration
 		download_file "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/configuration/generic/nohwa/configuration.conf"
 		source configuration.conf
+		check_and_delete "configuration.conf"
 		# create username for distro
 		banner
 		echo "${R}[${C}-${R}]${G} Please type the username for the linux distro container${W}"
@@ -2379,6 +2374,7 @@ function show_vncstart_help() {
 echo -e "
 vncstart 			to start vncserver with gpu acceleration
 vncstart ---nogpu	to start vncserver without gpu acceleration"
+vncstart --help     to show help
 }
 
 case \$1 in
@@ -2411,8 +2407,13 @@ cat <<'EOF' > "$PREFIX/bin/vncstop"
 
 termux-wake-unlock
 
-if [[ "$1" == "-f" ]]; then
+if [[ "$1" == "-f" ]] || [[ "$1" == "--force" ]]; then
 pkill -9 Xtigervnc > /dev/null 2>&1
+elif [[ "$1" == "-h" ]] || [[ "$1" == "--help" ]]; then
+echo -e "
+vncstop     	  to stop vncserver
+vncstop --force	  to force stop vncserver
+vncstop --help    to show the helps
 else
 display_numbers=$(vncserver -list | awk '/^:[0-9]+/ {print $1}')
 
@@ -2445,352 +2446,185 @@ EOF
 function setup_tx11start_cmd() {
 	check_and_delete "$PREFIX/bin/tx11start"
 if [[ "$enable_hw_acc" == "y" ]]; then
+
 cat <<EOF > "$PREFIX/bin/tx11start"
+
 #!/data/data/com.termux/files/usr/bin/bash
 
-termux-wake-lock
+# Initialize flags
+use_nogpu=false
+use_nodbus=false
+use_legacy=false
+use_debug=false
 
-termux_x11_pid=\$(pgrep -f "app_process -Xnoimage-dex2oat / com.termux.x11.Loader :${display_number}")
-de_pid=\$(pgrep -f "$de_startup")
-if [ -n "\$termux_x11_pid" ] || [ -n "\$de_pid" ] >/dev/null 2>&1; then
-pkill -f com.termux.x11 > /dev/null 2>&1
-kill -9 \$de_pid > /dev/null 2>&1
-fi
-
-if [[ "\$1" != "--help" ]]; then
-pulseaudio --start --exit-idle-time=-1
-pactl load-module module-sles-source > /dev/null 2>&1
-fi
-
-function show_tx11start_help(){
-###########################################################
-#                                                         #
-#************************** Help *************************#
-#                                                         #
-###########################################################
-
-# Display help information
-echo -e "
-tx11start 			to start termux:x11 with GPU acceleration
-tx11start --nogpu  	to start termux:x11 without GPU acceleration
-tx11start --nodbus	to start termux:x11 without dbus
-tx11start --legacy 	to start termux:x11 with -legacy-drawing
-tx11start --debug 	at the start to see debug log for that command
+# Function to show help
+function show_tx11start_help() {
+    echo -e "
+tx11start            - Start Termux:X11 with GPU acceleration
+tx11start --nogpu    - Start without GPU acceleration
+tx11start --nodbus   - Start without dbus
+tx11start --legacy   - Start with -legacy-drawing
+tx11start --debug    - Show debug log
 "
-exit 0
+    exit 0
 }
 
-###########################################################
-#                                                         #
-#************************* Debug *************************#
-#                                                         #
-###########################################################
-
-if [[ "\$1" == "--debug" ]]; then
-case \$2 in
---nogpu)
-    # Start Termux X11 without GPU acceleration
-    XDG_RUNTIME_DIR=\${TMPDIR} TERMUX_X11_DEBUG=1 termux-x11 :${display_number} &
-    sleep 1
-    am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1
-    sleep 1
-    env DISPLAY=:${display_number} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} LIBGL_ALWAYS_SOFTWARE=1 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe dbus-launch --exit-with-session $de_startup
-
-    # Check if the second argument is --legacy
-    if [[ "\$3" == "--legacy" ]]; then
-        XDG_RUNTIME_DIR=\${TMPDIR} TERMUX_X11_DEBUG=1 termux-x11 :${display_number} -legacy-drawing &
-        sleep 1
-        am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1
-        sleep 1
-        env DISPLAY=:${display_number} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} dbus-launch --exit-with-session $de_startup
-    fi
-    ;;
-
---nodbus)
-    # Start Termux X11 without dbus-launch
-	export ${set_to_export}
-	${initialize_server_method} &
-    env XDG_RUNTIME_DIR=\${TMPDIR} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} ${hw_method} TERMUX_X11_DEBUG=1 termux-x11 :${display_number} -xstartup $de_startup
-    exit 0
-
-    # Nested case to check for additional options
-    case \$3 in
-    --nogpu)
-        env LIBGL_ALWAYS_SOFTWARE=1 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe XDG_RUNTIME_DIR=\${TMPDIR} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} TERMUX_X11_DEBUG=1 termux-x11 :${display_number} -xstartup $de_startup
-
-        if [[ "\$4" == "--legacy" ]]; then
-            env XDG_RUNTIME_DIR=\${TMPDIR} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} TERMUX_X11_DEBUG=1 termux-x11 :${display_number} -legacy-drawing -xstartup $de_startup
-        fi
-        ;;
-    --legacy)
-	export ${set_to_export}
-	${initialize_server_method} &
-        env XDG_RUNTIME_DIR=\${TMPDIR} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} ${hw_method} TERMUX_X11_DEBUG=1 termux-x11 :${display_number} -legacy-drawing -xstartup $de_startup
-        ;;
-    *)
-        echo -e "${C}--legacy ${G}to start termux:x11 with -legacy-drawing${W}"
-        echo -e "${C}--nogpu ${G}to start termux:x11 without GPU acceleration${W}"
-        exit 0
-        ;;
+# Parse arguments
+while ((\$# >= 1)); do
+    case "\$1" in
+        --help)
+            show_tx11start_help
+            ;;
+        --nogpu)
+            use_nogpu=true
+            ;;
+        --nodbus)
+            use_nodbus=true
+            ;;
+        --legacy)
+            use_legacy=true
+            ;;
+        --debug)
+            use_debug=true
+            ;;
+        *)
+            echo "Invalid option: \$1"
+            show_tx11start_help
+            ;;
     esac
-    ;;
+    shift
+done
 
---legacy)
-    # Start Termux X11 with legacy drawing mode
-	export ${set_to_export}
-	${initialize_server_method} &
-    sleep 1
-    XDG_RUNTIME_DIR=\${TMPDIR} TERMUX_X11_DEBUG=1 termux-x11 :${display_number} -legacy-drawing &
-    sleep 1
-    am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1 &
-    sleep 1
-    env DISPLAY=:${display_number} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} ${hw_method} dbus-launch --exit-with-session $de_startup
-    ;;
+# Kill existing Termux X11 processes
+pkill -f com.termux.x11 > /dev/null 2>&1
+pkill -9 "$de_startup" > /dev/null 2>&1
 
-*)
-	if [[ -n "\$1" ]]; then
-    	echo "${R}[${R}☓${R}]${R} Invalid option: ${C} \$1 ${W}"
-    	show_tx11start_help
-    else
-    	# Default behavior: start Termux X11 with GPU acceleration and dbus
-		export ${set_to_export}
-		${initialize_server_method} &
-    	sleep 1
-    	XDG_RUNTIME_DIR=\${TMPDIR} TERMUX_X11_DEBUG=1 termux-x11 :${display_number} &
-    	sleep 1
-    	am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1 &
-    	sleep 1
-    	env DISPLAY=:${display_number} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} ${hw_method} dbus-launch --exit-with-session $de_startup
-	fi
-    ;;
-esac
-
-elif [[ "\$1" == "--help" ]]; then
-	show_tx11start_help
-else
-
-###########################################################
-#                                                         #
-#************************* Main **************************#
-#                                                         #
-###########################################################
-
-case \$1 in
---nogpu)
-    # Start Termux X11 without GPU acceleration
-    XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :${display_number} &
-    sleep 1
-    am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1
-    sleep 1
-    env DISPLAY=:${display_number} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} LIBGL_ALWAYS_SOFTWARE=1 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe dbus-launch --exit-with-session $de_startup > /dev/null 2>&1 &
-
-    # Check if the second argument is --legacy
-    if [[ "\$2" == "--legacy" ]]; then
-        XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :${display_number} -legacy-drawing &
-        sleep 1
-        am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1
-        sleep 1
-        env DISPLAY=:${display_number} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} dbus-launch --exit-with-session $de_startup > /dev/null 2>&1 &
-    fi
-    ;;
-
---nodbus)
-    # Start Termux X11 without dbus-launch
-	export ${set_to_export}
-	${initialize_server_method} &
-    env XDG_RUNTIME_DIR=\${TMPDIR} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} ${hw_method} termux-x11 :${display_number} -xstartup $de_startup > /dev/null 2>&1 &
-    exit 0
-
-    # Nested case to check for additional options
-    case \$2 in
-    --nogpu)
-        env LIBGL_ALWAYS_SOFTWARE=1 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe XDG_RUNTIME_DIR=\${TMPDIR} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} termux-x11 :${display_number} -xstartup $de_startup > /dev/null 2>&1 &
-
-        if [[ "\$3" == "--legacy" ]]; then
-            env XDG_RUNTIME_DIR=\${TMPDIR} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} termux-x11 :${display_number} -legacy-drawing -xstartup $de_startup > /dev/null 2>&1 &
-        fi
-        ;;
-    --legacy)
-	export ${set_to_export}
-	${initialize_server_method} &
-        env XDG_RUNTIME_DIR=\${TMPDIR} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} ${hw_method} termux-x11 :${display_number} -legacy-drawing -xstartup $de_startup > /dev/null 2>&1 &
-        ;;
-    *)
-        echo -e "${C}--legacy ${G}to start termux:x11 with -legacy-drawing${W}"
-        echo -e "${C}--nogpu ${G}to start termux:x11 without GPU acceleration${W}"
-        exit 0
-        ;;
-    esac
-    ;;
-
---legacy)
-    # Start Termux X11 with legacy drawing mode
-	export ${set_to_export}
-	${initialize_server_method} &
-    sleep 1
-    XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :${display_number} -legacy-drawing &
-    sleep 1
-    am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1 &
-    sleep 1
-    env DISPLAY=:${display_number} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} ${hw_method} dbus-launch --exit-with-session $de_startup > /dev/null 2>&1 &
-    ;;
-*)
-	if [[ -n "\$1" ]]; then
-		echo "${R}[${R}☓${R}]${R} Invalid option: ${C} \$1 ${W}"
-		show_tx11start_help
-    else
-    	# Default behavior: start Termux X11 with GPU acceleration and dbus
-		export ${set_to_export}
-		${initialize_server_method} &
-    	sleep 1
-    	XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :${display_number} &
-    	sleep 1
-    	am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1 &
-    	sleep 1
-    	env DISPLAY=:${display_number} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${gpu_environment_variable} ${hw_method} dbus-launch --exit-with-session $de_startup > /dev/null 2>&1 &
-	fi
-    ;;
-esac
+# Start pulseaudio unless --help was given
+if [[ "\$1" != "--help" ]]; then
+	termux-wake-lock
+    pulseaudio --start --exit-idle-time=-1
+    pactl load-module module-sles-source > /dev/null 2>&1
 fi
+
+# Debug mode
+if \$use_debug; then
+    echo "Debugging mode enabled"
+    export TERMUX_X11_DEBUG=1
+fi
+
+# Set environment variables if NOT using --nogpu
+if ! \$use_nogpu; then
+    export ${set_to_export}
+    ${initialize_server_method} &
+    export ${gpu_environment_variable}
+else
+    export LIBGL_ALWAYS_SOFTWARE=1
+    export MESA_LOADER_DRIVER_OVERRIDE=llvmpipe
+    export GALLIUM_DRIVER=llvmpipe
+fi
+
+sleep 1
+
+# Construct X11 command
+x11_cmd="XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :${display_number}"
+
+if \$use_legacy; then
+    x11_cmd+=" -legacy-drawing"
+fi
+
+# Start X11
+\$x11_cmd &
+sleep 3
+
+# Start X11 Main Activity
+am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1
+sleep 1
+
+# Start the desktop environment
+if \$use_nodbus; then
+    env DISPLAY=:${display_number} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${hw_method} $de_startup &
+else
+    env DISPLAY=:${display_number} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg ${hw_method} dbus-launch --exit-with-session $de_startup &
+fi
+
 EOF
 
 elif [[ "$enable_hw_acc" == "n" ]]; then
+
 cat <<EOF > "$PREFIX/bin/tx11start"
+
 #!/data/data/com.termux/files/usr/bin/bash
 
-termux-wake-lock
-
-termux_x11_pid=\$(pgrep -f "app_process -Xnoimage-dex2oat / com.termux.x11.Loader :${display_number}")
-de_pid=\$(pgrep -f "$de_startup")
-if [ -n "\$termux_x11_pid" ] || [ -n "\$de_pid" ] >/dev/null 2>&1; then
-pkill -f com.termux.x11 > /dev/null 2>&1
-kill -9 \$de_pid > /dev/null 2>&1
-fi
-
-if [[ "\$1" != "--help" ]]; then
-pulseaudio --start --exit-idle-time=-1
-pactl load-module module-sles-source > /dev/null 2>&1
-fi
+use_nodbus=false
+use_legacy=false
+use_debug=false
 
 function show_tx11start_help() {
-
-###########################################################
-#                                                         #
-#************************** Help *************************#
-#                                                         #
-###########################################################
-
 # Display help information
 echo -e "
-tx11start 			to start termux:x11 normally
-tx11start --nodbus	to start termux:x11 without dbus
-tx11start --legacy	to start termux:x11 with -legacy-drawing
-tx11start --debug 	at the start to see debug log for that command
+tx11start            - Start Termux:X11
+tx11start --nodbus   - Start without dbus
+tx11start --legacy   - Start with -legacy-drawing
+tx11start --debug    - Show debug log
 "
 exit 0
 }
 
-###########################################################
-#                                                         #
-#************************* Debug *************************#
-#                                                         #
-###########################################################
+# Parse arguments
+while ((\$# >= 1)); do
+	case "\$1" in
+		--help)
+			show_tx11start_help
+			;;
+		--nodbus)
+			use_nodbus=true
+			;;
+		--legacy)
+			use_legacy=true
+			;;
+			*)
+			echo "Invalid option: \$1"
+			show_tx11start_help
+	    	;;
+	esac
+	shift
+done
 
-if [[ "\$1" == "--debug" ]]; then
-case \$2 in
---nodbus)
-    # Start Termux X11 without dbus-launch
-    env XDG_RUNTIME_DIR=\${TMPDIR} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg TERMUX_X11_DEBUG=1 termux-x11 :${display_number} -xstartup $de_startup
-    exit 0
+# Kill existing Termux X11 processes
+pkill -f com.termux.x11 > /dev/null 2>&1
+pkill -9 "$de_startup" > /dev/null 2>&1
 
-    # Nested case to check for additional options
-    case \$3 in
-    --legacy)
-        env XDG_RUNTIME_DIR=\${TMPDIR} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg TERMUX_X11_DEBUG=1 termux-x11 :${display_number} -legacy-drawing -xstartup $de_startup
-        ;;
-    *)
-        echo -e "${C}--legacy ${G}to start termux:x11 with -legacy-drawing${W}"
-        exit 0
-        ;;
-    esac
-    ;;
-
---legacy)
-    # Start Termux X11 with legacy drawing mode
-    XDG_RUNTIME_DIR=\${TMPDIR} TERMUX_X11_DEBUG=1 termux-x11 :${display_number} -legacy-drawing &
-    sleep 1
-    am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1 &
-    sleep 1
-    env DISPLAY=:${display_number} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg dbus-launch --exit-with-session $de_startup
-    ;;
-
-*)
-	if [[ -n "\$1" ]]; then
-    	echo "${R}[${R}☓${R}]${R} Invalid option: ${C} \$1${W}"
-		show_tx11start_help
-    else
-    	# Default behavior: start Termux X11 with GPU acceleration and dbus
-    	XDG_RUNTIME_DIR=\${TMPDIR} TERMUX_X11_DEBUG=1 termux-x11 :${display_number} &
-    	sleep 1
-    	am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1 &
-    	sleep 1
-    	env DISPLAY=:${display_number} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg dbus-launch --exit-with-session $de_startup
-	fi
-    ;;
-esac
-
-elif [[ "\$1" == "--help" ]]; then
-	show_tx11start_help
-else
-
-###########################################################
-#                                                         #
-#************************* Main **************************#
-#                                                         #
-###########################################################
-
-case \$1 in
-
---nodbus)
-    # Start Termux X11 without dbus-launch
-    env XDG_RUNTIME_DIR=\${TMPDIR} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg termux-x11 :${display_number} -xstartup $de_startup > /dev/null 2>&1 &
-    exit 0
-
-    # Nested case to check for additional options
-    case \$2 in
-    --legacy)
-        env XDG_RUNTIME_DIR=\${TMPDIR} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg termux-x11 :${display_number} -legacy-drawing -xstartup $de_startup > /dev/null 2>&1 &
-        ;;
-    *)
-        echo -e "${C}--legacy ${G}to start termux:x11 with -legacy-drawing${W}"
-        exit 0
-        ;;
-    esac
-    ;;
-
---legacy)
-    # Start Termux X11 with legacy drawing mode
-    XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :${display_number} -legacy-drawing &
-    sleep 1
-    am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1 &
-    sleep 1
-    env DISPLAY=:${display_number} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg dbus-launch --exit-with-session $de_startup > /dev/null 2>&1 &
-    ;;
-*)
-	if [[ -n "\$1" ]]; then
-    	echo "${R}[${R}☓${R}]${R} Invalid option: ${C} \$1 ${W}"
-		show_tx11start_help
-    else
-   		# Default behavior: start Termux X11 without acceleration and dbus
-    	XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :${display_number} &
-    	sleep 1
-    	am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1 &
-    	sleep 1
-    	env DISPLAY=:${display_number} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg dbus-launch --exit-with-session $de_startup > /dev/null 2>&1 &
-	fi
-    ;;
-esac
+# Start pulseaudio unless --help was given
+if [[ "\$1" != "--help" ]]; then
+	termux-wake-lock
+    pulseaudio --start --exit-idle-time=-1
+    pactl load-module module-sles-source > /dev/null 2>&1
 fi
+
+# Debug mode
+if \$use_debug; then
+    echo "Debugging mode enabled"
+    export TERMUX_X11_DEBUG=1
+fi
+
+# Construct X11 command
+x11_cmd="XDG_RUNTIME_DIR=\${TMPDIR} termux-x11 :${display_number}"
+
+# Start X11
+\$x11_cmd &
+sleep 3
+
+# Start X11 Main Activity
+am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1
+sleep 1
+
+# Start the desktop environment
+if \$use_nodbus; then
+    env DISPLAY=:${display_number} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg $de_startup &
+else
+    env DISPLAY=:${display_number} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg dbus-launch --exit-with-session $de_startup &
+fi
+
 EOF
 
 fi
@@ -2826,7 +2660,7 @@ sleep 1
 	if [[ ! -n "\$termux_x11_pid" ]] || [[ ! -n "\$de_pid" ]]; then
 	echo -e "${G}Termux:X11 Stopped Successfully ${W}"
 	fi
-elif [[ "\$1" == "-f" ]]; then
+elif [[ "\$1" == "-f" ]] || [[ "\$1" == "--force" ]]; then
 pkill -f com.termux.x11 > /dev/null 2>&1
 pkill -9 openbox* > /dev/null 2>&1
 killall virgl_test_server > /dev/null 2>&1
@@ -2857,7 +2691,7 @@ pkill -f com.termux.x11 > /dev/null 2>&1
 	if [[ ! -n "\$termux_x11_pid" ]] || [[ ! -n "\$de_pid" ]]; then
 	echo -e "${G}Termux:X11 Stopped Successfully ${W}"
 	fi
-elif [[ "\$1" == "-f" ]]; then
+elif [[ "\$1" == "-f" ]] || [[ "\$1" == "--force" ]]; then
 pkill -f com.termux.x11 > /dev/null 2>&1
 pkill -9 $de_name-* > /dev/null 2>&1
 killall virgl_test_server > /dev/null 2>&1
@@ -3265,13 +3099,16 @@ function install_termux_desktop_appstore() {
 #########################################################################
 
 function get_shellrc_path() {
+	if [[ -z "$shell_name" ]]; then
+		shell_name=$(basename "$SHELL")
+	fi
 	if [[ "$shell_name" == "bash" ]]; then
-	shell_rc_file="$HOME/.bashrc"
+			shell_rc_file="$HOME/.bashrc"
 	elif [[ "$shell_name" == "zsh" ]]; then
-	shell_rc_file="$HOME/.zshrc"
+		shell_rc_file="$HOME/.zshrc"
 	else
-	print_failed "Unable to get shellrc path"
-	exit 1
+		print_failed "Unable to get shellrc path"
+		exit 1
 	fi
 }
 
@@ -3687,7 +3524,7 @@ function notes() {
 function remove_termux_desktop() {
 	if [[ ! -e "$config_file" ]]; then
 	echo "${R}[${C}-${R}]${C}${BOLD} Please Install Termux Desktop First${W}"
-	exit 0
+	exit 1
 	else
 	banner
 	echo "${R}[${C}-${R}]${R}${BOLD} Remove Termux Desktop${W}"
@@ -3826,7 +3663,7 @@ fi
 function change_style() {
 	if [[ ! -e "$config_file" ]]; then
 	echo -e "${C} It look like you haven't install the desktop yet\n Please install the desktop first${W}"
-	exit 0
+	exit 1
 	else
 	read_conf
 	gui_check_up
@@ -3858,23 +3695,50 @@ function change_hw() {
 	# Check if the configuration file exists
 	if [[ ! -e "$config_file" ]]; then
 	    echo -e "${C} It looks like you haven't installed the desktop yet\n Please install the desktop first${W}"
-	    exit 0
+	    exit 1
 	else
 		read_conf
 		if [[ "$enable_hw_acc"  == "y" ]]; then
 		    banner
-		    echo "${R}[${C}-${R}]${G} Your current hardware acceleration method for Termux is: ${C}${BOLD}${termux_hw_answer}${W}"
-		    echo
-		    echo "${R}[${C}-${R}]${G} Changing drivers might break the desktop environment sometimes${W}"
-		    confirmation_y_or_n "Do you want to continue" confirmation_break_de
-		    if [[ "$confirmation_break_de" == "y" ]]; then
+		    echo "${R}[${C}-${R}]${G} Your current hardware acceleration api for Termux is: ${C}${BOLD}${termux_hw_answer}${W}"
+		    echo "${R}[${C}-${R}]${G} Your current hardware acceleration api for $selected_distro is: ${C}${BOLD}${pd_hw_answer}${W}"
+			while true; do
+				echo
+		    	echo "${R}[${C}-${R}]${G} Changing drivers might break the desktop environment sometimes${W}"
+				echo "${R}[${C}-${R}]${G} Type 'a' if you want to continue anyway without breaking the desktop${W}"
+				read -r -p "${R}[${C}-${R}]${Y}${BOLD} Do you want to continue ${Y}(y/n/a) ${W}" confirmation_break_de
+				case $confirmation_break_de in
+					[yY]* )
+						echo
+						print_success "Continuing with answer: $confirmation_break_de"
+						echo
+						sleep 0.2
+						break;;
+					[aA]* )
+						echo
+						print_success "Continuing with answer: $confirmation_break_de"
+						echo
+						sleep 0.2
+						break;;
+					[nN]* )
+						echo
+						echo "${R}[${C}-${R}]${C} Skipping this step${W}"
+						echo
+						exit 1;;
+						*)
+						echo
+						print_failed "Invalid input. Please enter 'y' / 'n' / 'a'."
+						echo
+						;;
+				esac
+			done
+			print_log "$1 $confirmation_break_de"
+
+			if [[ "$confirmation_break_de" == "y" ]]; then
+				echo "${R}[${C}-${R}]${R}${BOLD} This process might break your desktop environment${W}"
 		        package_check_and_remove "mesa-zink vulkan-loader-android virglrenderer-android angle-android mesa-vulkan-icd-freedreno-dri3"
-		    else
-		        exit 0
-		    fi
-		    echo "${R}[${C}-${R}]${R}${BOLD} This process might break your desktop environment${W}"
-		    echo "${R}[${C}-${R}]${G}${BOLD} Make your new choice${W}"
-		    echo
+			fi
+
 		    hw_questions
 		    hw_config
 		    if [[ "$gui_mode" == "termux_x11" ]]; then
@@ -3889,7 +3753,7 @@ function change_hw() {
 		    clear
 		    print_success "${BOLD}Hardware acceleration method changed successfully"
 		elif [[ "$enable_hw_acc" == "n" ]]; then
-			echo "${R}[${C}-${R}]${G} This option is only for Hardware Acceleration enabled user${W}"
+			echo "${R}[${C}-${R}]${G} This option is only used if have Hardware Acceleration enabled${W}"
 		fi
 	fi
 }
@@ -3903,7 +3767,7 @@ function change_hw() {
 function change_distro() {
 	if [[ ! -e "$config_file" ]]; then
 	echo -e "${C} It look like you haven't install the desktop yet\n Please install the desktop first${W}"
-	exit 0
+	exit 1
 	else
 	read_conf
 	banner
@@ -4130,9 +3994,43 @@ function reinstall_config() {
 
 #########################################################################
 #
-# Some Fixes | Basic Task
+# Some Fixes | Finishing Tasks
 #
 #########################################################################
+
+function add_auto_completion() {
+	banner
+	echo "${R}[${C}-${R}]${G} Adding auto completions...${W}"
+	check_and_create_directory "/data/data/com.termux/files/usr/share/zsh/site-functions"
+	cd /data/data/com.termux/files/usr/share/zsh/site-functions
+	download_file "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/completion/zsh/_setup-termux-desktop"
+	if [[ "$gui_mode" == "both" ]]; then
+		download_file "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/completion/zsh/_vncstart"
+		download_file "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/completion/zsh/_vncstop"
+	fi
+	download_file "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/completion/zsh/_tx11start"
+	download_file "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/completion/zsh/_tx11stop"
+	if [[ "$distro_add_answer" == "y" ]]; then
+		download_file "_${selected_distro}" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/completion/zsh/_distro"
+		sed -i "s/distro/${selected_distro}/g" "_${selected_distro}"
+		download_file "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/completion/zsh/_add2menu"
+	fi
+	check_and_create_directory "/data/data/com.termux/files/usr/share/bash-completion/completions"
+	cd /data/data/com.termux/files/usr/share/bash-completion/completions
+	download_file "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/completion/bash/setup-termux-desktop"
+	if [[ "$gui_mode" == "both" ]]; then
+		download_file "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/completion/bash/_vncstart"
+		download_file "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/completion/bash/_vncstop"
+	fi
+	download_file "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/completion/bash/tx11start"
+	download_file "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/completion/bash/tx11stop"
+	if [[ "$distro_add_answer" == "y" ]]; then
+		download_file "${selected_distro}" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/completion/bash/debian"
+		sed -i "s/distro/${selected_distro}/g" "${selected_distro}"
+		download_file "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/completion/bash/add2menu"
+	fi
+	cd $HOME
+}
 
 function disable_vblank_mode() {
 	if [[ "$de_name" == "xfce" ]]; then
@@ -4177,6 +4075,9 @@ function print_basic_details() {
 	local country
 	net_condition="$(getprop gsm.network.type)"
 	country="$(getprop gsm.sim.operator.iso-country)"
+	if [[ -f "$config_file" ]]; then
+		check_and_backup "$config_file"
+	fi
 cat <<EOF > "$config_file"
 ####################################
 ########## Termux Desktop ##########
@@ -4351,14 +4252,13 @@ function check_for_appstore_update() {
 function reset_changes() {
     if [[ ! -e "$config_file" ]]; then
         echo -e "${C} It looks like you haven't installed the desktop yet.\n Please install the desktop first.${W}"
-        exit 0
+        exit 1
     else
         read_conf
         banner
         echo "${R}[${C}-${R}]${G} Removing $de_name Config...${W}"
         set_config_dir
 		check_and_delete "${config_dirs}"
-		shell_name=$(basename "$SHELL")
         get_shellrc_path
 
         if [[ "$terminal_utility_setup_answer" == "y" ]]; then
@@ -4466,6 +4366,7 @@ install_termux_desktop_appstore
 add_to_autostart
 check_desktop_process
 install_fm_tools
+add_auto_completion
 some_fixes
 cleanup_cache
 termux-wake-unlock

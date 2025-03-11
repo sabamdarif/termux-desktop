@@ -1,0 +1,24 @@
+#compdef tx11start
+
+_tx11start() {
+    local curcontext="$curcontext" state line
+    local -a opts
+
+    # Define available options
+    opts=(
+        '--help[Show help information]'
+        '--nogpu[Start without GPU acceleration]'
+        '--nodbus[Start without dbus]'
+        '--legacy[Start with -legacy-drawing]'
+        '--debug[Show debug log]'
+    )
+
+    # Prevent suggestions if --help is already typed
+    if [[ $words[(I)--help] -ne 0 ]]; then
+        return
+    fi
+
+    _arguments -s : "${opts[@]}"
+}
+
+_tx11start "$@"

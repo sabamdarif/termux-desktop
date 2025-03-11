@@ -1,0 +1,19 @@
+#!/data/data/com.termux/files/usr/bin/bash
+
+_vncstart_completions() {
+    local cur prev opts
+    COMPREPLY=()
+    cur="${COMP_WORDS[COMP_CWORD]}"
+    prev="${COMP_WORDS[COMP_CWORD-1]}"
+
+    # Define available options
+    opts="--nogpu --help -h"
+
+    # Provide completion only for the first argument
+    if [[ $COMP_CWORD -eq 1 ]]; then
+        COMPREPLY=( $(compgen -W "$opts" -- "$cur") )
+    fi
+}
+
+# Register completion function
+complete -F _vncstart_completions vncstart

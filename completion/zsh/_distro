@@ -1,0 +1,44 @@
+#compdef distro
+
+_distro() {
+    local -a commands options
+
+    # Define valid commands (positional arguments)
+    commands=(
+        "install:Install a package and add it to Termux desktop"
+        "in:Install a package and add it to Termux desktop"
+        "remove:Remove a package and delete it from Termux desktop"
+        "rm:Remove a package and delete it from Termux desktop"
+        "update:Update the Linux distro"
+    )
+
+    # Define valid options (flags)
+    options=(
+        "--help:Show help information"
+        "--root:Login as root"
+        "-r:Login as root"
+        "--remove:Completely remove the Linux distro and delete all files"
+    )
+
+    # Completion after "distro --" should only show options
+    if [[ $words[2] == --* ]]; then
+        _describe -t options 'Option' options
+        return
+    fi
+
+    # Default behavior: commands + options in proper format
+    _arguments \
+        '1:Command:->cmds_or_opts' \
+        '*::Options:->opts'
+
+    case $state in
+        cmds_or_opts)
+            _describe -t commands 'Command' commands
+            ;;
+        opts)
+            _describe -t options 'Option' options
+            ;;
+    esac
+}
+
+_distro "$@"

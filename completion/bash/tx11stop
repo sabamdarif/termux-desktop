@@ -1,0 +1,23 @@
+#!/data/data/com.termux/files/usr/bin/bash
+
+_tx11stop_completions() {
+    local cur prev opts
+    COMPREPLY=()
+    cur="${COMP_WORDS[COMP_CWORD]}"
+    
+    # Define available options (only one allowed)
+    opts="--help -h --force -f"
+
+    # Prevent suggesting options if one is already used
+    for word in "${COMP_WORDS[@]}"; do
+        case "$word" in
+            --help|-h|--force|-f)
+                return
+                ;;
+        esac
+    done
+
+    COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+}
+
+complete -F _tx11stop_completions tx11stop

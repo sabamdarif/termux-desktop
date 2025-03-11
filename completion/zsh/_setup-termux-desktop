@@ -1,0 +1,86 @@
+#compdef setup-termux-desktop
+
+_setup_termux_desktop() {
+    local -a main_opts change_opts reinstall_opts conf_files
+
+    # Define main options
+    main_opts=(
+        "--debug:Create a log file"
+        "--install:Start installation"
+        "-i:Start installation"
+        "--remove:Remove Termux desktop"
+        "-r:Remove Termux desktop"
+        "--change:Modify existing configuration"
+        "-c:Modify existing configuration"
+        "--reinstall:Reinstall previously installed items"
+        "-ri:Reinstall previously installed items"
+        "--reset:Reset all changes without uninstalling packages"
+        "--local-config:Use a pre-made config file for installation"
+        "--config:Use a pre-made config file for installation"
+        "-config:Use a pre-made config file for installation"
+        "--help:Show help information"
+        "-h:Show help information"
+        "--update:Update the Linux distro"
+    )
+
+    # Define options for --change
+    change_opts=(
+        "style:Change installed style"
+        "distro:Change Linux distro container"
+        "pd:Change Linux distro container"
+        "hw:Change hardware acceleration method"
+        "hwa:Change hardware acceleration method"
+        "autostart:Modify autostart behavior"
+        "display:Modify Termux:X11 display port"
+        "help:Show help for --change"
+        "h:Show help for --change"
+    )
+
+    # Define options for --reinstall
+    reinstall_opts=(
+        "icons:Reinstall icons pack"
+        "themes:Reinstall themes pack"
+        "config:Reinstall configuration files"
+        "help:Show help for --reinstall"
+        "h:Show help for --reinstall"
+    )
+
+    # Prevent completion after standalone options
+    case $words[2] in
+        "--help"|"-h"|"--reset"|"--update"|"--install"|"-i"|"--remove"|"-r")
+            return
+            ;;
+    esac
+
+    # Completion for --local-config / --config / -config (only .conf files, no message if none exist)
+    case $words[2] in
+        "--local-config"|"--config"|"-config")
+            conf_files=(*.conf(N))  # Get .conf files, (N) prevents error if none exist
+            if (( ${#conf_files[@]} > 0 )); then
+                _files -g '*.conf'
+            fi
+            return
+            ;;
+    esac
+
+    # Handle subcommands for --change and --reinstall
+    case $words[2] in
+        "--change"|"-c")
+            if (( CURRENT == 3 )); then
+                _describe 'Change options' change_opts
+            fi
+            return
+            ;;
+        "--reinstall"|"-ri")
+            if (( CURRENT == 3 )); then
+                _describe 'Reinstall options' reinstall_opts
+            fi
+            return
+            ;;
+    esac
+
+    # Default completion (first argument)
+    _describe 'Main options' main_opts
+}
+
+_setup_termux_desktop "$@"

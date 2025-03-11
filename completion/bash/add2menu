@@ -1,0 +1,20 @@
+#!/data/data/com.termux/files/usr/bin/bash
+
+_add2menu_completions() {
+    local cur prev opts
+    COMPREPLY=()
+    cur="${COMP_WORDS[COMP_CWORD]}"
+    prev="${COMP_WORDS[COMP_CWORD-1]}"
+    
+    opts="--legacy --legacy-nogpu --help -h"
+
+    # Prevent multiple arguments
+    if [[ ${COMP_CWORD} -gt 1 ]]; then
+        return 0
+    fi
+
+    COMPREPLY=( $(compgen -W "$opts" -- "$cur") )
+    return 0
+}
+
+complete -F _add2menu_completions add2menu

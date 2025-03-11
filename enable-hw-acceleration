@@ -148,7 +148,6 @@ case "$termux_hw_answer" in
     pd_hw_method="${hw_method}"
     ;;
 esac
-print_to_config "exp_termux_gl_hw_answer"
 print_to_config "termux_hw_answer"
 
 case "$pd_hw_answer" in
@@ -169,7 +168,6 @@ case "$pd_hw_answer" in
     echo
     ;;
 esac
-print_to_config "pd_hw_answer_num"
 print_to_config "pd_hw_answer"
 
 }

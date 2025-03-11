@@ -1,0 +1,18 @@
+#!/data/data/com.termux/files/usr/bin/bash
+
+_vncstop_completion() {
+    local cur opts
+    COMPREPLY=()
+    cur="${COMP_WORDS[COMP_CWORD]}"
+
+    # Define available options
+    opts="--force -f --help -h"
+
+    # Provide completion only for the first argument
+    if [[ $COMP_CWORD -eq 1 ]]; then
+        COMPREPLY=( $(compgen -W "$opts" -- "$cur") )
+    fi
+}
+
+# Register completion function
+complete -F _vncstop_completion vncstop

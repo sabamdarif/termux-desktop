@@ -1,0 +1,20 @@
+#compdef add2menu
+
+_add2menu() {
+    local -a opts
+    opts=(
+        '--legacy[Launch the old add2menu (uses zenity)]'
+        '--legacy-nogpu[Launch the old add2menu without GPU acceleration (uses zenity)]'
+        '--help[Show help information]'
+        '-h[Show help information]'
+    )
+
+    # Prevent multiple arguments
+    if (( CURRENT > 2 )); then
+        return
+    fi
+
+    _arguments -s : "${opts[@]}"
+}
+
+_add2menu "$@"

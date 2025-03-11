@@ -497,7 +497,7 @@ proot-distro login "$selected_distro" --shared-tmp -- /bin/bash -c 'export DISPL
 proot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp -- env DISPLAY=:$display_number sudo apt \$1 "\${options[@]}" "\${packages[@]}"
 
 elif [[ "\$1" = "update" ]]; then
-    proot-distro login --user $final_user_name "$selected_distro" --shared-tmp -- env DISPLAY=:$display_number sudo apt update
+    proot-distro login --user $final_user_name "$selected_distro" --shared-tmp --termux-home -- env DISPLAY=:$display_number sudo apt update
 fi
 
 if [[ \$1 = "install" ]] || [[ \$1 = "remove" ]] || [[ \$1 = "autoremove" ]]; then
@@ -539,7 +539,7 @@ elif [[ "\$1" = "install" ]]; then
     done
 
 # Install the packages using the package manager
-proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:$display_number sudo pacman -S"\${options[@]}" --noconfirm  "\${packages[@]}"
+proot-distro login $selected_distro --shared-tmp -- env DISPLAY=:$display_number sudo pacman -S"\${options[@]}" --noconfirm  "\${packages[@]}"
     
 cat <<EOF > "$save_root_path/packinstall.sh"
 #!/bin/bash
@@ -608,10 +608,10 @@ EOF
 proot-distro login $selected_distro --shared-tmp -- /bin/bash -c 'export DISPLAY=:$display_number; export XDG_RUNTIME_DIR=$TMPDIR; bash packremove.sh'
 
 # Remove the packages using the package manager
-proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:$display_number sudo pacman -R"\${options[@]}" --noconfirm "\${packages[@]}"
+proot-distro login $selected_distro --shared-tmp -- env DISPLAY=:$display_number sudo pacman -R"\${options[@]}" --noconfirm "\${packages[@]}"
 
 elif [[ "\$1" = "update" ]]; then
-    proot-distro login --user $final_user_name "$selected_distro" --shared-tmp -- env DISPLAY=:$display_number sudo pacman -Su
+    proot-distro login --user $final_user_name "$selected_distro" --shared-tmp --termux-home -- env DISPLAY=:$display_number sudo pacman -Su
 fi
 
 if [[ \$1 = "install" ]] || [[ \$1 = "remove" ]]; then
@@ -653,7 +653,7 @@ elif [[ "\$1" = "install" ]]; then
     done
 
 # Install the packages using the package manager
-proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:$display_number sudo dnf install "\${options[@]}" "\${packages[@]}"
+proot-distro login $selected_distro --shared-tmp -- env DISPLAY=:$display_number sudo dnf install "\${options[@]}" "\${packages[@]}"
 
 cat <<EOF > "$save_root_path/packinstall.sh"
 #!/bin/bash
@@ -725,8 +725,10 @@ EOF
 proot-distro login $selected_distro --shared-tmp -- /bin/bash -c 'export DISPLAY=:$display_number; export XDG_RUNTIME_DIR=$TMPDIR; bash packremove.sh'
 
 # Remove the packages using the package manager
-proot-distro login --user $final_user_name $selected_distro --shared-tmp -- env DISPLAY=:$display_number sudo dnf remove "\${options[@]}" "\${packages[@]}"
+proot-distro login $selected_distro --shared-tmp -- env DISPLAY=:$display_number sudo dnf remove "\${options[@]}" "\${packages[@]}"
 
+elif [[ "\$1" = "update" ]]; then
+    proot-distro login --user $final_user_name "$selected_distro" --shared-tmp --termux-home -- env DISPLAY=:$display_number sudo dnf update
 fi
 
 if [[ \$1 = "install" ]] || [[ \$1 = "remove" ]] || [[ \$1 = "autoremove" ]]; then
@@ -844,7 +846,7 @@ case \$1 in
     --legacy-nogpu)
     ./data/data/com.termux/files/usr/opt/add2menu/add2menu_legacy --nogpu
     ;;
-    --hellp|-h)
+    --help|-h)
 echo -e "
 --legacy            To launch the old add2menu (uses zenity)
 --legacy-nogpu      To launch the old add2menu without gpu acceleration (uses zenity)
