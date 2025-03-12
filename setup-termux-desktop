@@ -3496,13 +3496,13 @@ EOF
 }
 
 function add_to_autostart() {
+	unset de_on_startup
+	read_conf
 	print_to_config "de_on_startup"
 	if [[ "$de_on_startup" == "y" ]]; then
 		if [[ "$default_gui_mode" == "vnc" ]]; then
 			add_vnc_autostart
-		elif [[ "$gui_mode" == "termux_x11" ]]; then
-			add_tx11_autostart
-		elif [[ "$default_gui_mode" == "termux_x11" ]]; then
+		elif [[ "$default_gui_mode" == "termux_x11" ]] || [[ "$gui_mode" == "termux_x11" ]]; then
 			add_tx11_autostart
 		fi
 	print_to_config "default_gui_mode"
@@ -3909,8 +3909,8 @@ function change_autostart() {
     fi
 
     if [[ "$de_on_startup" == "y" ]]; then
-	confirmation_y_or_n "You are sure you want to change auto" confirmation_enable_auto_start
-		if [[ "$confirmation_enable_auto_start" == "y" ]]; then
+	confirmation_y_or_n "You are sure you want to change auto" confirmation_change_auto_start
+		if [[ "$confirmation_change_auto_start" == "y" ]]; then
     	    if grep -q "^vncstart" "$shell_rc_file"; then
     	        sed -i '/# Start Vnc/,/fi/d' "$shell_rc_file"
 				print_to_config "de_on_startup" "n"
@@ -3921,7 +3921,7 @@ function change_autostart() {
     	    fi
 		echo "${R}[${C}-${R}]${G} Auto start disabled${W}"
 		else
-			echo "${R}[${C}-${R}]${G} Keeping auto start disabled${W}"
+			echo "${R}[${C}-${R}]${G} Keeping auto start enabled${W}"
 		fi
 	elif [[ "$de_on_startup" == "n" ]]; then
 	confirmation_y_or_n "You haven't have auto start enable, do you want to enable it" confirmation_enable_auto_start
@@ -3941,7 +3941,6 @@ function change_autostart() {
 				elif [[ "$autostart_gui_mode_num" == "2" ]]; then
 					default_gui_mode="vnc"
 				fi
-				print_to_config "default_gui_mode"
 			fi
 		print_to_config "de_on_startup" "y"
 		add_to_autostart
