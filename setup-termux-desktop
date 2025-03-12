@@ -3496,8 +3496,6 @@ EOF
 }
 
 function add_to_autostart() {
-	unset de_on_startup
-	read_conf
 	print_to_config "de_on_startup"
 	if [[ "$de_on_startup" == "y" ]]; then
 		if [[ "$default_gui_mode" == "vnc" ]]; then
@@ -3708,6 +3706,11 @@ function remove_termux_desktop() {
 	elif [[ "$gui_mode" == "both" ]]; then
 	package_check_and_remove "termux-x11-nightly tigervnc xorg-xhost"
 	check_and_delete "$PREFIX/bin/tx11start $PREFIX/bin/tx11stop $HOME/.vnc/xstartup $PREFIX/bin/vncstart $PREFIX/bin/vncstop $PREFIX/bin/gui $PREFIX/bin/tx11start $PREFIX/bin/tx11stop"
+	cd /data/data/com.termux/files/usr/share/zsh/site-functions
+	check_and_delete "_add2menu _distro _setup-termux-desktop _tx11start _tx11stop _vncstart _vncstop"
+	cd /data/data/com.termux/files/usr/share/bash-completion/completions
+	check_and_delete "add2menu distro setup-termux-desktop tx11start tx11stop vncstart vncstop"
+	cd ~
 	# remove appstore
 	package_check_and_remove "aria2 python python3 cloneit"
 	check_and_delete "${PREFIX}/opt/appstore"
@@ -3942,7 +3945,8 @@ function change_autostart() {
 					default_gui_mode="vnc"
 				fi
 			fi
-		print_to_config "de_on_startup" "y"
+		de_on_startup=y
+		print_to_config "de_on_startup"
 		add_to_autostart
 		else
 		echo "${R}[${C}-${R}]${G} Keeping auto start disabled${W}"
@@ -4342,6 +4346,11 @@ function reset_changes() {
             check_and_restore "$PREFIX/etc/motd-playstore"
             check_and_restore "$PREFIX/etc/motd.sh" ; termux-reload-settings
             check_and_restore "$HOME/.termux/colors.properties"
+			cd /data/data/com.termux/files/usr/share/zsh/site-functions
+			check_and_delete "_add2menu _distro _setup-termux-desktop _tx11start _tx11stop _vncstart _vncstop"
+			cd /data/data/com.termux/files/usr/share/bash-completion/completions
+			check_and_delete "add2menu distro setup-termux-desktop tx11start tx11stop vncstart vncstop"
+			cd ~
             if grep -q "motd.sh$" "$PREFIX/etc/termux-login.sh"; then
                 sed -i "s|.*motd\.sh$|# |" "$PREFIX/etc/termux-login.sh" ; termux-reload-settings
             fi
