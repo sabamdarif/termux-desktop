@@ -891,13 +891,13 @@ cat <<EOF >> "$PREFIX/bin/pdrun"
 xhost + > /dev/null 2>&1
 case \$1 in
 --nogpu)
-proot-distro login --user $final_user_name "$selected_distro" --shared-tmp --termux-home -- eval "env DISPLAY=:$display_number XDG_RUNTIME_DIR=\${TMPDIR} LIBGL_ALWAYS_SOFTWARE=1 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe \${@:2}"
+proot-distro login --user $final_user_name "$selected_distro" --shared-tmp --termux-home -- eval "env DISPLAY=:\$DISPLAY XDG_RUNTIME_DIR=\${TMPDIR} LIBGL_ALWAYS_SOFTWARE=1 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe \${@:2}"
 ;;
 --help|-h)
 echo "${G}Type ${C}pdrun launch command ${G}to start with GPU acceleration${W}"
 ;;
 *)
-proot-distro login --user $final_user_name "$selected_distro" --shared-tmp --termux-home -- eval "env DISPLAY=:$display_number XDG_RUNTIME_DIR=\${TMPDIR} \$selected_pd_hw_method \$@"
+proot-distro login --user $final_user_name "$selected_distro" --shared-tmp --termux-home -- eval "env DISPLAY=:\$DISPLAY XDG_RUNTIME_DIR=\${TMPDIR} \$selected_pd_hw_method \$@"
 ;;
 esac
 EOF

@@ -1793,6 +1793,7 @@ function update_sys() {
 }
 
 function check_system_requirements() {
+while true; do
 	local errors=0
 	clear
 
@@ -1887,12 +1888,18 @@ function check_system_requirements() {
 				sleep 0.2
 			else
         		print_status "error" "$TERMUX_APK_RELEASE build is not recomended"
-				echo "${W}Update Termux:- https://github.com/termux/termux-app/releases ${W}"
+				echo "${W} Update Termux:- https://github.com/termux/termux-app/releases ${W}"
 				sleep 0.2
 			fi
 		else
 			print_status "warn" "Termux Version: ${W}$TERMUX_VERSION (Not Recomended)"
-			echo "${R}[${G}!${R}]${G} Update Termux:- https://github.com/termux/termux-app/releases/tag/${latest_termux_app_tag} ${W}"
+			if [[ $(getprop ro.product.cpu.abi) == "arm64-v8a" ]]; then
+				echo "${R}[${G}!${R}]${G} Update Termux:- https://github.com/termux/termux-app/releases/tag/ https://github.com/termux/termux-app/releases/download/${latest_termux_app_tag}/termux-app_${latest_termux_app_tag}+github-debug_arm64-v8a.apk${W}"
+			elif [[ $(getprop ro.product.cpu.abi) == "armeabi-v7a" ]]; then
+				echo "${R}[${G}!${R}]${G} Update Termux:- https://github.com/termux/termux-app/releases/tag/ https://github.com/termux/termux-app/releases/download/${latest_termux_app_tag}/termux-app_${latest_termux_app_tag}+github-debug_armeabi-v7a.apk${W}"
+			else
+				echo "${R}[${G}!${R}]${G} Update Termux:- https://github.com/termux/termux-app/releases/tag/ https://github.com/termux/termux-app/releases/download/${latest_termux_app_tag}/termux-app_${latest_termux_app_tag}+github-debug_universal.apk${W}"
+			fi
 			sleep 0.2
 		fi
     else
@@ -1923,7 +1930,13 @@ function check_system_requirements() {
 		local latest_termux_x11_tag
 		latest_termux_x11_tag=$(get_latest_release "termux" "termux-x11")
 		print_status "error" "Termux-x11: ${W}Not Installed"
-		echo "${R}[${C}-${R}]${G}${BOLD} Termux-x11:- ${W}https://github.com/termux/termux-x11/releases/tag/${latest_termux_x11_tag}"
+		if [[ $(getprop ro.product.cpu.abi) == "arm64-v8a" ]]; then
+			echo "${R}[${C}-${R}]${G}${BOLD} Install Termux-x11:- ${W}https://github.com/termux/termux-x11/releases/download/${latest_termux_x11_tag}/app-arm64-v8a-debug.apk"
+		elif [[ $(getprop ro.product.cpu.abi) == "armeabi-v7a" ]]; then
+			echo "${R}[${C}-${R}]${G}${BOLD} Install Termux-x11:- ${W}https://github.com/termux/termux-x11/releases/download/${latest_termux_x11_tag}/app-armeabi-v7a-debug.apk"
+		else
+			echo "${R}[${C}-${R}]${G}${BOLD} Install Termux-x11:- ${W}https://github.com/termux/termux-x11/releases/download/${latest_termux_x11_tag}/app-universal-debug.apk"
+		fi
         ((errors++))
 	fi
 	# Check termux API
@@ -1933,7 +1946,7 @@ function check_system_requirements() {
 		local latest_termux_api_tag
 		latest_termux_api_tag=$(get_latest_release "termux" "termux-api")
 		print_status "error" "Termux-API: ${W}Not Installed"
-		echo "${R}[${C}-${R}]${G}${BOLD} Termux-API:- ${W}https://github.com/termux/termux-api/releases/tag/${latest_termux_api_tag}"
+		echo "${R}[${C}-${R}]${G}${BOLD} Install Termux-API:- ${W}https://github.com/termux/termux-api/releases/download/${latest_termux_api_tag}/termux-api_${latest_termux_api_tag}+github-debug.apk"
         ((errors++))
 	fi
 	echo " "
@@ -1942,15 +1955,37 @@ function check_system_requirements() {
 		sleep 0.2
         return 0
     else
-        print_failed "Found $errors error(s). System requirements not met."
-		sleep 0.2
-		echo
-        confirmation_y_or_n "Do you want to continue anyway (Not Recomended)" continue_install_anyway
-		if [[ "$continue_install_anyway" == "n" ]]; then
-			trap - SIGINT SIGTSTP
-			exit 1
-		fi
+		while true; do
+			print_failed "Found $errors error(s). System requirements not met."
+			sleep 0.2
+			echo "${R}[${C}-${R}]${G} Type 'a' to check again${W}"
+			read -r -p "${R}[${C}-${R}]${Y}${BOLD} Do you want to continue anyway (Not Recomended) ${Y}(y/n/a) ${W}" sys_requirements_check
+			case $sys_requirements_check in
+				[yY]* )
+					echo
+					print_success "Continuing aniway..."
+					echo
+					sleep 0.2
+					break 2;;
+				[aA]* )
+					echo
+					print_success "Starting check again..."
+					echo
+					sleep 0.2
+					break;;
+				[nN]* )
+					trap - SIGINT SIGTSTP
+					exit 1;;
+					*)
+					echo
+					print_failed "Invalid input. Please enter 'y' / 'n' / 'a'."
+					echo
+					;;
+			esac
+		done
+		print_log "System requirements not met $sys_requirements_check"
     fi
+done
 }
 
 function print_recomended_msg() {
@@ -2994,6 +3029,14 @@ function check_desktop_process() {
         fi
 	fi
     fi
+	echo "${R}[${C}-${R}]${G} Adding custom Termux:x11 preferences...${W}"
+	echo
+	echo "${R}[${C}-${R}]${G} Backing up current Termux:x11 preferences...${W}"
+	echo
+	termux-x11-preference list > old-termx-x11-preferences
+	download_file "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/other/termx-x11-preferences"
+	termux-x11-preferences < termx-x11-preferences
+	check_and_delete "termx-x11-preferences"
 }
 
 #########################################################################
@@ -3503,7 +3546,9 @@ function add_to_autostart() {
 		elif [[ "$default_gui_mode" == "termux_x11" ]] || [[ "$gui_mode" == "termux_x11" ]]; then
 			add_tx11_autostart
 		fi
-	print_to_config "default_gui_mode"
+		if [[ "$gui_mode" == "both" ]]; then
+			print_to_config "default_gui_mode"
+		fi
 	fi
 }
 
@@ -3811,7 +3856,7 @@ function change_hw() {
 						;;
 				esac
 			done
-			print_log "$1 $confirmation_break_de"
+			print_log "break the desktop environment $confirmation_break_de"
 
 			if [[ "$confirmation_break_de" == "y" ]]; then
 				echo "${R}[${C}-${R}]${R}${BOLD} This process might break your desktop environment${W}"
@@ -3981,12 +4026,6 @@ function change_display() {
 			hw_config
 			setup_tx11start_cmd
 			print_to_config "display_number"
-			sed -i "s|DISPLAY=:[0-9]*|DISPLAY=:$display_number|" "${PREFIX}/bin/pdrun"
-			if [[ "$zsh_answer" == "y" ]] && [[ "$distro_zsh_answer" == "n" ]]; then
-				sed -i "s|DISPLAY=:[0-9]*|DISPLAY=:$display_number|" "${HOME}/.bashrc"
-			else
-				sed -i "s|DISPLAY=:[0-9]*|DISPLAY=:$display_number|" "${HOME}/.zshrc"
-			fi
 			sed -i "s|DISPLAY=:[0-9]*|DISPLAY=:$display_number|" "${PREFIX}/bin/$selected_distro"
 			print_log "Type the Display Port number: $display_number"
 		fi
