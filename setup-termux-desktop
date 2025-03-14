@@ -950,7 +950,7 @@ ${W}"
 		gui_mode_name="Termux:x11"
 	elif [[ "$gui_mode_num" == "2" ]]; then
 		gui_mode="both"
-		display_number="1"
+		display_number="0"
 		gui_mode_name="Both"
 	fi
 
@@ -1214,7 +1214,6 @@ function choose_distro() {
         4) selected_distro="fedora" ;;
         *) selected_distro="debian" ;;
     esac
-    print_to_config "selected_distro"
 
 }
 
@@ -2448,6 +2447,7 @@ echo -e "
 vncstop     	  to stop vncserver
 vncstop --force	  to force stop vncserver
 vncstop --help    to show the helps
+"
 else
 display_numbers=$(vncserver -list | awk '/^:[0-9]+/ {print $1}')
 
@@ -2724,9 +2724,14 @@ else
 	fi
 fi
 
-sleep 5
+EOF
 
+fi
+
+if [[ "$de_name" == "xfce" ]]; then
+cat <<EOF >> "$PREFIX/bin/tx11start"
 # Kill xfce4-screensaver if running
+sleep 5
 process_id=\$(ps aux | grep '[x]fce4-screensaver' | awk '{print \$2}')
 if [[ -n "\$process_id" ]]; then
 	if \$use_debug; then
@@ -2735,16 +2740,6 @@ if [[ -n "\$process_id" ]]; then
     	kill "\$process_id" > /dev/null 2>&1
 	fi
 fi
-
-EOF
-
-fi
-
-if [[ "$de_name" == "xfce" ]]; then
-cat <<'EOF' >> "$PREFIX/bin/tx11start"
-sleep 5
-process_id=$(ps -aux | grep '[x]fce4-screensaver' | awk '{print $2}')
-kill "$process_id" > /dev/null 2>&1
 EOF
 fi
 chmod +x "$PREFIX/bin/tx11start"
@@ -3035,7 +3030,7 @@ function check_desktop_process() {
 	echo
 	termux-x11-preference list > old-termx-x11-preferences
 	download_file "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/other/termx-x11-preferences"
-	termux-x11-preferences < termx-x11-preferences
+	termux-x11-preference < termx-x11-preferences
 	check_and_delete "termx-x11-preferences"
 }
 
@@ -4166,7 +4161,7 @@ function some_fixes() {
 	fi
 	# tx11start and vncstart
 	if [[ $termux_hw_answer == "freedreno" ]] || [[ $termux_hw_answer == "zink_with_mesa" ]] || [[ $termux_hw_answer == "zink_with_mesa_zink" ]]; then
-	sed -i 's/^[[:space:]]*&[[:space:]]*$/ /' "$PREFIX/bin/tx11start"
+	sed -i '/if ! \$use_nogpu; then/,/fi/ {/if \$use_debug; then/,/fi/d}' "$PREFIX/bin/tx11start"
 	sed -i 's/^[[:space:]]*&[[:space:]]*$/ /' "$PREFIX/bin/vncstart"
 	disable_vblank_mode
 	fi
