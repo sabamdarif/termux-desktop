@@ -3,6 +3,7 @@ import shutil
 import gi
 import sys
 import threading
+import re
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, GLib, Gdk, Gio, GdkPixbuf
 from datetime import datetime
@@ -70,6 +71,12 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
         # Delay app loading to let the UI render first
         GLib.timeout_add(100, self._delayed_load)
 
+        # Store reference to application actions for enabling/disabling
+        self.app = app
+        self.no_sandbox_action = app.lookup_action("no-sandbox")
+        self.absolute_path_action = app.lookup_action("absolute-path")
+        self.nogpu_action = app.lookup_action("nogpu")
+
     def setup_css(self):
         css = """
             .main-window {
@@ -127,6 +134,21 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
                 background-color: alpha(@theme_selected_bg_color, 0.2);
                 transition: background-color 400ms ease-out;
             }
+            /* Search bar styling */
+            entry.search {
+                border-radius: 5px;
+                min-height: 36px;
+            }
+            button.search-button {
+                border-radius: 5px;
+                min-height: 36px;
+                padding: 0 15px;
+                background-color: @theme_selected_bg_color;
+                color: white;
+            }
+            button.search-button:hover {
+                background-color: shade(@theme_selected_bg_color, 0.9);
+            }
         """
         style_provider = Gtk.CssProvider()
         style_provider.load_from_data(css.encode())
@@ -157,6 +179,23 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
         mode_box.pack_start(self.add_radio, False, False, 5)
         mode_box.pack_start(self.remove_radio, False, False, 5)
         
+        # Search toggle button
+        self.search_toggle_button = Gtk.ToggleButton()
+        search_icon = Gio.ThemedIcon(name="system-search-symbolic")
+        search_image = Gtk.Image.new_from_gicon(search_icon, Gtk.IconSize.BUTTON)
+        self.search_toggle_button.add(search_image)
+        self.search_toggle_button.set_tooltip_text("Toggle search bar")
+        self.search_toggle_button.connect("toggled", self.on_search_toggle)
+        
+        # Style the search toggle button
+        self.search_toggle_button.get_style_context().add_class('suggested-action')
+        
+        # Add a small margin between mode switches and search button
+        self.search_toggle_button.set_margin_start(8)
+        
+        # Add search button to the mode box
+        mode_box.pack_start(self.search_toggle_button, False, False, 0)
+        
         header.pack_start(mode_box)
         
         # Add a proper menu button (hamburger menu) to headerbar
@@ -167,6 +206,7 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
         menu = Gio.Menu()
         menu.append("Launch with --no-sandbox", "app.no-sandbox")  # Add no-sandbox toggle
         menu.append("Use Absolute Paths", "app.absolute-path")     # Add absolute path toggle
+        menu.append("Launch with --nogpu", "app.nogpu")            # Add nogpu toggle
         menu.append("About Add2Menu", "app.about")
         menu.append("Quit", "app.quit")
         
@@ -209,6 +249,33 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
         content_box.set_margin_end(20)
         content_box.set_margin_top(20)
         content_box.set_margin_bottom(20)
+        
+        # Search bar at the top
+        self.search_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+        self.search_box.set_margin_bottom(10)
+        
+        # Create search entry
+        self.search_entry = Gtk.SearchEntry()
+        self.search_entry.set_placeholder_text("Search applications...")
+        self.search_entry.connect("search-changed", self.on_search_changed)
+        self.search_entry.set_hexpand(True)
+        self.search_entry.get_style_context().add_class('search')
+        
+        # Create search button
+        search_button = Gtk.Button.new_with_label("Search")
+        search_button.connect("clicked", self.on_search_button_clicked)
+        search_button.get_style_context().add_class('search-button')
+        
+        # Add to search box
+        self.search_box.pack_start(self.search_entry, True, True, 0)
+        self.search_box.pack_start(search_button, False, False, 0)
+        
+        # Initialize search box as hidden but keep all children visible
+        self.search_box.set_no_show_all(True)
+        self.search_box.hide()
+        
+        # Add search box to main content
+        content_box.pack_start(self.search_box, False, False, 0)
         
         # Select all checkbox at top
         self.select_all_check = Gtk.CheckButton(label="Select All")
@@ -475,6 +542,8 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
     def on_refresh_clicked(self, button):
         """Handle refresh button click"""
         if not self.is_loading:
+            # Clear search entry
+            self.search_entry.set_text("")
             self.start_background_task(self.load_apps)
 
     def on_mode_changed(self, button):
@@ -485,6 +554,21 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
             # Get the current button mode (add or remove)
             mode = "Add" if self.add_radio.get_active() else "Remove"
             print(f"Mode changed to: {mode}")
+            
+            # Enable/disable menu options based on mode
+            is_add_mode = mode == "Add"
+            self.no_sandbox_action.set_enabled(is_add_mode)
+            self.absolute_path_action.set_enabled(is_add_mode)
+            self.nogpu_action.set_enabled(is_add_mode)
+            
+            # Reset search toggle button 
+            self.search_toggle_button.set_active(False)
+            # Ensure search box is hidden
+            self.search_box.hide()
+            self.search_box.set_no_show_all(True)
+            
+            # Clear the search entry
+            self.search_entry.set_text("")
             
             # Clear current list immediately for better user feedback
             self.liststore.clear()
@@ -560,14 +644,47 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
             if os.path.exists(new_path) or os.path.exists(desktop_path):
                 continue
             
+            # Build the pdrun command with appropriate flags
+            pdrun_cmd = "Exec=pdrun"
+            
+            # Add --nogpu flag if enabled
+            if self.nogpu_action.get_state().get_boolean():
+                pdrun_cmd += " --nogpu"
+            
             # Copy and modify the file
             shutil.copy(filepath, new_path)
-            with open(new_path, "r+", encoding="utf-8") as f:
+            
+            # Read the original desktop file contents
+            with open(new_path, "r", encoding="utf-8") as f:
                 content = f.read()
-                content = content.replace("Exec=", "Exec=pdrun ")
-                f.seek(0)
-                f.write(content)
-                f.truncate()
+                
+            # Replace the Exec line with our modified pdrun command
+            exec_pattern = re.compile(r'Exec=(.+)')
+            
+            if exec_pattern.search(content):
+                # Extract the original command
+                original_cmd = exec_pattern.search(content).group(1)
+                
+                # Build new command with the original command, but without duplicating "Exec="
+                new_cmd = f"pdrun"
+                
+                # Add --nogpu flag if enabled
+                if self.nogpu_action.get_state().get_boolean():
+                    new_cmd += " --nogpu"
+                
+                # Add the original command
+                new_cmd += f" {original_cmd}"
+                
+                # Add --no-sandbox at the end if enabled
+                if self.no_sandbox_action.get_state().get_boolean():
+                    new_cmd += " --no-sandbox"
+                
+                # Replace the Exec line
+                content = exec_pattern.sub(f"Exec={new_cmd}", content)
+                
+                # Write the modified content back
+                with open(new_path, "w", encoding="utf-8") as f:
+                    f.write(content)
             
             # Copy to desktop
             shutil.copy2(new_path, desktop_path)
@@ -620,7 +737,10 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
     def show_success_message(self):
         """Show success message and refresh the list"""
         self.show_message_dialog("Operation completed successfully!", "Success")
-        self.start_background_task(self.load_apps)
+        
+        # Force a refresh of the application list
+        self.is_loading = False  # Reset loading state to ensure refresh works
+        self._force_refresh()  # Use the same method as when changing modes
         return False
 
     def show_message_dialog(self, message, title="Notice"):
@@ -708,36 +828,63 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
             # Parse the command properly - remove .desktop file field codes
             cleaned_cmd = self.clean_desktop_exec(exec_cmd)
             
-            # Check if we're in remove mode and the command already starts with pdrun
+            # Check if we're in remove mode
             is_remove_mode = self.remove_radio.get_active()
-            if is_remove_mode and cleaned_cmd.startswith("pdrun "):
-                # Remove the pdrun prefix since we'll add it again later
-                cleaned_cmd = cleaned_cmd[6:].strip()
             
-            # Add --no-sandbox if enabled
-            if self.get_application().no_sandbox:
-                cleaned_cmd = f"{cleaned_cmd} --no-sandbox"
+            # In remove mode, we use the command as-is from the desktop file
+            if is_remove_mode:
+                # If it doesn't start with pdrun, add it
+                if not cleaned_cmd.startswith("pdrun "):
+                    cmd_parts = ["pdrun"]
+                    cmd_parts.extend(cleaned_cmd.split())
+                else:
+                    # Already has pdrun, just split it for execution
+                    cmd_parts = cleaned_cmd.split()
+            else:
+                # In add mode, construct the command with the current toggle states
+                # Remove the pdrun prefix if it exists
+                if cleaned_cmd.startswith("pdrun "):
+                    # Remove the pdrun prefix since we'll add it again later
+                    cleaned_cmd = cleaned_cmd[6:].strip()
+                
+                # Build the final command with appropriate flags
+                cmd_parts = ["pdrun"]
+                
+                # Add --nogpu if enabled
+                if self.nogpu_action.get_state().get_boolean():
+                    cmd_parts.append("--nogpu")
+                
+                # Add the command
+                cmd_parts.extend(cleaned_cmd.split())
+                
+                # Add --no-sandbox if enabled
+                if self.no_sandbox_action.get_state().get_boolean():
+                    cmd_parts.append("--no-sandbox")
+                
+                # Convert to absolute path if enabled
+                if self.absolute_path_action.get_state().get_boolean():
+                    # Find the index of the actual command after pdrun and flags
+                    cmd_idx = 1
+                    while cmd_idx < len(cmd_parts) and cmd_parts[cmd_idx].startswith("--"):
+                        cmd_idx += 1
+                    if cmd_idx < len(cmd_parts):
+                        cmd_parts[cmd_idx] = self.ensure_absolute_path(cmd_parts[cmd_idx])
             
-            # Convert to absolute path if enabled and if command doesn't already use absolute path
-            if self.get_application().use_absolute_path:
-                cleaned_cmd = self.ensure_absolute_path(cleaned_cmd)
+            # Join the command parts for display and logging
+            display_cmd = " ".join(cmd_parts[1:])  # Skip pdrun for display
             
             # Create notification toast
-            self.show_launch_notification(cleaned_cmd)
+            self.show_launch_notification(display_cmd)
             
             # Prepare the launcher
             launcher = Gio.SubprocessLauncher.new(Gio.SubprocessFlags.STDOUT_SILENCE | 
                                                   Gio.SubprocessFlags.STDERR_SILENCE)
             
-            # Split the command properly for subprocess
-            cmd_parts = ["pdrun"]
-            cmd_parts.extend(cleaned_cmd.split())
-            
             # Launch in background
             subprocess = launcher.spawnv(cmd_parts)
             
             # Log the launch
-            print(f"Launched application: pdrun {cleaned_cmd}")
+            print(f"Launched application: {' '.join(cmd_parts)}")
             
         except Exception as e:
             self.show_message_dialog(f"Error launching application: {str(e)}", "Error")
@@ -832,6 +979,113 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
         self.start_background_task(self.load_apps)
         return False  # Don't repeat
 
+    def on_search_changed(self, entry):
+        """Handle search entry change"""
+        query = entry.get_text().lower()
+        self.filter_apps(query)
+
+    def on_search_button_clicked(self, button):
+        """Handle search button click"""
+        self.on_search_changed(self.search_entry)
+
+    def filter_apps(self, query):
+        """Filter the application list based on the search query"""
+        # Store the currently selected items for preservation during filtering
+        selected_items = {}
+        for i, row in enumerate(self.liststore):
+            if row[0]:  # If checked
+                selected_items[row[1]] = True  # Use app name as key
+        
+        # Get the current mode
+        is_add_mode = self.add_radio.get_active()
+        
+        # Remember the current spinner state and start it if not already running
+        was_loading = self.is_loading
+        spinner_active = self.spinner.get_property("active")
+        if not spinner_active:
+            self.spinner.start()
+        
+        if not query:
+            # If search query is empty, reload the full list
+            if not was_loading:
+                self.is_loading = False
+                self._force_refresh()
+            return
+        
+        # Update status
+        self.status_label.set_text(f"Searching for: {query}")
+        
+        # Create a new list to store filtered results
+        filtered_apps = []
+        
+        # Get the appropriate directory based on mode
+        if is_add_mode:
+            apps_dir = os.path.join(self.DISTRO_PATH, "usr/share/applications")
+        else:
+            apps_dir = self.ADDED_DIR
+        
+        # Perform the search
+        for root, _, files in os.walk(apps_dir):
+            for file in files:
+                if file.endswith(".desktop"):
+                    filepath = os.path.join(root, file)
+                    try:
+                        desktop_entry = self.parse_desktop_file(filepath)
+                        if desktop_entry and not desktop_entry.get('no_display', False):
+                            app_name = desktop_entry.get('name') or os.path.splitext(file)[0]
+                            app_name = app_name.replace("_", " ").strip()
+                            
+                            # Check if the app matches the search query
+                            if query.lower() in app_name.lower() or query.lower() in file.lower():
+                                icon = desktop_entry.get('icon') or "application-x-executable"
+                                exec_cmd = desktop_entry.get('exec') or ""
+                                
+                                # Check if the item was previously selected
+                                is_selected = app_name in selected_items
+                                
+                                filtered_apps.append((is_selected, app_name, filepath, icon, exec_cmd))
+                    except Exception as e:
+                        print(f"Error processing {filepath}: {str(e)}")
+        
+        # Update the list store with filtered results
+        self.liststore.clear()
+        for item in sorted(filtered_apps, key=lambda x: x[1].lower()):
+            self.liststore.append(item)
+        
+        # Update status bar
+        self.status_label.set_text(f"Found {len(filtered_apps)} apps matching: {query}")
+        
+        # Stop spinner if it wasn't running before
+        if not spinner_active:
+            self.spinner.stop()
+
+    def on_search_toggle(self, button):
+        """Handle search toggle button click"""
+        is_active = button.get_active()
+        
+        if is_active:
+            # First, ensure no_show_all is set to False to allow showing the widget
+            self.search_box.set_no_show_all(False)
+            # Show the search box and all its children
+            self.search_box.show_all()
+            # Force UI update immediately
+            while Gtk.events_pending():
+                Gtk.main_iteration_do(False)
+            # Focus on the search field
+            self.search_entry.grab_focus()
+            # Print debug info
+            print("Search bar activated")
+        else:
+            # Hide search bar and clear search
+            self.search_box.hide()
+            self.search_entry.set_text("")
+            # Set no_show_all back to True
+            self.search_box.set_no_show_all(True)
+            # Reset filter
+            self.filter_apps("")
+            # Print debug info
+            print("Search bar deactivated")
+
 class Add2MenuApplication(Gtk.Application):
     def __init__(self):
         Gtk.Application.__init__(
@@ -842,6 +1096,7 @@ class Add2MenuApplication(Gtk.Application):
         self.window = None
         self.no_sandbox = False  # Default setting for no-sandbox option
         self.use_absolute_path = False  # Default setting for absolute path option
+        self.nogpu = False  # Default setting for nogpu option
 
     def do_startup(self):
         Gtk.Application.do_startup(self)
@@ -867,6 +1122,12 @@ class Add2MenuApplication(Gtk.Application):
                                                             GLib.Variant.new_boolean(False))
         absolute_path_action.connect("change-state", self.on_absolute_path_toggled)
         self.add_action(absolute_path_action)
+        
+        # Add nogpu toggle action
+        nogpu_action = Gio.SimpleAction.new_stateful("nogpu", None, 
+                                                    GLib.Variant.new_boolean(False))
+        nogpu_action.connect("change-state", self.on_nogpu_toggled)
+        self.add_action(nogpu_action)
         
         # Add keyboard accelerators
         self.set_accels_for_action("app.quit", ["<Ctrl>Q", "<Ctrl>W"])
@@ -897,7 +1158,7 @@ class Add2MenuApplication(Gtk.Application):
         
         about_dialog = Gtk.AboutDialog(transient_for=self.window, modal=True)
         about_dialog.set_program_name("Add To Menu")
-        about_dialog.set_version("2.0")
+        about_dialog.set_version("2.1")
         about_dialog.set_comments("A utility to add Linux applications to Termux desktop")
         about_dialog.set_copyright(f"© {current_year} Termux-desktop (sabamdarif)")
         about_dialog.set_license_type(Gtk.License.GPL_3_0)
@@ -916,6 +1177,11 @@ class Add2MenuApplication(Gtk.Application):
         """Handle absolute path toggle"""
         action.set_state(value)
         self.use_absolute_path = value.get_boolean()
+
+    def on_nogpu_toggled(self, action, value):
+        """Handle nogpu toggle"""
+        action.set_state(value)
+        self.nogpu = value.get_boolean()
 
 def main():
     # Make GTK use system's preferred theme
