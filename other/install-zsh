@@ -1,81 +1,106 @@
 #!/data/data/com.termux/files/usr/bin/bash
 
-check_file() {
-# Check if a file named "install.sh" exists in the current directory
-if [ -e "install.sh" ]; then
-  echo -e "${R}A file named install.sh already exists in the current directory.${W}"
-  
-  # Rename the existing file by adding a timestamp suffix
-  renamed_file="install_$(date +"%Y%m%d%H%M%S").sh"
-  mv "install.sh" "$renamed_file"
-  sleep 1.2 
-  echo -e "${G}The existing file has been renamed to ${C}$renamed_file${W}."
-else
-  echo -e "${G}No file named install.sh found in the current directory.${W}"
-fi
-}
-
 zsh_setup() {
-	echo "${Y}please wait ......"${W}
+	echo "${R}[${C}-${R}]${G} Setup zsh zinit..."${W}
 	sleep 1.3
 	cd ~
-	check_file
-	sleep 1.5
-	wget https://raw.github.com/robbyrussell/oh-my-zsh/master/tools/install.sh
-	sed -i -e 's/exec zsh -l/#exec zsh -l/g' install.sh
-	sed -i '/printf .*Do you want to change your default shell to zsh/,/read -r opt/c\opt="y"' "install.sh"
-	bash install.sh
-	rm install.sh
-	git clone https://github.com/zsh-users/zsh-autosuggestions ~/.oh-my-zsh/custom/plugins/zsh-autosuggestions
-	git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ~/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting
-	sed -i -e 's/ZSH_THEME="robbyrussell"/ZSH_THEME="kalistyle"/g' ~/.zshrc
-	sed -i -e 's/plugins=(git)/plugins=(git zsh-autosuggestions zsh-syntax-highlighting)/g' ~/.zshrc
-    echo "setopt nonomatch" >> ~/.zshrc
+cat << 'EOF' >> "$HOME/.zshrc"
+setopt nonomatch
+### Added by Zinit's installer
+if [[ ! -f $HOME/.local/share/zinit/zinit.git/zinit.zsh ]]; then
+    print -P "%F{33} %F{220}Installing %F{33}ZDHARMA-CONTINUUM%F{220} Initiative Plugin Manager (%F{33}zdharma-continuum/zinit%F{220})…%f"
+    command mkdir -p "$HOME/.local/share/zinit" && command chmod g-rwX "$HOME/.local/share/zinit"
+    command git clone https://github.com/zdharma-continuum/zinit "$HOME/.local/share/zinit/zinit.git" && \
+        print -P "%F{33} %F{34}Installation successful.%f%b" || \
+        print -P "%F{160} The clone has failed.%f%b"
+fi
+
+source "$HOME/.local/share/zinit/zinit.git/zinit.zsh"
+autoload -Uz _zinit
+(( ${+_comps} )) && _comps[zinit]=_zinit
+
+# Load a few important annexes, without Turbo
+# (this is currently required for annexes)
+zinit light-mode for \
+    zdharma-continuum/zinit-annex-as-monitor \
+    zdharma-continuum/zinit-annex-bin-gem-node \
+    zdharma-continuum/zinit-annex-patch-dl \
+    zdharma-continuum/zinit-annex-rust
+
+### End of Zinit's installer chunk
+zinit lucid light-mode for \
+    OMZL::history.zsh \
+    OMZL::completion.zsh \
+    OMZL::key-bindings.zsh
+
+zinit wait lucid light-mode for \
+  atinit"ZINIT[COMPINIT_OPTS]=-C; zpcompinit; zpcdreplay" \
+      zdharma-continuum/fast-syntax-highlighting \
+      OMZP::colored-man-pages \
+      OMZP::git \
+  atload"!_zsh_autosuggest_start" \
+      zsh-users/zsh-autosuggestions \
+  blockf atpull'zinit creinstall -q .' \
+      zsh-users/zsh-completions
+
+source "$HOME/.zsh-themes/td.zsh-theme"
+EOF
+bash -c "$(curl --fail --show-error --silent --location https://raw.githubusercontent.com/zdharma-continuum/zinit/HEAD/scripts/install.sh)"
+chsh -s zsh
 }
 
 setup_theme() {
-cat << EOF > ~/.oh-my-zsh/themes/kalistyle.zsh-theme
-local return_code="%(?..%{\$fg[red]%}%? ↵%{\$reset_color%})"
+cat << EOF > .zsh-themes/td.zsh-theme
+autoload -Uz colors && colors
+autoload -Uz vcs_info
 
-if [[ \$HOME == *termux* ]]; then
-    user="${user_name}@termux"
+setopt PROMPT_SUBST
+
+# Enable Git branch display
+zstyle ':vcs_info:git:*' formats ' %F{magenta} %b%f'
+precmd() { vcs_info }
+
+# Exit status indicator
+exit_status="%(?..%F{red}✘ %?%f)"
+
+# Detect distro and set the correct icons
+distro_id=\$(grep '^ID=' /etc/os-release | cut -d= -f2 | tr -d '"' ) >/dev/null 2>&1
+case "\$distro_id" in
+    kali) DISTRO_ICON="" ;;   # Kali Linux
+    arch) DISTRO_ICON="" ;;   # Arch Linux
+    ubuntu) DISTRO_ICON="" ;; # Ubuntu
+    debian) DISTRO_ICON="" ;; # Debian
+    fedora) DISTRO_ICON="" ;; # Fedora
+    alpine) DISTRO_ICON="" ;; # Alpine
+    void) DISTRO_ICON="" ;;   # Void Linux
+    opensuse*|sles) DISTRO_ICON="" ;; # openSUSE
+    gentoo) DISTRO_ICON="" ;; # Gentoo
+    nixos) DISTRO_ICON="" ;; # NixOS
+    *) DISTRO_ICON="" ;;      # Default Linux Icon
+esac
+
+# Symbols
+FOLDER_ICON=""
+PROMPT_SYMBOL="%F{green}❯%F{reset}"
+
+# Check if running in Termux and set username accordingly
+if [[ -n "\$PREFIX" && "\$PREFIX" == */com.termux/* ]]; then
+    user_name="${final_user_name}"  # You can replace this with another method to get the preferred username
 else
-    user="${user_name}@${selected_distro}"
+    user_name="\$(whoami)"
 fi
 
-local user_host="%B%F{green}┌──(%F{reset}\$user%F{green})-%F{green}[%F{reset}%B%{\$fg[blue]%}%~%b%F{blue}%B%F{green}]%F{reset}"
+# User and host info inside a box with DISTRO_ICON in the middle
+user_host="%F{blue}[%F{cyan}\$user_name%F{yellow} \$DISTRO_ICON %F{cyan}%m%F{blue}]%f"
 
-local user_symbol='%B%F{green}%(!.#.└─≽)%F{reset}'
+# Current directory inside the same box
+dir_display="%F{blue}[%F{yellow}\$FOLDER_ICON %F{yellow}%~%F{blue}]%f"
 
-local current_dir="%B%{\$fg[blue]%}%~ %{\$reset_color%}"
-
-local vcs_branch='\$(git_prompt_info)\$(hg_prompt_info)'
-local rvm_ruby='\$(ruby_prompt_info)'
-local venv_prompt='\$(virtualenv_prompt_info)'
-
-ZSH_THEME_RVM_PROMPT_OPTIONS="i v g"
-
-PROMPT="\${user_host}\${rvm_ruby}\${vcs_branch}\${venv_prompt}
-%{\$fg[yellow]%}\${user_symbol}%{\$reset_color%} "
-RPROMPT="%B\${return_code}%b"
-
-ZSH_THEME_GIT_PROMPT_PREFIX="%{\$fg[yellow]%}‹"
-ZSH_THEME_GIT_PROMPT_SUFFIX="› %{\$reset_color%}"
-ZSH_THEME_GIT_PROMPT_DIRTY="%{\$fg[green]%}●%{\$fg[yellow]%}"
-ZSH_THEME_GIT_PROMPT_CLEAN="%{\$fg[yellow]%}"
-
-ZSH_THEME_HG_PROMPT_PREFIX="\$ZSH_THEME_GIT_PROMPT_PREFIX"
-ZSH_THEME_HG_PROMPT_SUFFIX="\$ZSH_THEME_GIT_PROMPT_SUFFIX"
-ZSH_THEME_HG_PROMPT_DIRTY="\$ZSH_THEME_GIT_PROMPT_DIRTY"
-ZSH_THEME_HG_PROMPT_CLEAN="\$ZSH_THEME_GIT_PROMPT_CLEAN"
-
-ZSH_THEME_RUBY_PROMPT_PREFIX="%{\$fg[red]%}‹"
-ZSH_THEME_RUBY_PROMPT_SUFFIX="› %{\$reset_color%}"
-
-ZSH_THEME_VIRTUAL_ENV_PROMPT_PREFIX="%{\$fg[lightblue]%}‹"
-ZSH_THEME_VIRTUAL_ENV_PROMPT_SUFFIX="› %{\$reset_color%}"
-ZSH_THEME_VIRTUALENV_PREFIX="\$ZSH_THEME_VIRTUAL_ENV_PROMPT_PREFIX"
-ZSH_THEME_VIRTUALENV_SUFFIX="\$ZSH_THEME_VIRTUAL_ENV_PROMPT_SUFFIX"
+# Prompt layout (P10K-like)
+PROMPT="
+%B%F{green}╭─ \$user_host $\dir_display\${vcs_info_msg_0_}
+%B%F{green}╰─\${PROMPT_SYMBOL} %F{reset}"
+RPROMPT="\$exit_status"
 EOF
 
 print_success "zsh setup successfully"

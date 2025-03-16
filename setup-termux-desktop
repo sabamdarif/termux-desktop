@@ -3602,7 +3602,7 @@ function notes() {
 	sleep 2
 	echo "${R}[${C}-${R}]${C}${BOLD} Now Restart Termux ${G}(Must)${W}"
 	echo
-	echo "${R}[${C}-${R}]${C}${BOLD} Some basic commands:-${G}(Must)${W}"
+	echo "${R}[${C}-${R}]${C}${BOLD} Some basic commands:-${G}(Must know)${W}"
 	echo
 	echo "${R}[${C}-${R}]${G} tx11start        to start the gui with termux:x11${W}"
 	echo
@@ -3616,8 +3616,8 @@ function notes() {
 	echo "${R}[${C}-${R}]${G} vncstop          to stop the gui with vnc${W}"
 	echo
 	fi
-	echo "${R}[${C}-${R}]${C} $selected_distro to login into $selected_distro${W}"
-	echo
+	echo "${R}[${C}-${R}]${C} run:- $selected_distro, to login into $selected_distro${W}"
+	echo 
 	echo "${R}[${C}-${R}]${C}${BOLD} See Uses Section in github to know how to use it${W}"
 	echo
 	echo "${R}[${C}-${R}]${C} URL:- ${B}https://github.com/sabamdarif/termux-desktop/blob/main/README.md#5-usage-instructions${W}"
@@ -3664,7 +3664,7 @@ function remove_termux_desktop() {
 	#remove zsh
 	if [[ "$zsh_answer" == "y" ]]; then
 	package_check_and_remove "zsh"
-	check_and_delete "$HOME/.oh-my-zsh $HOME/.zsh_history $HOME/.zshrc"
+	check_and_delete "$HOME/.zsh_history $HOME/.zshrc"
 	fi
 	#remove terminal utility
 	if [[ "$terminal_utility_setup_answer" == "y" ]]; then
