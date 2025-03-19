@@ -1176,7 +1176,7 @@ function hw_questions() {
 	echo
 	echo "${Y}6. Freedreno KGSL (Unstable | Adreno GPU Only)${W}"
 	echo
-	select_an_option 5 1 termux_hw_answer_num
+	select_an_option 6 1 termux_hw_answer_num
 	print_to_config "termux_hw_answer_num"
 
 	# set gpu api name
