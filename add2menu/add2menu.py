@@ -80,7 +80,7 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
     def setup_css(self):
         css = """
             .main-window {
-                background-color: #f5f6f7;
+                background-color: @theme_bg_color;
             }
             headerbar {
                 /* Let the theme control the headerbar colors */
@@ -90,13 +90,13 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
             .mode-switch {
                 border-radius: 20px;
                 padding: 5px 10px;
-                background: rgba(0,0,0,0.1);
+                background: alpha(@theme_fg_color, 0.1);
             }
             .app-list {
-                background-color: white;
+                background-color: @theme_base_color;
                 border-radius: 5px;
-                border: 1px solid #ddd;
-                color: #333333;
+                border: 1px solid @borders;
+                color: @theme_fg_color;
             }
             .app-list row {
                 padding: 8px;
@@ -115,7 +115,7 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
                 background-color: alpha(@theme_selected_bg_color, 0.1);
             }
             .action-button {
-                color: white;
+                color: @theme_selected_fg_color;
                 border-radius: 5px;
                 padding: 8px 15px;
                 background-color: @theme_selected_bg_color;
@@ -124,10 +124,10 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
                 background-color: shade(@theme_selected_bg_color, 0.9);
             }
             .status-bar {
-                background-color: #f8f9fa;
-                border-top: 1px solid #dee2e6;
+                background-color: @theme_bg_color;
+                border-top: 1px solid @borders;
                 padding: 5px;
-                color: #333333;
+                color: @theme_fg_color;
             }
             /* Animation for app launch */
             .launch-flash {
@@ -144,7 +144,7 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
                 min-height: 36px;
                 padding: 0 15px;
                 background-color: @theme_selected_bg_color;
-                color: white;
+                color: @theme_selected_fg_color;
             }
             button.search-button:hover {
                 background-color: shade(@theme_selected_bg_color, 0.9);
