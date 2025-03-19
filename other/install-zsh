@@ -50,6 +50,7 @@ chsh -s zsh
 }
 
 setup_theme() {
+    check_and_create_directory "$HOME/.zsh-themes"
 cat << EOF > .zsh-themes/td.zsh-theme
 autoload -Uz colors && colors
 autoload -Uz vcs_info
@@ -85,7 +86,7 @@ PROMPT_SYMBOL="%F{green}❯%F{reset}"
 
 # Check if running in Termux and set username accordingly
 if [[ -n "\$PREFIX" && "\$PREFIX" == */com.termux/* ]]; then
-    user_name="${final_user_name}"  # You can replace this with another method to get the preferred username
+    user_name="${final_user_name}"
 else
     user_name="\$(whoami)"
 fi

@@ -156,9 +156,10 @@ function check_and_backup() {
 function download_file() {
     local dest
     local url
+    local max_retries=5
+    local attempt=1
 
     if [[ -z "$2" ]]; then
-        # If only one argument is provided, treat it as the URL and use its basename as the destination
         url="$1"
         dest="$(basename "$url")"
     else
@@ -171,22 +172,22 @@ function download_file() {
         return 1
     fi
 
-    wget --tries=5 --timeout=15 --retry-connrefused -O "$dest" "$url"
-
-    # Check if the file was downloaded successfully
-    if [[ -f "$dest" ]]; then
-        print_success "Successfully downloaded the file"
-    else
-        print_failed "Failed to download the file, retrying..."
+    while [[ $attempt -le $max_retries ]]; do
+        echo "${R}[${C}-${R}]${G} Attempt $attempt: Downloading $url to $dest...${W}"
         wget --tries=5 --timeout=15 --retry-connrefused -O "$dest" "$url"
 
         if [[ -f "$dest" ]]; then
-            print_success "Successfully downloaded the file after retry"
+            print_success "File downloaded successfully on attempt $attempt"
+            return 0
         else
-            print_failed "Failed to download the file after retry"
-            exit 1
+            print_failed "Download failed. Retrying... ($attempt/$max_retries)"
         fi
-    fi
+        
+        ((attempt++))
+    done
+
+    print_failed "Failed to download the file after $max_retries attempts. Exiting."
+    return 1
 }
 
 # find a backup file which end with a number pattern and restore it
@@ -439,39 +440,21 @@ function download_and_extract() {
     echo "${R}[${C}-${R}]${C}${BOLD}Downloading ${G}${filename}...${W}"
     sleep 1.5
 
-    # Change to the target directory
     cd "$target_dir" || return 1
 
-    local attempt=1
-    local success=false
-
-    # Attempt to download the file with retries
-    while [[ $attempt -le 3 ]]; do
-        if curl -# -L "$url" -o "$filename"; then
-            success=true
-            break
-        else
-            print_failed "Failed to download ${C}${filename}"
-            echo "${R}[${C}☓-{R}]${G}Retrying... Attempt ${C}$attempt${W}"
-            ((attempt++))
-            sleep 1
-        fi
-    done
-
-    # If download is successful, extract and remove the archive
-    if [[ "$success" = true ]]; then
+    if download_file "$filename" "$url"; then
         if [[ -f "$filename" ]]; then
             echo
             echo "${R}[${C}-${R}]${R}[${C}-${R}]${G} Extracting $filename${W}"
             extract_archive "$filename"
-            rm "$filename"
+            check_and_delete "$filename"
         fi
     else
-        # Notify if download fails after all attempts
         print_failed "Failed to download ${C}${filename}"
         echo "${R}[${C}-${R}]${C}Please check your internet connection${W}"
     fi
-	print_log "$url $target_dir $filename"
+    
+    print_log "$url $target_dir $filename"
 }
 
 # count the number subfolders inside a folder in my repo
@@ -532,11 +515,11 @@ function confirmation_y_or_n() {
 # get the latest version from a github releases
 # ex. latest_tag=$(get_latest_release "$repo_owner" "$repo_name")
 function get_latest_release() {
-	local repo_owner="$1"
-	local repo_name="$2"
-	curl -s "https://api.github.com/repos/$repo_owner/$repo_name/releases/latest" |
-	grep '"tag_name":' |
-	sed -E 's/.*"v?([^"]+)".*/\1/'
+    local repo_owner="$1"
+    local repo_name="$2"
+    curl -s "https://api.github.com/repos/$repo_owner/$repo_name/releases/latest" |
+    grep '"tag_name":' |
+    sed -E 's/.*"([^"]+)".*/\1/'
 }
 
 function install_font_for_style() {
@@ -899,14 +882,14 @@ function questions_setup_manual() {
 	echo
 	confirmation_y_or_n "Do you want to add some more wallpapers" ext_wall_answer
 	banner
-	confirmation_y_or_n "Do you want to Configuring Zsh" zsh_answer
+	confirmation_y_or_n "Do you want to use my zsh config" zsh_answer
 	banner
 	echo
 	echo "${R}[${C}-${R}]${B} Know More About Terminal Utility:- https://github.com/sabamdarif/termux-desktop/blob/main/see-more.md#hammer_and_wrenchlearn-about-terminal-utilities${W}"
 	echo
 	confirmation_y_or_n "Do you want install some terminal utility to make better terminal exprience" terminal_utility_setup_answer
 	banner
-		echo -e "${R}[${C}-${R}]${B} File Manager Tools Enhancement${W}
+	echo -e "${R}[${C}-${R}]${B} File Manager Tools Enhancement${W}
 
 ${B}Overview:${W}
 This option enhances your file manager with powerful right-click menu features.
@@ -933,7 +916,7 @@ ${B}Key Features:${W}
 ${B}How to Access:${W}
 Access these features through the 'Scripts' menu in your file manager's right-click context menu.
 ${W}"
-	confirmation_y_or_n "Do you want to Configuring File Manager Tools" fm_tools
+	confirmation_y_or_n "Do you want File Manager Tools tailored with powerful extra features" fm_tools
 	banner
 	echo "${R}[${C}-${R}]${G}${BOLD} Select Gui Mode${W}"
 	echo
@@ -1128,7 +1111,7 @@ function exp_termux_gl_hw_support() {
 		2) exp_termux_gl_hw_answer="virgl" ;;
 	    3) exp_termux_gl_hw_answer="virgl_angle" ;;
 	    4) exp_termux_gl_hw_answer="virgl_vulkan" ;;
-	    5) exp_termux_gl_hw_answer="virgl" ;;
+	    5) exp_termux_gl_hw_answer="zink_virgl" ;;
 	    6) exp_termux_gl_hw_answer="zink_with_mesa" ;;
 	    7) exp_termux_gl_hw_answer="zink_with_mesa_zink" ;;
 	esac
@@ -1185,7 +1168,7 @@ function hw_questions() {
 	    2) termux_hw_answer="virgl" ;;
 		3) termux_hw_answer="virgl_angle" ;;
 	    4) termux_hw_answer="virgl_vulkan" ;;
-	    5) termux_hw_answer="virgl" ;;
+	    5) termux_hw_answer="zink_virgl" ;;
 	    6) termux_hw_answer="freedreno" ;;
 	esac
 	print_to_config "termux_hw_answer"
@@ -1253,10 +1236,12 @@ function distro_questions() {
         echo
         	while true; do
         	    read -r -p "${R}[${C}-${R}]${G} Input username [Lowercase]: ${W}" user_name
-        	    if [[ -n "$user_name" ]]; then
-        	        break
-        	    else
+        	    if [[ -z "$user_name" ]]; then
         	        print_warn "You can't leave the username empty. Please enter a valid username."
+				elif [[ "$user_name" =~ \  ]]; then
+					print_warn "Username cannot contain spaces. Please enter a valid username."
+        	    else
+        	        break
         	    fi
         	done
         echo
@@ -1288,17 +1273,21 @@ function distro_questions() {
 	    while true; do
     		while true; do
     		    read -r -p "${R}[${C}-${R}]${G}Input username [Lowercase]: ${W}" user_name
-    		    if [[ -n "$user_name" ]]; then
-    		        break
-    		    else
-    		        print_warn "You can't leave the username empty. Please enter a valid username."
-    		    fi
+    		    if [[ -z "$user_name" ]]; then
+        	        print_warn "You can't leave the username empty. Please enter a valid username."
+				elif [[ "$user_name" =~ \  ]]; then
+					print_warn "Username cannot contain spaces. Please enter a valid username."
+        	    else
+        	        break
+        	    fi
     		done
     		echo
 	    	while true; do
 	    	    read -r -p "${R}[${C}-${R}]${G}Input Password (Minimum 4 characters): ${W}" pass
 	    	    if [[ -z "$pass" ]]; then
 	    	        print_warn "You can't leave the password empty. Please enter a valid password."
+				elif [[ "$user_name" =~ \  ]]; then
+					print_warn "Password cannot contain spaces. Please enter a valid username."
 	    	    elif [[ ${#pass} -lt 4 ]]; then
 	    	        print_warn "Password must be at least 4 characters long. Please enter a longer password."
 	    	    else
@@ -1432,6 +1421,8 @@ function define_value_name() {
 	# Vulkan Driver
 	if [[ "$confirmation_mesa_vulkan_icd_wrapper" == "y" ]]; then
 	vulkan_driver_name="Vulkan ICD Wrapper"
+	elif [[ "$termux_hw_answer" == "freedreno" ]]; then
+	vulkan_driver_name="Freedreno KGSL"
 	else
 	vulkan_driver_name="Not Supported"
 	fi
@@ -1877,7 +1868,7 @@ while true; do
 		sleep 0.2
 		local latest_termux_app_tag
 		latest_termux_app_tag=$(get_latest_release "termux" "termux-app")
-		if [[ "$TERMUX_VERSION" == "$latest_termux_app_tag" ]]; then
+		if [[ "$TERMUX_VERSION" == "${latest_termux_app_tag#v}" ]]; then
 			print_status "ok" "Termux Version: ${W}$TERMUX_VERSION"
 			sleep 0.2
 			local termux_build
@@ -1893,11 +1884,11 @@ while true; do
 		else
 			print_status "warn" "Termux Version: ${W}$TERMUX_VERSION (Not Recomended)"
 			if [[ $(getprop ro.product.cpu.abi) == "arm64-v8a" ]]; then
-				echo "${R}[${G}!${R}]${G} Update Termux:- https://github.com/termux/termux-app/releases/tag/ https://github.com/termux/termux-app/releases/download/${latest_termux_app_tag}/termux-app_${latest_termux_app_tag}+github-debug_arm64-v8a.apk${W}"
+				echo "${R}[${G}!${R}]${G} Update Termux:- https://github.com/termux/termux-app/releases/download/${latest_termux_app_tag}/termux-app_${latest_termux_app_tag}+github-debug_arm64-v8a.apk${W}"
 			elif [[ $(getprop ro.product.cpu.abi) == "armeabi-v7a" ]]; then
-				echo "${R}[${G}!${R}]${G} Update Termux:- https://github.com/termux/termux-app/releases/tag/ https://github.com/termux/termux-app/releases/download/${latest_termux_app_tag}/termux-app_${latest_termux_app_tag}+github-debug_armeabi-v7a.apk${W}"
+				echo "${R}[${G}!${R}]${G} Update Termux:- https://github.com/termux/termux-app/releases/download/${latest_termux_app_tag}/termux-app_${latest_termux_app_tag}+github-debug_armeabi-v7a.apk${W}"
 			else
-				echo "${R}[${G}!${R}]${G} Update Termux:- https://github.com/termux/termux-app/releases/tag/ https://github.com/termux/termux-app/releases/download/${latest_termux_app_tag}/termux-app_${latest_termux_app_tag}+github-debug_universal.apk${W}"
+				echo "${R}[${G}!${R}]${G} Update Termux:- https://github.com/termux/termux-app/releases/download/${latest_termux_app_tag}/termux-app_${latest_termux_app_tag}+github-debug_universal.apk${W}"
 			fi
 			sleep 0.2
 		fi
@@ -2354,36 +2345,42 @@ cat <<EOF > "$PREFIX/bin/vncstart"
 
 termux-wake-lock
 
-vnc_server_pid=\$(pgrep -f "vncserver")
-de_pid=\$(pgrep -f "$de_startup")
-if [[ -n "\$de_pid" ]] || [[ -n "\$vnc_server_pid" ]]>/dev/null 2>&1; then
-vncstop -f
+# Prevent script from looping by checking if it's already running
+if pgrep -f "vncstart" >/dev/null; then
+    echo "[!] vncstart is already running. Exiting."
+    exit 1
 fi
 
-if [[ "\$1" != "--help" ]] || [[ "\$1" != "-h" ]]; then
-pulseaudio --start --exit-idle-time=-1
-pactl load-module module-sles-source > /dev/null 2>&1
+vnc_server_pid=\$(pgrep -f "vncserver")
+de_pid=\$(pgrep -f "$de_startup")
+
+if [[ -n "\$de_pid" || -n "\$vnc_server_pid" ]]; then
+    vncstop -f
+fi
+
+if [[ "\$1" != "--help" && "\$1" != "-h" ]]; then
+    pulseaudio --start --exit-idle-time=-1
+    pactl load-module module-sles-source > /dev/null 2>&1
 fi
 
 function show_vncstart_help() {
-echo -e "
-vncstart			to start vncserver
-vncstart --help 	to show help
-"
+    echo -e "\nUsage:\n"
+    echo "vncstart            to start vncserver"
+    echo "vncstart --help     to show help"
 }
 
 case \$1 in
---help|-h)
-show_vncstart_help
-;;
-*)
-if [[ -n "\$1" ]]; then
-echo "${R}[${R}☓${R}]${R} Invalid option: ${C}\$1${W}"
-show_vncstart_help
-else
-env XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg vncserver
-fi
-;;
+    --help|-h)
+        show_vncstart_help
+        ;;
+    *)
+        if [[ -n "\$1" ]]; then
+            echo "[☓] Invalid option: \$1"
+            show_vncstart_help
+        else
+            env XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg vncserver
+        fi
+        ;;
 esac
 EOF
 elif [[ "$enable_hw_acc" == "y" ]]; then
@@ -2392,41 +2389,48 @@ cat <<EOF > "$PREFIX/bin/vncstart"
 
 termux-wake-lock
 
-vnc_server_pid=\$(pgrep -f "vncserver")
-de_pid=\$(pgrep -f "$de_startup")
-if [[ -n "\$de_pid" ]] || [[ -n "\$vnc_server_pid" ]]>/dev/null 2>&1; then
-vncstop -f
+# Prevent script from looping by checking if it's already running
+if pgrep -f "vncstart" >/dev/null; then
+    echo "[!] vncstart is already running. Exiting."
+    exit 1
 fi
 
-if [[ "\$1" != "--help" ]] || [[ "\$1" != "-h" ]]; then
-pulseaudio --start --exit-idle-time=-1
-pactl load-module module-sles-source > /dev/null 2>&1
+vnc_server_pid=\$(pgrep -f "vncserver")
+de_pid=\$(pgrep -f "$de_startup")
+
+if [[ -n "\$de_pid" || -n "\$vnc_server_pid" ]]; then
+    vncstop -f
+fi
+
+if [[ "\$1" != "--help" && "\$1" != "-h" ]]; then
+    pulseaudio --start --exit-idle-time=-1
+    pactl load-module module-sles-source > /dev/null 2>&1
 fi
 
 function show_vncstart_help() {
-echo -e "
-vncstart 			to start vncserver with gpu acceleration
-vncstart ---nogpu	to start vncserver without gpu acceleration"
-vncstart --help     to show help
+    echo -e "\nUsage:\n"
+    echo "vncstart            to start vncserver with GPU acceleration"
+    echo "vncstart --nogpu    to start vncserver without GPU acceleration"
+    echo "vncstart --help     to show this help message"
 }
 
 case \$1 in
---nogpu)
-env XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg LIBGL_ALWAYS_SOFTWARE=1 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe vncserver
-;;
---help|-h)
-show_vncstart_help
-;;
-*)
-if [[ -n "\$1" ]]; then
-echo "${R}[${R}☓${R}]${R} Invalid option: ${C}\$1${W}"
-show_vncstart_help
-else
-export ${set_to_export}
-${initialize_server_method} &
-env XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg $hw_method vncserver
-fi
-;;
+    --nogpu)
+        env XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg LIBGL_ALWAYS_SOFTWARE=1 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe vncserver
+        ;;
+    --help|-h)
+        show_vncstart_help
+        ;;
+    *)
+        if [[ -n "\$1" ]]; then
+            echo "[☓] Invalid option: \$1"
+            show_vncstart_help
+        else
+            export ${set_to_export}
+            ${initialize_server_method} &
+            env XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg $hw_method vncserver
+        fi
+        ;;
 esac
 EOF
 fi
@@ -2823,7 +2827,7 @@ function setup_termux_x11() {
 		local repo_name="termux-x11"
 		local latest_termux_x11_tag
 		latest_termux_x11_tag=$(get_latest_release "termux" "termux-x11")
-		local termux_x11_url="https://github.com/$repo_owner/$repo_name/releases/download/v$latest_termux_x11_tag/"
+		local termux_x11_url="https://github.com/$repo_owner/$repo_name/releases/download/$latest_termux_x11_tag/"
 		local assets
 		assets=$(curl -s "https://api.github.com/repos/$repo_owner/$repo_name/releases/latest" | grep -oP '(?<="name": ")[^"]*')
 		deb_assets=$(echo "$assets" | grep "termux-x11.*all.deb")
@@ -3028,7 +3032,7 @@ function check_desktop_process() {
 	echo
 	echo "${R}[${C}-${R}]${G} Backing up current Termux:x11 preferences...${W}"
 	echo
-	termux-x11-preference list > old-termx-x11-preferences
+	termux-x11-preference list > "$HOME/old-termx-x11-preferences"
 	download_file "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/other/termx-x11-preferences"
 	termux-x11-preference < termx-x11-preferences
 	check_and_delete "termx-x11-preferences"
