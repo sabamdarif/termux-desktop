@@ -158,6 +158,7 @@ function download_file() {
     local url
     local max_retries=5
     local attempt=1
+    local successful_attempt=0
 
     if [[ -z "$2" ]]; then
         url="$1"
@@ -177,14 +178,23 @@ function download_file() {
         wget --tries=5 --timeout=15 --retry-connrefused -O "$dest" "$url"
 
         if [[ -f "$dest" ]]; then
-            print_success "File downloaded successfully on attempt $attempt"
-            return 0
+            successful_attempt=$attempt
+            break
         else
             print_failed "Download failed. Retrying... ($attempt/$max_retries)"
         fi
         
         ((attempt++))
     done
+
+    if [[ -f "$dest" ]]; then
+        if [[ $successful_attempt -eq 1 ]]; then
+            print_success "File downloaded successfully."
+        else
+            print_success "File downloaded successfully on attempt $successful_attempt."
+        fi
+        return 0
+    fi
 
     print_failed "Failed to download the file after $max_retries attempts. Exiting."
     return 1
