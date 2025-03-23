@@ -42,7 +42,7 @@ Icon Used:
 
 <br>
 
-## 2. Minimalist Setup 1:
+## 2. Minimalist Setup
 
 <details>
 <summary><b style ="font-size: small">Style Details: </summary>
