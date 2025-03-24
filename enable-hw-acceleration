@@ -204,6 +204,7 @@ function setup_turnip_proot() {
     download_file "$HOME/mesa-vulkan-kgsl_arm64.deb" "https://github.com/sabamdarif/termux-desktop/releases/download/mesa-vulkan/mesa-vulkan-kgsl_24.1.0-devel-20240120_arm64.deb"
     proot-distro login $selected_distro --shared-tmp -- env DISPLAY=:1.0 dpkg -i $HOME/mesa-vulkan-kgsl_arm64.deb
     proot-distro login $selected_distro --shared-tmp -- env DISPLAY=:1.0 rm $HOME/mesa-vulkan-kgsl_arm64.deb
+    proot-distro login $selected_distro --shared-tmp -- env DISPLAY=:1.0 apt-mark hold mesa-vulkan-drivers libgl1-mesa-dri mesa-libgallium
     fi
 }
 
