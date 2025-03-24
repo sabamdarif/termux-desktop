@@ -174,10 +174,13 @@ function download_file() {
     fi
 
     while [[ $attempt -le $max_retries ]]; do
-        echo "${R}[${C}-${R}]${G} Attempt $attempt: Downloading $url to $dest...${W}"
+        echo "${R}[${C}-${R}]${G} Downloading $dest...${W}"
+		if [[ ! -s "$dest" ]]; then
+			check_and_delete "$dest"
+		fi
         wget --tries=5 --timeout=15 --retry-connrefused -O "$dest" "$url"
 
-        if [[ -f "$dest" ]]; then
+        if [[ -f "$dest" && -s "$dest" ]]; then
             successful_attempt=$attempt
             break
         else
@@ -2230,7 +2233,7 @@ function setup_folder() {
 #
 #########################################################################
 
-# setup hardware acceleration, check if the enable-hw-acceleration already exist then then first check if it different from github , then ask user if they want to replace it or not, if not then continue with the lacal enable-hw-acceleration file
+# setup hardware acceleration, check if the enable-hw-acceleration already exist, if then first check if it different from github , then ask user if they want to replace it with the latest or not, if not then continue with the local enable-hw-acceleration file
 function hw_config() {
     banner
     echo "${R}[${C}-${R}]${G}${BOLD} Configuring Hardware Acceleration${W}"
@@ -2252,23 +2255,23 @@ function hw_config() {
                 check_and_backup "${current_path}/enable-hw-acceleration"
                 download_file "${current_path}/enable-hw-acceleration" https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/enable-hw-acceleration
 				chmod +x "${current_path}/enable-hw-acceleration"
-                . "${current_path}"/enable-hw-acceleration
+                source "${current_path}"/enable-hw-acceleration
             else
                 echo "${R}[${C}-${R}]${G} Using the local hardware acceleration setup file.${W}"
                 chmod +x "${current_path}/enable-hw-acceleration"
-                . "${current_path}"/enable-hw-acceleration
+                source "${current_path}/enable-hw-acceleration"
             fi
 
             print_to_config "change_old_hw_installer"
         else
             echo "${R}[${C}-${R}]${G} Using the local hardware acceleration setup file.${W}"
             chmod +x "${current_path}/enable-hw-acceleration"
-            . "${current_path}"/enable-hw-acceleration
+            source "${current_path}/enable-hw-acceleration"
         fi
     else
         download_file "${current_path}/enable-hw-acceleration" https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/enable-hw-acceleration
 		chmod +x "${current_path}/enable-hw-acceleration"
-        . "${current_path}"/enable-hw-acceleration
+        source "${current_path}/enable-hw-acceleration"
     fi
 
     check_and_delete "${current_path}/enable-hw-acceleration"
@@ -2312,18 +2315,18 @@ function distro_container_setup() {
                     download_file "${current_path}/distro-container-setup" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/distro-container-setup"
 
                     chmod +x "${current_path}/distro-container-setup"
-                    . "${current_path}/distro-container-setup"
+                    source "${current_path}/distro-container-setup"
                 else
                     echo "${R}[${C}-${R}]${G} Using the local distro-container setup file${W}"
                     chmod +x "${current_path}/distro-container-setup"
-                    . "${current_path}/distro-container-setup"
+                    source "${current_path}/distro-container-setup"
                 fi
 
                 print_to_config "change_old_distro_installer"
             else
                 echo "${R}[${C}-${R}]${G} Using the local distro-container setup file${W}"
                 chmod +x "${current_path}/distro-container-setup"
-                . "${current_path}/distro-container-setup"
+                source "${current_path}/distro-container-setup"
             fi
         else
             download_file "${current_path}/distro-container-setup" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/distro-container-setup"
@@ -2334,7 +2337,7 @@ function distro_container_setup() {
             fi
 
             chmod +x "${current_path}/distro-container-setup"
-            . "${current_path}/distro-container-setup"
+            source "${current_path}/distro-container-setup"
         fi
 	check_and_delete "${current_path}/distro-container-setup"
     fi

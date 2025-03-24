@@ -1,15 +1,37 @@
+#!/usr/bin/env python3
 import os
-import shutil
-import gi
 import sys
-import threading
+import json
+import subprocess
 import re
-gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk, GLib, Gdk, Gio, GdkPixbuf
+import shutil
+import signal
+from pathlib import Path
+import platform
+import time
+import threading
 from datetime import datetime
+import gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk, GLib, Gdk, Gio, GdkPixbuf, Pango, GObject
 
-# Icon cache to avoid repeated searches
+# Icon cache to avoid repeated lookups
 ICON_CACHE = {}
+# Control verbose logging for icon search 
+# Set this to True to debug icon issues
+VERBOSE_ICON_SEARCH = os.environ.get('VERBOSE_ICON_SEARCH', '0') == '1'
+
+def main():
+    # Make GTK use system's preferred theme
+    settings = Gtk.Settings.get_default()
+    if settings:
+        settings.set_property("gtk-application-prefer-dark-theme", 
+                             Gtk.Settings.get_default().get_property("gtk-application-prefer-dark-theme"))
+    
+    # Create and run the application
+    app = Add2MenuApplication()
+    exit_status = app.run([sys.argv[0]])  # Only pass program name
+    sys.exit(exit_status)
 
 class Add2MenuWindow(Gtk.ApplicationWindow):
     def __init__(self, app):
@@ -29,6 +51,13 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
         self.DISTRO_PATH = os.getenv("distro_path", f"/data/data/com.termux/files/usr/var/lib/proot-distro/installed-rootfs/{self.DISTRO_NAME}")
         self.APPLICATIONS_DIR = os.path.join(self.PREFIX, "share/applications")
         self.ADDED_DIR = os.path.join(self.APPLICATIONS_DIR, "pd_added")
+        
+        # Icon paths
+        self.SYSTEM_ICONS_DIR = "/data/data/com.termux/files/usr/share/icons"
+        self.USER_ICONS_DIR = "/data/data/com.termux/files/home/.icons"
+        
+        # Setup icon theme paths
+        self.setup_icon_theme()
         
         # Task status
         self.is_loading = False
@@ -68,14 +97,20 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
         self.show_all()
         self.status_label.set_text("Loading applications...")
         
-        # Delay app loading to let the UI render first
-        GLib.timeout_add(100, self._delayed_load)
-
         # Store reference to application actions for enabling/disabling
         self.app = app
         self.no_sandbox_action = app.lookup_action("no-sandbox")
         self.absolute_path_action = app.lookup_action("absolute-path")
         self.nogpu_action = app.lookup_action("nogpu")
+        
+        # Set initial state of show-added-apps action based on current mode
+        show_added_apps_action = app.lookup_action("show-added-apps")
+        if show_added_apps_action:
+            # Enable only if in add mode
+            show_added_apps_action.set_enabled(self.add_radio.get_active())
+        
+        # Delay app loading to let the UI render first
+        GLib.timeout_add(100, self._delayed_load)
 
     def setup_css(self):
         css = """
@@ -204,9 +239,10 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
         
         # Create app menu
         menu = Gio.Menu()
-        menu.append("Launch with --no-sandbox", "app.no-sandbox")  # Add no-sandbox toggle
-        menu.append("Use Absolute Paths", "app.absolute-path")     # Add absolute path toggle
-        menu.append("Launch with --nogpu", "app.nogpu")            # Add nogpu toggle
+        menu.append("Show added apps", "app.show-added-apps")   # Add our new menu item
+        menu.append("Launch with --no-sandbox", "app.no-sandbox")
+        menu.append("Use Absolute Paths", "app.absolute-path")
+        menu.append("Launch with --nogpu", "app.nogpu")
         menu.append("About Add2Menu", "app.about")
         menu.append("Quit", "app.quit")
         
@@ -288,11 +324,14 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
         scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
         scroll.set_shadow_type(Gtk.ShadowType.IN)
         
-        # Use TreeView with exec command
-        self.liststore = Gtk.ListStore(bool, str, str, str, str)  # checkbox, name, path, icon, exec_cmd
+        # Use TreeView with exec command and description for tooltips
+        self.liststore = Gtk.ListStore(bool, str, str, str, str, str)  # checkbox, name, path, icon, exec_cmd, description
         self.treeview = Gtk.TreeView(model=self.liststore)
         self.treeview.set_headers_visible(True)
         self.treeview.get_style_context().add_class('app-list')
+        
+        # Enable tooltips showing the description
+        self.treeview.set_tooltip_column(5)  # Use description column for tooltips
         
         # Checkbox column
         renderer_toggle = Gtk.CellRendererToggle()
@@ -302,7 +341,9 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
         
         # Icon column with efficient rendering
         renderer_icon = Gtk.CellRendererPixbuf()
-        column_icon = Gtk.TreeViewColumn("", renderer_icon, icon_name=3)
+        column_icon = Gtk.TreeViewColumn("", renderer_icon)
+        # Use a data function instead of direct binding
+        column_icon.set_cell_data_func(renderer_icon, self.icon_data_func)
         self.treeview.append_column(column_icon)
         
         # Name column
@@ -402,19 +443,65 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
         self.show_message_dialog(f"Operation failed: {error_message}", "Error")
         return False  # Important: return False to remove the idle callback
 
+    def get_added_applications(self):
+        """Helper method to get a dictionary of applications already added to pd_added"""
+        added_apps = {}
+        if os.path.exists(self.ADDED_DIR):
+            for file in os.listdir(self.ADDED_DIR):
+                if file.endswith(".desktop"):
+                    filepath = os.path.join(self.ADDED_DIR, file)
+                    try:
+                        desktop_entry = self.parse_desktop_file(filepath)
+                        if desktop_entry:
+                            app_name = desktop_entry.get('name') or os.path.splitext(file)[0]
+                            # Store both filename and app name for comparison
+                            added_apps[file] = app_name.replace("_", " ").strip().lower()
+                    except Exception as e:
+                        print(f"Error processing added file {filepath}: {str(e)}")
+        return added_apps
+
     def load_apps(self):
         """Background task to load applications"""
         if self.add_radio.get_active():
             # In add mode, show apps from the distro's application directory
             path = os.path.join(self.DISTRO_PATH, "usr/share/applications")
             action_label = "Add Selected"
+            
+            # Get list of already added applications using the helper method
+            added_apps = self.get_added_applications()
         else:
             # In remove mode, show ONLY apps from the pd_added directory
             path = self.ADDED_DIR
             action_label = "Remove Selected"
+            added_apps = {}  # Not needed in remove mode
         
         # Get apps from directory
         apps = self.list_desktop_files(path)
+        
+        # Filter out already added apps if in Add mode and show_added_apps is False
+        show_added_apps = self.app.show_added_apps  # Get the setting from the application
+        
+        if self.add_radio.get_active() and added_apps and not show_added_apps:
+            filtered_apps = []
+            skipped_count = 0
+            for app in apps:
+                name, filepath, icon, exec_cmd, description = app
+                filename = os.path.basename(filepath)
+                # Check if this file is already in pd_added directory
+                if filename in added_apps:
+                    # Also compare app names (case insensitive)
+                    if name.lower() == added_apps[filename]:
+                        # Skip this app as it's already added
+                        skipped_count += 1
+                        continue
+                # If not found or names don't match, include the app
+                filtered_apps.append(app)
+            
+            # Log how many apps were filtered out
+            if skipped_count > 0:
+                print(f"Filtered out {skipped_count} applications that are already added")
+            
+            apps = filtered_apps
         
         # Sort the apps for initial display
         sorted_apps = sorted(apps, key=lambda x: x[0].lower())
@@ -429,10 +516,22 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
         self.liststore.clear()
         self.action_button.set_label(action_label)
         
-        for name, filepath, icon, exec_cmd in apps:
-            self.liststore.append([False, name, filepath, icon or "application-x-executable", exec_cmd])
+        for name, filepath, icon, exec_cmd, description in apps:
+            self.liststore.append([False, name, filepath, icon or "application-x-executable", exec_cmd, description])
         
-        self.update_status()
+        # If we're in Add mode, set appropriate status message
+        if self.add_radio.get_active():
+            show_added_apps = self.app.show_added_apps
+            if show_added_apps:
+                self.status_label.set_text(f"Showing {len(apps)} applications (including already added apps)")
+            else:
+                self.status_label.set_text(f"Showing {len(apps)} applications (already added apps are hidden)")
+        else:
+            self.status_label.set_text(f"Showing {len(apps)} applications")
+        
+        # After short delay, update to normal status message
+        GLib.timeout_add(3000, self.update_status)
+        
         return False  # Important: remove the idle callback
 
     def list_desktop_files(self, directory):
@@ -456,14 +555,15 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
                             display_name = display_name.replace("_", " ").strip()
                             icon = desktop_entry.get('icon') or "application-x-executable"
                             exec_cmd = desktop_entry.get('exec') or ""
-                            desktop_files.append((display_name, filepath, icon, exec_cmd))
+                            description = desktop_entry.get('comment') or ""
+                            desktop_files.append((display_name, filepath, icon, exec_cmd, description))
                     except Exception as e:
                         print(f"Error processing {filepath}: {str(e)}")
         
         # If we're in remove mode, only show files from pd_added directory
         if directory == self.ADDED_DIR:
             # Make sure we're only seeing pd_added files
-            desktop_files = [(name, path, icon, exec_cmd) for name, path, icon, exec_cmd in desktop_files
+            desktop_files = [(name, path, icon, exec_cmd, desc) for name, path, icon, exec_cmd, desc in desktop_files
                               if path.startswith(self.ADDED_DIR)]
                         
         return desktop_files
@@ -474,7 +574,8 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
             'name': None,
             'icon': None,
             'no_display': False,
-            'exec': None  # Add exec command field
+            'exec': None,  # Add exec command field
+            'comment': None  # Add description/comment field
         }
         
         try:
@@ -487,9 +588,12 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
                         result['name'] = line.split("=", 1)[1].strip()
                     elif line.startswith('Icon='):
                         icon_name = line.split("=", 1)[1].strip()
+                        # Try to find the real icon path
                         result['icon'] = self.find_icon_cached(icon_name)
                     elif line.startswith('Exec='):
                         result['exec'] = line.split("=", 1)[1].strip()
+                    elif line.startswith('Comment='):
+                        result['comment'] = line.split("=", 1)[1].strip()
                     elif line.startswith('NoDisplay=true'):
                         result['no_display'] = True
                         break
@@ -500,24 +604,145 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
         return result
 
     def find_icon_cached(self, icon_name):
-        """Find an icon with caching for performance"""
+        """Find an icon with caching for performance, respecting the current theme"""
         if not icon_name:
-            return "application-x-executable"
+            if VERBOSE_ICON_SEARCH:
+                print(f"No icon name provided, using fallback")
+            fallback = self.get_fallback_icon_path("application-x-executable")
+            return fallback if fallback else "application-x-executable"
             
         # Check cache first
         if icon_name in ICON_CACHE:
             return ICON_CACHE[icon_name]
             
-        # For full path icons, just return as is
+        # Log the icon we're searching for
+        if VERBOSE_ICON_SEARCH:
+            print(f"Searching for icon: {icon_name}")
+            
+        # For full path icons, just return as is if they exist
         if os.path.isfile(icon_name):
+            if VERBOSE_ICON_SEARCH:
+                print(f"Found icon as direct file path: {icon_name}")
             ICON_CACHE[icon_name] = icon_name
             return icon_name
             
-        # If it's an icon name without extension, try GTK icon theme
-        icon_theme = Gtk.IconTheme.get_default()
+        # Check if it's a path within the distro
+        if icon_name.startswith('/'):
+            # It might be a path inside the distro
+            distro_relative_path = icon_name.lstrip('/')
+            distro_full_path = os.path.join(self.DISTRO_PATH, distro_relative_path)
+            if os.path.isfile(distro_full_path):
+                if VERBOSE_ICON_SEARCH:
+                    print(f"Found icon in distro path: {distro_full_path}")
+                ICON_CACHE[icon_name] = distro_full_path
+                return distro_full_path
+            
+        # If no extension provided, try both PNG and SVG
+        icon_path = None
+        found_icon = None
+        
+        # Search in explicitly defined paths first for better performance
+        search_paths = []
+        
+        # Try in the current theme directory first
+        current_theme_dir = os.path.join(self.USER_ICONS_DIR, self.current_theme_name)
+        if os.path.exists(current_theme_dir):
+            search_paths.append(current_theme_dir)
+            
+        # Then try system icon theme
+        system_theme_dir = os.path.join(self.SYSTEM_ICONS_DIR, self.current_theme_name)
+        if os.path.exists(system_theme_dir):
+            search_paths.append(system_theme_dir)
+        
+        # Try distro's icon theme
+        distro_theme_dir = os.path.join(self.DISTRO_PATH, "usr/share/icons", self.current_theme_name)
+        if os.path.exists(distro_theme_dir):
+            search_paths.append(distro_theme_dir)
+            
+        # Add default fallback themes
+        for theme_name in ["hicolor", "Adwaita"]:
+            # User theme
+            user_theme = os.path.join(self.USER_ICONS_DIR, theme_name)
+            if os.path.exists(user_theme):
+                search_paths.append(user_theme)
+            
+            # System theme
+            system_theme = os.path.join(self.SYSTEM_ICONS_DIR, theme_name)
+            if os.path.exists(system_theme):
+                search_paths.append(system_theme)
+            
+            # Distro theme
+            distro_theme = os.path.join(self.DISTRO_PATH, "usr/share/icons", theme_name)
+            if os.path.exists(distro_theme):
+                search_paths.append(distro_theme)
+        
+        # Try distro's pixmaps folder
+        distro_pixmaps = os.path.join(self.DISTRO_PATH, "usr/share/pixmaps")
+        if os.path.exists(distro_pixmaps):
+            search_paths.append(distro_pixmaps)
+        
+        if VERBOSE_ICON_SEARCH:
+            print(f"Searching in {len(search_paths)} icon paths")
+        
+        # Common icon sizes and contexts
+        icon_sizes = ["scalable", "256x256", "128x128", "96x96", "64x64", "48x48", "32x32", "24x24", "22x22", "16x16"]
+        icon_contexts = ["apps", "places", "mimetypes", "devices", "actions", "categories"]
+        
+        # Search for the icon in our preferred paths
+        for path in search_paths:
+            # First check directly in the path (for pixmaps or other flat directories)
+            for ext in [".png", ".svg", ".xpm", ""]:
+                icon_file = os.path.join(path, f"{icon_name}{ext}")
+                if os.path.exists(icon_file):
+                    if VERBOSE_ICON_SEARCH:
+                        print(f"Found icon in path directly: {icon_file}")
+                    ICON_CACHE[icon_name] = icon_file
+                    return icon_file
+            
+            # Then check in subdirectories
+            for context in icon_contexts:
+                for size in icon_sizes:
+                    # Check common directory structures
+                    for structure in [f"{size}/{context}", f"{context}/{size}", context]:
+                        check_path = os.path.join(path, structure)
+                        if os.path.exists(check_path):
+                            # Try different extensions
+                            for ext in [".png", ".svg", ".xpm", ""]:
+                                icon_file = os.path.join(check_path, f"{icon_name}{ext}")
+                                if os.path.exists(icon_file):
+                                    if VERBOSE_ICON_SEARCH:
+                                        print(f"Found icon in theme structure: {icon_file}")
+                                    ICON_CACHE[icon_name] = icon_file
+                                    return icon_file
+        
+        if VERBOSE_ICON_SEARCH:
+            print(f"Icon not found in file paths, falling back to GTK theme system")
+        
+        # Try to get the file path from the icon theme
+        return self.get_icon_path_from_theme(icon_name)
+        
+    def get_icon_path_from_theme(self, icon_name):
+        """Try to get the actual file path from the icon theme"""
+        icon_theme = self.icon_theme
         
         # Check if the icon exists in the theme
         if icon_theme.has_icon(icon_name):
+            if VERBOSE_ICON_SEARCH:
+                print(f"Found icon in GTK theme system: {icon_name}")
+            
+            # Try to get the icon path
+            try:
+                icon_info = icon_theme.lookup_icon(icon_name, 24, 0)
+                if icon_info:
+                    path = icon_info.get_filename()
+                    if path and os.path.exists(path):
+                        ICON_CACHE[icon_name] = path
+                        return path
+            except Exception as e:
+                if VERBOSE_ICON_SEARCH:
+                    print(f"Error getting icon path: {e}")
+            
+            # If we can't get the file path, return the name for symbolic icon
             ICON_CACHE[icon_name] = icon_name
             return icon_name
             
@@ -532,18 +757,139 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
         
         for variation in variations:
             if icon_theme.has_icon(variation):
+                if VERBOSE_ICON_SEARCH:
+                    print(f"Found icon with variation: {variation}")
+                
+                # Try to get the file path
+                try:
+                    icon_info = icon_theme.lookup_icon(variation, 24, 0)
+                    if icon_info:
+                        path = icon_info.get_filename()
+                        if path and os.path.exists(path):
+                            ICON_CACHE[icon_name] = path
+                            return path
+                except Exception as e:
+                    if VERBOSE_ICON_SEARCH:
+                        print(f"Error getting icon path: {e}")
+                
+                # If we can't get the file path, return the variation name
                 ICON_CACHE[icon_name] = variation
                 return variation
                 
-        # Fallback if no icon was found
+        # Try to extract app name from icon name for better matching
+        base_name = os.path.basename(icon_name).lower()
+        if icon_theme.has_icon(base_name):
+            if VERBOSE_ICON_SEARCH:
+                print(f"Found icon using base name: {base_name}")
+            
+            # Try to get the file path
+            try:
+                icon_info = icon_theme.lookup_icon(base_name, 24, 0)
+                if icon_info:
+                    path = icon_info.get_filename()
+                    if path and os.path.exists(path):
+                        ICON_CACHE[icon_name] = path
+                        return path
+            except Exception as e:
+                if VERBOSE_ICON_SEARCH:
+                    print(f"Error getting icon path: {e}")
+            
+            # If we can't get the file path, return the base_name
+            ICON_CACHE[icon_name] = base_name
+            return base_name
+            
+        # Try icon based on potential app name
+        if '-' in base_name:
+            app_name = base_name.split('-')[0]
+            if icon_theme.has_icon(app_name):
+                if VERBOSE_ICON_SEARCH:
+                    print(f"Found icon using app name prefix: {app_name}")
+                
+                # Try to get the file path
+                try:
+                    icon_info = icon_theme.lookup_icon(app_name, 24, 0)
+                    if icon_info:
+                        path = icon_info.get_filename()
+                        if path and os.path.exists(path):
+                            ICON_CACHE[icon_name] = path
+                            return path
+                except Exception as e:
+                    if VERBOSE_ICON_SEARCH:
+                        print(f"Error getting icon path: {e}")
+                
+                # If we can't get the file path, return the app_name
+                ICON_CACHE[icon_name] = app_name
+                return app_name
+        
+        # If all else fails, try a generic category icon
+        fallback_icons = ["application-x-executable", "applications-other", "system-run"]
+        for fallback in fallback_icons:
+            if icon_theme.has_icon(fallback):
+                if VERBOSE_ICON_SEARCH:
+                    print(f"Using fallback icon: {fallback}")
+                
+                # Try to get the file path
+                try:
+                    icon_info = icon_theme.lookup_icon(fallback, 24, 0)
+                    if icon_info:
+                        path = icon_info.get_filename()
+                        if path and os.path.exists(path):
+                            ICON_CACHE[icon_name] = path
+                            return path
+                except Exception as e:
+                    if VERBOSE_ICON_SEARCH:
+                        print(f"Error getting icon path: {e}")
+                
+                # If we can't get the file path, return the fallback
+                ICON_CACHE[icon_name] = fallback
+                return fallback
+                
+        # Ultimate fallback
+        if VERBOSE_ICON_SEARCH:
+            print(f"No icon found at all, using ultimate fallback")
+            
+        # Try to get the ultimate fallback path
+        fallback = self.get_fallback_icon_path("application-x-executable")
+        if fallback:
+            ICON_CACHE[icon_name] = fallback
+            return fallback
+            
+        # Last resort, return the name
         ICON_CACHE[icon_name] = "application-x-executable"
         return "application-x-executable"
+        
+    def get_fallback_icon_path(self, icon_name):
+        """Try to get the file path for a fallback icon"""
+        try:
+            icon_theme = self.icon_theme
+            icon_info = icon_theme.lookup_icon(icon_name, 24, 0)
+            if icon_info:
+                path = icon_info.get_filename()
+                if path and os.path.exists(path):
+                    return path
+        except Exception as e:
+            if VERBOSE_ICON_SEARCH:
+                print(f"Error getting fallback icon path: {e}")
+        return None
 
     def on_refresh_clicked(self, button):
         """Handle refresh button click"""
         if not self.is_loading:
             # Clear search entry
             self.search_entry.set_text("")
+            
+            # Show appropriate status based on mode and settings
+            if self.add_radio.get_active():
+                show_added_apps = self.app.show_added_apps
+                mode_text = "add"
+                if show_added_apps:
+                    self.status_label.set_text(f"Loading {mode_text} applications (including already added)...")
+                else:
+                    self.status_label.set_text(f"Loading {mode_text} applications...")
+            else:
+                mode_text = "remove"
+                self.status_label.set_text(f"Loading {mode_text} applications...")
+            
             self.start_background_task(self.load_apps)
 
     def on_mode_changed(self, button):
@@ -561,6 +907,14 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
             self.absolute_path_action.set_enabled(is_add_mode)
             self.nogpu_action.set_enabled(is_add_mode)
             
+            # Enable/disable show-added-apps action (only relevant in Add mode)
+            show_added_apps_action = self.app.lookup_action("show-added-apps")
+            if show_added_apps_action:
+                # First set the correct state before enabling/disabling
+                # This preserves the toggle state when switching back to Add mode
+                show_added_apps_action.set_state(GLib.Variant.new_boolean(self.app.show_added_apps))
+                show_added_apps_action.set_enabled(is_add_mode)
+            
             # Reset search toggle button 
             self.search_toggle_button.set_active(False)
             # Ensure search box is hidden
@@ -574,7 +928,14 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
             self.liststore.clear()
             
             # Show loading indication with the current mode
-            self.status_label.set_text(f"Loading {mode.lower()} applications...")
+            if is_add_mode:
+                show_added_apps = self.app.show_added_apps
+                if show_added_apps:
+                    self.status_label.set_text(f"Loading {mode.lower()} applications (including already added)...")
+                else:
+                    self.status_label.set_text(f"Loading {mode.lower()} applications...")
+            else:
+                self.status_label.set_text(f"Loading {mode.lower()} applications...")
             
             # Ensure the spinner is visible
             self.spinner.start()
@@ -1017,12 +1378,19 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
         
         # Create a new list to store filtered results
         filtered_apps = []
+        skipped_count = 0  # Count of apps skipped due to already being added
         
         # Get the appropriate directory based on mode
         if is_add_mode:
             apps_dir = os.path.join(self.DISTRO_PATH, "usr/share/applications")
+            # Get added applications using the helper method
+            added_apps = self.get_added_applications()
         else:
             apps_dir = self.ADDED_DIR
+            added_apps = {}  # Empty dict for remove mode
+        
+        # Get the show_added_apps setting
+        show_added_apps = self.app.show_added_apps
         
         # Perform the search
         for root, _, files in os.walk(apps_dir):
@@ -1036,16 +1404,32 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
                             app_name = app_name.replace("_", " ").strip()
                             
                             # Check if the app matches the search query
-                            if query.lower() in app_name.lower() or query.lower() in file.lower():
+                            # Also search in the description
+                            description = desktop_entry.get('comment') or ""
+                            if (query.lower() in app_name.lower() or 
+                                query.lower() in file.lower() or 
+                                query.lower() in description.lower()):
+                                
+                                # Skip if app is already added (in Add mode) and show_added_apps is False
+                                if is_add_mode and added_apps and not show_added_apps:
+                                    filename = os.path.basename(filepath)
+                                    if filename in added_apps and app_name.lower() == added_apps[filename]:
+                                        skipped_count += 1
+                                        continue
+                                
                                 icon = desktop_entry.get('icon') or "application-x-executable"
                                 exec_cmd = desktop_entry.get('exec') or ""
                                 
                                 # Check if the item was previously selected
                                 is_selected = app_name in selected_items
                                 
-                                filtered_apps.append((is_selected, app_name, filepath, icon, exec_cmd))
+                                filtered_apps.append((is_selected, app_name, filepath, icon, exec_cmd, description))
                     except Exception as e:
                         print(f"Error processing {filepath}: {str(e)}")
+        
+        # Log how many apps were filtered out
+        if is_add_mode and skipped_count > 0:
+            print(f"Search: Filtered out {skipped_count} applications that are already added")
         
         # Update the list store with filtered results
         self.liststore.clear()
@@ -1086,6 +1470,117 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
             # Print debug info
             print("Search bar deactivated")
 
+    def setup_icon_theme(self):
+        """Setup icon theme to use system and custom icon packs"""
+        self.icon_theme = Gtk.IconTheme.get_default()
+        
+        # Add Termux system icons path
+        if os.path.exists(self.SYSTEM_ICONS_DIR):
+            self.icon_theme.append_search_path(self.SYSTEM_ICONS_DIR)
+            
+        # Add user's custom icon pack path
+        if os.path.exists(self.USER_ICONS_DIR):
+            self.icon_theme.append_search_path(self.USER_ICONS_DIR)
+        
+        # Add distro's icon paths if available
+        distro_icon_dir = os.path.join(self.DISTRO_PATH, "usr/share/icons")
+        if os.path.exists(distro_icon_dir):
+            self.icon_theme.append_search_path(distro_icon_dir)
+        
+        # Get current icon theme name
+        self.current_theme_name = self.detect_current_icon_theme()
+        
+        # Add specific paths for Qogir-dark theme
+        if self.current_theme_name == "Qogir-dark":
+            for base_path in [self.USER_ICONS_DIR, self.SYSTEM_ICONS_DIR, os.path.join(self.DISTRO_PATH, "usr/share/icons")]:
+                qogir_path = os.path.join(base_path, "Qogir-dark")
+                if os.path.exists(qogir_path):
+                    self.icon_theme.append_search_path(qogir_path)
+                
+                # Also try regular Qogir as fallback
+                qogir_reg_path = os.path.join(base_path, "Qogir")
+                if os.path.exists(qogir_reg_path):
+                    self.icon_theme.append_search_path(qogir_reg_path)
+
+    def detect_current_icon_theme(self):
+        """Detect the currently active icon theme"""
+        # First try to get from GTK settings
+        settings = Gtk.Settings.get_default()
+        if settings:
+            theme_name = settings.get_property("gtk-icon-theme-name")
+            if theme_name:
+                return theme_name
+        
+        # Check if there's a .gtkrc-2.0 file in the home directory
+        gtkrc_path = os.path.expanduser("~/.gtkrc-2.0")
+        if os.path.exists(gtkrc_path):
+            try:
+                with open(gtkrc_path, "r") as f:
+                    for line in f:
+                        if "gtk-icon-theme-name" in line:
+                            parts = line.split("=")
+                            if len(parts) > 1:
+                                theme = parts[1].strip().strip('"').strip("'")
+                                return theme
+            except Exception as e:
+                print(f"Error reading gtkrc: {e}")
+        
+        # Check XDG config
+        xdg_config = os.path.expanduser("~/.config/gtk-3.0/settings.ini")
+        if os.path.exists(xdg_config):
+            try:
+                with open(xdg_config, "r") as f:
+                    for line in f:
+                        if "gtk-icon-theme-name" in line:
+                            parts = line.split("=")
+                            if len(parts) > 1:
+                                theme = parts[1].strip().strip('"').strip("'")
+                                return theme
+            except Exception as e:
+                print(f"Error reading gtk3 settings: {e}")
+        
+        # Return a default theme
+        return "hicolor"
+
+    def icon_data_func(self, column, cell, model, iter, data=None):
+        """Data function for the icon column"""
+        icon_name = model.get_value(iter, 3)  # Get icon from column 3
+        if not icon_name:
+            # No icon, set blank pixbuf
+            cell.set_property("pixbuf", None)
+            return
+            
+        try:
+            # First try to load from a file path
+            if os.path.isfile(icon_name):
+                pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_size(icon_name, 24, 24)
+                cell.set_property("pixbuf", pixbuf)
+                return
+            
+            # If not a file, try to load from theme
+            icon_theme = self.icon_theme
+            if icon_theme.has_icon(icon_name):
+                try:
+                    pixbuf = icon_theme.load_icon(icon_name, 24, 0)
+                    cell.set_property("pixbuf", pixbuf)
+                    return
+                except Exception as e:
+                    print(f"Error loading icon '{icon_name}' from theme: {e}")
+            
+            # Try fallback to application-x-executable
+            try:
+                pixbuf = icon_theme.load_icon("application-x-executable", 24, 0)
+                cell.set_property("pixbuf", pixbuf)
+                return
+            except:
+                pass
+                
+            # Last resort - set icon name
+            cell.set_property("icon-name", icon_name)
+        except Exception as e:
+            print(f"Error setting icon for '{icon_name}': {e}")
+            cell.set_property("icon-name", "application-x-executable")
+
 class Add2MenuApplication(Gtk.Application):
     def __init__(self):
         Gtk.Application.__init__(
@@ -1097,6 +1592,7 @@ class Add2MenuApplication(Gtk.Application):
         self.no_sandbox = False  # Default setting for no-sandbox option
         self.use_absolute_path = False  # Default setting for absolute path option
         self.nogpu = False  # Default setting for nogpu option
+        self.show_added_apps = False  # Default setting for show-added-apps option
 
     def do_startup(self):
         Gtk.Application.do_startup(self)
@@ -1129,6 +1625,12 @@ class Add2MenuApplication(Gtk.Application):
         nogpu_action.connect("change-state", self.on_nogpu_toggled)
         self.add_action(nogpu_action)
         
+        # Add show-added-apps toggle action
+        show_added_apps_action = Gio.SimpleAction.new_stateful("show-added-apps", None, 
+                                                             GLib.Variant.new_boolean(False))
+        show_added_apps_action.connect("change-state", self.on_show_added_apps_toggled)
+        self.add_action(show_added_apps_action)
+        
         # Add keyboard accelerators
         self.set_accels_for_action("app.quit", ["<Ctrl>Q", "<Ctrl>W"])
         
@@ -1158,7 +1660,7 @@ class Add2MenuApplication(Gtk.Application):
         
         about_dialog = Gtk.AboutDialog(transient_for=self.window, modal=True)
         about_dialog.set_program_name("Add To Menu")
-        about_dialog.set_version("2.1")
+        about_dialog.set_version("2.2")
         about_dialog.set_comments("A utility to add Linux applications to Termux desktop")
         about_dialog.set_copyright(f"© {current_year} Termux-desktop (sabamdarif)")
         about_dialog.set_license_type(Gtk.License.GPL_3_0)
@@ -1183,19 +1685,18 @@ class Add2MenuApplication(Gtk.Application):
         action.set_state(value)
         self.nogpu = value.get_boolean()
 
-def main():
-    # Make GTK use system's preferred theme
-    settings = Gtk.Settings.get_default()
-    if settings:
-        settings.set_property("gtk-application-prefer-dark-theme", 
-                             Gtk.Settings.get_default().get_property("gtk-application-prefer-dark-theme"))
-    
-    # Create and run the application
-    app = Add2MenuApplication()
-    return app.run(sys.argv)
+    def on_show_added_apps_toggled(self, action, value):
+        """Handle show-added-apps toggle"""
+        action.set_state(value)
+        self.show_added_apps = value.get_boolean()
+        
+        # Refresh the application list to apply the new filter setting,
+        # but only if we are in the Add mode where it's relevant
+        if self.window and self.window.add_radio.get_active():
+            self.window._force_refresh()
 
 if __name__ == "__main__":
     try:
-        sys.exit(main())
+        main()
     except KeyboardInterrupt:
         sys.exit(0)
