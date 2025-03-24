@@ -3879,9 +3879,11 @@ function change_hw() {
 		    hw_config
 		    if [[ "$gui_mode" == "termux_x11" ]]; then
 		        setup_tx11start_cmd
+                        some_fixes
 		    elif [[ "$gui_mode" == "both" ]]; then
 		        setup_tx11start_cmd
 		        setup_vncstart_cmd
+                        some_fixes
 		    fi
 		    if [[ "$distro_add_answer" == "y" ]]; then
 		        sed -i "s|selected_pd_hw_method=\"[^\"]*\"|selected_pd_hw_method=\"$pd_hw_method\"|" "$PREFIX/bin/pdrun"
