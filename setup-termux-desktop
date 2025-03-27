@@ -178,7 +178,12 @@ function download_file() {
 		if [[ ! -s "$dest" ]]; then
 			check_and_delete "$dest"
 		fi
-        wget --tries=5 --timeout=15 --retry-connrefused -O "$dest" "$url"
+
+		if command -v wget &>/dev/null; then
+			wget --tries=5 --timeout=15 --retry-connrefused -O "$dest" "$url"
+		else
+			curl -# -L "$url" -o "$dest"
+		fi
 
         if [[ -f "$dest" && -s "$dest" ]]; then
             successful_attempt=$attempt
@@ -235,11 +240,11 @@ function check_and_restore() {
 function detact_package_manager() {
 	source "/data/data/com.termux/files/usr/bin/termux-setup-package-manager"
 	if [[ "$TERMUX_APP_PACKAGE_MANAGER" == "apt" ]]; then
-	PACKAGE_MANAGER="apt"
+		PACKAGE_MANAGER="apt"
 	elif [[ "$TERMUX_APP_PACKAGE_MANAGER" == "pacman" ]]; then
-	PACKAGE_MANAGER="pacman"
+		PACKAGE_MANAGER="pacman"
 	else
-	print_failed "${C} Could not detact your package manager, Switching To ${C}pkg ${W}" 
+		print_failed "${C} Could not detact your package manager, Switching To ${C}pkg ${W}" 
 	fi
 	print_log "$PACKAGE_MANAGER"
 }
@@ -290,17 +295,17 @@ function package_install_and_check() {
                     echo "${R}[${C}-${R}]${G}${BOLD} Installing matched package: ${C}$pkgs ${W}"
                     if dpkg -s "$pkgs" >/dev/null 2>&1; then
                         log_info "Package already installed" "Package: $pkgs"
-                        pkg reinstall "$pkgs" -y
+                        apt reinstall "$pkgs" -y
                     else
-                        pkg install "$pkgs" -y
+                        apt install "$pkgs" -y
                     fi
                 done
             else
                 if dpkg -s "$package_name" >/dev/null 2>&1; then
                     log_info "Package already installed" "Package: $package_name"
-                    pkg reinstall "$package_name" -y
+                    apt reinstall "$package_name" -y
                 else
-                    pkg install "$package_name" -y
+                    apt install "$package_name" -y
                 fi
             fi
         fi
@@ -330,25 +335,25 @@ function package_check_and_remove() {
                 packages=$(dpkg --get-selections | awk '{print $1}' | grep -E "${package_name//\*/.*}")
             fi
 
-            for pkg in $packages; do
-                echo "${R}[${C}-${R}]${G}${BOLD} Removing matched package: ${C}$pkg ${W}"
+            for package in $packages; do
+                echo "${R}[${C}-${R}]${G}${BOLD} Removing matched package: ${C}$package ${W}"
                 if [[ "$PACKAGE_MANAGER" == "pacman" ]]; then
-                    if pacman -Qi "$pkg" >/dev/null 2>&1; then
-                        pacman -Rnds --noconfirm "$pkg"
+                    if pacman -Qi "$package" >/dev/null 2>&1; then
+                        pacman -Rnds --noconfirm "$package"
                         if [ $? -eq 0 ]; then
-                            print_success "$pkg removed successfully"
+                            print_success "$package removed successfully"
 							print_log "Processing wildcard pattern: $package_name"
                         else
-                            print_failed "Failed to remove $pkg ${W}"
+                            print_failed "Failed to remove $package ${W}"
                         fi
                     fi
                 else
                     if dpkg -s "$pkg" >/dev/null 2>&1; then
                         apt autoremove "$pkg" -y
                         if [ $? -eq 0 ]; then
-                            print_success "$pkg removed successfully"
+                            print_success "$package removed successfully"
                         else
-                            print_failed "Failed to remove $pkg ${W}"
+                            print_failed "Failed to remove $package ${W}"
                         fi
                     fi
                 fi
@@ -718,14 +723,14 @@ function questions_theme_select() {
     cd "$HOME" || return
     echo "${R}[${C}-${R}]${G} Downloading list of available styles...${W}"
     check_and_delete "${current_path}/styles.md"
-    download_file "${current_path}/styles.md" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/${de_name}_styles.md"
+    download_file "${current_path}/styles.md" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/readmes/${de_name}_styles.md"
 
     banner
 
     if [[ -n "$subfolder_count_value" ]]; then
         echo "${R}[${C}-${R}]${G} Check the $de_name styles preview${W}"
         echo
-        echo "${R}[${C}-${R}]${G} From Here:- ${B}https://github.com/sabamdarif/termux-desktop/blob/main/${de_name}_styles.md${W}"
+        echo "${R}[${C}-${R}]${G} From Here:- ${B}https://github.com/sabamdarif/termux-desktop/blob/main/readmes/${de_name}_styles.md${W}"
         echo
         echo "${R}[${C}-${R}]${G} Number of available custom styles for $de_name is: ${C}${subfolder_count_value}${W}"
         echo
@@ -760,7 +765,7 @@ function questions_theme_select() {
 		        fi
 		        echo "${R}[${C}-${R}]${G} Check the $de_name styles section in GitHub${W}"
 		        echo
-		        echo "${R}[${C}-${R}]${B} https://github.com/sabamdarif/termux-desktop/blob/main/${de_name}_styles.md${W}"
+		        echo "${R}[${C}-${R}]${B} https://github.com/sabamdarif/termux-desktop/blob/main/readmes/${de_name}_styles.md${W}"
 		        echo
 		    fi
 		done
@@ -813,10 +818,6 @@ function ask_to_chose_de() {
 	icons_folder="$HOME/.icons"
 	de_startup="mate-session"
 	fi
-	print_to_config "de_startup"
-	print_to_config "de_name"
-	print_to_config "themes_folder"
-	print_to_config "icons_folder"
 	banner
 	questions_theme_select
 }
@@ -898,7 +899,7 @@ function questions_setup_manual() {
 	confirmation_y_or_n "Do you want to use my zsh config" zsh_answer
 	banner
 	echo
-	echo "${R}[${C}-${R}]${B} Know More About Terminal Utility:- https://github.com/sabamdarif/termux-desktop/blob/main/see-more.md#hammer_and_wrenchlearn-about-terminal-utilities${W}"
+	echo "${R}[${C}-${R}]${B} Know More About Terminal Utility:- https://github.com/sabamdarif/termux-desktop/blob/main/readmes/see-more.md#hammer_and_wrenchlearn-about-terminal-utilities${W}"
 	echo
 	confirmation_y_or_n "Do you want install some terminal utility to make better terminal exprience" terminal_utility_setup_answer
 	banner
@@ -978,12 +979,12 @@ It will help you to install apps that aren't available in Termux.
 So it will set up a Linux distro container and add options to install those apps.
 Also, you can launch those installed apps from Termux like other apps.
 "
-echo "Learn More:- https://github.com/sabamdarif/termux-desktop/blob/main/proot-container.md"
+echo "Learn More:- https://github.com/sabamdarif/termux-desktop/blob/main/readmes/proot-container.md"
 echo
 	confirmation_y_or_n "Do you want to add a Linux container" distro_add_answer
 if [[ "$enable_hw_acc" == "y" ]]; then
 	banner
-	if ! type -p pacman >/dev/null 2>&1; then
+	if ! command -v pacman &>/dev/null; then
 	echo "${R}[${C}-${R}]${R}${BOLD} Read This Carefully:-${W}"
 	echo -e "
 ${R}[${C}-${R}]${G}${BOLD} Mesa Vulkan ICD-Wrapper ${W}
@@ -1037,7 +1038,6 @@ function setup_device_gpu_model() {
 	else
 		device_gpu_model_name="$gpu_name"
 	fi
-	print_to_config "device_gpu_model_name"
 
 }
 
@@ -1098,7 +1098,7 @@ function exp_termux_gl_hw_support() {
 	banner
 	echo "${R}[${C}-${R}]${G}${BOLD} First Read This${W}"
 	echo
-	echo "${R}[${C}-${R}]${B} This:- https://github.com/sabamdarif/termux-desktop/blob/main/hw-acceleration.md${W}"
+	echo "${R}[${C}-${R}]${B} This:- https://github.com/sabamdarif/termux-desktop/blob/main/readmes/hw-acceleration.md${W}"
 	echo
 	echo "${R}[${C}-${R}]${G}${BOLD} It will be used to enable opengl support${W}"
 	echo
@@ -1156,7 +1156,7 @@ function hw_questions() {
 	else
     echo "${R}[${C}-${R}]${G}${BOLD} First Read This${W}"
     echo
-    echo "${R}[${C}-${R}]${B} This:- https://github.com/sabamdarif/termux-desktop/blob/main/hw-acceleration.md${W}"
+    echo "${R}[${C}-${R}]${B} This:- https://github.com/sabamdarif/termux-desktop/blob/main/readmes/hw-acceleration.md${W}"
     echo
     echo "${R}[${C}-${R}]${G}${BOLD} Select Hardware Acceleration API${W}"
     echo
@@ -1213,35 +1213,11 @@ function choose_distro() {
 
 }
 
-function distro_questions() {
-	banner
-	choose_distro
-	banner
-	confirmation_y_or_n "Do you want to configure audio support for Linux distro container" pd_audio_config_answer
-
-	if [[ "$distro_add_answer" == "y" ]] && [[ "$zsh_answer" == "y" ]]; then
-	banner
-	confirmation_y_or_n "Do you want to Configuring Zsh also for Linux distro container" distro_zsh_answer
-	else
-	distro_zsh_answer="$zsh_answer"
-	fi
-
-	banner
-	confirmation_y_or_n "Do you want to create a normal user account ${C}(Recomended)" pd_useradd_answer
+function setup_user_name_only() {
 	echo
-
-	if [[ "$pd_useradd_answer" == "n" ]]; then
-	echo "${R}[${C}-${R}]${G} Skiping User Account Setup${W}"
-	else
-	echo "${R}[${C}-${R}]${G}${BOLD} Select user account type${W}"
+	echo "${R}[${C}-${R}]${G}${BOLD} Create user account${W}"
 	echo
-	echo "${Y}1. User with no password confirmation${W}"
-	echo
-	echo "${Y}2. User with password confirmation${W}"
-	echo
-	select_an_option 2 1 pd_pass_type
-	    if [[ "$pd_pass_type" == "1" ]]; then
-	    while true; do
+	while true; do
         echo " "
         echo "${R}[${C}-${R}]${G} Default Password Will Be Set, Because Sometimes It Might Ask You For Password${W}"
         echo
@@ -1279,60 +1255,92 @@ function distro_questions() {
         	esac
     	done
 	    print_to_config "user_name"
-	    elif [[ "$pd_pass_type" == "2" ]]; then
-	    echo
-	    echo "${R}[${C}-${R}]${G}${BOLD} Create user account${W}"
-	    echo
-	    while true; do
-    		while true; do
-    		    read -r -p "${R}[${C}-${R}]${G}Input username [Lowercase]: ${W}" user_name
-    		    if [[ -z "$user_name" ]]; then
-        	        print_warn "You can't leave the username empty. Please enter a valid username."
-				elif [[ "$user_name" =~ \  ]]; then
-					print_warn "Username cannot contain spaces. Please enter a valid username."
-        	    else
-        	        break
-        	    fi
-    		done
-    		echo
-	    	while true; do
-	    	    read -r -p "${R}[${C}-${R}]${G}Input Password (Minimum 4 characters): ${W}" pass
-	    	    if [[ -z "$pass" ]]; then
-	    	        print_warn "You can't leave the password empty. Please enter a valid password."
-				elif [[ "$user_name" =~ \  ]]; then
-					print_warn "Password cannot contain spaces. Please enter a valid username."
-	    	    elif [[ ${#pass} -lt 4 ]]; then
-	    	        print_warn "Password must be at least 4 characters long. Please enter a longer password."
-	    	    else
-	    	        break
-	    	    fi
-	    	done
+}
 
-	    echo
-	    read -r -p "${R}[${C}-${R}]${Y}Do you want to continue with username ${C}$user_name ${Y}and password ${C}$pass${Y} ? (y/n) : ${W}" choice
-	    echo
-	    choice="${choice:-y}"
-	    echo
-	    print_success "Continuing with answer: $choice"
-	    echo ""
-	    sleep 0.2
-
-	    	case $choice in
-	    	    [yY]* )
-	    	        print_success "Continuing with username ${C}$user_name ${G}and password ${C}$pass"
-	    	        break;;
-	    	    [nN]* )
-	    	        echo "${R}[${C}-${R}]${G}Please provide username and password again.${W}"
-	    	        echo
-	    	        ;;
-	    	    * )
-	    	        print_failed "Invalid input, Please enter y or n"
-	    	        ;;
-	    	esac
+function setup_user_name_and_pass() {
+	echo
+	echo "${R}[${C}-${R}]${G}${BOLD} Create user account${W}"
+	echo
+	while true; do
+    	while true; do
+    	    read -r -p "${R}[${C}-${R}]${G}Input username [Lowercase]: ${W}" user_name
+    	    if [[ -z "$user_name" ]]; then
+    	        print_warn "You can't leave the username empty. Please enter a valid username."
+			elif [[ "$user_name" =~ \  ]]; then
+				print_warn "Username cannot contain spaces. Please enter a valid username."
+    	    else
+    	        break
+    	    fi
+    	done
+    	echo
+		while true; do
+		    read -r -p "${R}[${C}-${R}]${G}Input Password (Minimum 4 characters): ${W}" pass
+		    if [[ -z "$pass" ]]; then
+		        print_warn "You can't leave the password empty. Please enter a valid password."
+			elif [[ "$user_name" =~ \  ]]; then
+				print_warn "Password cannot contain spaces. Please enter a valid username."
+		    elif [[ ${#pass} -lt 4 ]]; then
+		        print_warn "Password must be at least 4 characters long. Please enter a longer password."
+		    else
+		        break
+		    fi
 		done
+	echo
+	read -r -p "${R}[${C}-${R}]${Y}Do you want to continue with username ${C}$user_name ${Y}and password ${C}$pass${Y} ? (y/n) : ${W}" choice
+	echo
+	choice="${choice:-y}"
+	echo
+	print_success "Continuing with answer: $choice"
+	echo ""
+	sleep 0.2
+		case $choice in
+		    [yY]* )
+		        print_success "Continuing with username ${C}$user_name ${G}and password ${C}$pass"
+		        break;;
+		    [nN]* )
+		        echo "${R}[${C}-${R}]${G}Please provide username and password again.${W}"
+		        echo
+		        ;;
+		    * )
+		        print_failed "Invalid input, Please enter y or n"
+		        ;;
+		esac
+	done
+	print_to_config "user_name"
+	print_to_config "pass"
+}
 
-	    print_to_config "user_name"
-	    print_to_config "pass"
+function distro_questions() {
+	banner
+	choose_distro
+	banner
+	confirmation_y_or_n "Do you want to configure audio support for Linux distro container" pd_audio_config_answer
+
+	if [[ "$distro_add_answer" == "y" ]] && [[ "$zsh_answer" == "y" ]]; then
+	banner
+	confirmation_y_or_n "Do you want to Configuring Zsh also for Linux distro container" distro_zsh_answer
+	else
+	distro_zsh_answer="$zsh_answer"
+	fi
+
+	banner
+	confirmation_y_or_n "Do you want to create a normal user account ${C}(Recomended)" pd_useradd_answer
+	echo
+
+	if [[ "$pd_useradd_answer" == "n" ]]; then
+	echo "${R}[${C}-${R}]${G} Skiping User Account Setup${W}"
+	else
+	echo "${R}[${C}-${R}]${G}${BOLD} Select user account type${W}"
+	echo
+	echo "${Y}1. User with no password confirmation${W}"
+	echo
+	echo "${Y}2. User with password confirmation${W}"
+	echo
+	select_an_option 2 1 pd_pass_type
+	    if [[ "$pd_pass_type" == "1" ]]; then
+			setup_user_name_only
+	    elif [[ "$pd_pass_type" == "2" ]]; then
+			setup_user_name_and_pass
 	    fi
 
 	fi
@@ -1647,35 +1655,7 @@ ${W}"
 		check_and_delete "configuration.conf"
 		# create username for distro
 		banner
-		echo "${R}[${C}-${R}]${G} Please type the username for the linux distro container${W}"
-		echo
-		while true; do
-			echo " "
-			echo "${R}[${C}-${R}]${G} Default Password Password for ubuntu is:-${C}root (if needed)${W}"
-			echo
-			read -r -p "${R}[${C}-${R}]${G} Input username [Lowercase]: ${W}" user_name
-			echo
-        	local choice
-			read -r -p "${R}[${C}-${R}]${Y} Do you want to continue with username ${C}$user_name ${Y}? (y/n) : ${W}" choice
-			echo
-			choice="${choice:-y}"
-			echo
-			print_success "Continuing with answer: $choice"
-			sleep 0.2
-			case $choice in
-			[yY]* )
-			print_success "Continuing with username ${C}$user_name"
-			break;;
-			[nN]* )
-			echo "${R}[${C}-${R}]${G}Please provide username again.${W}"
-			echo
-			;;
-			* )
-			print_failed "Invalid input, Please enter y or n"
-			;;
-			esac
-		done
-		print_to_config "user_name"
+		setup_user_name_only
 	elif [[ "$install_type_answer" == "2" ]]; then
 
 ######################################################################
@@ -1688,35 +1668,7 @@ ${W}"
 		check_and_delete "configuration.conf"
 		# create username for distro
 		banner
-		echo "${R}[${C}-${R}]${G} Please type the username for the linux distro container${W}"
-		echo
-		while true; do
-			echo " "
-			echo "${R}[${C}-${R}]${G} Default Password Password for ubuntu is:-${C}root (if needed)${W}"
-			echo
-			read -r -p "${R}[${C}-${R}]${G} Input username [Lowercase]: ${W}" user_name
-			echo
-        	local choice
-			read -r -p "${R}[${C}-${R}]${Y} Do you want to continue with username ${C}$user_name ${Y}? (y/n) : ${W}" choice
-			echo
-			choice="${choice:-y}"
-			echo
-			print_success "Continuing with answer: $choice"
-			sleep 0.2
-			case $choice in
-			[yY]* )
-			print_success "Continuing with username ${C}$user_name"
-			break;;
-			[nN]* )
-			echo "${R}[${C}-${R}]${G}Please provide username again.${W}"
-			echo
-			;;
-			* )
-			print_failed "Invalid input, Please enter y or n"
-			;;
-			esac
-		done
-		print_to_config "user_name"
+		setup_user_name_only
 	elif [[ "$install_type_answer" == "3" ]]; then
 		questions_setup_manual
 	fi
@@ -1758,13 +1710,15 @@ function load_local_config() {
 
 function chose_mirror() {
 	echo "${R}[${C}-${R}]${G}${BOLD}Selecting best termux packages mirror please wait${W}"
-	local todays_date
-	todays_date=$(date +"%d-%m")
-    unlink "$PREFIX/etc/termux/chosen_mirrors" &>/dev/null
-    ln -s "$PREFIX/etc/termux/mirrors/all" "$PREFIX/etc/termux/chosen_mirrors" &>/dev/null
-    pkg --check-mirror update
-	touch "$HOME/.run_chosen_mirrors_once"
-	echo "$todays_date" > "$HOME/.run_chosen_mirrors_once"
+    # unlink "$PREFIX/etc/termux/chosen_mirrors" &>/dev/null
+    # ln -s "$PREFIX/etc/termux/mirrors/all" "$PREFIX/etc/termux/chosen_mirrors" &>/dev/null
+    # pkg --check-mirror update
+	if [[ "$PACKAGE_MANAGER" == "apt" ]]; then
+		download_file "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/other/termux-fastest-repo"
+		chmod +x termux-fastest-repo
+		./termux-fastest-repo
+		check_and_delete "termux-fastest-repo"
+	fi
 }
 
 function update_sys() {
@@ -1772,26 +1726,12 @@ function update_sys() {
     echo "${R}[${C}-${R}]${G}${BOLD} Updating System....${W}"
     echo
 
-    local todays_date
-    todays_date=$(date +"%d-%m")
-
     if [[ "$PACKAGE_MANAGER" == "pacman" ]]; then
         pacman -Syu --noconfirm
     else
-        if [[ -f "$HOME/.run_chosen_mirrors_once" ]]; then
-			local date_on_file
-			date_on_file="$(cat "$HOME"/.run_chosen_mirrors_once)"
-			# Check if the file is older than today
-            if [[ $(find "$HOME/.run_chosen_mirrors_once" -mtime +0 2>/dev/null) ]] && [[ "$date_on_file" != "$todays_date" ]]; then # although [[ "$date_on_file" != "$todays_date" ]] is unnecessary
-                chose_mirror
-            fi
-            pkg update -y -o Dpkg::Options::="--force-confnew"
-            pkg upgrade -y -o Dpkg::Options::="--force-confnew"
-        else
-            chose_mirror
-            pkg update -y -o Dpkg::Options::="--force-confnew"
-            pkg upgrade -y -o Dpkg::Options::="--force-confnew"
-        fi
+        chose_mirror
+        pkg update -y -o Dpkg::Options::="--force-confnew"
+        pkg upgrade -y -o Dpkg::Options::="--force-confnew"
     fi
 }
 
@@ -2055,7 +1995,10 @@ function install_desktop() {
     # if [[ "$distro_add_answer" == "y" ]]; then
     #     package_install_and_check "xdg-utils"
     # fi
-
+	print_to_config "de_startup"
+	print_to_config "de_name"
+	print_to_config "themes_folder"
+	print_to_config "icons_folder"
     log_info "Desktop installation process done"
 }
 
@@ -3293,6 +3236,8 @@ function terminal_utility_setup() {
 	download_file "$HOME/.aliases" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/other/.aliases"
 	download_file "$HOME/.termux/colors.properties" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/other/colors.properties"
 	download_file "$PREFIX/bin/termux-ssh" "https://raw.githubusercontent.com/sabamdarif/simple-linux-scripts/main/termux-ssh" && chmod +x "$PREFIX/bin/termux-ssh"
+	download_file "$PREFIX/bin/termux-fastest-repo" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/other/termux-fastest-repo"
+	chmod +x $PREFIX/bin/termux-fastest-repo
 	cp "$shell_rc_file" "${shell_rc_file}-2"
 	check_and_backup "$shell_rc_file"
 	mv "${shell_rc_file}-2" "${shell_rc_file}"
@@ -3642,7 +3587,7 @@ function notes() {
 	if [[ "$distro_add_answer" == "y" ]]; then
 	echo "${R}[${C}-${R}]${C}${BOLD} See how to use Linux distro container${W}"
 	echo
-	echo "${R}[${C}-${R}]${C} URL:- ${B}https://github.com/sabamdarif/termux-desktop/blob/main/proot-container.md${W}"
+	echo "${R}[${C}-${R}]${C} URL:- ${B}https://github.com/sabamdarif/termux-desktop/blob/main/readmes/proot-container.md${W}"
 	fi
 }
 
@@ -3804,7 +3749,7 @@ function change_style() {
 	read_conf
 	gui_check_up
 	banner
-	download_file "${current_path}/styles.md" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/${de_name}_styles.md"
+	download_file "${current_path}/styles.md" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/readmes/${de_name}_styles.md"
 	style_name=$(grep -oP "^## $style_answer\..+?(?=(\n## \d+\.|\Z))" "${current_path}/styles.md" | sed -e "s/^## $style_answer\. //" -e "s/:$//" -e 's/^[[:space:]]*//;s/[[:space:]]*$//')
 	check_and_delete "${current_path}/styles.md"
 	echo "${R}[${C}-${R}]${G} Your currently installed style is ${C}${BOLD}$style_name ${W}"
@@ -4447,16 +4392,12 @@ current_path=$(pwd)
 function install_termux_desktop() {
 banner
 cleanup_cache
-check_and_create_directory "${termux_desktop_path}"
-touch "$config_file"
-print_log "$config_file"
 update_sys
 termux-wake-lock
 install_required_packages
 if [[ "$1" != "--local-config" && "$1" != "--config" && "$1" != "-config" ]]; then
     print_recomended_msg
 fi
-print_basic_details
 add_common_function
 if [[ "$1" != "--local-config" && "$1" != "--config" && "$1" != "-config" ]]; then
 questions_install_type
@@ -4472,11 +4413,15 @@ questions_install_type
 	fi
 fi
 if [[ "$1" == "--local-config" ]] || [[ "$1" == "--config" ]] || [[ "$1" == "-config" ]]; then
-	download_file "${current_path}/styles.md" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/${de_name}_styles.md"
+	download_file "${current_path}/styles.md" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/readmes/${de_name}_styles.md"
 	style_name=$(grep -oP "^## $style_answer\..+?(?=(\n## \d+\.|\Z))" "${current_path}/styles.md" | sed -e "s/^## $style_answer\. //" -e "s/:$//" -e 's/^[[:space:]]*//;s/[[:space:]]*$//')
 	check_and_delete "${current_path}/styles.md"
 fi
 print_conf_info
+print_basic_details
+check_and_create_directory "${termux_desktop_path}"
+touch "$config_file"
+print_log "$config_file"
 setup_folder
 setup_zsh
 setup_fonts

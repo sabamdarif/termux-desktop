@@ -13,7 +13,7 @@
 <br>
 
 ## 1. Nordic Openbox:
-### Keybord shortcuts:- [Here](https://github.com/sabamdarif/termux-desktop/blob/main/see-more.md#openbox-keybindings-cheat-sheet)
+### Keybord shortcuts:- [Here](https://github.com/sabamdarif/termux-desktop/blob/main/readmes/see-more.md#openbox-keybindings-cheat-sheet)
 >Inspired from [adi1090x's termux-desktop](https://github.com/adi1090x/termux-desktop)
 
 >My modifications to his style

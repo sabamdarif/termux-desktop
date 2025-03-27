@@ -10,7 +10,7 @@ When setting up hardware acceleration in Termux, follow these steps for optimal 
 
 > Use [CPU-Z](https://play.google.com/store/apps/details?id=com.cpuid.cpu_z&pcampaignid=web_share) to identify your GPU. Research your GPU online to determine whether `virpipe` or `zink` works best; Reddit or similar forums often have useful insights.
 
-![CPU-Z Screenshot](images/cpu-z.png)
+![CPU-Z Screenshot](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/cpu-z.png)
 
 ## Using Hardware Acceleration in Termux
 1. **Start Termux Desktop** via VNC or Termux:x11 (recommended).
@@ -30,7 +30,7 @@ When setting up hardware acceleration in Termux, follow these steps for optimal 
    ```
    - To run without GPU acceleration.
 
-![GLMark2 Results](images/pdrun-glmark2.png)
+![GLMark2 Results](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/pdrun-glmark2.png)
 
 ### Method 2: Termux Menu
 1. Add the desired program to the Termux menu.
@@ -88,10 +88,10 @@ setup-termux-desktop --change hw
 ## Experimental Driver Performance
 
 ### Adreno with `mesa-vulkan-icd-wrapper` and Turnip
-![Adreno Experimental Performance](./images/exp-hwa-adreno.png)
+![Adreno Experimental Performance](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/exp-hwa-adreno.png)
 
 ### Mali with `mesa-vulkan-icd-wrapper`
-![Mali Experimental Performance](./images/exp-hwa-mali.png)
+![Mali Experimental Performance](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/exp-hwa-mali.png)
 
 ### Test Environment
 > These tests and results were conducted by [LinuxDroidMaster](https://github.com/LinuxDroidMaster).
@@ -146,11 +146,11 @@ setup-termux-desktop --change hw
 |----------|-------|------------|------|--------|
 | 2        | Error | 24         | 40   | N/A    |
 
-![WebGL Aquarium on Firefox](./images/webglaquarium.png)
+![WebGL Aquarium on Firefox](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/webglaquarium.png)
 
 ---
 
 ### Additional Testing
 - **SuperTuxKart:** Benchmarked over 30 seconds.
 
-![SuperTuxKart Comparison](./images/supertuxkart_comparison.png)
+![SuperTuxKart Comparison](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/supertuxkart_comparison.png)

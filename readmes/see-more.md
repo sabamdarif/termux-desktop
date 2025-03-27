@@ -28,8 +28,11 @@
 - **largefile** To list large files
 - **preview** use fzf to search file and preview text file
 - **fcd** use fzf to search directories and cd into them
+  ##### For more cat $HOME/.aliases
 
-##### For more cat $HOME/.aliases
+#### :jigsaw:3.Special Programs (scripts):-
+- **termux-fastest-repo** same like termux-chnage-repo but to test and then chose the fastest repo (only for apt)
+
 ---
 
 ## :hammer_and_wrench:Openbox Keybindings Cheat Sheet

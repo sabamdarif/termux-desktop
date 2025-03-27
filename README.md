@@ -43,10 +43,10 @@
    - VNC Client [RealVNC](https://play.google.com/store/apps/details?id=com.realvnc.viewer.android) or [NetHunter Kex](https://store.nethunter.com/en/packages/com.offsec.nethunter.kex/) _(Optional)_
 
 ##### 2. Explore Desktop Styles:
-   - **[XFCE](xfce_styles.md)**
-   - **[LXQt](lxqt_styles.md)**
-   - **[OPENBOX](openbox_styles.md)**
-   - **[MATE](mate_styles.md)**
+   - **[XFCE](/readmes/xfce_styles.md)**
+   - **[LXQt](/readmes/lxqt_styles.md)**
+   - **[OPENBOX](/readmes/openbox_styles.md)**
+   - **[MATE](/readmes/mate_styles.md)**
 
 ##### 3. Hardware Acceleration and Distro Container:
    - Learn more about [hardware acceleration](hw-acceleration.md).
@@ -202,16 +202,16 @@ Options:
 #### [See More...](https://github.com/sabamdarif/termux-desktop?tab=readme-ov-file#2-explore-desktop-styles)
 
 ### App Store:
-<img src="images/termux-app-store.png">
+<img src="https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/termux-app-store.png">
 
 <details>
 <summary><b>Appstore UI:</b></summary>
 
 |Loading|Installing|
 |--|--|
-|![img](images/appstore-loading.png)|![img](images/appstore-app-installing.png)|
+|![img](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/appstore-loading.png)|![img](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/appstore-app-installing.png)|
 |Installed|Prompt|
-|![img](images/appstore-app-installed.png)|![img](images/appstore-prmpt.png)|
+|![img](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/appstore-app-installed.png)|![img](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/appstore-prmpt.png)|
 </details>
 
 ---
@@ -219,13 +219,13 @@ Options:
 ## Advanced Topics:
 
 ### Wine:
-Run Windows applications seamlessly. Learn more [here](https://github.com/sabamdarif/termux-desktop/blob/main/wine.md#wine_glasslearn-about-wine).
+Run Windows applications seamlessly. Learn more [here](https://github.com/sabamdarif/termux-desktop/blob/main/readmes/wine.md#wine_glasslearn-about-wine).
 
 ### Distro Containers:
-Install additional apps like LibreOffice. Details [here](proot-container.md).
+Install additional apps like LibreOffice. Details [here](/readmes/proot-container.md).
 
 ### Hardware Acceleration:
-Enhance performance with GPU acceleration. Learn more [here](hw-acceleration.md).
+Enhance performance with GPU acceleration. Learn more [here](/readmes/hw-acceleration.md).
 
 ---
 

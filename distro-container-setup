@@ -12,7 +12,6 @@ function setup_distro() {
     echo "${R}[${C}-${R}]${G}${BOLD} Setting up ${C}proot-distro${W}"
     echo
 
-    update_sys
     package_install_and_check "proot-distro"
 
     banner
@@ -154,7 +153,7 @@ function pd_package_install_and_check() {
             if dpkg -s "$package_name" >/dev/null 2>&1; then
                 print_success "$package_name installed successfully"
             else
-                if type -p "$package_name" &>/dev/null || ls "$PREFIX/bin/"*"$package_name"* >/dev/null 2>&1; then
+                if command -v wget &>/dev/null || ls "$PREFIX/bin/"*"$package_name"* >/dev/null 2>&1; then
                     print_success "$package_name installed successfully"
                 fi
             fi
@@ -162,7 +161,7 @@ function pd_package_install_and_check() {
             if pacman -Qi "$package_name" >/dev/null 2>&1; then
                 print_success "$package_name installed successfully"
             else
-                if type -p "$package_name" &>/dev/null || ls "$PREFIX/bin/"*"$package_name"* >/dev/null 2>&1; then
+                if command -v wget &>/dev/null || ls "$PREFIX/bin/"*"$package_name"* >/dev/null 2>&1; then
                     print_success "$package_name installed successfully"
                 fi
             fi
@@ -170,7 +169,7 @@ function pd_package_install_and_check() {
             if rpm -q "$package_name" >/dev/null 2>&1; then
                 print_success "$package_name installed success"
             else
-                if type -p "$package_name" &>/dev/null || ls "$PREFIX/bin/"*"$package_name"* >/dev/null 2>&1; then
+                if command -v wget &>/dev/null || ls "$PREFIX/bin/"*"$package_name"* >/dev/null 2>&1; then
                     print_success "$package_name installed success"
                 fi
             fi
@@ -891,13 +890,13 @@ cat <<EOF >> "$PREFIX/bin/pdrun"
 xhost + > /dev/null 2>&1
 case \$1 in
 --nogpu)
-proot-distro login --user $final_user_name "$selected_distro" --shared-tmp --termux-home -- eval "env DISPLAY=\$(echo \$DISPLAY) XDG_RUNTIME_DIR=\${TMPDIR} LIBGL_ALWAYS_SOFTWARE=1 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe \${@:2}"
+proot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp --termux-home -- eval "env DISPLAY=\$(echo \$DISPLAY) XDG_RUNTIME_DIR=\${TMPDIR} LIBGL_ALWAYS_SOFTWARE=1 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe \${@:2}"
 ;;
 --help|-h)
 echo "${G}Type ${C}pdrun launch command ${G}to start with GPU acceleration${W}"
 ;;
 *)
-proot-distro login --user $final_user_name "$selected_distro" --shared-tmp --termux-home -- eval "env DISPLAY=\$(echo \$DISPLAY) XDG_RUNTIME_DIR=\${TMPDIR} \$selected_pd_hw_method \$@"
+proot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp --termux-home -- eval "env DISPLAY=\$(echo \$DISPLAY) XDG_RUNTIME_DIR=\${TMPDIR} \$selected_pd_hw_method \$@"
 ;;
 esac
 EOF
@@ -924,7 +923,7 @@ case \$1 in
 echo "${G}Type ${C}pdrun launch command ${G}to start with gpu acceleration${W}"
 ;;
 *)
-proot-distro login --user $final_user_name "$selected_distro" --shared-tmp --termux-home -- eval "env DISPLAY=\$(echo \$DISPLAY) XDG_RUNTIME_DIR=\${TMPDIR} \$@"
+proot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp --termux-home -- eval "env DISPLAY=\$(echo \$DISPLAY) XDG_RUNTIME_DIR=\${TMPDIR} \$@"
 ;;
 esac
 EOF

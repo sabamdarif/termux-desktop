@@ -209,6 +209,7 @@ function setup_turnip_proot() {
 }
 
 check_termux
+print_to_config "device_gpu_model_name"
 if [[ "$call_from_change_display" == "y" ]]; then
 setup_hw_environment_variables
 setup_gpu_specific_environment_variables

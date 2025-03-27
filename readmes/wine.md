@@ -42,7 +42,7 @@ make install
 
 ## :wine_glass:Learn about Wine:
 
-<center><img src="images/apps/wine.png"></center>
+<center><img src="https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/apps/wine.png"></center>
 
 #### Using XoW64-wine
 -  **Xow64-wine:-** easy to configure and fast with good compatibility using newer version of wine and box64, support most graphic drivers for both termux glibc and proot **[Install From Here](https://github.com/ar37-rs/xow64-wine)**

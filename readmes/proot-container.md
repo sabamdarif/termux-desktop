@@ -40,7 +40,7 @@ pdrun <package-name>
 pdrun libreoffice
 ```
 
-<center><img src="images/apps/container-pdrun-libreoffice.png"></center>
+<center><img src="https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/apps/container-pdrun-libreoffice.png"></center>
 
 ---
 
@@ -56,10 +56,10 @@ You can add installed applications to the Termux desktop menu for quick access i
 
 Once added, the app will appear in the Termux desktop menu.
 
-<center><img src="images/add2menu-icon.png"></center>
-<center><img src="images/add2menu-option.png"></center>
-<center><img src="images/add2menu-main-window.png"></center>
-<center><img src="images/pd-appps.png"></center>
+<center><img src="https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/add2menu-icon.png"></center>
+<center><img src="https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/add2menu-option.png"></center>
+<center><img src="https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/add2menu-main-window.png"></center>
+<center><img src="https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/pd-appps.png"></center>
 
 ---
 
@@ -76,7 +76,7 @@ For a faster setup, use the following command to install an app and add it to th
 ```bash
 debian install libreoffice
 ```
-<center><img src="images/apps/container-libreoffice-2.png"></center>
+<center><img src="https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/apps/container-libreoffice-2.png"></center>
 
 If this method doesn’t work for any reason, you can manually add the app to the menu using the steps outlined above.
 
