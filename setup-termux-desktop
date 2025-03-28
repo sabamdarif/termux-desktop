@@ -710,106 +710,93 @@ function validate_required_vars() {
 # check the avilable styles and create a list to type the corresponding number
 # in the style readme file the name must use this'## number name :' pattern, like:- ## 1. Basic Style:
 function questions_theme_select() {
-    local owner="sabamdarif"
-    local repo="termux-desktop"
-    local main_folder="setup-files/$de_name"
-    local branch="setup-files"
+	local owner="sabamdarif"
+	local repo="termux-desktop"
+	local main_folder="setup-files/$de_name"
+	local branch="setup-files"
 
-    # set default style value based on de
-    if [[ "$de_name" == "xfce" ]]; then
-        default_selection="1"
-    elif [[ "$de_name" == "lxqt" ]]; then
-        default_selection="2"
-    elif [[ "$de_name" == "mate" ]]; then
-        default_selection="1"
-    elif [[ "$de_name" == "openbox" ]]; then
-        default_selection="1"
-    elif [[ "$de_name" == "i3wm" ]]; then
-        default_selection="0"
-    elif [[ "$de_name" == "dwm" ]]; then
-        default_selection="0"
-    elif [[ "$de_name" == "bspwm" ]]; then
-        default_selection="0"
-    elif [[ "$de_name" == "awesome" ]]; then
-        default_selection="0"
-    fi
+	# Set default style value based on the desktop environment (DE)
+	case "$de_name" in
+	    xfce | mate | openbox) default_selection="1" ;;
+	    lxqt) default_selection="2" ;;
+	    i3wm | dwm | bspwm | awesome) default_selection="0" ;;
+	    *) default_selection="0" ;;
+	esac
 
-    # First, check if the remote styles file exists
-    local styles_url="https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/readmes/${de_name}_styles.md"
-    if curl --head --silent --fail "$styles_url" > /dev/null; then
-        echo "${R}[${C}-${R}]${G} Downloading list of available styles...${W}"
-        check_and_delete "${current_path}/styles.md"
-        download_file "${current_path}/styles.md" "$styles_url"
-    else
-        echo "${R}[${C}-${R}]${G} No custom setup is available for $de_name${W}"
-		log_debug "No custom setup is available for $de_name"
-        echo "${R}[${C}-${R}]${G} Continuing with style 0. stock${W}"
-        style_answer=0
-        print_to_config "style_answer"
-        return
-    fi
+	# Get the number of available custom styles
+	subfolder_count_value=$(count_subfolders "$owner" "$repo" "$main_folder" "$branch" 2>/dev/null)
 
-    # Call the count_subfolders function with the branch parameter
-    subfolder_count_value=$(count_subfolders "$owner" "$repo" "$main_folder" "$branch" 2>/dev/null)
-
-    # If the file exists but there are no custom styles, skip interactive selection
-    if [[ -z "$subfolder_count_value" || "$subfolder_count_value" -eq 0 ]]; then
-        echo "${R}[${C}-${R}]${G} No custom setup is available for $de_name${W}"
+	# If no custom styles are available, use stock style and skip interaction
+	if [[ "$subfolder_count_value" -eq 0 ]]; then
+		echo "${R}[${C}-${R}]${G} No custom setup is available for $de_name${W}"
 		log_debug "no:- $subfolder_count_value, No custom setup is available for $de_name"
-        echo "${R}[${C}-${R}]${G} Continuing with style 0. stock${W}"
-        style_answer=0
-        print_to_config "style_answer"
-        check_and_delete "${current_path}/styles.md"
-        return
-    fi
+		echo "${R}[${C}-${R}]${G} Continuing with style 0: Stock${W}"
+		style_answer=0
+		style_name="Stock"
+		print_log "$style_answer $subfolder_count_value"
+		return
+	fi
 
-    banner
+	# If custom styles exist, fetch and display them
+	local styles_url="https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/readmes/${de_name}_styles.md"
+	if curl --head --silent --fail "$styles_url" > /dev/null; then
+		echo "${R}[${C}-${R}]${G} Downloading list of available styles...${W}"
+		check_and_delete "${current_path}/styles.md"
+		download_file "${current_path}/styles.md" "$styles_url"
+	else
+		echo "${R}[${C}-${R}]${G} No custom setup is available for $de_name${W}"
+		log_debug "No custom setup is available for $de_name"
+		echo "${R}[${C}-${R}]${G} Continuing with style 0: Stock${W}"
+		style_answer=0
+		style_name="Stock"
+		print_log "$style_answer $subfolder_count_value"
+		return
+	fi
 
-    echo "${R}[${C}-${R}]${G} Check the $de_name styles preview${W}"
-    echo
-    echo "${R}[${C}-${R}]${G} From Here:- ${B}https://github.com/sabamdarif/termux-desktop/blob/main/readmes/${de_name}_styles.md${W}"
-    echo
-    echo "${R}[${C}-${R}]${G} Number of available custom styles for $de_name is: ${C}${subfolder_count_value}${W}"
-    echo
-    echo "${R}[${C}-${R}]${G} Available Styles Are:${W}"
-    echo
+	if [[ "$subfolder_count_value" -gt 0 ]]; then
+		banner
 
-    grep -oP '## \d+\..+?(?=(\n## \d+\.|\Z))' styles.md | while read -r style; do
-        echo "${Y}${style#### }${W}"
-    done
+		echo "${R}[${C}-${R}]${G} Check the $de_name styles preview${W}"
+		echo
+		echo "${R}[${C}-${R}]${G} From Here:- ${B}https://github.com/sabamdarif/termux-desktop/blob/main/readmes/${de_name}_styles.md${W}"
+		echo
+		echo "${R}[${C}-${R}]${G} Number of available custom styles for $de_name is: ${C}${subfolder_count_value}${W}"
+		echo
+		echo "${R}[${C}-${R}]${G} Available Styles Are:${W}"
+		echo
 
-    while true; do
-        echo
-        read -r -p "${R}[${C}-${R}]${Y} Type number of the style (Press Enter to select default): ${W}" style_answer
-        style_answer="${style_answer:-$default_selection}"
+		grep -oP '## \d+\..+?(?=(\n## \d+\.|\Z))' "${current_path}/styles.md" | while read -r style; do
+			echo "${Y}${style#### }${W}"
+		done
 
-        if [[ "$style_answer" =~ ^[0-9]+$ ]] && [[ "$style_answer" -ge 0 ]] && [[ "$style_answer" -le "$subfolder_count_value" ]]; then
-            style_name=$(grep -oP "^## $style_answer\..+?(?=(\n## \d+\.|\Z))" "${current_path}/styles.md" | sed -e "s/^## $style_answer\. //" -e "s/:$//" -e 's/^[[:space:]]*//;s/[[:space:]]*$//')
-            echo
-            print_success "Continuing with style number ${C}$style_answer (Style: $style_name${W})"
-            echo
-            break
-        else
-            echo
-            print_failed "The entered style number is incorrect"
-            echo
-            if [[ "$subfolder_count_value" == "0" ]]; then
-                echo "${R}[${C}-${R}]${Y} Please enter 0 because for $de_name only stock style is available${W}"
-                echo
-            else
-                echo "${R}[${C}-${R}]${Y} Please enter a number between 0 to ${subfolder_count_value}${W}"
-                echo
-            fi
-            echo "${R}[${C}-${R}]${G} Check the $de_name styles section in GitHub${W}"
-            echo
-            echo "${R}[${C}-${R}]${B} https://github.com/sabamdarif/termux-desktop/blob/main/readmes/${de_name}_styles.md${W}"
-            echo
-        fi
-    done
+		while true; do
+	    	echo
+	    	read -r -p "${R}[${C}-${R}]${Y} Type number of the style (Press Enter to select default): ${W}" style_answer
+	    	style_answer="${style_answer:-$default_selection}"
 
-    print_to_config "style_answer"
-    check_and_delete "${current_path}/styles.md"
-    print_log "$style_answer $subfolder_count_value"
+			if [[ "$style_answer" =~ ^[0-9]+$ ]] && [[ "$style_answer" -ge 0 ]] && [[ "$style_answer" -le "$subfolder_count_value" ]]; then
+		    	style_name=$(grep -oP "^## $style_answer\..+?(?=(\n## \d+\.|\Z))" "${current_path}/styles.md" | sed -e "s/^## $style_answer\. //" -e "s/:$//" -e 's/^[[:space:]]*//;s/[[:space:]]*$//')
+		    	echo
+		    	print_success "Continuing with style number ${C}$style_answer (Style: $style_name${W})"
+		    	echo
+		    	break
+			else
+		    	echo
+		    	print_failed "The entered style number is incorrect"
+		    	echo
+		    	echo "${R}[${C}-${R}]${Y} Please enter a number between 0 and ${subfolder_count_value}${W}"
+		    	echo
+		    	echo "${R}[${C}-${R}]${G} Check the $de_name styles section in GitHub${W}"
+		    	echo
+		    	echo "${R}[${C}-${R}]${B} https://github.com/sabamdarif/termux-desktop/blob/main/readmes/${de_name}_styles.md${W}"
+		    	echo
+			fi
+		done
+
+		print_to_config "style_answer"
+		check_and_delete "${current_path}/styles.md"
+		print_log "$style_answer $subfolder_count_value"
+	fi
 }
 
 function ask_to_chose_de() {
@@ -2071,6 +2058,22 @@ function install_desktop() {
         echo
         package_install_and_check "mate*"
         package_install_and_check "marco mousepad xfce4-taskmanager lximage-qt"
+	elif [[ "$de_name" == "i3wm" ]]; then
+		log_info "Installing I3wm"
+        echo "${R}[${C}-${R}]${G}${BOLD} Installing i3WM${W}"
+		package_install_and_check "i3"
+	elif [[ "$de_name" == "dwm" ]]; then
+		log_info "Installing dwm"
+        echo "${R}[${C}-${R}]${G}${BOLD} Installing DWM${W}"
+		package_install_and_check "dwm"
+	elif [[ "$de_name" == "bspwm" ]]; then
+		log_info "Installing BSPWM"
+        echo "${R}[${C}-${R}]${G}${BOLD} Installing BSPWM${W}"
+		package_install_and_check "bspwm"
+	elif [[ "$de_name" == "awesome" ]]; then
+		log_info "Installing AWESOME WM"
+        echo "${R}[${C}-${R}]${G}${BOLD} Installing AWESOME WM${W}"
+		package_install_and_check "awesome"
     fi
 	package_install_and_check "kvantum xwayland pulseaudio file-roller pavucontrol gnome-font-viewer atril galculator gdk-pixbuf libwayland-protocols xorg-xrdb"
     # Uncomment if additional package installation is needed
