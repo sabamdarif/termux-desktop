@@ -80,22 +80,11 @@ Cursor Theme:
 
 <details>
 <summary><b style ="font-size: small">Style Details: </summary>
-Theme Used: 
-<br>
+Theme Used, Icon Used, Cursor Theme:-
 
-- [Qogir](https://www.pling.com/p/1230631/)
-- [Redstone](https://www.opendesktop.org/p/1013482/)
-
-Icon Used:
-<br>
-
-- [We10X special](https://www.pling.com/p/1366371/)
-- [Windows 10](https://github.com/B00merang-Artwork/Windows-10/)
-
-Cursor Theme: 
-- [Windows 10](https://www.gnome-look.org/p/1829490)
-
-</b>
+- [kali-undercover](https://gitlab.com/kalilinux/packages/kali-undercover)
+Kvantum:-
+- [Win10OS-kde](https://github.com/yeyushengfan258/Win10OS-kde/tree/master/Kvantum)
 </details>
 <br>
 
@@ -104,7 +93,7 @@ Cursor Theme:
 <details style ="font-size: larger">
 <summary><b style ="font-size: larger">Screenshots: </b></summary>
 
-|Apps|Menubar|Buttons|
+|Apps|Start Menu|Buttons|
 |--|--|--|
 |![img](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/xfce/look_3/basic-apps.png)|![img](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/xfce/look_3/menu.png)|![img](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/xfce/look_3/win-like-close.png)|
 

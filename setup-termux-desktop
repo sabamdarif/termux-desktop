@@ -488,14 +488,23 @@ function count_subfolders() {
     response=$(curl -s "$url")
     # Check for API errors (e.g., rate limiting or wrong path)
     if echo "$response" | jq -e 'has("message")' >/dev/null; then
-        echo "Error: $(echo "$response" | jq -r '.message')"
-        return 1
+        local message
+        message=$(echo "$response" | jq -r '.message')
+        # If the error is "Not Found", default to 0; otherwise, show the error.
+        if [[ "$message" == "Not Found" ]]; then
+            echo 0
+            return 0
+        else
+            echo "Error: $message"
+            return 1
+        fi
     fi
-    # Extract and count directoriest
-    subfolder_count=$(echo "$response" | jq -r '.[] | select(.type == "dir") | .name' | wc -l)
-
-    # Default to 0 if no subfolders are found
-    if [[ -z "$subfolder_count" || "$subfolder_count" -eq 0 ]]; then
+    # Use jq to extract directories and count them; if none found, length returns 0.
+    local subfolder_count
+    subfolder_count=$(echo "$response" | jq -r '[.[] | select(.type == "dir")] | length')
+    
+    # Ensure that if no value was found, we set it to 0.
+    if [[ -z "$subfolder_count" ]]; then
         subfolder_count=0
     fi
 
@@ -845,7 +854,7 @@ function ask_to_chose_de() {
 	echo
 	echo "${Y}8. Awesome($total_custom_awesome_setup)${W}"
 	echo
-	select_an_option 4 1 desktop_answer
+	select_an_option 8 1 desktop_answer
 	echo
 	# set the variables based on chosen de
 	sys_icons_folder="$PREFIX/share/icons"
@@ -2636,18 +2645,6 @@ else
     	env DISPLAY=:${display_number}  XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg dbus-launch --exit-with-session $de_startup &
 	else
     	env DISPLAY=:${display_number}  XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg dbus-launch --exit-with-session $de_startup > /dev/null 2>&1 &
-	fi
-fi
-
-sleep 5
-
-# Kill xfce4-screensaver if running
-process_id=\$(ps aux | grep '[x]fce4-screensaver' | awk '{print \$2}')
-if [[ -n "\$process_id" ]]; then
-	if \$use_debug; then
-		kill "\$process_id"
-	else
-    	kill "\$process_id" > /dev/null 2>&1
 	fi
 fi
 
