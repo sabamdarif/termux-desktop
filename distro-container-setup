@@ -834,7 +834,7 @@ cp $PREFIX/share/applications/org.sabamdarif.termux.add2menu.desktop $HOME/Deskt
 chmod +x $HOME/Desktop/org.sabamdarif.termux.add2menu.desktop
 chmod +x "$PREFIX/opt/add2menu/add2menu_legacy"
 
-cat <<EOF >> "$PREFIX/bin/add2menu"
+cat <<EOF > "$PREFIX/bin/add2menu"
 #!/data/data/com.termux/files/usr/bin/bash
 
 export distro_name="${selected_distro}"

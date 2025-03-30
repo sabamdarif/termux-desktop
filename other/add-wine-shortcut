@@ -8,7 +8,11 @@ function check_termux() {
 }
 
 if [[ "$wine_answer" == "3" ]]; then
-wine_cmd="hangover-wine"
+	if [[ ! -f "$PREFIX/bin/wine" ]]; then
+		wine_cmd="wine"
+	else
+		wine_cmd="hangover-wine"
+	fi
 else
 wine_cmd="wine"
 fi
@@ -16,6 +20,22 @@ fi
 function wine_shortcut() {
 rm -rf "$PREFIX/share/applications/wine-explorer.desktop $PREFIX/share/applications/wine-winecfg.desktop $PREFIX/share/applications/wine-uninstaller.desktop $PREFIX/share/applications/wine-regedit.desktop $PREFIX/share/applications/wine-wineboot.desktop" >/dev/null 2>&1
 
+cat << EOF > "$PREFIX/share/applications/wine-program-loader.desktop"
+[Desktop Entry]
+Name=Wine Program Loader
+Comment=Run Windows programs with Wine
+Name[ar]=مشغل برامج واين
+Comment[ar]=تشغيل برامج ويندوز باستخدام واين
+Exec=${wine_cmd} %f
+Icon=wine
+Terminal=false
+Type=Application
+MimeType=application/x-ms-dos-executable;application/x-msi;
+Categories=X-Wine;
+X-Desktop-File-Install-Version=0.26
+NoDisplay=true
+EOF
+chmod +x "$PREFIX/share/applications/wine-program-loader.desktop"
 cat << EOF > "$PREFIX/share/applications/wine-explorer.desktop"
 [Desktop Entry]
 Name=Wine File

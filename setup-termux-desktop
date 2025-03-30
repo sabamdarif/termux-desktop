@@ -45,7 +45,7 @@ function check_termux() {
 
 #########################################################################
 #
-# Shortcut Functions
+# Base Functions
 #
 #########################################################################
 
@@ -2186,17 +2186,23 @@ function additional_required_steps() {
     echo "${R}[${C}-${R}]${G}${BOLD} Installing Additional Packages If Required...${W}"
 	echo
 		if [[ "$style_answer" == "4" ]] || [[ "$style_answer" == "5" ]]; then
-		install_font_for_style "${style_answer}"
+			install_font_for_style "${style_answer}"
 		fi
+
 		if [[ "$style_answer" == "5" ]]; then
-		package_install_and_check "eww"
+			package_install_and_check "eww"
 		fi
+
+		if [[ "$style_answer" == "3" ]]; then
+			package_install_and_check "xdotool"
+		fi
+
 	elif [[ "$de_name" == "openbox" ]]; then
 	    if [[ "$style_answer" == "1" ]]; then
-	    install_font_for_style "1"
+	    	install_font_for_style "1"
 		else
-		echo "${R}[${C}-${R}]${G} No Additional Packages Required For Theme: ${style_answer}${W}"
-	    sleep 1
+			echo "${R}[${C}-${R}]${G} No Additional Packages Required For Theme: ${style_answer}${W}"
+	    	sleep 1
 	    fi
 	fi
 }
@@ -3518,6 +3524,9 @@ function setup_wine() {
 	elif [[ "$wine_answer" == "3" ]]; then
 		package_install_and_check "hangover hangover-wine"
 		run_wine_shortcut_script
+		if [[ ! -f "$PREFIX/bin/wine" ]]; then
+			ln -s "$PREFIX/bin/hangover-wine" "$PREFIX/bin/wine"
+		fi
 		print_to_config "setup_wine" "hangover-wine"
 	elif [[ "$wine_answer" == "4" ]]; then
 		echo "${R}[${C}-${R}]${C} Skipping wine Installation...${W}"
