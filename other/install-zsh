@@ -70,11 +70,10 @@ cat << EOF > .zsh-themes/td.zsh-theme
 autoload -Uz colors && colors
 autoload -Uz vcs_info
 
-setopt PROMPT_SUBST
-
 # Enable Git branch display
 zstyle ':vcs_info:git:*' formats ' %F{magenta} %b%f'
 precmd() { vcs_info }
+setopt PROMPT_SUBST
 
 # Exit status indicator
 exit_status="%(?..%F{red}✘ %?%f)"
