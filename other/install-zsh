@@ -111,9 +111,9 @@ user_host="%F{blue}[%F{cyan}\$user_name%F{yellow} \$DISTRO_ICON %F{cyan}%m%F{blu
 dir_display="%F{blue}[%F{yellow}%~%F{blue}]%f"
 
 # Prompt layout (P10K-like)
-PROMPT="
+PROMPT='
 %B%F{green}╭─ \$user_host \$dir_display\${vcs_info_msg_0_}
-%B%F{green}╰─\${PROMPT_SYMBOL} %F{reset}"
+%B%F{green}╰─\${PROMPT_SYMBOL} %F{reset}'
 RPROMPT="\$exit_status"
 EOF
 
