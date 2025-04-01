@@ -1799,8 +1799,8 @@ function update_sys() {
         pacman -Syu --noconfirm
     else
         chose_mirror
-        pkg update -y -o Dpkg::Options::="--force-confnew"
-        pkg upgrade -y -o Dpkg::Options::="--force-confnew"
+        apt update -y -o Dpkg::Options::="--force-confnew"
+        apt upgrade -y -o Dpkg::Options::="--force-confnew"
     fi
 }
 
@@ -2075,7 +2075,7 @@ function install_desktop() {
         echo "${R}[${C}-${R}]${G}${BOLD} Installing AWESOME WM${W}"
 		package_install_and_check "awesome"
     fi
-	package_install_and_check "kvantum xwayland pulseaudio file-roller pavucontrol gnome-font-viewer atril galculator gdk-pixbuf libwayland-protocols xorg-xrdb"
+	package_install_and_check "kvantum xwayland pulseaudio file-roller pavucontrol gnome-font-viewer evince galculator gdk-pixbuf libwayland-protocols xorg-xrdb"
     # Uncomment if additional package installation is needed
     # if [[ "$distro_add_answer" == "y" ]]; then
     #     package_install_and_check "xdg-utils"
@@ -4482,7 +4482,6 @@ install_required_packages
 if [[ "$1" != "--local-config" && "$1" != "--config" && "$1" != "-config" ]]; then
     print_recomended_msg
 fi
-add_common_function
 if [[ "$1" != "--local-config" && "$1" != "--config" && "$1" != "-config" ]]; then
 questions_install_type
 	if [[ "$install_type_answer" == "3" ]]; then
@@ -4524,6 +4523,7 @@ else
 	setup_config
 fi
 banner
+add_common_function
 call_from_change_pd="n"
 distro_container_setup
 gui_launcher

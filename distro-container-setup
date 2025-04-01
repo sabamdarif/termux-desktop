@@ -220,7 +220,7 @@ function distro_basic_task() {
     echo
     if [[ "$selected_distro" == "debian" ]] || [[ "$selected_distro" == "ubuntu" ]]; then
     proot-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:$display_number apt update
-    proot-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:$display_number apt upgrade -y
+    proot-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:$display_number apt upgrade -y -o Dpkg::Options::="--force-confnew"
     elif [[ "$selected_distro" == "archlinux" ]]; then
     proot-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:$display_number pacman -Syu --noconfirm
     elif [[ "$selected_distro" == "fedora" ]]; then
