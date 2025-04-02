@@ -21,6 +21,261 @@ ICON_CACHE = {}
 # Set this to True to debug icon issues
 VERBOSE_ICON_SEARCH = os.environ.get('VERBOSE_ICON_SEARCH', '0') == '1'
 
+class TerminalLogWindow(Gtk.Window):
+    """A simple terminal-like window for displaying application launch logs"""
+    def __init__(self, parent):
+        Gtk.Window.__init__(self, title="Application Launch Log")
+        self.set_default_size(650, 400)
+        self.set_transient_for(parent)
+        
+        # Flag to track if we're currently saving to a file
+        self.is_saving_to_file = False
+        self.log_file = None
+        
+        # Apply the CSS class
+        self.get_style_context().add_class('terminal-window')
+        
+        # Don't destroy window when closed, just hide it
+        self.connect("delete-event", lambda w, e: self.on_window_close(w, e))
+        
+        # Set up the main container
+        vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+        self.add(vbox)
+        
+        # Create a scrolled window for the text view
+        scrolled_window = Gtk.ScrolledWindow()
+        scrolled_window.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
+        scrolled_window.set_shadow_type(Gtk.ShadowType.IN)
+        
+        # Create a text view with monospace font for terminal-like appearance
+        self.textview = Gtk.TextView()
+        self.textview.set_editable(False)
+        self.textview.set_cursor_visible(False)
+        self.textview.set_wrap_mode(Gtk.WrapMode.WORD_CHAR)
+        
+        # Use monospace font
+        self.textview.override_font(Pango.FontDescription("Monospace 10"))
+        
+        # Set colors for the terminal (dark background, light text)
+        self.set_terminal_colors()
+        
+        # Get the buffer for adding text
+        self.textbuffer = self.textview.get_buffer()
+        
+        # Add the text view to the scrolled window
+        scrolled_window.add(self.textview)
+        
+        # Add scrolled window to the main container
+        vbox.pack_start(scrolled_window, True, True, 0)
+        
+        # Add a toolbar at the bottom
+        toolbar = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+        toolbar.set_margin_start(6)
+        toolbar.set_margin_end(6)
+        toolbar.set_margin_bottom(6)
+        vbox.pack_start(toolbar, False, False, 0)
+        
+        # Save button
+        save_button = Gtk.Button.new_with_label("Save Log")
+        save_button.connect("clicked", self.on_save_clicked)
+        save_button.set_tooltip_text("Save log contents to a file")
+        toolbar.pack_start(save_button, False, False, 0)
+        
+        # Clear button
+        clear_button = Gtk.Button.new_with_label("Clear")
+        clear_button.connect("clicked", self.on_clear_clicked)
+        clear_button.set_tooltip_text("Clear the log window")
+        toolbar.pack_end(clear_button, False, False, 0)
+        
+        # Set up a tag for timestamps
+        self.time_tag = self.textbuffer.create_tag("timestamp", foreground="#AAAAAA")
+        
+        # Initialize with a welcome message
+        self.log("Terminal log window initialized. Application launch output will appear here.")
+    
+    def on_window_close(self, window, event):
+        """Handle window close event - also stop file logging if active"""
+        if self.is_saving_to_file and self.log_file and not self.log_file.closed:
+            try:
+                self.log_file.close()
+                self.log("Stopped saving to log file.")
+            except Exception as e:
+                print(f"Error closing log file: {e}")
+            self.is_saving_to_file = False
+            self.log_file = None
+        
+        # Just hide the window instead of destroying it
+        self.hide()
+        return True  # Prevent the window from being destroyed
+    
+    def set_terminal_colors(self):
+        """Set terminal-like colors for the text view"""
+        # Get the text view's style context
+        context = self.textview.get_style_context()
+        
+        # Create a CSS provider for custom styling
+        provider = Gtk.CssProvider()
+        css = """
+        textview {
+            background-color: #2D2D2D;
+            color: #E0E0E0;
+        }
+        textview text {
+            background-color: #2D2D2D;
+            color: #E0E0E0;
+        }
+        """
+        provider.load_from_data(css.encode())
+        
+        # Apply the CSS to the text view
+        context.add_provider(provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+    
+    def log(self, message, include_timestamp=True):
+        """Add a log message to the terminal view"""
+        if include_timestamp:
+            # Get the current timestamp
+            timestamp = datetime.now().strftime("[%H:%M:%S] ")
+            
+            # Get end iterator for inserting text
+            end_iter = self.textbuffer.get_end_iter()
+            
+            # Insert the timestamp with its tag
+            self.textbuffer.insert_with_tags(end_iter, timestamp, self.time_tag)
+            
+            # Insert the message
+            self.textbuffer.insert(end_iter, message + "\n")
+        else:
+            # Insert just the message without timestamp
+            end_iter = self.textbuffer.get_end_iter()
+            self.textbuffer.insert(end_iter, message + "\n")
+        
+        # If we're saving to a file, write to the file as well
+        if self.is_saving_to_file and self.log_file and not self.log_file.closed:
+            try:
+                if include_timestamp:
+                    timestamp = datetime.now().strftime("[%H:%M:%S] ")
+                    self.log_file.write(timestamp + message + "\n")
+                else:
+                    self.log_file.write(message + "\n")
+                self.log_file.flush()  # Ensure it's written immediately
+            except Exception as e:
+                print(f"Error writing to log file: {e}")
+                self.is_saving_to_file = False
+                try:
+                    self.log_file.close()
+                except:
+                    pass
+                self.log_file = None
+                GLib.idle_add(self.log, f"ERROR: Failed to write to log file: {e}")
+        
+        # Scroll to the end
+        self.scroll_to_end()
+    
+    def log_command(self, command):
+        """Log a command execution with special formatting"""
+        # Log a separator line
+        self.log("\n" + "-" * 40, include_timestamp=False)
+        # Log the command with timestamp
+        self.log(f"Executing: {command}")
+        # Log another separator
+        self.log("-" * 40, include_timestamp=False)
+    
+    def on_clear_clicked(self, button):
+        """Clear the terminal view"""
+        self.textbuffer.set_text("")
+        self.log("Log cleared.")
+    
+    def on_save_clicked(self, button):
+        """Show a file chooser dialog to save the log"""
+        if self.is_saving_to_file:
+            # If already saving, stop saving and close the file
+            self.is_saving_to_file = False
+            if self.log_file and not self.log_file.closed:
+                try:
+                    self.log_file.close()
+                    self.log("Stopped saving to log file.")
+                except Exception as e:
+                    print(f"Error closing log file: {e}")
+            self.log_file = None
+            button.set_label("Save Log")
+            return
+        
+        # Create a file chooser dialog
+        dialog = Gtk.FileChooserDialog(
+            title="Save Log File",
+            parent=self,
+            action=Gtk.FileChooserAction.SAVE,
+            buttons=(
+                "Cancel", Gtk.ResponseType.CANCEL,
+                "Save", Gtk.ResponseType.ACCEPT
+            )
+        )
+        
+        # Set default filename with timestamp
+        default_filename = f"app_launch_log_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
+        dialog.set_current_name(default_filename)
+        
+        # Set a filter for text files
+        filter_text = Gtk.FileFilter()
+        filter_text.set_name("Text files")
+        filter_text.add_mime_type("text/plain")
+        filter_text.add_pattern("*.txt")
+        dialog.add_filter(filter_text)
+        
+        # Add an "All files" filter
+        filter_all = Gtk.FileFilter()
+        filter_all.set_name("All files")
+        filter_all.add_pattern("*")
+        dialog.add_filter(filter_all)
+        
+        # Show the dialog and handle the response
+        response = dialog.run()
+        
+        if response == Gtk.ResponseType.ACCEPT:
+            filepath = dialog.get_filename()
+            dialog.destroy()
+            
+            # First export the current content of the buffer
+            start_iter = self.textbuffer.get_start_iter()
+            end_iter = self.textbuffer.get_end_iter()
+            text = self.textbuffer.get_text(start_iter, end_iter, False)
+            
+            try:
+                # Open the file for appending (we want to keep writing to it)
+                self.log_file = open(filepath, 'w')
+                
+                # Write the current content
+                self.log_file.write(text)
+                self.log_file.flush()
+                
+                # Set flag to continue logging to this file
+                self.is_saving_to_file = True
+                
+                # Update the button label
+                button.set_label("Stop Saving")
+                
+                # Log a message
+                self.log(f"Started saving log to: {filepath}")
+                
+            except Exception as e:
+                self.log(f"ERROR: Failed to save log: {str(e)}")
+                if self.log_file:
+                    try:
+                        self.log_file.close()
+                    except:
+                        pass
+                self.log_file = None
+                self.is_saving_to_file = False
+        else:
+            dialog.destroy()
+    
+    def scroll_to_end(self):
+        """Scroll the text view to the end"""
+        end_iter = self.textbuffer.get_end_iter()
+        mark = self.textbuffer.create_mark(None, end_iter, False)
+        self.textview.scroll_to_mark(mark, 0.0, True, 0.0, 1.0)
+        self.textbuffer.delete_mark(mark)
+
 def main():
     # Make GTK use system's preferred theme
     settings = Gtk.Settings.get_default()
@@ -102,6 +357,7 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
         self.no_sandbox_action = app.lookup_action("no-sandbox")
         self.absolute_path_action = app.lookup_action("absolute-path")
         self.nogpu_action = app.lookup_action("nogpu")
+        self.show_app_launch_log_action = app.lookup_action("show-app-launch-log")
         
         # Set initial state of show-added-apps action based on current mode
         show_added_apps_action = app.lookup_action("show-added-apps")
@@ -184,6 +440,20 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
             button.search-button:hover {
                 background-color: shade(@theme_selected_bg_color, 0.9);
             }
+            /* Terminal window styling */
+            .terminal-window textview {
+                background-color: #2D2D2D;
+                color: #E0E0E0;
+                padding: 8px;
+            }
+            .terminal-window button {
+                border-radius: 5px;
+                padding: 8px 15px;
+            }
+            .terminal-window scrolledwindow {
+                border-radius: 5px;
+                border: 1px solid @borders;
+            }
         """
         style_provider = Gtk.CssProvider()
         style_provider.load_from_data(css.encode())
@@ -239,12 +509,29 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
         
         # Create app menu
         menu = Gio.Menu()
-        menu.append("Show added apps", "app.show-added-apps")   # Add our new menu item
-        menu.append("Launch with --no-sandbox", "app.no-sandbox")
-        menu.append("Use Absolute Paths", "app.absolute-path")
-        menu.append("Launch with --nogpu", "app.nogpu")
-        menu.append("About Add2Menu", "app.about")
-        menu.append("Quit", "app.quit")
+        
+        # Create menu items with icons where appropriate
+        show_added_apps_item = Gio.MenuItem.new("Show added apps", "app.show-added-apps")
+        no_sandbox_item = Gio.MenuItem.new("Launch with --no-sandbox", "app.no-sandbox")
+        absolute_path_item = Gio.MenuItem.new("Use Absolute Paths", "app.absolute-path")
+        nogpu_item = Gio.MenuItem.new("Launch with --nogpu", "app.nogpu")
+        
+        # Create terminal log item with an icon
+        terminal_item = Gio.MenuItem.new("Show app launch log", "app.show-app-launch-log")
+        terminal_icon = Gio.ThemedIcon.new("utilities-terminal")
+        terminal_item.set_icon(terminal_icon)
+        
+        about_item = Gio.MenuItem.new("About Add2Menu", "app.about")
+        quit_item = Gio.MenuItem.new("Quit", "app.quit")
+        
+        # Add items to menu
+        menu.append_item(show_added_apps_item)
+        menu.append_item(no_sandbox_item)
+        menu.append_item(absolute_path_item)
+        menu.append_item(nogpu_item)
+        menu.append_item(terminal_item)
+        menu.append_item(about_item)
+        menu.append_item(quit_item)
         
         # Set popover menu
         popover = Gtk.Popover.new_from_model(menu_button, menu)
@@ -1233,23 +1520,77 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
             
             # Join the command parts for display and logging
             display_cmd = " ".join(cmd_parts[1:])  # Skip pdrun for display
+            full_cmd = " ".join(cmd_parts)  # Full command with pdrun
             
             # Create notification toast
             self.show_launch_notification(display_cmd)
             
-            # Prepare the launcher
-            launcher = Gio.SubprocessLauncher.new(Gio.SubprocessFlags.STDOUT_SILENCE | 
-                                                  Gio.SubprocessFlags.STDERR_SILENCE)
+            # Check if app launch logging is enabled
+            show_log = self.app.show_app_launch_log
             
-            # Launch in background
-            subprocess = launcher.spawnv(cmd_parts)
+            if show_log and self.app.log_window:
+                # Log the command to the terminal window
+                self.app.log_window.log_command(full_cmd)
+                
+                # Make sure the log window is visible
+                self.app.log_window.show_all()
+                
+                # Configure launcher to capture output
+                launcher = Gio.SubprocessLauncher.new(Gio.SubprocessFlags.STDOUT_PIPE | 
+                                                     Gio.SubprocessFlags.STDERR_MERGE)
+                
+                # Launch with output capture
+                subprocess = launcher.spawnv(cmd_parts)
+                
+                # Start reading output in a separate thread to avoid blocking UI
+                thread = threading.Thread(target=self._read_process_output, 
+                                         args=(subprocess, self.app.log_window))
+                thread.daemon = True
+                thread.start()
+            else:
+                # Normal launch without output capture
+                launcher = Gio.SubprocessLauncher.new(Gio.SubprocessFlags.STDOUT_SILENCE | 
+                                                     Gio.SubprocessFlags.STDERR_SILENCE)
+                
+                # Launch in background
+                subprocess = launcher.spawnv(cmd_parts)
             
             # Log the launch
-            print(f"Launched application: {' '.join(cmd_parts)}")
+            print(f"Launched application: {full_cmd}")
             
         except Exception as e:
-            self.show_message_dialog(f"Error launching application: {str(e)}", "Error")
-            print(f"Error launching application: {str(e)}")
+            error_message = f"Error launching application: {str(e)}"
+            self.show_message_dialog(error_message, "Error")
+            print(error_message)
+            
+            # Also log to terminal window if available
+            if self.app.show_app_launch_log and self.app.log_window:
+                self.app.log_window.log(f"ERROR: {error_message}")
+    
+    def _read_process_output(self, subprocess, log_window):
+        """Read process output in a background thread and log to terminal window"""
+        try:
+            # Get stdout pipe
+            stdout_pipe = subprocess.get_stdout_pipe()
+            
+            # Create a GIO input stream for reading
+            istream = Gio.DataInputStream.new(stdout_pipe)
+            
+            # Read line by line until end
+            while True:
+                line, length = istream.read_line_utf8(None)
+                if line is None:
+                    break
+                    
+                # Use GLib.idle_add to safely update UI from background thread
+                GLib.idle_add(log_window.log, line.strip())
+                
+            # Log process completion
+            GLib.idle_add(log_window.log, "Process completed.")
+            
+        except Exception as e:
+            # Log any errors
+            GLib.idle_add(log_window.log, f"Error reading process output: {str(e)}")
     
     def ensure_absolute_path(self, cmd):
         """Ensure the command uses absolute paths if possible"""
@@ -1593,6 +1934,8 @@ class Add2MenuApplication(Gtk.Application):
         self.use_absolute_path = False  # Default setting for absolute path option
         self.nogpu = False  # Default setting for nogpu option
         self.show_added_apps = False  # Default setting for show-added-apps option
+        self.show_app_launch_log = False  # Default setting for show-app-launch-log option
+        self.log_window = None  # Terminal log window instance
 
     def do_startup(self):
         Gtk.Application.do_startup(self)
@@ -1631,6 +1974,12 @@ class Add2MenuApplication(Gtk.Application):
         show_added_apps_action.connect("change-state", self.on_show_added_apps_toggled)
         self.add_action(show_added_apps_action)
         
+        # Add show-app-launch-log toggle action
+        show_app_launch_log_action = Gio.SimpleAction.new_stateful("show-app-launch-log", None, 
+                                                                  GLib.Variant.new_boolean(False))
+        show_app_launch_log_action.connect("change-state", self.on_show_app_launch_log_toggled)
+        self.add_action(show_app_launch_log_action)
+        
         # Add keyboard accelerators
         self.set_accels_for_action("app.quit", ["<Ctrl>Q", "<Ctrl>W"])
         
@@ -1660,7 +2009,7 @@ class Add2MenuApplication(Gtk.Application):
         
         about_dialog = Gtk.AboutDialog(transient_for=self.window, modal=True)
         about_dialog.set_program_name("Add To Menu")
-        about_dialog.set_version("2.2")
+        about_dialog.set_version("2.3")
         about_dialog.set_comments("A utility to add Linux applications to Termux desktop")
         about_dialog.set_copyright(f"© {current_year} Termux-desktop (sabamdarif)")
         about_dialog.set_license_type(Gtk.License.GPL_3_0)
@@ -1694,6 +2043,20 @@ class Add2MenuApplication(Gtk.Application):
         # but only if we are in the Add mode where it's relevant
         if self.window and self.window.add_radio.get_active():
             self.window._force_refresh()
+            
+    def on_show_app_launch_log_toggled(self, action, value):
+        """Handle show-app-launch-log toggle"""
+        action.set_state(value)
+        self.show_app_launch_log = value.get_boolean()
+        
+        # Create the log window if it doesn't exist, but don't show it yet
+        # It will be shown when an app is launched
+        if self.show_app_launch_log and not self.log_window:
+            self.log_window = TerminalLogWindow(self.window)
+        
+        # If logging is disabled and the window is visible, hide it
+        if not self.show_app_launch_log and self.log_window and self.log_window.get_visible():
+            self.log_window.hide()
 
 if __name__ == "__main__":
     try:

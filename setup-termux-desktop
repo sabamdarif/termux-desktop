@@ -2393,7 +2393,7 @@ cat <<EOF > "$PREFIX/bin/vncstart"
 termux-wake-lock
 
 # Prevent script from looping by checking if it's already running
-if pgrep -f "vncstart" >/dev/null; then
+if pgrep -f "vncserver" >/dev/null; then
     echo "[!] vncstart is already running. Exiting."
     exit 1
 fi
