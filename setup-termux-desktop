@@ -107,7 +107,7 @@ function wait_for_keypress() {
 }
 
 function check_and_create_directory() {
-    if [[ ! -d "$1" ]]; then
+    if [[ -n "$1" && ! -d "$1" ]]; then
         mkdir -p "$1"
 		print_log "$1"
     fi
@@ -118,16 +118,18 @@ function check_and_delete() {
     local file
 	local files_folders
     for files_folders in "$@"; do
-        for file in $files_folders; do
-            if [[ -e "$file" ]]; then
-                if [[ -d "$file" ]]; then
-                    rm -rf "$file" >/dev/null 2>&1
-                elif [[ -f "$file" ]]; then
-                    rm "$file" >/dev/null 2>&1
-                fi
-            fi
-		print_log "$file"
-        done
+		if [[ -n "$files_folders" ]]; then
+    	    for file in $files_folders; do
+    	        if [[ -e "$file" ]]; then
+    	            if [[ -d "$file" ]]; then
+    	                rm -rf "$file" >/dev/null 2>&1
+    	            elif [[ -f "$file" ]]; then
+    	                rm "$file" >/dev/null 2>&1
+    	            fi
+    	        fi
+			print_log "$file"
+    	    done
+		fi
     done
 }
 
@@ -136,20 +138,22 @@ function check_and_backup() {
 	local file
 	local files_folders
     for files_folders in "$@"; do
-        for file in $files_folders; do
-            if [[ -e "$file" ]]; then
-            local date_str
-			date_str=$(date +"%d-%m-%Y")
-			local backup="${file}-${date_str}.bak"
-			    if [[ -e "$backup" ]]; then
-				echo "${R}[${C}-${R}]${G}Backup file ${C}${backup} ${G}already exists${W}"
-				echo
-				fi
-		    echo "${R}[${C}-${R}]${G}backing up file ${C}$file${W}"
-			mv "$1" "$backup"
-			print_log "$1 $backup"
-            fi
-        done
+		if [[ -n "$files_folders" ]]; then
+    	    for file in $files_folders; do
+    	        if [[ -e "$file" ]]; then
+    	        local date_str
+				date_str=$(date +"%d-%m-%Y")
+				local backup="${file}-${date_str}.bak"
+				    if [[ -e "$backup" ]]; then
+					echo "${R}[${C}-${R}]${G}Backup file ${C}${backup} ${G}already exists${W}"
+					echo
+					fi
+			    echo "${R}[${C}-${R}]${G}backing up file ${C}$file${W}"
+				mv "$1" "$backup"
+				print_log "$1 $backup"
+    	        fi
+    	    done
+		fi
     done
 }
 
@@ -191,7 +195,6 @@ function download_file() {
         else
             print_failed "Download failed. Retrying... ($attempt/$max_retries)"
         fi
-        
         ((attempt++))
     done
 
@@ -285,6 +288,7 @@ function package_install_and_check() {
                 fi
             fi
         else
+			dpkg --configure -a
             if [[ $package_name == *"*"* ]]; then
                 log_debug "Processing wildcard pattern" "Pattern: $package_name"
                 echo "${R}[${C}-${R}]${C} Processing wildcard pattern: $package_name ${W}"
@@ -348,6 +352,7 @@ function package_check_and_remove() {
                         fi
                     fi
                 else
+					dpkg --configure -a
                     if dpkg -s "$pkg" >/dev/null 2>&1; then
                         apt autoremove "$pkg" -y
                         if [ $? -eq 0 ]; then
@@ -370,6 +375,7 @@ function package_check_and_remove() {
                     fi
                 fi
             else
+				dpkg --configure -a
                 if dpkg -s "$package_name" >/dev/null 2>&1; then
                     echo "${R}[${C}-${R}]${G}${BOLD} Removing package: ${C}$package_name ${W}"
                     apt autoremove "$package_name" -y
@@ -471,7 +477,6 @@ function download_and_extract() {
         print_failed "Failed to download ${C}${filename}"
         echo "${R}[${C}-${R}]${C}Please check your internet connection${W}"
     fi
-    
     print_log "$url $target_dir $filename"
 }
 
@@ -502,7 +507,6 @@ function count_subfolders() {
     # Use jq to extract directories and count them; if none found, length returns 0.
     local subfolder_count
     subfolder_count=$(echo "$response" | jq -r '[.[] | select(.type == "dir")] | length')
-    
     # Ensure that if no value was found, we set it to 0.
     if [[ -z "$subfolder_count" ]]; then
         subfolder_count=0
@@ -603,6 +607,7 @@ function read_conf() {
 
 	source "$config_file"
     print_success "Configuration variables loaded"
+	validate_required_vars
 }
 
 function print_to_config() {
@@ -2075,7 +2080,7 @@ function install_desktop() {
         echo "${R}[${C}-${R}]${G}${BOLD} Installing AWESOME WM${W}"
 		package_install_and_check "awesome"
     fi
-	package_install_and_check "kvantum xwayland pulseaudio file-roller pavucontrol gnome-font-viewer evince galculator gdk-pixbuf libwayland-protocols xorg-xrdb"
+	package_install_and_check "kvantum xwayland pulseaudio file-roller pavucontrol gnome-font-viewer evince galculator libwayland-protocols xorg-xrdb"
     # Uncomment if additional package installation is needed
     # if [[ "$distro_add_answer" == "y" ]]; then
     #     package_install_and_check "xdg-utils"
@@ -2121,7 +2126,24 @@ function theme_installer() {
     check_and_create_directory "$PREFIX/share/backgrounds"
     download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/setup-files/setup-files/${de_name}/look_${style_answer}/wallpaper.tar.gz" "$PREFIX/share/backgrounds/"
 
+	print_to_config "ext_wall_answer"
+	if [[ "$ext_wall_answer" == "n" ]]; then
+		echo "${R}[${C}-${R}]${C} Skipping Extra Wallpapers Setup...${W}"
+		echo
+	elif [[ "$ext_wall_answer" == "y" ]]; then
+		echo "${R}[${C}-${R}]${G}${BOLD} Installing Some Extra Wallpapers...${W}"
+		echo
+		check_and_create_directory "$PREFIX/share/backgrounds"
+		download_and_extract "https://archive.org/download/wallpaper-extra.tar/wallpaper-extra.tar.gz" "$PREFIX/share/backgrounds/"
+	fi
+
     banner
+	echo "${R}[${C}-${R}]${G}${BOLD} Configuring Icon Pack...${W}"
+    echo
+	package_install_and_check "gdk-pixbuf"
+	if [[ -z "$icons_folder" ]]; then
+		icons_folder="$HOME/.icons"
+	fi
     check_and_create_directory "$icons_folder"
     download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/setup-files/setup-files/${de_name}/look_${style_answer}/icon.tar.gz" "$icons_folder"
 
@@ -2149,6 +2171,9 @@ function theme_installer() {
 
     echo "${R}[${C}-${R}]${G}${BOLD} Installing Theme...${W}"
     echo
+	if [[ -z "$themes_folder" ]]; then
+		themes_folder="$HOME/.themes"
+	fi
     check_and_create_directory "$themes_folder"
     download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/setup-files/setup-files/${de_name}/look_${style_answer}/theme.tar.gz" "$themes_folder"
 
@@ -2222,16 +2247,6 @@ function setup_config() {
 	additional_required_steps
 	else
 	print_failed "Failed to select style..."
-	fi
-	print_to_config "ext_wall_answer"
-	if [[ "$ext_wall_answer" == "n" ]]; then
-	echo "${R}[${C}-${R}]${C} Skipping Extra Wallpapers Setup...${W}"
-	echo
-	elif [[ "$ext_wall_answer" == "y" ]]; then
-	echo "${R}[${C}-${R}]${G}${BOLD} Installing Some Extra Wallpapers...${W}"
-	echo
-	check_and_create_directory "$PREFIX/share/backgrounds"
-	download_and_extract "https://archive.org/download/wallpaper-extra.tar/wallpaper-extra.tar.gz" "$PREFIX/share/backgrounds/"
 	fi
 }
 
@@ -3203,16 +3218,20 @@ function install_termux_desktop_appstore() {
     echo
     sleep 1
 
-    package_install_and_check "aria2 python python3 cloneit pygobject python-pillow"
+    package_install_and_check "aria2 python python3 pygobject python-pillow"
+	check_and_delete "${PREFIX}/opt/appstore"
     check_and_create_directory "${PREFIX}/opt/appstore"
-    cd ${PREFIX}/opt/appstore || return
-    cloneit https://github.com/sabamdarif/Termux-AppStore/tree/main/src
-    cd src || return
-    mv -f * ${PREFIX}/opt/appstore/
-    cd .. || return
-    check_and_delete "src"
+    cd ${PREFIX}/opt/appstore || return 1
+	download_file "https://raw.githubusercontent.com/sabamdarif/Termux-AppStore/refs/heads/src/gtk_app_store.py"
+	check_and_create_directory "style"
+	download_file "style/style.css" "https://raw.githubusercontent.com/sabamdarif/Termux-AppStore/refs/heads/src/style/style.css"
+  check_and_create_directory "inbuild_functions"
+	download_file "inbuild_functions/inbuild_functions" "https://raw.githubusercontent.com/sabamdarif/Termux-AppStore/refs/heads/src/inbuild_functions/inbuild_functions"
+	chmod +x "inbuild_functions/inbuild_functions"
+	download_file "https://raw.githubusercontent.com/sabamdarif/Termux-AppStore/refs/heads/src/requirements.txt"
+	download_file "${PREFIX}/share/applications/org.sabamdarif.termux.appstore.desktop" "https://raw.githubusercontent.com/sabamdarif/Termux-AppStore/refs/heads/src/org.sabamdarif.termux.appstore.desktop"
+
     check_and_create_directory "$HOME/.appstore"
-    check_and_create_directory "$HOME/.termux_appstore"
 
     # Install Python dependencies only if not already installed
     echo "${R}[${C}-${R}]${C} Checking Python dependencies...${W}"
@@ -3233,16 +3252,11 @@ function install_termux_desktop_appstore() {
         fi
     done < requirements.txt
 
-    # Move desktop file only if it doesn't exist
-    if [[ ! -f "${PREFIX}/share/applications/org.sabamdarif.termux.appstore.desktop" ]]; then
-        mv -f org.sabamdarif.termux.appstore.desktop "${PREFIX}/share/applications/"
-    fi
-	if [[ ! -f "/data/data/com.termux/files/home/Desktop/org.sabamdarif.termux.appstore.desktop" ]]; then
-        cp "${PREFIX}/share/applications/org.sabamdarif.termux.appstore.desktop" "/data/data/com.termux/files/home/Desktop"
-		chmod +x /data/data/com.termux/files/home/Desktop/org.sabamdarif.termux.appstore.desktop
-    fi
-    chmod +x "${PREFIX}/opt/appstore/inbuild_functions/inbuild_functions"
-    cd "${HOME}" || return
+    # Move desktop file
+	check_and_delete "/data/data/com.termux/files/home/Desktop/org.sabamdarif.termux.appstore.desktop"
+    cp "${PREFIX}/share/applications/org.sabamdarif.termux.appstore.desktop" "/data/data/com.termux/files/home/Desktop"
+	chmod +x /data/data/com.termux/files/home/Desktop/org.sabamdarif.termux.appstore.desktop
+    cd "${HOME}"
 }
 
 #########################################################################
@@ -3495,7 +3509,7 @@ function run_wine_shortcut_script() {
 	print_success "Adding wine desktop shortcuts..."
 	download_file "add-wine-shortcut" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/other/add-wine-shortcut"
 	chmod +x "add-wine-shortcut"
-    . add-wine-shortcut
+    	. add-wine-shortcut
 	check_and_delete "add-wine-shortcut"
 }
 
@@ -3839,7 +3853,7 @@ function change_style() {
 	sleep 2
 	unset style_name
 	questions_theme_select
-	rm -rf ~/.cache/sessions/x*
+	rm -rf ~/.cache/sessions/*
 	setup_config
 	banner
 	echo "${R}[${C}-${R}]${G} Style changed successfully${W}"
@@ -4184,7 +4198,7 @@ function add_auto_completion() {
 	download_file "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/completion/bash/tx11start"
 	download_file "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/completion/bash/tx11stop"
 	if [[ "$distro_add_answer" == "y" ]]; then
-		download_file "${selected_distro}" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/completion/bash/debian"
+		download_file "${selected_distro}" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/completion/bash/distro"
 		sed -i "s/distro/${selected_distro}/g" "${selected_distro}"
 		download_file "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/completion/bash/add2menu"
 	fi
@@ -4362,11 +4376,7 @@ function check_for_appstore_update() {
         local local_hash
 
         # Get GitHub file hash
-        if [[ "$file" == "gtk_app_store.py" ]]; then
-            github_hash=$(curl -sL "https://raw.githubusercontent.com/sabamdarif/Termux-AppStore/main/src/${file}" | sha256sum | cut -d ' ' -f 1)
-        else
-            github_hash=$(curl -sL "https://raw.githubusercontent.com/sabamdarif/Termux-AppStore/main/src/${file}" | sha256sum | cut -d ' ' -f 1)
-        fi
+            github_hash=$(curl -sL "https://raw.githubusercontent.com/sabamdarif/Termux-AppStore/refs/heads/src/${file}" | sha256sum | cut -d ' ' -f 1)
 
         # Get local file hash
         if [[ -f "$PREFIX/opt/appstore/$file" ]]; then
@@ -4393,7 +4403,6 @@ function check_for_appstore_update() {
 
         if [[ "$update_appstore" == "y" ]]; then
             echo "${R}[${C}-${R}]${G} Updating appstore...${W}"
-            check_and_delete "$PREFIX/opt/appstore"
             install_termux_desktop_appstore
             echo "${R}[${C}-${R}]${G} Appstore updated successfully${W}"
         else
