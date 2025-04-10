@@ -15,278 +15,278 @@ SPEED_RESULT_FILE="$TEMP_DIR/mirror_speeds.txt"
 
 # Ensure required packages are installed (removed bc dependency)
 check_dependencies() {
-    for pkg in dialog curl; do
-        if ! command -v $pkg >/dev/null; then
-            echo "Installing required package: $pkg"
-            apt update && apt install -y $pkg
-        fi
-    done
+  for pkg in dialog curl; do
+    if ! command -v $pkg >/dev/null; then
+      echo "Installing required package: $pkg"
+      apt update && apt install -y $pkg
+    fi
+  done
 }
 
 # Create temp directory if it doesn't exist
 mkdir -p "$TEMP_DIR" || exit $?
 
 unlink_and_link() {
-    MIRROR_PATH="$1"
-    if [ -L "/data/data/com.termux/files/usr/etc/termux/chosen_mirrors" ]; then
-        unlink "/data/data/com.termux/files/usr/etc/termux/chosen_mirrors"
-    fi
-    ln -s "${MIRROR_PATH}" "/data/data/com.termux/files/usr/etc/termux/chosen_mirrors"
+  MIRROR_PATH="$1"
+  if [ -L "/data/data/com.termux/files/usr/etc/termux/chosen_mirrors" ]; then
+    unlink "/data/data/com.termux/files/usr/etc/termux/chosen_mirrors"
+  fi
+  ln -s "${MIRROR_PATH}" "/data/data/com.termux/files/usr/etc/termux/chosen_mirrors"
 }
 
 get_mirror_url() {
-    basename "$1"
+  basename "$1"
 }
 
 get_mirror_description() {
-    head -n 2 "$1" | tail -n 1 | cut -d" " -f2-
+  head -n 2 "$1" | tail -n 1 | cut -d" " -f2-
 }
 
 get_mirror_main_url() {
-    grep "MAIN=" "$1" | cut -d'"' -f2
+  grep "MAIN=" "$1" | cut -d'"' -f2
 }
 
 # Test download speed from a mirror using millisecond precision without bc
 test_mirror_speed() {
-    mirror_file="$1"
-    mirror_name=$(get_mirror_url "$mirror_file")
-    mirror_url=$(get_mirror_main_url "$mirror_file")
-    
-    # Ensure URL ends with slash
-    [[ "$mirror_url" != */ ]] && mirror_url="${mirror_url}/"
-    
-    # Use a common file that should be on all mirrors
-    test_url="${mirror_url}dists/stable/Release"
-    
-    # Test the speed
-    echo -n "Testing $mirror_name... "
-    
-    # Get start time in milliseconds
-    start_time=$(date +%s%3N)
-    
-    # Use curl with a 10 second timeout, follow redirects, silent mode
-    if curl -s -L --connect-timeout 5 --max-time 10 -o /dev/null "$test_url"; then
-        end_time=$(date +%s%3N)
-        # Calculate duration in milliseconds (as an integer)
-        duration=$((end_time - start_time))
-        # Convert to seconds with two decimal places using awk
-        speed=$(awk "BEGIN {printf \"%.2f\", $duration/1000}")
-        
-        echo "done - ${speed}s"
-        echo "$mirror_file|$mirror_name|$speed" >> "$SPEED_RESULT_FILE"
-    else
-        echo "failed (timeout or error)"
-        echo "$mirror_file|$mirror_name|999.99" >> "$SPEED_RESULT_FILE"
-    fi
+  mirror_file="$1"
+  mirror_name=$(get_mirror_url "$mirror_file")
+  mirror_url=$(get_mirror_main_url "$mirror_file")
+
+  # Ensure URL ends with slash
+  [[ "$mirror_url" != */ ]] && mirror_url="${mirror_url}/"
+
+  # Use a common file that should be on all mirrors
+  test_url="${mirror_url}dists/stable/Release"
+
+  # Test the speed
+  echo -n "Testing $mirror_name... "
+
+  # Get start time in milliseconds
+  start_time=$(date +%s%3N)
+
+  # Use curl with a 10 second timeout, follow redirects, silent mode
+  if curl -s -L --connect-timeout 5 --max-time 10 -o /dev/null "$test_url"; then
+    end_time=$(date +%s%3N)
+    # Calculate duration in milliseconds (as an integer)
+    duration=$((end_time - start_time))
+    # Convert to seconds with two decimal places using awk
+    speed=$(awk "BEGIN {printf \"%.2f\", $duration/1000}")
+
+    echo "done - ${speed}s"
+    echo "$mirror_file|$mirror_name|$speed" >>"$SPEED_RESULT_FILE"
+  else
+    echo "failed (timeout or error)"
+    echo "$mirror_file|$mirror_name|999.99" >>"$SPEED_RESULT_FILE"
+  fi
 }
 
 # Select which mirrors to test
 select_mirrors_to_test() {
-    REGIONS=()
-    REGIONS+=("All mirrors" "Test all mirrors in the entire world" "on")
-    REGIONS+=("Asia" "Test only mirrors in Asia (excl. Chinese Mainland and Russia)" "off")
-    REGIONS+=("Chinese Mainland" "Test only mirrors in Chinese Mainland" "off")
-    REGIONS+=("Europe" "Test only mirrors in Europe" "off")
-    REGIONS+=("North America" "Test only mirrors in North America" "off")
-    REGIONS+=("Oceania" "Test only mirrors in Oceania" "off")
-    REGIONS+=("Russia" "Test only mirrors in Russia" "off")
+  REGIONS=()
+  REGIONS+=("All mirrors" "Test all mirrors in the entire world" "on")
+  REGIONS+=("Asia" "Test only mirrors in Asia (excl. Chinese Mainland and Russia)" "off")
+  REGIONS+=("Chinese Mainland" "Test only mirrors in Chinese Mainland" "off")
+  REGIONS+=("Europe" "Test only mirrors in Europe" "off")
+  REGIONS+=("North America" "Test only mirrors in North America" "off")
+  REGIONS+=("Oceania" "Test only mirrors in Oceania" "off")
+  REGIONS+=("Russia" "Test only mirrors in Russia" "off")
 
-    local TEMPFILE="$(mktemp $TEMP_DIR/region.XXXXXX)"
-    dialog \
-        --title "termux-fastest-repo" --clear \
-        --radiolist "Which mirrors would you like to test for speed?\nSelect with space." 0 0 0 \
-        "${REGIONS[@]}" --and-widget \
-        2> "$TEMPFILE"
-    retval=$?
-    clear
+  local TEMPFILE="$(mktemp $TEMP_DIR/region.XXXXXX)"
+  dialog \
+    --title "termux-fastest-repo" --clear \
+    --radiolist "Which mirrors would you like to test for speed?\nSelect with space." 0 0 0 \
+    "${REGIONS[@]}" --and-widget \
+    2>"$TEMPFILE"
+  retval=$?
+  clear
 
-    case $retval in
-        1)
-            # Cancel pressed
-            echo "Selection cancelled."
-            exit
-            ;;
-        255)
-            # Esc pressed
-            echo "Selection cancelled."
-            exit
-            ;;
-    esac
+  case $retval in
+  1)
+    # Cancel pressed
+    echo "Selection cancelled."
+    exit
+    ;;
+  255)
+    # Esc pressed
+    echo "Selection cancelled."
+    exit
+    ;;
+  esac
 
-    region="$(cat "$TEMPFILE")"
-    rm "$TEMPFILE"
-    
-    return_mirrors=()
-    
-    if [ "$region" == "All mirrors" ]; then
-        echo "[*] Testing all mirrors"
-        return_mirrors=($(find ${MIRROR_BASE_DIR}/{asia,chinese_mainland,europe,north_america,oceania,russia}/ -type f ! -name "*\.dpkg-old" ! -name "*\.dpkg-new" ! -name "*~"))
-        # Also add default mirror
-        return_mirrors+=("${MIRROR_BASE_DIR}/default")
-    elif [ "$region" == "Asia" ]; then
-        echo "[*] Testing mirrors in Asia"
-        return_mirrors=($(find ${MIRROR_BASE_DIR}/asia/ -type f ! -name "*\.dpkg-old" ! -name "*\.dpkg-new" ! -name "*~"))
-    elif [ "$region" == "Chinese Mainland" ]; then
-        echo "[*] Testing mirrors in Chinese Mainland"
-        return_mirrors=($(find ${MIRROR_BASE_DIR}/chinese_mainland/ -type f ! -name "*\.dpkg-old" ! -name "*\.dpkg-new" ! -name "*~"))
-    elif [ "$region" == "Europe" ]; then
-        echo "[*] Testing mirrors in Europe"
-        return_mirrors=($(find ${MIRROR_BASE_DIR}/europe/ -type f ! -name "*\.dpkg-old" ! -name "*\.dpkg-new" ! -name "*~"))
-    elif [ "$region" == "North America" ]; then
-        echo "[*] Testing mirrors in North America"
-        return_mirrors=($(find ${MIRROR_BASE_DIR}/north_america/ -type f ! -name "*\.dpkg-old" ! -name "*\.dpkg-new" ! -name "*~"))
-    elif [ "$region" == "Oceania" ]; then
-        echo "[*] Testing mirrors in Oceania"
-        return_mirrors=($(find ${MIRROR_BASE_DIR}/oceania/ -type f ! -name "*\.dpkg-old" ! -name "*\.dpkg-new" ! -name "*~"))
-    elif [ "$region" == "Russia" ]; then
-        echo "[*] Testing mirrors in Russia"
-        return_mirrors=($(find ${MIRROR_BASE_DIR}/russia/ -type f ! -name "*\.dpkg-old" ! -name "*\.dpkg-new" ! -name "*~"))
-    else
-        echo "[!] Error: unknown region: '$region'. Exiting"
-        exit 1
-    fi
-    
-    mirrors=("${return_mirrors[@]}")
+  region="$(cat "$TEMPFILE")"
+  rm "$TEMPFILE"
+
+  return_mirrors=()
+
+  if [ "$region" == "All mirrors" ]; then
+    echo "[*] Testing all mirrors"
+    return_mirrors=($(find ${MIRROR_BASE_DIR}/{asia,chinese_mainland,europe,north_america,oceania,russia}/ -type f ! -name "*\.dpkg-old" ! -name "*\.dpkg-new" ! -name "*~"))
+    # Also add default mirror
+    return_mirrors+=("${MIRROR_BASE_DIR}/default")
+  elif [ "$region" == "Asia" ]; then
+    echo "[*] Testing mirrors in Asia"
+    return_mirrors=($(find ${MIRROR_BASE_DIR}/asia/ -type f ! -name "*\.dpkg-old" ! -name "*\.dpkg-new" ! -name "*~"))
+  elif [ "$region" == "Chinese Mainland" ]; then
+    echo "[*] Testing mirrors in Chinese Mainland"
+    return_mirrors=($(find ${MIRROR_BASE_DIR}/chinese_mainland/ -type f ! -name "*\.dpkg-old" ! -name "*\.dpkg-new" ! -name "*~"))
+  elif [ "$region" == "Europe" ]; then
+    echo "[*] Testing mirrors in Europe"
+    return_mirrors=($(find ${MIRROR_BASE_DIR}/europe/ -type f ! -name "*\.dpkg-old" ! -name "*\.dpkg-new" ! -name "*~"))
+  elif [ "$region" == "North America" ]; then
+    echo "[*] Testing mirrors in North America"
+    return_mirrors=($(find ${MIRROR_BASE_DIR}/north_america/ -type f ! -name "*\.dpkg-old" ! -name "*\.dpkg-new" ! -name "*~"))
+  elif [ "$region" == "Oceania" ]; then
+    echo "[*] Testing mirrors in Oceania"
+    return_mirrors=($(find ${MIRROR_BASE_DIR}/oceania/ -type f ! -name "*\.dpkg-old" ! -name "*\.dpkg-new" ! -name "*~"))
+  elif [ "$region" == "Russia" ]; then
+    echo "[*] Testing mirrors in Russia"
+    return_mirrors=($(find ${MIRROR_BASE_DIR}/russia/ -type f ! -name "*\.dpkg-old" ! -name "*\.dpkg-new" ! -name "*~"))
+  else
+    echo "[!] Error: unknown region: '$region'. Exiting"
+    exit 1
+  fi
+
+  mirrors=("${return_mirrors[@]}")
 }
 
 # Test selected mirrors and display results
 test_selected_mirrors() {
-    echo "Testing connection speed to selected Termux mirrors..."
-    echo "This may take a while, please be patient."
-    echo ""
-    
-    # Clear previous results
-    rm -f "$SPEED_RESULT_FILE"
-    
-    # Get mirrors to test
-    select_mirrors_to_test
-    
-    # Test each mirror
-    for mirror in ${mirrors[@]}; do
-        test_mirror_speed "$mirror"
-    done
-    
-    # Sort results by speed (3rd field)
-    sort -t'|' -k3 -n "$SPEED_RESULT_FILE" > "${SPEED_RESULT_FILE}.sorted"
-    mv "${SPEED_RESULT_FILE}.sorted" "$SPEED_RESULT_FILE"
-    
-    echo ""
-    echo "Speed testing completed!"
+  echo "Testing connection speed to selected Termux mirrors..."
+  echo "This may take a while, please be patient."
+  echo ""
+
+  # Clear previous results
+  rm -f "$SPEED_RESULT_FILE"
+
+  # Get mirrors to test
+  select_mirrors_to_test
+
+  # Test each mirror
+  for mirror in ${mirrors[@]}; do
+    test_mirror_speed "$mirror"
+  done
+
+  # Sort results by speed (3rd field)
+  sort -t'|' -k3 -n "$SPEED_RESULT_FILE" >"${SPEED_RESULT_FILE}.sorted"
+  mv "${SPEED_RESULT_FILE}.sorted" "$SPEED_RESULT_FILE"
+
+  echo ""
+  echo "Speed testing completed!"
 }
 
 # Display sorted results and let user select
 select_mirror_by_speed() {
-    MIRRORS=()
-    
-    # Add a header explaining the sorting
-    echo "=================================================================="
-    echo "                  MIRRORS SORTED BY SPEED                         "
-    echo "                  (FASTEST TO SLOWEST)                           "
-    echo "=================================================================="
-    
-    # Display a simple table of results in console
-    echo
-    printf "%-35s | %-10s | %s\n" "MIRROR" "SPEED (s)" "DESCRIPTION"
-    echo "--------------------------------|------------|-------------------------"
-    
-    # Read the sorted results
-    while IFS='|' read -r mirror_path mirror_name speed; do
-        # Skip mirrors that failed (999.99)
-        if [ "$speed" = "999.99" ]; then
-            mirror_desc="Failed to connect"
-            printf "%-35s | %-10s | %s\n" "$mirror_name" "FAILED" "$mirror_desc"
-        else
-            mirror_desc="$(get_mirror_description "$mirror_path")"
-            printf "%-35s | %-10s | %s\n" "$mirror_name" "${speed}s" "$mirror_desc"
-        fi
-        
-        # Format description for dialog display
-        if [ "$speed" = "999.99" ]; then
-            mirror_desc="Failed to connect"
-        else
-            mirror_desc="✓ Speed: ${speed}s - $(get_mirror_description "$mirror_path")"
-        fi
-        
-        # Add to the options array
-        MIRRORS+=("$mirror_name" "$mirror_desc" "off")
-    done < "$SPEED_RESULT_FILE"
-    
-    echo
-    echo "Press Enter to continue to mirror selection..."
-    read
-    
-    # Mark the first (fastest) mirror as selected by default
-    if [ ${#MIRRORS[@]} -gt 0 ]; then
-        MIRRORS[2]="on"
-    else
-        echo "No mirrors were successfully tested. Exiting."
-        exit 1
-    fi
-    
-    local TEMPFILE="$(mktemp $TEMP_DIR/mirror.XXXXXX)"
-    dialog \
-        --title "termux-fastest-repo" --clear \
-        --radiolist "Select your preferred mirror (sorted fastest to slowest).\nSelect with space." 0 0 0 \
-        "${MIRRORS[@]}" --and-widget \
-        2> "$TEMPFILE"
-    retval=$?
-    clear
+  MIRRORS=()
 
-    case $retval in
-        1)
-            # Cancel pressed
-            echo "Selection cancelled."
-            exit
-            ;;
-        255)
-            # Esc pressed
-            echo "Selection cancelled."
-            exit
-            ;;
-    esac
+  # Add a header explaining the sorting
+  echo "=================================================================="
+  echo "                  MIRRORS SORTED BY SPEED                         "
+  echo "                  (FASTEST TO SLOWEST)                           "
+  echo "=================================================================="
 
-    selected_mirror="$(cat "$TEMPFILE")"
-    rm "$TEMPFILE"
-    
-    # Find the mirror path from the selected name
-    selected_path=""
-    while IFS='|' read -r mirror_path mirror_name speed; do
-        if [ "$mirror_name" = "$selected_mirror" ]; then
-            selected_path="$mirror_path"
-            break
-        fi
-    done < "$SPEED_RESULT_FILE"
-    
-    if [ -n "$selected_path" ]; then
-        echo "[*] Mirror $selected_mirror selected"
-        unlink_and_link "$selected_path"
-        echo "[*] pkg --check-mirror update"
-        TERMUX_APP_PACKAGE_MANAGER=apt pkg --check-mirror update
+  # Display a simple table of results in console
+  echo
+  printf "%-35s | %-10s | %s\n" "MIRROR" "SPEED (s)" "DESCRIPTION"
+  echo "--------------------------------|------------|-------------------------"
+
+  # Read the sorted results
+  while IFS='|' read -r mirror_path mirror_name speed; do
+    # Skip mirrors that failed (999.99)
+    if [ "$speed" = "999.99" ]; then
+      mirror_desc="Failed to connect"
+      printf "%-35s | %-10s | %s\n" "$mirror_name" "FAILED" "$mirror_desc"
     else
-        echo "[!] Error: Could not find path for selected mirror."
-        exit 1
+      mirror_desc="$(get_mirror_description "$mirror_path")"
+      printf "%-35s | %-10s | %s\n" "$mirror_name" "${speed}s" "$mirror_desc"
     fi
+
+    # Format description for dialog display
+    if [ "$speed" = "999.99" ]; then
+      mirror_desc="Failed to connect"
+    else
+      mirror_desc="✓ Speed: ${speed}s - $(get_mirror_description "$mirror_path")"
+    fi
+
+    # Add to the options array
+    MIRRORS+=("$mirror_name" "$mirror_desc" "off")
+  done <"$SPEED_RESULT_FILE"
+
+  echo
+  echo "Press Enter to continue to mirror selection..."
+  read
+
+  # Mark the first (fastest) mirror as selected by default
+  if [ ${#MIRRORS[@]} -gt 0 ]; then
+    MIRRORS[2]="on"
+  else
+    echo "No mirrors were successfully tested. Exiting."
+    exit 1
+  fi
+
+  local TEMPFILE="$(mktemp $TEMP_DIR/mirror.XXXXXX)"
+  dialog \
+    --title "termux-fastest-repo" --clear \
+    --radiolist "Select your preferred mirror (sorted fastest to slowest).\nSelect with space." 0 0 0 \
+    "${MIRRORS[@]}" --and-widget \
+    2>"$TEMPFILE"
+  retval=$?
+  clear
+
+  case $retval in
+  1)
+    # Cancel pressed
+    echo "Selection cancelled."
+    exit
+    ;;
+  255)
+    # Esc pressed
+    echo "Selection cancelled."
+    exit
+    ;;
+  esac
+
+  selected_mirror="$(cat "$TEMPFILE")"
+  rm "$TEMPFILE"
+
+  # Find the mirror path from the selected name
+  selected_path=""
+  while IFS='|' read -r mirror_path mirror_name speed; do
+    if [ "$mirror_name" = "$selected_mirror" ]; then
+      selected_path="$mirror_path"
+      break
+    fi
+  done <"$SPEED_RESULT_FILE"
+
+  if [ -n "$selected_path" ]; then
+    echo "[*] Mirror $selected_mirror selected"
+    unlink_and_link "$selected_path"
+    echo "[*] pkg --check-mirror update"
+    TERMUX_APP_PACKAGE_MANAGER=apt pkg --check-mirror update
+  else
+    echo "[!] Error: Could not find path for selected mirror."
+    exit 1
+  fi
 }
 
 # Main function
 main() {
-    check_dependencies
-    
-    if ! command -v apt 1>/dev/null; then
-        echo "Error: Cannot change mirrors since apt is not installed." >&2
-        exit 1
-    fi
-    
-    if [ "$TERMUX_APP_PACKAGE_MANAGER" = "pacman" ]; then
-        read -p "Warning: This script can only change mirrors for apt, is that what you intended? [y|n] " -n 1 -r
-        echo
-        [[ ${REPLY} =~ ^[Nn]$ ]] && exit
-    fi
-    
-    test_selected_mirrors
-    select_mirror_by_speed
-    
-    echo "Mirror has been updated successfully!"
+  check_dependencies
+
+  if ! command -v apt 1>/dev/null; then
+    echo "Error: Cannot change mirrors since apt is not installed." >&2
+    exit 1
+  fi
+
+  if [ "$TERMUX_APP_PACKAGE_MANAGER" = "pacman" ]; then
+    read -p "Warning: This script can only change mirrors for apt, is that what you intended? [y|n] " -n 1 -r
+    echo
+    [[ ${REPLY} =~ ^[Nn]$ ]] && exit
+  fi
+
+  test_selected_mirrors
+  select_mirror_by_speed
+
+  echo "Mirror has been updated successfully!"
 }
 
 # Run the script

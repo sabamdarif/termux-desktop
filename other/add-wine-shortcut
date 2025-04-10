@@ -1,26 +1,26 @@
 #!/data/data/com.termux/files/usr/bin/bash
 
 function check_termux() {
-	if [[ $HOME != *termux* ]]; then
-	echo "${R}[${R}☓${R}]${R}${BOLD}Please run it inside termux${W}"
-	exit 0
-	fi
+  if [[ $HOME != *termux* ]]; then
+    echo "${R}[${R}☓${R}]${R}${BOLD}Please run it inside termux${W}"
+    exit 0
+  fi
 }
 
 if [[ "$wine_answer" == "3" ]]; then
-	if [[ ! -f "$PREFIX/bin/wine" ]]; then
-		wine_cmd="wine"
-	else
-		wine_cmd="hangover-wine"
-	fi
+  if [[ ! -f "$PREFIX/bin/wine" ]]; then
+    wine_cmd="wine"
+  else
+    wine_cmd="hangover-wine"
+  fi
 else
-wine_cmd="wine"
+  wine_cmd="wine"
 fi
 
 function wine_shortcut() {
-rm -rf "$PREFIX/share/applications/wine-explorer.desktop $PREFIX/share/applications/wine-winecfg.desktop $PREFIX/share/applications/wine-uninstaller.desktop $PREFIX/share/applications/wine-regedit.desktop $PREFIX/share/applications/wine-wineboot.desktop" >/dev/null 2>&1
+  rm -rf "$PREFIX/share/applications/wine-explorer.desktop $PREFIX/share/applications/wine-winecfg.desktop $PREFIX/share/applications/wine-uninstaller.desktop $PREFIX/share/applications/wine-regedit.desktop $PREFIX/share/applications/wine-wineboot.desktop" >/dev/null 2>&1
 
-cat << EOF > "$PREFIX/share/applications/wine-program-loader.desktop"
+  cat <<EOF >"$PREFIX/share/applications/wine-program-loader.desktop"
 [Desktop Entry]
 Name=Wine Program Loader
 Comment=Run Windows programs with Wine
@@ -35,8 +35,8 @@ Categories=X-Wine;
 X-Desktop-File-Install-Version=0.26
 NoDisplay=true
 EOF
-chmod +x "$PREFIX/share/applications/wine-program-loader.desktop"
-cat << EOF > "$PREFIX/share/applications/wine-explorer.desktop"
+  chmod +x "$PREFIX/share/applications/wine-program-loader.desktop"
+  cat <<EOF >"$PREFIX/share/applications/wine-explorer.desktop"
 [Desktop Entry]
 Name=Wine File
 Comment=Wine File Browser
@@ -49,8 +49,8 @@ Type=Application
 Categories=X-Wine;
 X-Desktop-File-Install-Version=0.26
 EOF
-chmod +x "$PREFIX/share/applications/wine-explorer.desktop"
-cat << EOF > "$PREFIX/share/applications/wine-winecfg.desktop"
+  chmod +x "$PREFIX/share/applications/wine-explorer.desktop"
+  cat <<EOF >"$PREFIX/share/applications/wine-winecfg.desktop"
 [Desktop Entry]
 Name=Wine Configuration
 Comment=Interface to set wine parameters
@@ -65,8 +65,8 @@ StartupWMClass=winecfg.exe
 Categories=X-Wine;
 X-Desktop-File-Install-Version=0.26
 EOF
-chmod +x "$PREFIX/share/applications/wine-winecfg.desktop"
-cat << EOF > "$PREFIX/share/applications/wine-uninstaller.desktop"
+  chmod +x "$PREFIX/share/applications/wine-winecfg.desktop"
+  cat <<EOF >"$PREFIX/share/applications/wine-uninstaller.desktop"
 [Desktop Entry]
 Name=Wine Software Uninstaller
 Comment=Interface to uninstall software
@@ -81,8 +81,8 @@ StartupWMClass=uninstaller.exe
 Categories=X-Wine;
 X-Desktop-File-Install-Version=0.26
 EOF
-chmod +x "$PREFIX/share/applications/wine-uninstaller.desktop"
-cat << EOF > "$PREFIX/share/applications/wine-regedit.desktop"
+  chmod +x "$PREFIX/share/applications/wine-uninstaller.desktop"
+  cat <<EOF >"$PREFIX/share/applications/wine-regedit.desktop"
 [Desktop Entry]
 Name=Regedit
 Comment=Wine registry editor
@@ -97,8 +97,8 @@ StartupWMClass=regedit.exe
 Categories=X-Wine;
 X-Desktop-File-Install-Version=0.26
 EOF
-chmod +x "$PREFIX/share/applications/wine-regedit.desktop"
-cat << EOF > "$PREFIX/share/applications/wine-wineboot.desktop"
+  chmod +x "$PREFIX/share/applications/wine-regedit.desktop"
+  cat <<EOF >"$PREFIX/share/applications/wine-wineboot.desktop"
 [Desktop Entry]
 Name=Wine Boot
 Comment=Simulate restart
@@ -111,7 +111,7 @@ Type=Application
 Categories=X-Wine;
 X-Desktop-File-Install-Version=0.26
 EOF
-chmod +x "$PREFIX/share/applications/wine-wineboot.desktop"
+  chmod +x "$PREFIX/share/applications/wine-wineboot.desktop"
 }
 
 check_termux
