@@ -254,6 +254,7 @@ EOF
   elif [[ "$pd_useradd_answer" == "y" ]]; then
     final_user_name="${user_name}"
   fi
+  print_to_config "user_name"
   print_to_config "pd_useradd_answer"
   print_to_config "final_user_name"
   if [[ "$pd_pass_type" == "2" ]]; then
@@ -957,7 +958,7 @@ function install_some_required_pack() {
   fi
 
   banner
-  echo "${R}[${C}-${R}]${G} Installing some required packages${W}"
+  echo "${R}[${C}-${R}]${G} Installing some distro specfic required packages${W}"
   pd_setup_some_required_pack=$(
     cat <<EOF
 pd_package_install_and_check "$some_required_pack_list"

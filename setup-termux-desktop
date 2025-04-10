@@ -824,7 +824,6 @@ function questions_theme_select() {
       fi
     done
 
-    print_to_config "style_answer"
     check_and_delete "${current_path}/styles.md"
     print_log "$style_answer $subfolder_count_value"
   fi
@@ -924,9 +923,6 @@ function ask_to_chose_de() {
 
 function questions_setup_manual() {
   ask_to_chose_de
-  echo
-  print_success "Continuing with answer: ${style_answer})$style_name"
-  sleep 0.2
   banner
   echo "${R}[${C}-${R}]${G}${BOLD} Select browser you want to install${W}"
   echo
@@ -1002,6 +998,38 @@ function questions_setup_manual() {
   echo "${R}[${C}-${R}]${B} Know More About Terminal Utility:- https://github.com/sabamdarif/termux-desktop/blob/main/readmes/see-more.md#hammer_and_wrenchlearn-about-terminal-utilities${W}"
   echo
   confirmation_y_or_n "Do you want install some terminal utility to make better terminal exprience" terminal_utility_setup_answer
+  banner
+  if [[ "$terminal_utility_setup_answer" == "y" ]]; then
+    echo "${R}[${C}-${R}]${G} Select nerd font you want to install...${B}"
+    echo " "
+    latest_nerd_font_version=$(get_latest_release "ryanoasis" "nerd-fonts")
+    # fetch
+    release_json=$(curl -sSL "https://api.github.com/repos/ryanoasis/nerd-fonts/releases/tags/${latest_nerd_font_version}")
+    mapfile -t FONT_OPTIONS < <(
+      jq -r '.assets // []
+         | map(select(.name | endswith(".tar.xz")))
+         | .[].name' \
+        <<<"$release_json"
+    )
+    count=${#FONT_OPTIONS[@]}
+    ((count == 0)) && {
+      print_failed "No .tar.xz fonts found for ${latest_nerd_font_version}." >&2
+      exit 1
+    }
+    # Display menu
+    term_width=$(tput cols 2>/dev/null || echo 80)
+
+    (
+      for i in "${!FONT_OPTIONS[@]}"; do
+        printf "%3d) %s\n" "$((i + 1))" "${FONT_OPTIONS[$i]}"
+      done
+    ) | pr -2 -t -w"$term_width"
+
+    # Get choice
+    echo
+    select_an_option "$count" 1 nerd_choice
+    sel_ned_font_name="${FONT_OPTIONS[$((nerd_choice - 1))]}"
+  fi
   banner
   echo -e "${R}[${C}-${R}]${B} File Manager Tools Enhancement${W}
 
@@ -1097,7 +1125,6 @@ If you type 'n/N' then it will use the old virtualizing way to setup Hardware Ac
 Also type 'n/N' If you want to use Freedreno KGSL (Adreno GPU Only)./n
 "
       confirmation_y_or_n "Do you want to install the new mesa-vulkan-icd-wrapper Driver" confirmation_mesa_vulkan_icd_wrapper
-      print_to_config "confirmation_mesa_vulkan_icd_wrapper"
     fi
   fi
 }
@@ -1355,7 +1382,6 @@ function setup_user_name_only() {
       ;;
     esac
   done
-  print_to_config "user_name"
 }
 
 function setup_user_name_and_pass() {
@@ -1408,8 +1434,6 @@ function setup_user_name_and_pass() {
       ;;
     esac
   done
-  print_to_config "user_name"
-  print_to_config "pass"
 }
 
 function distro_questions() {
@@ -2275,6 +2299,7 @@ function setup_config() {
     echo "${R}[${C}-${R}]${G}${BOLD} Installing $de_name Style: ${C}${style_answer}${W}"
     theme_installer
     additional_required_steps
+    print_to_config "style_answer"
   else
     print_failed "Failed to select style..."
   fi
@@ -2438,9 +2463,11 @@ function setup_vncstart_cmd() {
 termux-wake-lock
 
 # Prevent script from looping by checking if it's already running
-if pgrep -f "vncserver" >/dev/null; then
-    echo "[!] vncstart is already running. Exiting."
+if [[ "\$1" != "--help" && "\$1" != "-h" ]]; then
+  if pgrep -f "vncserver" >/dev/null; then
+    echo "[!] vncserver is already running. Exiting."
     exit 1
+  fi
 fi
 
 vnc_server_pid=\$(pgrep -f "vncserver")
@@ -2482,9 +2509,11 @@ EOF
 termux-wake-lock
 
 # Prevent script from looping by checking if it's already running
-if pgrep -f "vncstart" >/dev/null; then
-    echo "[!] vncstart is already running. Exiting."
+if [[ "\$1" != "--help" && "\$1" != "-h" ]]; then
+  if pgrep -f "vncserver" >/dev/null; then
+    echo "[!] vncserver is already running. Exiting."
     exit 1
+  fi
 fi
 
 vnc_server_pid=\$(pgrep -f "vncserver")
@@ -3244,7 +3273,7 @@ function install_termux_desktop_appstore() {
   banner
   echo "${R}[${C}-${R}]${C} Setting up AppStore...${W}"
   echo
-  echo "${R}[${C}-${R}]${C} Keep in mind that the AppStore is still in the early development stage. Bugs are expected.${W}"
+  echo "${R}[${C}-${R}]${C} Keep in mind that the AppStore is still in the early development stage so bugs are expected.${W}"
   echo
   sleep 1
 
@@ -3516,15 +3545,27 @@ function install_fm_tools() {
 function setup_fonts() {
   if [[ "$terminal_utility_setup_answer" == "y" ]]; then
     banner
-    echo "${R}[${C}-${R}]${G}${BOLD} Installing Fonts...${W}"
+    echo "${R}[${C}-${R}]${G}${BOLD} Installing ${sel_ned_font_name} Nerd Fonts...${W}"
     package_install_and_check "nerdfix fontconfig-utils"
     check_and_create_directory "$HOME/.termux"
     check_and_create_directory "$HOME/.fonts"
     check_and_backup "$HOME/.termux/font.ttf"
-    download_and_extract "https://github.com/ryanoasis/nerd-fonts/releases/download/v3.2.1/0xProto.zip" "$HOME/.fonts"
-    clear
+
+    if [[ -n "${sel_ned_font_name}" ]]; then
+      download_and_extract "https://github.com/ryanoasis/nerd-fonts/releases/download/${latest_nerd_font_version}/${sel_ned_font_name}" "$HOME/.fonts"
+    else
+      local latest_nerd_font_version
+      latest_nerd_font_version=$(get_latest_release "ryanoasis" "nerd-fonts")
+      download_and_extract "https://github.com/ryanoasis/nerd-fonts/releases/download/${latest_nerd_font_version}/0xProto.tar.xz" "$HOME/.fonts"
+    fi
+
+    local nerd_font_file
+    nerd_font_file=$(find "$HOME/.fonts" -type f -iname '*NerdFont-Regular.ttf' | head -n 1)
+    if [[ -z "${nerd_font_file}" ]]; then
+      nerd_font_file=$(find "$HOME/.fonts" -type f -iname '*.ttf' | head -n 1)
+    fi
     check_and_delete "$HOME/.fonts/README.md $HOME/.fonts/LICENSE"
-    cp "$HOME/.fonts/0xProtoNerdFont-Regular.ttf" "$HOME/.termux/font.ttf"
+    cp "${nerd_font_file}" "$HOME/.termux/font.ttf"
     fc-cache -f
   fi
 }
@@ -4223,8 +4264,8 @@ function add_auto_completion() {
   cd /data/data/com.termux/files/usr/share/bash-completion/completions
   download_file "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/completion/bash/setup-termux-desktop"
   if [[ "$gui_mode" == "both" ]]; then
-    download_file "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/completion/bash/_vncstart"
-    download_file "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/completion/bash/_vncstop"
+    download_file "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/completion/bash/vncstart"
+    download_file "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/completion/bash/vncstop"
   fi
   download_file "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/completion/bash/tx11start"
   download_file "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/completion/bash/tx11stop"
@@ -4545,10 +4586,10 @@ function install_termux_desktop() {
     check_and_delete "${current_path}/styles.md"
   fi
   print_conf_info
-  print_basic_details
   check_and_create_directory "${termux_desktop_path}"
   touch "$config_file"
   print_log "$config_file"
+  print_basic_details
   setup_folder
   setup_zsh
   setup_fonts
