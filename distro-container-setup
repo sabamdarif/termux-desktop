@@ -335,6 +335,7 @@ EOF
   else
     echo "${R}[${C}-${R}]${C} Canceling ZSH setup...${W}"
   fi
+  print_to_config "distro_zsh_answer"
 }
 
 function distro_terminal_utility_setup() {

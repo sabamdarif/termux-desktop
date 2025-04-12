@@ -1153,7 +1153,6 @@ function setup_device_gpu_model() {
         print_warn "Invalid input, Please enter a number between 1 and 4"
       fi
     done
-    print_to_config "device_gpu_model"
 
     # set gpu model name
     case "$device_gpu_model" in
@@ -1255,10 +1254,7 @@ function exp_termux_gl_hw_support() {
   6) exp_termux_gl_hw_answer="zink_with_mesa" ;;
   7) exp_termux_gl_hw_answer="zink_with_mesa_zink" ;;
   esac
-  print_to_config "exp_termux_gl_hw_answer"
   termux_hw_answer="${exp_termux_gl_hw_answer}"
-  print_to_config "exp_termux_gl_hw_answer"
-  print_to_config "termux_hw_answer"
 
   if [[ "$distro_add_answer" == "y" ]]; then
     case "$exp_termux_gl_hw_answer" in
@@ -1300,7 +1296,6 @@ function hw_questions() {
     echo "${Y}6. Freedreno KGSL (Unstable | Adreno GPU Only)${W}"
     echo
     select_an_option 6 1 termux_hw_answer_num
-    print_to_config "termux_hw_answer_num"
 
     # set gpu api name
     case "$termux_hw_answer_num" in
@@ -1311,7 +1306,6 @@ function hw_questions() {
     5) termux_hw_answer="zink_virgl" ;;
     6) termux_hw_answer="freedreno" ;;
     esac
-    print_to_config "termux_hw_answer"
     distro_hw_questions
   fi
 }
@@ -3394,90 +3388,6 @@ function terminal_utility_setup() {
     check_and_backup "$shell_rc_file"
     mv "${shell_rc_file}-2" "${shell_rc_file}"
 
-    cat <<'EOF' >>"$HOME/.shell_rc_content"
-#######################################################
-# SPECIAL FUNCTIONS
-#######################################################
-# Extracts any archive(s)
-extract() {
-	for archive in "$@"; do
-    if [[ ! -f "$archive" ]]; then
-        echo "Error: '$archive' does not exist!"
-        continue
-    fi
-
-    total_size=$(stat -c '%s' "$archive")
-
-    case "$archive" in
-        *.tar.gz|*.tgz)
-            pv -s "$total_size" "$archive" | tar xzf -
-            ;;
-        *.tar.xz)
-            pv -s "$total_size" "$archive" | tar xJf -
-            ;;
-        *.tar.bz2|*.tbz2)
-            pv -s "$total_size" "$archive" | tar xjf -
-            ;;
-        *.tar)
-            pv -s "$total_size" "$archive" | tar xf -
-            ;;
-        *.bz2)
-            pv -s "$total_size" "$archive" | bunzip2 > "${archive%.bz2}"
-            ;;
-        *.gz)
-            pv -s "$total_size" "$archive" | gunzip > "${archive%.gz}"
-            ;;
-        *.7z)
-            pv -s "$total_size" "$archive" | 7z x -si -y > /dev/null
-            ;;
-        *.rar)
-            pv -s "$total_size" "$archive" | unrar x -
-            ;;
-        *.zip)
-            pv -s "$total_size" "$archive" | unzip -
-            ;;
-        *.Z)
-            pv -s "$total_size" "$archive" | uncompress -
-            ;;
-        *)
-            echo "Unsupported archive format: $archive"
-            ;;
-    esac
-	done
-}
-# Searches for text in all files in the current folder
-ftext() {
-	# -i case-insensitive
-	# -I ignore binary files
-	# -H causes filename to be printed
-	# -r recursive search
-	# -n causes line number to be printed
-	# optional: -F treat search term as a literal, not a regular expression
-	# optional: -l only print filenames and not the matching lines ex. grep -irl "$1" *
-	grep -iIHrn --color=always "$1" . | less -r
-}
-# Copy and go to the directory
-cpg() {
-	if [ -d "$2" ]; then
-		cp "$1" "$2" && cd "$2"
-	else
-		cp "$1" "$2"
-	fi
-}
-# Move and go to the directory
-mvg() {
-	if [ -d "$2" ]; then
-		mv "$1" "$2" && cd "$2"
-	else
-		mv "$1" "$2"
-	fi
-}
-# Create and go to the directory
-mkdirg() {
-	mkdir -p "$1"
-	cd "$1"
-}
-EOF
     cat <<EOF >>"$HOME/.shell_rc_content"
 # set zoxide as cd
 eval "\$(zoxide init --cmd cd ${shell_name})"
@@ -4587,7 +4497,6 @@ function install_termux_desktop() {
   fi
   print_conf_info
   check_and_create_directory "${termux_desktop_path}"
-  touch "$config_file"
   print_log "$config_file"
   print_basic_details
   setup_folder

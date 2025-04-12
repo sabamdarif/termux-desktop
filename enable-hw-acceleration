@@ -173,6 +173,7 @@ function setup_hw_environment_variables() {
 }
 
 function setup_gpu_specific_environment_variables() {
+  print_to_config "device_gpu_model"
   if [[ "$confirmation_mesa_vulkan_icd_wrapper" == "y" ]]; then
     if [[ "$device_gpu_model_name" == "adreno" ]]; then
       gpu_environment_variable="VK_ICD_FILENAMES=$PREFIX/share/vulkan/icd.d/wrapper_icd.aarch64.json MESA_SHADER_CACHE=512MB MESA_SHADER_CACHE_DISABLE=false vblank_mode=0"

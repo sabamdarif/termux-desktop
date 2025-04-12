@@ -1,5 +1,7 @@
 # fzf
 alias preview="fzf --preview='bat --color=always --style=numbers --theme OneHalfDark {}' --preview-window=down"
+alias fnvim='nvim $(fzf -m --preview="bat --color=always --style=numbers --theme OneHalfDark {}" --preview-window=down)'
+alias fvim='vim $(fzf -m --preview="bat --color=always --style=numbers --theme OneHalfDark {}" --preview-window=down)'
 alias fcd="cd \$(find . -type d | fzf)"  # Fuzzy search directories and cd into them
 
 #System    
@@ -45,4 +47,127 @@ alias psu="ps aux"
 alias psg="ps aux | grep -i"  # Usage: psg process_name  
 alias kill9="kill -9"
 alias myip="curl ifconfig.me"  # Show public IP
-alias speedtest="curl -s https://raw.githubusercontent.com/sivel/speedtest-cli/master/speedtest.py | python -"  
+alias speedtest="curl -s https://raw.githubusercontent.com/sivel/speedtest-cli/master/speedtest.py | python -"
+
+#######################################################
+# SPECIAL FUNCTIONS
+#######################################################
+# Extracts any archive(s)
+extract() {
+	for archive in "$@"; do
+    if [[ ! -f "$archive" ]]; then
+        echo "Error: '$archive' does not exist!"
+        continue
+    fi
+
+    total_size=$(stat -c '%s' "$archive")
+
+    case "$archive" in
+        *.tar.gz|*.tgz)
+            pv -s "$total_size" "$archive" | tar xzf -
+            ;;
+        *.tar.xz)
+            pv -s "$total_size" "$archive" | tar xJf -
+            ;;
+        *.tar.bz2|*.tbz2)
+            pv -s "$total_size" "$archive" | tar xjf -
+            ;;
+        *.tar)
+            pv -s "$total_size" "$archive" | tar xf -
+            ;;
+        *.bz2)
+            pv -s "$total_size" "$archive" | bunzip2 > "${archive%.bz2}"
+            ;;
+        *.gz)
+            pv -s "$total_size" "$archive" | gunzip > "${archive%.gz}"
+            ;;
+        *.7z)
+            pv -s "$total_size" "$archive" | 7z x -si -y > /dev/null
+            ;;
+        *.rar)
+            pv -s "$total_size" "$archive" | unrar x -
+            ;;
+        *.zip)
+            unzip "$archive"
+            ;;
+        *.Z)
+            pv -s "$total_size" "$archive" | uncompress -
+            ;;
+        *)
+            echo "Unsupported archive format: $archive"
+            ;;
+    esac
+	done
+}
+# Searches for text in all files in the current folder
+ftext() {
+	# -i case-insensitive
+	# -I ignore binary files
+	# -H causes filename to be printed
+	# -r recursive search
+	# -n causes line number to be printed
+	# optional: -F treat search term as a literal, not a regular expression
+	# optional: -l only print filenames and not the matching lines ex. grep -irl "$1" *
+	grep -iIHrn --color=always "$1" . | less -r
+}
+# Copy and go to the directory
+cpg() {
+	if [ -d "$2" ]; then
+		cp "$1" "$2" && cd "$2"
+	else
+		cp "$1" "$2"
+	fi
+}
+# Move and go to the directory
+mvg() {
+	if [ -d "$2" ]; then
+		mv "$1" "$2" && cd "$2"
+	else
+		mv "$1" "$2"
+	fi
+}
+# Create and go to the directory
+mkdirg() {
+	mkdir -p "$1"
+	cd "$1"
+}
+
+fkill() {
+  local selected pid
+
+  # Use a temp file to hold selected lines
+  local tmpfile
+  tmpfile=$(mktemp)
+
+  ps -eo user,pid,cmd --sort=-%mem \
+    | sed 1d \
+    | fzf --multi \
+          --reverse \
+          --header=" Select processes to kill (Tab to mark, Enter to kill)" \
+          --preview 'ps -p {2} -o pid,user,%cpu,%mem,cmd' \
+          --bind 'ctrl-s:toggle-sort' > "$tmpfile"
+
+  if [[ ! -s $tmpfile ]]; then
+    echo "No processes selected." >&2
+    rm -f "$tmpfile"
+    return 1
+  fi
+
+  while IFS= read -r line; do
+    pid=$(echo "$line" | awk '{print $2}')
+    if [[ -n "$pid" ]]; then
+      echo "Killing PID $pid…" >&2
+      if kill -TERM "$pid" 2>/dev/null; then
+        echo "Sent SIGTERM to $pid" >&2
+      else
+        echo "SIGTERM failed for $pid, sending SIGKILL…" >&2
+        kill -KILL "$pid" 2>/dev/null \
+          && echo "Sent SIGKILL to $pid" >&2 \
+          || echo "Failed to kill $pid" >&2
+      fi
+    fi
+  done < "$tmpfile"
+
+  rm -f "$tmpfile"
+}
+
