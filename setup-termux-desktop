@@ -2262,8 +2262,12 @@ function additional_required_steps() {
       install_font_for_style "${style_answer}"
     fi
 
-    if [[ "$style_answer" == "5" ]]; then
+    if [[ "$style_answer" == "5" ]] || [[ "$style_answer" == "6" ]]; then
       package_install_and_check "eww"
+    fi
+
+    if [[ "$style_answer" == "6" ]]; then
+      package_install_and_check "rofi"
     fi
 
     if [[ "$style_answer" == "3" ]]; then

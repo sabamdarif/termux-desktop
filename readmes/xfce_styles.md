@@ -33,11 +33,15 @@ Icon Used:
 </details>
 <br>
 
-<center><img src="https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/xfce/look_1/look.png"></center>
+<center><img src="https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/xfce/look_1/desktop.png"></center>
 
 <details style ="font-size: larger">
 <summary><b style ="font-size: larger">Screenshots: </b></summary>
-<img src="https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/xfce/look_1/desktop.png">
+
+|Start Menu|Appps|
+|--|--|
+|![img](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/xfce/look_1/start-menu.png)|![img](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/xfce/look_1/apps.png)|
+
 </details>
 
 <br>
@@ -166,5 +170,44 @@ Cursor Theme:
 
 </details>
 <br>
+
+## 6.  Minimalist Setup 2:
+
+<details>
+<summary><b style ="font-size: small">Style Details: </summary>
+Theme Used: 
+<br>
+
+- [Otis](https://www.pling.com/s/Gnome/p/1619506)
+
+Icon Used:
+<br>
+
+- [Deepin2022](https://www.gnome-look.org/s/Gnome/p/1678986)
+
+Cursor Theme:
+- [Layan-cursors](https://www.pling.com/p/1365214/)
+- [oreo purple cursors](https://www.pling.com/p/1360254/)
+
+Kvantum Theme:
+- [Dracula-purple-solid](https://www.gnome-look.org/p/2052404/)
+- [kPurple](https://www.pling.com/p/1625856/)
+
+</b>
+</details>
+<br>
+
+<center><img src="https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/xfce/look_6/desktop.png"></center>
+
+<details style ="font-size: larger">
+<summary><b style ="font-size: larger">Screenshots: </b></summary>
+
+|App Launcher|Apps|
+|--|--|
+|![img](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/xfce/look_6/app-launcher.png)|![img](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/xfce/look_6/apps.png)|
+
+</details>
+<br>
+
 
 # More Coming soon...
