@@ -544,6 +544,14 @@ function confirmation_y_or_n() {
   while true; do
     read -r -p "${R}[${C}-${R}]${Y}${BOLD} $1 ${Y}(y/n) ${W}" response
     response="${response:-y}"
+
+    if [[ "$response" =~ [[:space:]/] ]]; then
+      echo
+      print_failed "Invalid input: no spaces or slashes allowed. Enter only 'y' or 'n'."
+      echo
+      continue
+    fi
+
     eval "$2='$response'"
     case $response in
     [yY]*)
@@ -688,7 +696,6 @@ function validate_required_vars() {
   if [[ "$enable_hw_acc" == "y" ]]; then
     required_vars+=(
       "termux_hw_answer"
-      "confirmation_mesa_vulkan_icd_wrapper"
     )
   fi
 
@@ -1001,35 +1008,44 @@ function questions_setup_manual() {
   banner
   if [[ "$terminal_utility_setup_answer" == "y" ]]; then
     echo "${R}[${C}-${R}]${G} Select nerd font you want to install...${B}"
-    echo " "
-    latest_nerd_font_version=$(get_latest_release "ryanoasis" "nerd-fonts")
-    # fetch
-    release_json=$(curl -sSL "https://api.github.com/repos/ryanoasis/nerd-fonts/releases/tags/${latest_nerd_font_version}")
-    mapfile -t FONT_OPTIONS < <(
-      jq -r '.assets // []
-         | map(select(.name | endswith(".tar.xz")))
-         | .[].name' \
-        <<<"$release_json"
+    echo
+
+    latest_nf_version=$(get_latest_release "ryanoasis" "nerd-fonts")
+
+    release_json=$(curl -sSL "https://api.github.com/repos/ryanoasis/nerd-fonts/releases/tags/${latest_nf_version}")
+
+    mapfile -t ASSET_NAMES < <(
+      jq -r '
+        .assets // [] 
+        | map(select(.name | endswith(".tar.xz")))
+        | .[].name
+      ' <<<"$release_json"
     )
-    count=${#FONT_OPTIONS[@]}
-    ((count == 0)) && {
-      print_failed "No .tar.xz fonts found for ${latest_nerd_font_version}." >&2
+
+    FONT_DISPLAY=()
+    for asset in "${ASSET_NAMES[@]}"; do
+      FONT_DISPLAY+=("${asset%.tar.xz}")
+    done
+
+    ((${#ASSET_NAMES[@]} == 0)) && {
+      print_failed "No .tar.xz fonts found for ${latest_nf_version}." >&2
       exit 1
     }
-    # Display menu
-    term_width=$(tput cols 2>/dev/null || echo 80)
 
+    term_width=$(tput cols 2>/dev/null || echo 80)
     (
-      for i in "${!FONT_OPTIONS[@]}"; do
-        printf "%3d) %s\n" "$((i + 1))" "${FONT_OPTIONS[$i]}"
+      for i in "${!FONT_DISPLAY[@]}"; do
+        printf "%3d) %s\n" "$((i + 1))" "${FONT_DISPLAY[$i]}"
       done
     ) | pr -2 -t -w"$term_width"
 
-    # Get choice
     echo
-    select_an_option "$count" 1 nerd_choice
-    sel_ned_font_name="${FONT_OPTIONS[$((nerd_choice - 1))]}"
+    select_an_option "${#ASSET_NAMES[@]}" 1 nerd_choice
+
+    sel_asset_name="${ASSET_NAMES[$((nerd_choice - 1))]}"
+    sel_base_name="${FONT_DISPLAY[$((nerd_choice - 1))]}"
   fi
+
   banner
   echo -e "${R}[${C}-${R}]${B} File Manager Tools Enhancement${W}
 
@@ -1120,9 +1136,9 @@ ${R}[${C}-${R}]${G}${BOLD} Mesa Vulkan ICD-Wrapper ${W}
 If you have Adreno GPU then please select ubuntu or debian as Linux container so it can use ternip in the Linux container.\n
 Sadly for other then adreno, GPU might / might not work on the Linux container./n
 
-If you type 'n/N' then it will use the old virtualizing way to setup Hardware Acceleration
+If you type 'n or N' then it will use the old virtualizing way to setup Hardware Acceleration
 
-Also type 'n/N' If you want to use Freedreno KGSL (Adreno GPU Only)./n
+Also type 'n or N' If you want to use Freedreno KGSL (Adreno GPU Only)./n
 "
       confirmation_y_or_n "Do you want to install the new mesa-vulkan-icd-wrapper Driver" confirmation_mesa_vulkan_icd_wrapper
     fi
@@ -1204,9 +1220,7 @@ function distro_hw_questions() {
       echo
       echo "${Y}3. Turnip (Adreno GPU Only)${W}"
       echo
-      echo "${Y}4. Skip${W}"
-      echo
-      select_an_option 4 1 pd_hw_answer_num
+      select_an_option 3 1 pd_hw_answer_num
 
       case "$pd_hw_answer_num" in
       1) pd_hw_answer="zink" ;;
@@ -1553,6 +1567,14 @@ function define_value_name() {
   elif [[ "$terminal_utility_setup_answer" == "n" ]]; then
     terminal_utility_setup_confirmation="No"
   fi
+  # Nerd Font
+  if [[ "$install_type_answer" == "3" ]]; then
+    sel_font_name="$sel_base_name"
+  elif [[ "$install_type_answer" == "1" ]] || [[ "$install_type_answer" == "2" ]]; then
+    sel_font_name="0xProto"
+  else
+    sel_font_name="N/A"
+  fi
   # Hardware Acceleration Status
   if [[ "$enable_hw_acc" == "y" ]]; then
     hw_acc_confirmation="Enabled"
@@ -1688,6 +1710,7 @@ function print_conf_info() {
   echo "${G}Terminal Setup${W}"
   echo "   • Shell: ${current_shell_name}"
   echo "   • Terminal Utilities: ${terminal_utility_setup_confirmation}"
+  echo "   • Font: ${sel_font_name}"
   sleep 0.015
 
   echo "${G}Hardware Acceleration${W}"
@@ -3080,8 +3103,26 @@ function check_desktop_process() {
     xfce)
       de_pid="$(pgrep xfce4)"
       ;;
-    lxqt | openbox | mate)
-      de_pid="$(pgrep $de_name)"
+    lxqt)
+      de_pid="$(pgrep -f "lxqt-session|lxqt-panel|pcmanfm-qt")"
+      ;;
+    openbox)
+      de_pid="$(pgrep -f "openbox|openbox-session")"
+      ;;
+    mate)
+      de_pid="$(pgrep -f "mate-session|mate-panel|caja")"
+      ;;
+    i3)
+      de_pid="$(pgrep -f "i3|i3-with-shmlog")"
+      ;;
+    dwm)
+      de_pid="$(pgrep dwm)"
+      ;;
+    bspwm)
+      de_pid="$(pgrep bspwm)"
+      ;;
+    awesome)
+      de_pid="$(pgrep -f "awesome")"
       ;;
     *)
       print_status "error" "Unknown desktop environment: $de_name"
@@ -3104,8 +3145,31 @@ function check_desktop_process() {
       xfce)
         de_pid="$(pgrep xfce4)"
         ;;
-      lxqt | openbox | mate)
-        de_pid="$(pgrep $de_name)"
+      lxqt)
+        de_pid="$(pgrep -f "lxqt-session|lxqt-panel|pcmanfm-qt")"
+        ;;
+      openbox)
+        de_pid="$(pgrep -f "openbox|openbox-session")"
+        ;;
+      mate)
+        de_pid="$(pgrep -f "mate-session|mate-panel|caja")"
+        ;;
+      i3)
+        de_pid="$(pgrep -f "i3|i3-with-shmlog")"
+        ;;
+      dwm)
+        de_pid="$(pgrep dwm)"
+        ;;
+      bspwm)
+        de_pid="$(pgrep bspwm)"
+        ;;
+      awesome)
+        de_pid="$(pgrep -f "awesome")"
+        ;;
+      *)
+        print_status "error" "Unknown desktop environment: $de_name"
+        sleep 0.2
+        return 1
         ;;
       esac
 
@@ -3459,28 +3523,38 @@ function install_fm_tools() {
 function setup_fonts() {
   if [[ "$terminal_utility_setup_answer" == "y" ]]; then
     banner
-    echo "${R}[${C}-${R}]${G}${BOLD} Installing ${sel_ned_font_name} Nerd Fonts...${W}"
+    echo "${R}[${C}-${R}]${G}${BOLD} Installing ${sel_base_name} Nerd Font...${W}"
+
     package_install_and_check "nerdfix fontconfig-utils"
     check_and_create_directory "$HOME/.termux"
     check_and_create_directory "$HOME/.fonts"
     check_and_backup "$HOME/.termux/font.ttf"
 
-    if [[ -n "${sel_ned_font_name}" ]]; then
-      download_and_extract "https://github.com/ryanoasis/nerd-fonts/releases/download/${latest_nerd_font_version}/${sel_ned_font_name}" "$HOME/.fonts"
-    else
-      local latest_nerd_font_version
-      latest_nerd_font_version=$(get_latest_release "ryanoasis" "nerd-fonts")
-      download_and_extract "https://github.com/ryanoasis/nerd-fonts/releases/download/${latest_nerd_font_version}/0xProto.tar.xz" "$HOME/.fonts"
+    if [[ -z "$latest_nf_version" ]]; then
+      latest_nf_version=$(get_latest_release "ryanoasis" "nerd-fonts")
     fi
 
-    local nerd_font_file
-    nerd_font_file=$(find "$HOME/.fonts" -type f -iname '*NerdFont-Regular.ttf' | head -n 1)
-    if [[ -z "${nerd_font_file}" ]]; then
-      nerd_font_file=$(find "$HOME/.fonts" -type f -iname '*.ttf' | head -n 1)
+    if [[ -z "$sel_asset_name" ]]; then
+      sel_base_name="0xProto"
     fi
+    print_to_config "sel_base_name"
+
+    download_and_extract "https://github.com/ryanoasis/nerd-fonts/releases/download/${latest_nf_version}/${sel_base_name}.tar.xz" "$HOME/.fonts"
+    nerd_font_file=$(find "$HOME/.fonts" -type f \( -iname "${sel_base_name}*NerdFont-Regular.ttf" -o -iname "${sel_base_name}*NerdFont-Regular.otf" \) | head -n1)
+
+    if [[ -z "$nerd_font_file" ]]; then
+      nerd_font_file=$(find "$HOME/.fonts" -type f -iname "*NerdFont*" | head -n1)
+    fi
+
     check_and_delete "$HOME/.fonts/README.md $HOME/.fonts/LICENSE"
-    cp "${nerd_font_file}" "$HOME/.termux/font.ttf"
-    fc-cache -f
+
+    if [[ -n "$nerd_font_file" ]]; then
+      cp "$nerd_font_file" "$HOME/.termux/font.ttf"
+      fc-cache -f
+    else
+      print_failed "Could not locate a NerdFont-Regular file for ${sel_base_name}." >&2
+      exit 1
+    fi
   fi
 }
 
