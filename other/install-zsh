@@ -6,6 +6,10 @@ zsh_setup() {
   cd ~
   cat <<'EOF' >>"$HOME/.zshrc"
 setopt nonomatch
+
+# Enable auto-cd
+setopt AUTO_CD
+
 ### Added by Zinit's installer
 if [[ ! -f $HOME/.local/share/zinit/zinit.git/zinit.zsh ]]; then
     print -P "%F{33} %F{220}Installing %F{33}ZDHARMA-CONTINUUM%F{220} Initiative Plugin Manager (%F{33}zdharma-continuum/zinit%F{220})…%f"
@@ -21,12 +25,11 @@ autoload -Uz _zinit
 
 # Load a few important annexes, without Turbo
 # (this is currently required for annexes)
-zinit light-mode for \
+    zinit light-mode for \
     zdharma-continuum/zinit-annex-as-monitor \
     zdharma-continuum/zinit-annex-bin-gem-node \
     zdharma-continuum/zinit-annex-patch-dl \
     zdharma-continuum/zinit-annex-rust
-
 ### End of Zinit's installer chunk
 
 # Load Oh My Zsh libraries
@@ -35,9 +38,27 @@ zinit lucid light-mode for \
     OMZL::completion.zsh \
     OMZL::key-bindings.zsh
 
+# Fix for proot-distro library issues
+if [[ -z "$PREFIX" && "$PREFIX" != *"/com.termux/"* ]]; then
+    # Set LD_LIBRARY_PATH for proot environments if needed
+    export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/usr/lib:/lib"
+    # Disable commands that might cause errors in proot
+    function fix_proot_cmd() {
+        if ! command -v $1 &> /dev/null; then
+            alias $1="echo '$1 not available in this proot environment'"
+        fi
+    }
+    # Fix commonly problematic commands
+    fix_proot_cmd uname
+    fix_proot_cmd sleep
+    fix_proot_cmd mkdir
+fi
+
 # Ensure completion is properly initialized
-autoload -Uz compinit
-compinit
+if [[ -n "$PREFIX" && "$PREFIX" = *"/com.termux/"* ]]; then
+  autoload -Uz compinit
+  compinit
+fi
 
 # Load plugins with Turbo mode
 zinit wait lucid for \
@@ -48,7 +69,7 @@ zinit wait lucid for \
 zinit wait lucid for \
     atload"!_zsh_autosuggest_start" \
         zsh-users/zsh-autosuggestions
-    
+
 zinit wait lucid for \
     blockf atpull'zinit creinstall -q .' \
         zsh-users/zsh-completions
@@ -67,6 +88,9 @@ EOF
 setup_theme() {
   check_and_create_directory "$HOME/.zsh-themes"
   cat <<EOF >.zsh-themes/td.zsh-theme
+# td.zsh-theme - A clean and functional ZSH theme with distro detection
+# Created for Termux and proot-distro environments
+
 autoload -Uz colors && colors
 autoload -Uz vcs_info
 
@@ -79,19 +103,24 @@ setopt PROMPT_SUBST
 exit_status="%(?..%F{red}✘ %?%f)"
 
 # Detect distro and set the correct icons
-distro_id=\$(grep '^ID=' /etc/os-release | cut -d= -f2 | tr -d '"' ) >/dev/null 2>&1
-case "\$distro_id" in
-    kali) DISTRO_ICON="" ;;   # Kali Linux
-    arch) DISTRO_ICON="" ;;   # Arch Linux
-    ubuntu) DISTRO_ICON="" ;; # Ubuntu
-    debian) DISTRO_ICON="" ;; # Debian
-    fedora) DISTRO_ICON="" ;; # Fedora
-    alpine) DISTRO_ICON="" ;; # Alpine
-    void) DISTRO_ICON="" ;;   # Void Linux
-    opensuse*|sles) DISTRO_ICON="" ;; # openSUSE
-    gentoo) DISTRO_ICON="" ;; # Gentoo
-    nixos) DISTRO_ICON="" ;; # NixOS
-    *) DISTRO_ICON="" ;;      # Default Linux Icon
+if command -v grep &> /dev/null && [ -f /etc/os-release ]; then
+    distro_id=\$(grep '^ID=' /etc/os-release 2>/dev/null | cut -d= -f2 | tr -d '"') 2>/dev/null
+else
+    distro_id="unknown"
+fi
+
+case "\$distro_id" in 
+  kali) DISTRO_ICON="" ;;   # Kali Linux
+  arch) DISTRO_ICON="" ;;   # Arch Linux
+  ubuntu) DISTRO_ICON="" ;; # Ubuntu
+  debian) DISTRO_ICON="" ;; # Debian
+  fedora) DISTRO_ICON="" ;; # Fedora
+  alpine) DISTRO_ICON="" ;; # Alpine
+  void) DISTRO_ICON="" ;;   # Void Linux
+  opensuse*|sles) DISTRO_ICON="" ;; # openSUSE
+  gentoo) DISTRO_ICON="" ;; # Gentoo
+  nixos) DISTRO_ICON="" ;; # NixOS
+  *) DISTRO_ICON="" ;;      # Default Linux Icon
 esac
 
 # Symbols
@@ -114,6 +143,8 @@ dir_display="%F{blue}[%F{yellow}%~%F{blue}]%f"
 PROMPT='
 %B%F{green}╭─ \$user_host \$dir_display\${vcs_info_msg_0_}
 %B%F{green}╰─\${PROMPT_SYMBOL} %F{reset}'
+
+# Right prompt shows exit status of previous command
 RPROMPT="\$exit_status"
 EOF
 

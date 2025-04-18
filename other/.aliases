@@ -13,6 +13,12 @@ alias mkdir='mkdir -p'
 alias startssh='termux-ssh'
 alias stopssh='termux-ssh stop'
 
+# Define .. and ../.. shortcuts for navigation
+alias '..'='cd ..'
+alias '...'='cd ../..'
+alias '....'='cd ../../..'
+alias '.....'='cd ../../../..'
+
 #Photos
 alias ss="cd /sdcard/Pictures/Screenshots/"
 
