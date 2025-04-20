@@ -77,9 +77,6 @@ zinit wait lucid for \
 # Load theme
 source "$HOME/.zsh-themes/td.zsh-theme"
 
-# Load sources if they exist
-[[ -f /data/data/com.termux/files/home/.shell_rc_content ]] && source /data/data/com.termux/files/home/.shell_rc_content
-[[ -f /data/data/com.termux/files/home/.aliases ]] && source /data/data/com.termux/files/home/.aliases
 EOF
   NO_INPUT=1 bash -c "$(curl --fail --show-error --silent --location https://raw.githubusercontent.com/zdharma-continuum/zinit/HEAD/scripts/install.sh)"
   chsh -s zsh
@@ -87,12 +84,13 @@ EOF
 
 setup_theme() {
   check_and_create_directory "$HOME/.zsh-themes"
-  cat <<EOF >.zsh-themes/td.zsh-theme
+  cat <<EOF >"$HOME/.zsh-themes/td.zsh-theme"
 # td.zsh-theme - A clean and functional ZSH theme with distro detection
 # Created for Termux and proot-distro environments
 
 autoload -Uz colors && colors
 autoload -Uz vcs_info
+setopt complete_aliases
 
 # Enable Git branch display
 zstyle ':vcs_info:git:*' formats ' %F{magenta} %b%f'

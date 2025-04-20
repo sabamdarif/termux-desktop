@@ -540,11 +540,17 @@ function count_subfolders() {
 }
 
 # create a yes / no confirmation prompt
+
 function confirmation_y_or_n() {
   while true; do
+    # prompt
     read -r -p "${R}[${C}-${R}]${Y}${BOLD} $1 ${Y}(y/n) ${W}" response
+    # apply default
     response="${response:-y}"
+    # lowercase
+    response="${response,,}"
 
+    # reject spaces or slashes
     if [[ "$response" =~ [[:space:]/] ]]; then
       echo
       print_failed "Invalid input: no spaces or slashes allowed. Enter only 'y' or 'n'."
@@ -552,26 +558,36 @@ function confirmation_y_or_n() {
       continue
     fi
 
+    # normalize full words to single letters
+    if [[ "$response" =~ ^(yes|y)$ ]]; then
+      response="y"
+    elif [[ "$response" =~ ^(no|n)$ ]]; then
+      response="n"
+    else
+      echo
+      print_failed "Invalid input. Please enter 'y', 'yes', 'n', or 'no'."
+      echo
+      continue
+    fi
+
+    # store in the caller’s variable
     eval "$2='$response'"
+
+    # handle it
     case $response in
-    [yY]*)
+    y)
       echo
       print_success "Continuing with answer: $response"
       echo
       sleep 0.2
       break
       ;;
-    [nN]*)
+    n)
       echo
       echo "${R}[${C}-${R}]${C} Skipping this step${W}"
       echo
       sleep 0.2
       break
-      ;;
-    *)
-      echo
-      print_failed "Invalid input. Please enter 'y' or 'n'."
-      echo
       ;;
     esac
   done
@@ -2527,6 +2543,11 @@ EOF
     cat <<EOF >"$PREFIX/bin/vncstart"
 #!/data/data/com.termux/files/usr/bin/bash
 
+if [[ -z "$PREFIX" && "$PREFIX" != *"/com.termux/"* ]]; then 
+  echo "${R}[${R}☓${R}]${R}${BOLD}Please run it inside termux${W}"
+  exit 0
+fi
+
 termux-wake-lock
 
 # Prevent script from looping by checking if it's already running
@@ -2584,6 +2605,11 @@ function setup_vncstop_cmd() {
   cat <<'EOF' >"$PREFIX/bin/vncstop"
 #!/data/data/com.termux/files/usr/bin/bash
 
+if [[ -z "$PREFIX" && "$PREFIX" != *"/com.termux/"* ]]; then 
+  echo "${R}[${R}☓${R}]${R}${BOLD}Please run it inside termux${W}"
+  exit 0
+fi
+
 termux-wake-unlock
 
 if [[ "$1" == "-f" ]] || [[ "$1" == "--force" ]]; then
@@ -2630,127 +2656,132 @@ function setup_tx11start_cmd() {
     cat <<EOF >"$PREFIX/bin/tx11start"
 #!/data/data/com.termux/files/usr/bin/bash
 
-# Initialize flags
-use_nogpu=false
-use_nodbus=false
-use_legacy=false
-use_debug=false
+    if [[ -z "$PREFIX" && "$PREFIX" != *"/com.termux/"* ]]; then
+      echo "${R}[${R}☓${R}]${R}${BOLD}Please run it inside termux${W}"
+      exit 0
+    fi
 
-# Function to show help
-function show_tx11start_help() {
-    echo -e "
+    # Initialize flags
+    use_nogpu=false
+    use_nodbus=false
+    use_legacy=false
+    use_debug=false
+
+    # Function to show help
+    function show_tx11start_help() {
+      echo -e "
 tx11start            - Start Termux:X11 with GPU acceleration
 tx11start --nogpu    - Start without GPU acceleration
 tx11start --nodbus   - Start without dbus
 tx11start --legacy   - Start with -legacy-drawing
 tx11start --debug    - Show debug log
 "
-    exit 0
-}
+      exit 0
+    }
 
-# Parse arguments
-while ((\$# >= 1)); do
-    case "\$1" in
-        --help)
-            show_tx11start_help
-            ;;
-        --nogpu)
-            use_nogpu=true
-            ;;
-        --nodbus)
-            use_nodbus=true
-            ;;
-        --legacy)
-            use_legacy=true
-            ;;
-        --debug)
-            use_debug=true
-            ;;
-        *)
-            echo "Invalid option: \$1"
-            show_tx11start_help
-            ;;
-    esac
-    shift
-done
+    # Parse arguments
+    while ((\$# >= 1)); do
+      case "\$1" in
+      --help)
+        show_tx11start_help
+        ;;
+      --nogpu)
+        use_nogpu=true
+        ;;
+      --nodbus)
+        use_nodbus=true
+        ;;
+      --legacy)
+        use_legacy=true
+        ;;
+      --debug)
+        use_debug=true
+        ;;
+      *)
+        echo "Invalid option: \$1"
+        show_tx11start_help
+        ;;
+      esac
+      shift
+    done
 
-# Kill existing Termux X11 processes
-pkill -f com.termux.x11 > /dev/null 2>&1
-pkill -9 "$de_startup" > /dev/null 2>&1
+    # Kill existing Termux X11 processes
+    pkill -f com.termux.x11 >/dev/null 2>&1
+    pkill -9 "$de_startup" >/dev/null 2>&1
 
-# Ensure XDG_RUNTIME_DIR exists
-export XDG_RUNTIME_DIR=/data/data/com.termux/files/usr/tmp
-mkdir -p "\$XDG_RUNTIME_DIR"
+    # Ensure XDG_RUNTIME_DIR exists
+    export XDG_RUNTIME_DIR=/data/data/com.termux/files/usr/tmp
+    mkdir -p "\$XDG_RUNTIME_DIR"
 
-# Export DISPLAY variable
-export DISPLAY=:${display_number}
+    # Export DISPLAY variable
+    export DISPLAY=:${display_number}
 
-# Start pulseaudio unless --help was given
-if [[ "\$1" != "--help" ]]; then
-    termux-wake-lock
-    pulseaudio --start --exit-idle-time=-1
-	if \$use_debug; then
-    	pactl load-module module-sles-source
-	else
-    	pactl load-module module-sles-source > /dev/null 2>&1
-	fi
-fi
+    # Start pulseaudio unless --help was given
+    if [[ "\$1" != "--help" ]]; then
+      termux-wake-lock
+      pulseaudio --start --exit-idle-time=-1
+      if \$use_debug; then
+        pactl load-module module-sles-source
+      else
+        pactl load-module module-sles-source >/dev/null 2>&1
+      fi
+    fi
 
-# Set environment variables if NOT using --nogpu
-if ! \$use_nogpu; then
-    export ${set_to_export}
-	if \$use_debug; then
-    	${initialize_server_method} &
-	else
-    	${initialize_server_method} > /dev/null 2>&1 &
-	fi
-    export ${gpu_environment_variable}
-	export ${hw_method}
-else
-    export LIBGL_ALWAYS_SOFTWARE=1
-    export MESA_LOADER_DRIVER_OVERRIDE=llvmpipe
-    export GALLIUM_DRIVER=llvmpipe
-fi
+    # Set environment variables if NOT using --nogpu
+    if ! \$use_nogpu; then
+      export ${set_to_export}
+      if \$use_debug; then
+        ${initialize_server_method} &
+      else
+        ${initialize_server_method} >/dev/null 2>&1 &
+      fi
+      export ${gpu_environment_variable}
+      export ${hw_method}
+    else
+      export LIBGL_ALWAYS_SOFTWARE=1
+      export MESA_LOADER_DRIVER_OVERRIDE=llvmpipe
+      export GALLIUM_DRIVER=llvmpipe
+    fi
 
-sleep 1
+    sleep 1
 
-# Construct X11 command
-x11_cmd="XDG_RUNTIME_DIR=\${XDG_RUNTIME_DIR} termux-x11 :0"
+    # Construct X11 command
+    x11_cmd="XDG_RUNTIME_DIR=\${XDG_RUNTIME_DIR} termux-x11 :0"
 
-if \$use_legacy; then
-    x11_cmd+=" -legacy-drawing"
-fi
+    if \$use_legacy; then
+      x11_cmd+=" -legacy-drawing"
+    fi
 
-# Start X11
-if \$use_debug; then
-	eval "\$x11_cmd" &
-else
-	eval "\$x11_cmd" > /dev/null 2>&1 &
-fi
-sleep 1
+    # Start X11
+    if \$use_debug; then
+      eval "\$x11_cmd" &
+    else
+      eval "\$x11_cmd" >/dev/null 2>&1 &
+    fi
+    sleep 1
 
-# Start X11 Main Activity
-if \$use_debug; then
-	am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity
-else
-	am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1
-fi
-sleep 1
+    # Start X11 Main Activity
+    if \$use_debug; then
+      am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity
+    else
+      am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity >/dev/null 2>&1
+    fi
+    sleep 1
 
-# Start the desktop environment
-if \$use_nodbus; then
-	if \$use_debug; then
-    	env DISPLAY=:${display_number} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg $de_startup &
-	else
-    	env DISPLAY=:${display_number} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg $de_startup > /dev/null 2>&1 &
-	fi
-else
-	if \$use_debug; then
-    	env DISPLAY=:${display_number}  XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg dbus-launch --exit-with-session $de_startup &
-	else
-    	env DISPLAY=:${display_number}  XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg dbus-launch --exit-with-session $de_startup > /dev/null 2>&1 &
-	fi
-fi
+    # Start the desktop environment
+    if \$use_nodbus; then
+      if \$use_debug; then
+        env DISPLAY=:${display_number} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg $de_startup &
+      else
+        env DISPLAY=:${display_number} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg $de_startup >/dev/null 2>&1 &
+      fi
+    else
+      if \$use_debug; then
+        env DISPLAY=:${display_number} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg dbus-launch --exit-with-session $de_startup &
+      else
+        env DISPLAY=:${display_number} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg dbus-launch --exit-with-session $de_startup >/dev/null 2>&1 &
+      fi
+    fi
 
 EOF
 
@@ -2759,104 +2790,108 @@ EOF
     cat <<EOF >"$PREFIX/bin/tx11start"
 #!/data/data/com.termux/files/usr/bin/bash
 
-# Initialize flags
-use_nodbus=false
-use_legacy=false
-use_debug=false
+if [[ -z "$PREFIX" && "$PREFIX" != *"/com.termux/"* ]]; then
+  echo "${R}[${R}☓${R}]${R}${BOLD}Please run it inside termux${W}"
+  exit 0
+fi
+    # Initialize flags
+    use_nodbus=false
+    use_legacy=false
+    use_debug=false
 
-# Function to show help
-function show_tx11start_help() {
-    echo -e "
+    # Function to show help
+    function show_tx11start_help() {
+      echo -e "
 tx11start            - Start Termux:X11
 tx11start --nodbus   - Start without dbus
 tx11start --legacy   - Start with -legacy-drawing
 tx11start --debug    - Show debug log
 "
-    exit 0
-}
+      exit 0
+    }
 
-# Parse arguments
-while ((\$# >= 1)); do
-    case "\$1" in
-        --help)
-            show_tx11start_help
-            ;;
-        --nodbus)
-            use_nodbus=true
-            ;;
-        --legacy)
-            use_legacy=true
-            ;;
-        --debug)
-            use_debug=true
-            ;;
-        *)
-            echo "Invalid option: \$1"
-            show_tx11start_help
-            ;;
-    esac
-    shift
-done
+    # Parse arguments
+    while ((\$# >= 1)); do
+      case "\$1" in
+      --help)
+        show_tx11start_help
+        ;;
+      --nodbus)
+        use_nodbus=true
+        ;;
+      --legacy)
+        use_legacy=true
+        ;;
+      --debug)
+        use_debug=true
+        ;;
+      *)
+        echo "Invalid option: \$1"
+        show_tx11start_help
+        ;;
+      esac
+      shift
+    done
 
-# Kill existing Termux X11 processes
-pkill -f com.termux.x11 > /dev/null 2>&1
-pkill -9 "$de_startup" > /dev/null 2>&1
+    # Kill existing Termux X11 processes
+    pkill -f com.termux.x11 >/dev/null 2>&1
+    pkill -9 "$de_startup" >/dev/null 2>&1
 
-# Ensure XDG_RUNTIME_DIR exists
-export XDG_RUNTIME_DIR=/data/data/com.termux/files/usr/tmp
-mkdir -p "\$XDG_RUNTIME_DIR"
+    # Ensure XDG_RUNTIME_DIR exists
+    export XDG_RUNTIME_DIR=/data/data/com.termux/files/usr/tmp
+    mkdir -p "\$XDG_RUNTIME_DIR"
 
-# Export DISPLAY variable
-export DISPLAY=:${display_number}
+    # Export DISPLAY variable
+    export DISPLAY=:${display_number}
 
-# Start pulseaudio unless --help was given
-if [[ "\$1" != "--help" ]]; then
-    termux-wake-lock
-    pulseaudio --start --exit-idle-time=-1
-	if \$use_debug; then
-    	pactl load-module module-sles-source
-	else
-    	pactl load-module module-sles-source > /dev/null 2>&1
-	fi
-fi
+    # Start pulseaudio unless --help was given
+    if [[ "\$1" != "--help" ]]; then
+      termux-wake-lock
+      pulseaudio --start --exit-idle-time=-1
+      if \$use_debug; then
+        pactl load-module module-sles-source
+      else
+        pactl load-module module-sles-source >/dev/null 2>&1
+      fi
+    fi
 
-# Construct X11 command
-x11_cmd="XDG_RUNTIME_DIR=\${XDG_RUNTIME_DIR} termux-x11 :0"
+    # Construct X11 command
+    x11_cmd="XDG_RUNTIME_DIR=\${XDG_RUNTIME_DIR} termux-x11 :0"
 
-if \$use_legacy; then
-    x11_cmd+=" -legacy-drawing"
-fi
+    if \$use_legacy; then
+      x11_cmd+=" -legacy-drawing"
+    fi
 
-# Start X11
-if \$use_debug; then
-	eval "\$x11_cmd" &
-else
-	eval "\$x11_cmd" > /dev/null 2>&1 &
-fi
-sleep 1
+    # Start X11
+    if \$use_debug; then
+      eval "\$x11_cmd" &
+    else
+      eval "\$x11_cmd" >/dev/null 2>&1 &
+    fi
+    sleep 1
 
-# Start X11 Main Activity
-if \$use_debug; then
-	am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity
-else
-	am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1
-fi
-sleep 1
+    # Start X11 Main Activity
+    if \$use_debug; then
+      am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity
+    else
+      am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity >/dev/null 2>&1
+    fi
+    sleep 1
 
-# Start the desktop environment
-if \$use_nodbus; then
-	if \$use_debug; then
-    	env DISPLAY=:${display_number} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg $de_startup &
-	else
-    	env DISPLAY=:${display_number} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg $de_startup > /dev/null 2>&1 &
-	fi
-else
-	if \$use_debug; then
-    	env DISPLAY=:${display_number}  XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg dbus-launch --exit-with-session $de_startup &
-	else
-    	env DISPLAY=:${display_number}  XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg dbus-launch --exit-with-session $de_startup > /dev/null 2>&1 &
-	fi
-fi
+    # Start the desktop environment
+    if \$use_nodbus; then
+      if \$use_debug; then
+        env DISPLAY=:${display_number} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg $de_startup &
+      else
+        env DISPLAY=:${display_number} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg $de_startup >/dev/null 2>&1 &
+      fi
+    else
+      if \$use_debug; then
+        env DISPLAY=:${display_number} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg dbus-launch --exit-with-session $de_startup &
+      else
+        env DISPLAY=:${display_number} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg dbus-launch --exit-with-session $de_startup >/dev/null 2>&1 &
+      fi
+    fi
 
 EOF
 
@@ -2884,6 +2919,11 @@ function setup_tx11stop_cmd() {
   if [[ "$de_name" == "openbox" ]]; then
     cat <<EOF >"$PREFIX/bin/tx11stop"
 #!/data/data/com.termux/files/usr/bin/bash
+
+if [[ -z "$PREFIX" && "$PREFIX" != *"/com.termux/"* ]]; then
+   echo "${R}[${R}☓${R}]${R}${BOLD}Please run it inside termux${W}"
+   exit 0
+fi
 
 termux-wake-unlock
 
@@ -2914,8 +2954,14 @@ fi
 exec 2>/dev/null
 EOF
   else
+
     cat <<EOF >"$PREFIX/bin/tx11stop"
 #!/data/data/com.termux/files/usr/bin/bash
+
+if [[ -z "$PREFIX" && "$PREFIX" != *"/com.termux/"* ]]; then 
+  echo "${R}[${R}☓${R}]${R}${BOLD}Please run it inside termux${W}"
+  exit 0
+fi
 
 termux-wake-unlock
 
@@ -2972,6 +3018,12 @@ function setup_termux_x11() {
 function gui_termux_x11() {
   cat <<EOF >"$PREFIX/bin/gui"
 #!/data/data/com.termux/files/usr/bin/bash
+
+if [[ -z "$PREFIX" && "$PREFIX" != *"/com.termux/"* ]]; then 
+  echo "${R}[${R}☓${R}]${R}${BOLD}Please run it inside termux${W}"
+  exit 0
+fi
+
 case \$1 in
 --start|-l)
 tx11start
@@ -2996,6 +3048,12 @@ EOF
 function gui_both() {
   cat <<EOF >"$PREFIX/bin/gui"
 #!/data/data/com.termux/files/usr/bin/bash
+
+if [[ -z "$PREFIX" && "$PREFIX" != *"/com.termux/"* ]]; then 
+  echo "${R}[${R}☓${R}]${R}${BOLD}Please run it inside termux${W}"
+  exit 0
+fi
+
 case \$1 in
     --start|-l)
         case \$2 in
@@ -3461,17 +3519,12 @@ function terminal_utility_setup() {
 eval "\$(zoxide init --cmd cd ${shell_name})"
 EOF
   fi
+
   cat <<EOF >>"$HOME/.shell_rc_content"
 # print your current termux-desktop configuration
 alias 'tdconfig'='cat "$config_file"'
 if [[ \$HOME != *termux* ]]; then
-export DISPLAY=:$display_number
-case \$1 in
-    tx11start|tx11stop|vncstart|vncstop|pdrun)
-        echo "${R}Error: These commands can only be run from Termux, not inside proot distro.${W}"
-        exit 1
-    ;;
-esac
+  export DISPLAY=:$display_number
 fi
 EOF
   if [[ "$distro_add_answer" == "y" ]]; then
@@ -3481,8 +3534,11 @@ alias 'pdapps'='cd /data/data/com.termux/files/usr/share/applications/pd_added &
 EOF
   fi
 
-  echo "source $HOME/.shell_rc_content" >>"${shell_rc_file}"
-  echo "source $HOME/.aliases" >>"${shell_rc_file}"
+  echo "[[ -f ${HOME}/.shell_rc_content ]] && source ${HOME}/.shell_rc_content" >>"${shell_rc_file}"
+
+  if [[ "$terminal_utility_setup_answer" == "y" ]]; then
+    echo "[[ -f ${HOME}/.aliases ]] && source ${HOME}/.aliases" >>"${shell_rc_file}"
+  fi
 
   print_to_config "terminal_utility_setup_answer"
 }
@@ -4738,6 +4794,11 @@ case $1 in
     show_help
   else
     install_termux_desktop "$1"
+  fi
+
+  if [[ -z "$PREFIX" && "$PREFIX" != *"/com.termux/"* ]]; then
+    echo "${R}[${R}☓${R}]${R}${BOLD}Please run it inside termux${W}"
+    exit 0
   fi
   ;;
 esac
