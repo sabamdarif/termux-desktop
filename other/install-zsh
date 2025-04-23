@@ -1,10 +1,10 @@
 #!/data/data/com.termux/files/usr/bin/bash
 
 zsh_setup() {
-  echo "${R}[${C}-${R}]${G} Setup zsh zinit..."${W}
-  sleep 1.3
-  cd ~
-  cat <<'EOF' >>"$HOME/.zshrc"
+    echo "${R}[${C}-${R}]${G} Setup zsh zinit..."${W}
+    sleep 1.3
+    cd ~
+    cat <<'EOF' >>"$HOME/.zshrc"
 setopt nonomatch
 
 # Enable auto-cd
@@ -78,13 +78,13 @@ zinit wait lucid for \
 source "$HOME/.zsh-themes/td.zsh-theme"
 
 EOF
-  NO_INPUT=1 bash -c "$(curl --fail --show-error --silent --location https://raw.githubusercontent.com/zdharma-continuum/zinit/HEAD/scripts/install.sh)"
-  chsh -s zsh
+    NO_INPUT=1 bash -c "$(curl --fail --show-error --silent --location https://raw.githubusercontent.com/zdharma-continuum/zinit/HEAD/scripts/install.sh)"
+    chsh -s zsh
 }
 
 setup_theme() {
-  check_and_create_directory "$HOME/.zsh-themes"
-  cat <<EOF >"$HOME/.zsh-themes/td.zsh-theme"
+    check_and_create_directory "$HOME/.zsh-themes"
+    cat <<EOF >"$HOME/.zsh-themes/td.zsh-theme"
 # td.zsh-theme - A clean and functional ZSH theme with distro detection
 # Created for Termux and proot-distro environments
 
@@ -146,45 +146,45 @@ PROMPT='
 RPROMPT="\$exit_status"
 EOF
 
-  print_success "zsh setup successfully"
+    print_success "zsh setup successfully"
 }
 
 check_paramitter() {
-  if [[ -n "$PREFIX" && "$PREFIX" == *"/com.termux/"* && -z "$user_name" ]]; then
-    while true; do
-      echo " "
-      while true; do
-        read -r -p "${R}[${C}-${R}]${G} Input username [Lowercase]: ${W}" user_name
-        if [[ -n "$user_name" ]]; then
-          break
-        else
-          print_warn "You can't leave the username empty. Please enter a valid username."
-        fi
-      done
-      echo
-      local choice
-      read -r -p "${R}[${C}-${R}]${Y} Do you want to continue with username ${C}$user_name ${Y}? (y/n) : ${W}" choice
-      echo
-      choice="${choice:-y}"
-      echo
-      print_success "Continuing with answer: $choice"
-      sleep 0.2
-      case $choice in
-      [yY]*)
-        print_success "Continuing with username ${C}$user_name"
-        break
-        ;;
-      [nN]*)
-        echo "${R}[${C}-${R}]${G}Please provide username again.${W}"
-        echo
-        ;;
-      *)
-        print_failed "Invalid input, Please enter y or n"
-        ;;
-      esac
-    done
-  fi
-  final_user_name="${user_name}"
+    if [[ -n "$PREFIX" && "$PREFIX" == *"/com.termux/"* && -z "$user_name" ]]; then
+        while true; do
+            echo " "
+            while true; do
+                read -r -p "${R}[${C}-${R}]${G} Input username [Lowercase]: ${W}" user_name
+                if [[ -n "$user_name" ]]; then
+                    break
+                else
+                    print_warn "You can't leave the username empty. Please enter a valid username."
+                fi
+            done
+            echo
+            local choice
+            read -r -p "${R}[${C}-${R}]${Y} Do you want to continue with username ${C}$user_name ${Y}? (y/n) : ${W}" choice
+            echo
+            choice="${choice:-y}"
+            echo
+            print_success "Continuing with answer: $choice"
+            sleep 0.2
+            case $choice in
+            [yY]*)
+                print_success "Continuing with username ${C}$user_name"
+                break
+                ;;
+            [nN]*)
+                echo "${R}[${C}-${R}]${G}Please provide username again.${W}"
+                echo
+                ;;
+            *)
+                print_failed "Invalid input, Please enter y or n"
+                ;;
+            esac
+        done
+    fi
+    final_user_name="${user_name}"
 }
 
 check_paramitter
