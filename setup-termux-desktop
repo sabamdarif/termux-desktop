@@ -1244,9 +1244,9 @@ function exp_vulkan_support() {
     echo
     echo "${Y}1. vulkan-icd-wrapper${W}"
     echo
-    echo "${Y}2. mesa-vulkan-icd-freedreno (adreno only)${W}"
+    echo "${Y}2. mesa-vulkan-icd-freedreno (Turnip) (adreno only)${W}"
     echo
-    echo "${Y}3. mesa-zink-vulkan-icd-freedreno (adreno only)${W}"
+    echo "${Y}3. mesa-zink-vulkan-icd-freedreno (Turnip) (adreno only)${W}"
     echo
     echo "${Y}4. will use the old virgl way${W}"
     echo
@@ -1345,6 +1345,7 @@ function hw_questions() {
         distro_hw_questions
     elif [[ "$exp_termux_vulkan_hw_answer" == "mesa_zink_freedreno" ]] || [[ "$exp_termux_vulkan_hw_answer" == "mesa_freedreno" ]]; then
         termux_hw_answer="freedreno"
+        distro_hw_questions
     fi
 }
 
@@ -2524,6 +2525,11 @@ if [[ -n "\$de_pid" || -n "\$vnc_server_pid" ]]; then
 fi
 
 if [[ "\$1" != "--help" && "\$1" != "-h" ]]; then
+      if \$use_debug; then
+          rm -rf ~/.config/pulse/*-runtime/pid
+      else
+          rm -rf ~/.config/pulse/*-runtime/pid >/dev/null 2>&1 
+      fi
     pulseaudio --start --exit-idle-time=-1
     pactl load-module module-sles-source > /dev/null 2>&1
 fi
@@ -2575,6 +2581,11 @@ if [[ -n "\$de_pid" || -n "\$vnc_server_pid" ]]; then
 fi
 
 if [[ "\$1" != "--help" && "\$1" != "-h" ]]; then
+      if \$use_debug; then
+          rm -rf ~/.config/pulse/*-runtime/pid
+      else
+          rm -rf ~/.config/pulse/*-runtime/pid >/dev/null 2>&1 
+      fi
     pulseaudio --start --exit-idle-time=-1
     pactl load-module module-sles-source > /dev/null 2>&1
 fi
@@ -2727,7 +2738,12 @@ tx11start --debug    - Show debug log
 
     # Start pulseaudio unless --help was given
     if [[ "\$1" != "--help" ]]; then
-      termux-wake-lock
+      termux-wake-lock 
+      if \$use_debug; then
+          rm -rf ~/.config/pulse/*-runtime/pid
+      else
+          rm -rf ~/.config/pulse/*-runtime/pid >/dev/null 2>&1 
+      fi
       pulseaudio --start --exit-idle-time=-1
       if \$use_debug; then
         pactl load-module module-sles-source
@@ -2856,6 +2872,11 @@ tx11start --debug    - Show debug log
     # Start pulseaudio unless --help was given
     if [[ "\$1" != "--help" ]]; then
       termux-wake-lock
+      if \$use_debug; then
+          rm -rf ~/.config/pulse/*-runtime/pid
+      else
+          rm -rf ~/.config/pulse/*-runtime/pid >/dev/null 2>&1 
+      fi
       pulseaudio --start --exit-idle-time=-1
       if \$use_debug; then
         pactl load-module module-sles-source
@@ -3404,47 +3425,11 @@ function install_termux_desktop_appstore() {
     echo
     echo "${R}[${C}-${R}]${C} Keep in mind that the AppStore is still in the early development stage so bugs are expected.${W}"
     echo
-    sleep 1
-
-    package_install_and_check "aria2 python python3 pygobject python-pillow"
-    check_and_delete "${PREFIX}/opt/appstore"
-    check_and_create_directory "${PREFIX}/opt/appstore"
-    cd ${PREFIX}/opt/appstore || return 1
-    download_file "https://raw.githubusercontent.com/sabamdarif/Termux-AppStore/refs/heads/src/gtk_app_store.py"
-    check_and_create_directory "style"
-    download_file "style/style.css" "https://raw.githubusercontent.com/sabamdarif/Termux-AppStore/refs/heads/src/style/style.css"
-    check_and_create_directory "inbuild_functions"
-    download_file "inbuild_functions/inbuild_functions" "https://raw.githubusercontent.com/sabamdarif/Termux-AppStore/refs/heads/src/inbuild_functions/inbuild_functions"
-    chmod +x "inbuild_functions/inbuild_functions"
-    download_file "https://raw.githubusercontent.com/sabamdarif/Termux-AppStore/refs/heads/src/requirements.txt"
-    download_file "${PREFIX}/share/applications/org.sabamdarif.termux.appstore.desktop" "https://raw.githubusercontent.com/sabamdarif/Termux-AppStore/refs/heads/src/org.sabamdarif.termux.appstore.desktop"
-
-    check_and_create_directory "$HOME/.appstore"
-
-    # Install Python dependencies only if not already installed
-    echo "${R}[${C}-${R}]${C} Checking Python dependencies...${W}"
-    while IFS= read -r module; do
-        if [[ -n "$module" && ! "$module" =~ ^[[:space:]]*# ]]; then # Skip empty lines and comments
-            if ! pip show "${module%[>=<]*}" >/dev/null 2>&1; then
-                echo "${R}[${C}-${R}]${G} Installing ${module}...${W}"
-                pip install "$module" || {
-                    print_failed "Failed to install $module. Retrying..."
-                    sleep 0.3
-                    pip install "$module" || {
-                        print_failed "Failed to install $module after retry. Continuing..."
-                    }
-                }
-            else
-                echo "${R}[${C}-${R}]${G} ${module%[>=<]*} is already installed${W}"
-            fi
-        fi
-    done <requirements.txt
-
-    # Move desktop file
-    check_and_delete "/data/data/com.termux/files/home/Desktop/org.sabamdarif.termux.appstore.desktop"
+    download_file "$PREFIX/bin/appstore" "https://raw.githubusercontent.com/sabamdarif/Termux-AppStore/refs/heads/src/appstore"
+    chmod +x "$PREFIX/bin/appstore"
+    appstore --install
     cp "${PREFIX}/share/applications/org.sabamdarif.termux.appstore.desktop" "/data/data/com.termux/files/home/Desktop"
     chmod +x /data/data/com.termux/files/home/Desktop/org.sabamdarif.termux.appstore.desktop
-    cd "${HOME}"
 }
 
 #########################################################################
@@ -4346,6 +4331,8 @@ function some_fixes() {
             grep -q 'export LD_PRELOAD=/system/lib64/libskcodec.so' "$shell_rc_file" || echo 'export LD_PRELOAD=/system/lib64/libskcodec.so' >>"$shell_rc_file"
         fi
     fi
+    # fix blank export in tx11start
+    sed -i '/^export\s*$/d' "$PREFIX/bin/tx11start"
     # tx11start and vncstart
     if [[ "$termux_hw_answer" == "freedreno" ]] || [[ $termux_hw_answer == "zink_with_mesa" ]] || [[ $termux_hw_answer == "zink_with_mesa_zink" ]]; then
         sed -i "/if ! \$use_nogpu; then/,/fi/ {/if \$use_debug; then/,/fi/d}" "$PREFIX/bin/tx11start"
@@ -4474,64 +4461,9 @@ function check_installer_status() {
 }
 
 function check_for_appstore_update() {
-    if [[ ! -d "$PREFIX/opt/appstore" ]]; then
-        return
-    fi
-
     echo "${R}[${C}-${R}]${G} Checking for appstore updates...${W}"
     echo
-
-    local files_to_check=(
-        "gtk_app_store.py"
-        "inbuild_functions/inbuild_functions"
-        "requirements.txt"
-        "style/style.css"
-    )
-
-    local update_needed=false
-    local failed_hash_checks=()
-
-    # Check each file's hash against GitHub version
-    for file in "${files_to_check[@]}"; do
-        local github_hash
-        local local_hash
-
-        # Get GitHub file hash
-        github_hash=$(curl -sL "https://raw.githubusercontent.com/sabamdarif/Termux-AppStore/refs/heads/src/${file}" | sha256sum | cut -d ' ' -f 1)
-
-        # Get local file hash
-        if [[ -f "$PREFIX/opt/appstore/$file" ]]; then
-            local_hash=$(sha256sum "$PREFIX/opt/appstore/$file" | cut -d ' ' -f 1)
-        else
-            failed_hash_checks+=("$file")
-            update_needed=true
-            continue
-        fi
-
-        # Compare hashes
-        if [[ "$local_hash" != "$github_hash" ]]; then
-            update_needed=true
-            failed_hash_checks+=("$file")
-        fi
-    done
-
-    if [[ "$update_needed" == true ]]; then
-        echo "${R}[${C}-${R}]${Y} Updates found for the following files:${W}"
-        printf '%s\n' "${failed_hash_checks[@]}"
-        echo
-
-        confirmation_y_or_n "Would you like to update the appstore to the latest version" update_appstore
-
-        if [[ "$update_appstore" == "y" ]]; then
-            echo "${R}[${C}-${R}]${G} Updating appstore...${W}"
-            install_termux_desktop_appstore
-            echo "${R}[${C}-${R}]${G} Appstore updated successfully${W}"
-        else
-            echo "${R}[${C}-${R}]${C} Skipping appstore update${W}"
-        fi
-    else
-        echo "${R}[${C}-${R}]${G}${BOLD} You are using the latest version${W}"
-    fi
+    appstore --update
 }
 
 #########################################################################
