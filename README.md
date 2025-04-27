@@ -49,8 +49,8 @@
    - **[MATE](/readmes/mate_styles.md)**
 
 ##### 3. Hardware Acceleration and Distro Container:
-   - Learn more about [hardware acceleration](hw-acceleration.md).
-   - Check out [distro container usage](proot-container.md).
+   - Learn more about [hardware acceleration](/readmes/hw-acceleration.md).
+   - Check out [distro container usage](/readmes/proot-container.md).
 
 ##### 4. Start Installation: 
 > Full Installation YouTube Video Guide:- [Here](https://youtu.be/SlR9f9hl5CQ?si=7O13ZAzdAnB_wwWw)
