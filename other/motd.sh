@@ -1,56 +1,76 @@
-#!/data/data/com.termux/files/usr/bin
-W="\e[0;39m"
-G="\e[1;32m"
-C="\e[1;36m"
-Y='\033[1;33m'
-R="\e[1;31m"
-BOLD='\033[1m'
+#!/data/data/com.termux/files/usr/bin/bash
+# Color codes
+W=$'\e[0;39m'
+G=$'\e[1;32m'
+C=$'\e[1;36m'
+R=$'\e[1;31m'
+BOLD=$'\033[1m'
+WHITE=$'\e[0;37m'
+DIM=$'\e[2m'
+UNDIM=$'\e[22m'
 
+# Android distro info
 if [[ -d /system/app/ && -d /system/priv-app ]]; then
     DISTRO="Android $(getprop ro.build.version.release)"
     MODEL="$(getprop ro.product.brand) $(getprop ro.product.model)"
 fi
-termux_build=$(echo "$TERMUX_APK_RELEASE" | awk '{print tolower($0)}' | awk '{for(i=1;i<=NF;i++) $i=toupper(substr($i,1,1)) substr($i,2)} 1')
+
+# Normalize Termux build string
+termux_build="${TERMUX_APK_RELEASE,,}"
+termux_build="${termux_build^}"
+
+# Read thermal zone temperature (first readable)
+raw_temp=""
 for zone in /sys/class/thermal/thermal_zone*/temp; do
-    if [ -f "$zone" ]; then
-        cpu=$(cat "$zone")
+    if [[ -r "$zone" ]]; then
+        raw_temp=$(<"$zone")
         break
     fi
 done
-
-# Convert temperature format
-if [[ -n "$cpu" && "$cpu" =~ ^[0-9]+$ ]]; then
-    TEMP=$((cpu / 1000)) # Some devices store temp in millidegrees
-    [[ "$TEMP" -eq 0 ]] && TEMP=$((cpu / 100))
+if [[ $raw_temp =~ ^[0-9]+$ ]]; then
+    TEMP=$((raw_temp > 1000 ? raw_temp / 1000 : raw_temp / 100))
 else
     TEMP="N/A"
 fi
-PROCESSOR_BRAND_NAME="$(getprop ro.soc.manufacturer | tr '[:lower:]' '[:upper:]')"
-PROCESSOR_NAME="$(getprop ro.soc.model | tr '[:lower:]' '[:upper:]')"
-HARDWARE="$(getprop ro.hardware | tr '[:lower:]' '[:upper:]')"
-if [[ -n "$PROCESSOR_BRAND_NAME" && -n "$PROCESSOR_NAME" ]]; then
-    soc_details="$PROCESSOR_BRAND_NAME $PROCESSOR_NAME"
+
+# SoC detection
+PROC_BRAND=$(getprop ro.soc.manufacturer | tr '[:lower:]' '[:upper:]')
+PROC_MODEL=$(getprop ro.soc.model | tr '[:lower:]' '[:upper:]')
+HARDWARE=$(getprop ro.hardware | tr '[:lower:]' '[:upper:]')
+if [[ -n $PROC_BRAND && -n $PROC_MODEL ]]; then
+    soc_details="$PROC_BRAND $PROC_MODEL"
 else
     soc_details="$HARDWARE"
 fi
-PROCESSOR_COUNT=$(grep -ioP 'processor\t:' /proc/cpuinfo | wc -l)
-if [[ "$TEMP" -lt "20" ]]; then
-    FG="${C}"
-elif [[ "$TEMP" -gt "20" && "$TEMP" -lt "60" ]]; then
-    FG="${G}"
-elif [[ "$TEMP" -gt "60" ]]; then
-    FG="${R}"
+
+# vCPU count
+PROCESSOR_COUNT=$(grep -c '^processor' /proc/cpuinfo)
+
+# Temperature icon
+if [[ $TEMP =~ ^[0-9]+$ ]]; then
+    if ((TEMP < 20)); then
+        TEMP_ICON="${C}"
+    elif ((TEMP < 40)); then
+        TEMP_ICON="${G}"
+    elif ((TEMP > 40)); then
+        TEMP_ICON="${R}"
+    fi
+else
+    TEMP_ICON=""
 fi
 
+# Architecture icon
 cpu_arch=$(uname -m)
-
-if [[ "$cpu_arch" == "aarch64" ]]; then
+if [[ $cpu_arch == "aarch64" ]]; then
     cpu_arch_icon="󰻠"
 else
     cpu_arch_icon="󰻟"
 fi
-clear
 
+# Memory usage
+IFS=' ' read -r USED TOTAL <<<"$(free -htm | awk '/Mem/ { print $3, $2 }')"
+
+# ASCII logo
 LOGO="
   ;,           ,;
    ';,.-----.,;'
@@ -60,49 +80,55 @@ LOGO="
 '-----------------'
 "
 
-# get free memory
-IFS=" " read USED AVAIL TOTAL <<<$(free -htm | grep "Mem" | awk {'print $3,$7,$2'})
-printf "      %+25s ${G}${LOGO}${W}"
-echo -e "
-${W}${BOLD}System Info:
-$C System          : $G  ${W}$DISTRO
-$C Host            : $G  ${W}$MODEL
-$C Kernel          : $G  ${W}$(uname -sr)
-$C CPU             : $G  ${W}${soc_details} ($G$PROCESSOR_COUNT$W vCPU)
-$C Architectures   : $G${cpu_arch_icon}  ${W}$(uname -m | tr '[:lower:]' '[:upper:]')
-$C Termux Version  : $G  ${W}${TERMUX_VERSION}-${termux_build}$W
-$C Memory          : $G  ${G}$USED$W used, $G$TOTAL$W total$W
-$C Temperature     : $FG  ${TEMP}°c$W"
+clear
 
+# print the logo
+printf "%25s %b\n" "" "${G}${LOGO}${W}"
+
+echo -e "${W}${BOLD}System Info:
+${C} System          : ${G}  ${W}${DISTRO}
+${C} Host            : ${G}  ${W}${MODEL}
+${C} Kernel          : ${G}  ${W}$(uname -r | grep -o '^[0-9]*\.[0-9]*\.[0-9]*')
+${C} CPU             : ${G}  ${W}${soc_details} (${G}${PROCESSOR_COUNT}${W} vCPU)
+${C} Architectures   : ${G}${cpu_arch_icon}  ${W}${cpu_arch^^}
+${C} Termux Version  : ${G}  ${W}${TERMUX_VERSION}-${termux_build}${W}
+${C} Memory          : ${G}  ${USED}${W} used, ${TOTAL}${W} total
+${C} Temperature     : ${TEMP_ICON}  ${TEMP}°C${W}
+"
+
+# Disk usage bars
 max_usage=95
 bar_width=45
 
-# disk usage: ignore zfs, squashfs & tmpfs
-mapfile -t dfs < <(df -H -t sdcardfs -t fuse -t fuse.rclone | tail -n+2)
-printf "\n${BOLD}Disk Usage:${W}\n"
+# Disk Usage header
+printf "%b\n" "${BOLD}Disk Usage:${W}"
 
-for line in "${dfs[@]}"; do
-    # get disk usage
-    usage=$(echo "$line" | awk '{print $5}' | sed 's/%//')
-    used_width=$((($usage * $bar_width) / 100))
-    # color is green if usage < max_usage, else red
-    if [ "${usage}" -ge "${max_usage}" ]; then
-        color=$R
-    else
-        color=$G
-    fi
-    # print green/red bar until used_width
-    bar="[${color}"
-    for ((i = 0; i < $used_width; i++)); do
-        bar+="#"
-    done
-    # print dimmmed bar until end
-    bar+="${white}${dim}"
-    for ((i = $used_width; i < $bar_width; i++)); do
-        bar+="-"
-    done
-    bar+="${undim}]"
-    # print usage line & bar
-    echo "${line}" | awk '{ printf("%-30s used %+1s of %+4s\n", $6, $3, $2); }' | sed -e 's/^/  /'
-    echo -e "${bar}" | sed -e 's/^/  /'
-done
+# Calculate dynamic mount-point width using COLUMNS (fallback to stty)
+cols=${COLUMNS:-$(stty size 2>/dev/null | awk '{print $2}')}
+indent=1 # leading spaces in printf
+# leading spaces in printf
+trailer=20 # adjust this to match width of " used XX of YY"
+mount_width=$((cols - indent - trailer))
+
+# Iterate over filesystems and draw bars
+while read -r _ size used _ usep mount; do
+    pct=${usep%%%}
+    used_width=$((pct * bar_width / 100))
+    ((pct >= max_usage)) && bar_color=$R || bar_color=$G
+
+    # build bar graphic
+    bar="[${bar_color}"
+    for ((i = 0; i < used_width; i++)); do bar+="#"; done
+    bar+="${WHITE}${DIM}"
+    for ((i = used_width; i < bar_width; i++)); do bar+="-"; done
+    bar+="${UNDIM}]"
+
+    # print filesystem usage with dynamic alignment
+    # use indent variable to align mount under the 'i' of "Disk Usage:"
+    printf "%*s%-*s used %-4s of %-4s
+" \
+        "$indent" "" "$mount_width" "$mount" "$used" "$size"
+    # print bar with same indent
+    printf "%*s%b
+" "$indent" "" "${bar}"
+done < <(df -H -t sdcardfs -t fuse -t fuse.rclone | tail -n +2)

@@ -5,6 +5,7 @@ zsh_setup() {
     sleep 1.3
     cd ~
     cat <<'EOF' >>"$HOME/.zshrc"
+# Turn off “no match” errors
 setopt nonomatch
 
 # Enable auto-cd
@@ -24,13 +25,11 @@ autoload -Uz _zinit
 (( ${+_comps} )) && _comps[zinit]=_zinit
 
 # Load a few important annexes, without Turbo
-# (this is currently required for annexes)
-    zinit light-mode for \
+zinit light-mode for \
     zdharma-continuum/zinit-annex-as-monitor \
     zdharma-continuum/zinit-annex-bin-gem-node \
     zdharma-continuum/zinit-annex-patch-dl \
     zdharma-continuum/zinit-annex-rust
-### End of Zinit's installer chunk
 
 # Load Oh My Zsh libraries
 zinit lucid light-mode for \
@@ -54,7 +53,7 @@ if [[ -z "$PREFIX" && "$PREFIX" != *"/com.termux/"* ]]; then
     fix_proot_cmd mkdir
 fi
 
-# Ensure completion is properly initialized
+# Ensure completion is properly initialized in Termux
 if [[ -n "$PREFIX" && "$PREFIX" = *"/com.termux/"* ]]; then
   autoload -Uz compinit
   compinit
@@ -74,9 +73,15 @@ zinit wait lucid for \
     blockf atpull'zinit creinstall -q .' \
         zsh-users/zsh-completions
 
+# zsh-fzf-history-search
+zinit ice lucid wait'0'
+zinit light joshskidmore/zsh-fzf-history-search
+
+# real-time, fish-style type-ahead completion
+zinit wait lucid for marlonrichert/zsh-autocomplete
+
 # Load theme
 source "$HOME/.zsh-themes/td.zsh-theme"
-
 EOF
     NO_INPUT=1 bash -c "$(curl --fail --show-error --silent --location https://raw.githubusercontent.com/zdharma-continuum/zinit/HEAD/scripts/install.sh)"
     chsh -s zsh

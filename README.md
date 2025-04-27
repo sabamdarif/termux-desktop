@@ -239,11 +239,12 @@ ___
 Special thanks to:
 - [LinuxDroidMaster/Termux-Desktops](https://github.com/LinuxDroidMaster/Termux-Desktops)
 - [phoenixbyrd/Termux_XFCE](https://github.com/phoenixbyrd/Termux_XFCE)
-- [Yisus7u7/termux-desktop-xfce](https://github.com/Yisus7u7/termux-desktop-xfce)
+- [Yisus7u7/termux-desktop-xfce](https://github.com/JesusChapman/termux-desktop-xfce)
 - [adi1090x/termux-desktop](https://github.com/adi1090x/termux-desktop)
 - [Generator/termux-motd](https://github.com/Generator/termux-motd)
-- [virgl-angle-termux](https://github.com/ar37-rs/virgl-angle-termux)
-- [myTermux](https://github.com/mayTermux/myTermux)
+- [ar37-rs/virgl-angle](https://github.com/ar37-rs/virgl-angle)
+- [mayTermux/myTermux](https://github.com/mayTermux/myTermux)
+- [catppuccin](https://github.com/catppuccin)
 ---
 
 **If you enjoy this project, consider giving it a star!** :star2:

@@ -3511,6 +3511,14 @@ function terminal_utility_setup() {
         cat <<EOF >>"$HOME/.shell_rc_content"
 # set zoxide as cd
 eval "\$(zoxide init --cmd cd ${shell_name})"
+
+# FZF color scheme
+export FZF_DEFAULT_OPTS=" \
+--color=bg+:#363a4f,bg:#24273a,spinner:#f4dbd6,hl:#ed8796 \
+--color=fg:#cad3f5,header:#ed8796,info:#c6a0f6,pointer:#f4dbd6 \
+--color=marker:#b7bdf8,fg+:#cad3f5,prompt:#c6a0f6,hl+:#ed8796 \
+--color=selected-bg:#494d64 \
+--color=border:#363a4f,label:#cad3f5"
 EOF
     fi
 
@@ -4327,9 +4335,10 @@ function some_fixes() {
     local device_brand_name
     device_brand_name=$(getprop ro.product.brand | cut -d ' ' -f 1)
     if [[ $device_brand_name == samsung* && $android_version -ge 14 ]]; then
-        if [[ -e "/system/lib64/libskcodec.so" ]]; then
-            grep -q 'export LD_PRELOAD=/system/lib64/libskcodec.so' "$shell_rc_file" || echo 'export LD_PRELOAD=/system/lib64/libskcodec.so' >>"$shell_rc_file"
-        fi
+        package_install_and_check "libandroid-stub"
+        # if [[ -e "/system/lib64/libskcodec.so" ]]; then
+        #     grep -q 'export LD_PRELOAD=/system/lib64/libskcodec.so' "$shell_rc_file" || echo 'export LD_PRELOAD=/system/lib64/libskcodec.so' >>"$shell_rc_file"
+        # fi
     fi
     # fix blank export in tx11start
     sed -i '/^export\s*$/d' "$PREFIX/bin/tx11start"
