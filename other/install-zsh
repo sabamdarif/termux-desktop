@@ -74,17 +74,16 @@ zinit wait lucid for \
         zsh-users/zsh-completions
 
 # zsh-fzf-history-search
-zinit ice lucid wait'0'
+zinit ice lucid wait
 zinit light joshskidmore/zsh-fzf-history-search
 
 # real-time, fish-style type-ahead completion
-zinit wait lucid for marlonrichert/zsh-autocomplete
+zinit light marlonrichert/zsh-autocomplete
 
 # Load theme
 source "$HOME/.zsh-themes/td.zsh-theme"
 EOF
-    NO_INPUT=1 bash -c "$(curl --fail --show-error --silent --location https://raw.githubusercontent.com/zdharma-continuum/zinit/HEAD/scripts/install.sh)"
-    chsh -s zsh
+    NO_INPUT=1 bash -c "$(curl --fail --show-error --silent --location https://raw.githubusercontent.com/zdharma-continuum/zinit/HEAD/scripts/install.sh)" && chsh -s zsh
 }
 
 setup_theme() {
