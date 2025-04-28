@@ -4071,6 +4071,8 @@ function change_distro() {
         banner
         if [[ "$distro_add_answer" == "y" ]]; then
             call_from_change_pd="y"
+            locl old_distro
+            old_distro="${selected_distro}"
             if [[ -d "$PREFIX/var/lib/proot-distro/installed-rootfs/$selected_distro" ]]; then
                 echo "${R}[${C}-${R}]${G} Your currently installed distro is :${C}${BOLD}${selected_distro}${W}"
                 echo
@@ -4080,7 +4082,7 @@ function change_distro() {
                 if [[ "$distro_change_confirmation" == "y" ]]; then
                     choose_distro
                     echo "${R}[${C}-${R}]${G} Removing $selected_distro and it's data${W}"
-                    pd remove $selected_distro
+                    pd remove ${old_distro}
                     check_and_delete "$PREFIX/share/applications/pd_added"
                     check_and_delete "$PREFIX/bin/$selected_distro"
                     pd_hw_method=$(grep 'selected_pd_hw_method=' "$PREFIX/bin/pdrun" | sed -e 's/.*selected_pd_hw_method="\([^"]*\)".*/\1/')
