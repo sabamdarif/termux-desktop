@@ -946,6 +946,26 @@ function ask_to_chose_de() {
     questions_theme_select
 }
 
+function questions_zsh_theme_select() {
+    echo "${R}[${C}-${R}]${G}${BOLD} Select zsh theme${W}"
+    echo
+    echo "${Y}1. My Zsh Theme (not customizable, made for my setup) ${W}"
+    echo
+    echo "${Y}2. Powerlevel10k (highly customizable) ${W}"
+    echo
+    echo "${Y}3. Pure (pretty, minimal and fast zsh prompt) ${W}"
+    echo
+    select_an_option 2 1 chosen_zsh_theme
+
+    if [[ "$chosen_zsh_theme" == "1" ]]; then
+        selected_zsh_theme_name="td_zsh"
+    elif [[ "$chosen_zsh_theme" == "2" ]]; then
+        selected_zsh_theme_name="p10k_zsh"
+    elif [[ "$chosen_zsh_theme" == "3" ]]; then
+        selected_zsh_theme_name="pure_zsh"
+    fi
+}
+
 function questions_setup_manual() {
     ask_to_chose_de
     banner
@@ -1018,6 +1038,9 @@ function questions_setup_manual() {
     confirmation_y_or_n "Do you want to add some more wallpapers" ext_wall_answer
     banner
     confirmation_y_or_n "Do you want to use my zsh config" zsh_answer
+    if [[ "$zsh_answer" == "y" ]]; then
+        questions_zsh_theme_select
+    fi
     banner
     echo
     echo "${R}[${C}-${R}]${B} Know More About Terminal Utility:- https://github.com/sabamdarif/termux-desktop/blob/main/readmes/see-more.md#hammer_and_wrenchlearn-about-terminal-utilities${W}"
@@ -3471,6 +3494,7 @@ function setup_zsh() {
         clear
     fi
     get_shellrc_path
+    print_to_config "selected_zsh_theme_name"
     print_to_config "zsh_answer"
 }
 
