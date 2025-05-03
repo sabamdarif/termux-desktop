@@ -1,9 +1,9 @@
 #!/data/data/com.termux/files/usr/bin/bash
 
-zsh_setup() {
+function zshrc_setup() {
     echo "${R}[${C}-${R}]${G} Setup zsh zinit... ${W}"
     sleep 1.3
-    cd ${HOME} || return 0
+    cd "${HOME}" || return 0
     check_and_backup "$HOME/.zshrc"
     cat <<'EOF' >"$HOME/.zshrc"
 # Turn off “no match” errors
@@ -83,32 +83,9 @@ zinit light marlonrichert/zsh-autocomplete
 
 EOF
 
-    if [[ "$selected_zsh_theme_name" == "td_zsh" ]]; then
-        cat <<'EOF' >>"$HOME/.zshrc"
-# Load theme
-source "$HOME/.zsh-themes/td.zsh-theme"
-EOF
-    elif [[ "$selected_zsh_theme_name" == "p10k_zsh" ]]; then
-        cat <<'EOF' >>"$HOME/.zshrc"
-# Powerlevel10k Theme.
-zinit ice depth=1; zinit light romkatv/powerlevel10k
-EOF
-    elif [[ "$selected_zsh_theme_name" == "pure_zsh" ]]; then
-        cat <<'EOF' >>"$HOME/.zshrc"
-# Load pure theme
-zinit ice pick"async.zsh" src"pure.zsh" # with zsh-async library that's bundled with it.
-zinit light sindresorhus/pure
-EOF
-    else
-        cat <<'EOF' >>"$HOME/.zshrc"
-# Load theme
-source "$HOME/.zsh-themes/td.zsh-theme"
-EOF
-    fi
-    NO_INPUT=1 bash -c "$(curl --fail --show-error --silent --location https://raw.githubusercontent.com/zdharma-continuum/zinit/HEAD/scripts/install.sh)" && chsh -s zsh
 }
 
-setup_theme() {
+function setup_td_zsh_theme() {
     check_and_create_directory "$HOME/.zsh-themes"
     cat <<EOF >"$HOME/.zsh-themes/td.zsh-theme"
 # td.zsh-theme - A clean and functional ZSH theme with distro detection
@@ -175,7 +152,7 @@ EOF
     print_success "zsh setup successfully"
 }
 
-check_paramitter() {
+function check_paramitter() {
     if [[ -n "$PREFIX" && "$PREFIX" == *"/com.termux/"* && -z "$user_name" ]]; then
         while true; do
             echo " "
@@ -213,6 +190,35 @@ check_paramitter() {
     final_user_name="${user_name}"
 }
 
-check_paramitter
-zsh_setup
-setup_theme
+function set_theme() {
+    if [[ "$selected_zsh_theme_name" == "td_zsh" ]]; then
+        check_paramitter
+        setup_td_zsh_theme
+        cat <<'EOF' >>"$HOME/.zshrc"
+# Load theme
+source "$HOME/.zsh-themes/td.zsh-theme"
+EOF
+    elif [[ "$selected_zsh_theme_name" == "p10k_zsh" ]]; then
+        cat <<'EOF' >>"$HOME/.zshrc"
+# Powerlevel10k Theme.
+zinit ice depth=1; zinit light romkatv/powerlevel10k
+EOF
+    elif [[ "$selected_zsh_theme_name" == "pure_zsh" ]]; then
+        cat <<'EOF' >>"$HOME/.zshrc"
+# Load pure theme
+zinit ice pick"async.zsh" src"pure.zsh" # with zsh-async library that's bundled with it.
+zinit light sindresorhus/pure
+EOF
+    else
+        check_paramitter
+        setup_td_zsh_theme
+        cat <<'EOF' >>"$HOME/.zshrc"
+# Load theme
+source "$HOME/.zsh-themes/td.zsh-theme"
+EOF
+    fi
+    NO_INPUT=1 bash -c "$(curl --fail --show-error --silent --location https://raw.githubusercontent.com/zdharma-continuum/zinit/HEAD/scripts/install.sh)" && chsh -s zsh
+}
+
+zshrc_setup
+set_theme
