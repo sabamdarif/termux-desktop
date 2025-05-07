@@ -81,6 +81,10 @@ zinit light joshskidmore/zsh-fzf-history-search
 # real-time, fish-style type-ahead completion
 zinit light marlonrichert/zsh-autocomplete
 
+export PATH="$HOME/.local/bin:$PATH"
+if [[ -n "$PREFIX" && "$PREFIX" = *"/com.termux/"* ]]; then
+    export LD_LIBRARY_PATH="$PREFIX/lib:$LD_LIBRARY_PATH"
+fi
 EOF
 
 }

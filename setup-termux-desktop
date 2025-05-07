@@ -610,7 +610,7 @@ function install_font_for_style() {
     check_and_create_directory "$HOME/.fonts"
     download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/setup-files/setup-files/$de_name/look_${style_number}/font.tar.gz" "$HOME/.fonts"
     fc-cache -f
-    cd "$HOME" || return
+    cd "$HOME" || return 1
 }
 
 function print_status() {
@@ -773,8 +773,8 @@ function questions_theme_select() {
 
     # Set default style value based on the desktop environment (DE)
     case "$de_name" in
-    xfce | mate | openbox) default_selection="1" ;;
-    lxqt) default_selection="2" ;;
+    xfce | mate) default_selection="1" ;;
+    lxqt | openbox) default_selection="2" ;;
     i3wm | dwm | bspwm | awesome) default_selection="0" ;;
     *) default_selection="0" ;;
     esac
@@ -1034,6 +1034,8 @@ function questions_setup_manual() {
     confirmation_y_or_n "Do you want to Configure Hardware Acceleration" enable_hw_acc
     banner
     echo "${R}[${C}-${R}]${G} By default, it only adds 4-5 wallpapers${W}"
+    echo
+    echo "${R}[${C}-${R}]${R} This is a 1GB+ collection (Thanks:-JaKooLit)${W}"
     echo
     confirmation_y_or_n "Do you want to add some more wallpapers" ext_wall_answer
     banner
@@ -2177,7 +2179,7 @@ function install_desktop() {
     elif [[ "$de_name" == "openbox" ]]; then
         echo "${R}[${C}-${R}]${G}${BOLD} Installing Openbox WM${W}"
         echo
-        package_install_and_check "openbox polybar xorg-xsetroot lxappearance wmctrl feh thunar firefox mpd rofi bmon xcompmgr xfce4-settings gtk3 gedit"
+        package_install_and_check "openbox polybar xorg-xsetroot xorg-xprop lxappearance wmctrl feh firefox rofi bmon xcompmgr gtk3 gedit xmllint"
     elif [[ "$de_name" == "mate" ]]; then
         echo "${R}[${C}-${R}]${G}${BOLD} Installing MATE${W}"
         echo
@@ -2246,7 +2248,6 @@ function theme_installer() {
     check_and_create_directory "$PREFIX/share/backgrounds"
     download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/setup-files/setup-files/${de_name}/look_${style_answer}/wallpaper.tar.gz" "$PREFIX/share/backgrounds/"
 
-    print_to_config "ext_wall_answer"
     if [[ "$ext_wall_answer" == "n" ]]; then
         echo "${R}[${C}-${R}]${C} Skipping Extra Wallpapers Setup...${W}"
         echo
@@ -2255,7 +2256,16 @@ function theme_installer() {
         echo
         check_and_create_directory "$PREFIX/share/backgrounds"
         download_and_extract "https://archive.org/download/wallpaper-extra.tar/wallpaper-extra.tar.gz" "$PREFIX/share/backgrounds/"
+        cd "${HOME}" || exit 1
+        git clone --recursive --depth=1 -j "$(nproc)" https://github.com/JaKooLit/Wallpaper-Bank
+        cd Wallpaper-Bank/wallpapers/ || exit 1
+        mv Dynamic-Wallpapers/* "$PREFIX/share/backgrounds/"
+        check_and_delete "Dynamic-Wallpapers"
+        mv * "$PREFIX/share/backgrounds/"
+        cd "${HOME}" || exit 1
+        check_and_delete "Wallpaper-Bank"
     fi
+    print_to_config "ext_wall_answer"
 
     banner
     echo "${R}[${C}-${R}]${G}${BOLD} Configuring Icon Pack...${W}"
@@ -2348,11 +2358,23 @@ function additional_required_steps() {
 
     elif [[ "$de_name" == "openbox" ]]; then
         if [[ "$style_answer" == "1" ]]; then
+            package_install_and_check "xfce4-settings mpd thunar"
             install_font_for_style "1"
-        else
-            echo "${R}[${C}-${R}]${G} No Additional Packages Required For Theme: ${style_answer}${W}"
-            sleep 1
+        elif [[ "$style_answer" == "2" ]]; then
+            package_install_and_check "devilspie2 xfce4-terminal thunar dunst python python3 tint2 xdotool"
+            install_font_for_style "2"
+            echo "${R}[${C}-${R}]${G}${BOLD} Installing package: ${C}pywal${W}"
+            pip install pywal
+            echo "${R}[${C}-${R}]${G}${BOLD} Installing package: ${C}pyyaml${W}"
+            pip install pyyaml
+            echo "${R}[${C}-${R}]${G}${BOLD} Installing package: ${C}pyxdg${W}"
+            pip install pyxdg
+            echo "${R}[${C}-${R}]${G}${BOLD} Installing package: ${C}docopt${W}"
+            pip install docopt
+            echo "${R}[${C}-${R}]${G}${BOLD} Installing package: ${C}rofimoji${W}"
+            pip install rofimoji
         fi
+
     fi
 }
 
