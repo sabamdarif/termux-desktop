@@ -456,7 +456,7 @@ for arg in "\$@"; do
         if [ -z "\$desktop_files" ]; then 
             if ! apt-file list "\$package_name" >/dev/null 2>&1; then 
                 echo "\${R}[\${C}-\${R}]\${G} Updating apt-file cache… \${W}"
-                apt-file update -y 
+                sudo apt-file update 
             fi
 
             if command -v apt-file >/dev/null; then
@@ -526,6 +526,8 @@ for arg in "\$@"; do
     fi
 
     # Remove the package
+    echo "\${R}[\${C}-\${R}]\${G} Removing packages...\${W}"
+    echo 
     sudo apt "\$removal_command" "\$package_name"
 
     # Handle desktop files
@@ -539,7 +541,7 @@ for arg in "\$@"; do
             # Check if package is really uninstalled
             if ! dpkg -s "\$package_name" >/dev/null 2>&1; then 
                 print_success "Removing \${C}\${desktop_files_without_ext} \${G}From Termux Menu"
-                rm "/data/data/com.termux/files/usr/share/applications/pd_added/\${desktop_files_with_ext}"
+                check_and_delete "/data/data/com.termux/files/usr/share/applications/pd_added/\${desktop_files_with_ext}"
             else
                 print_failed "Package \${C}\$package_name\${R} is still installed; skipping desktop removal."
             fi
@@ -665,7 +667,7 @@ for package_name in "\${packages[@]}"; do
             desktop_files_with_ext=\$(basename "\$desktop_files_name")
             desktop_files_without_ext="\${desktop_files_with_ext%.desktop}"
             print_success "Removing \${C}\${desktop_files_without_ext} \${G}From Termux Menu"
-            rm /data/data/com.termux/files/usr/share/applications/pd_added/\${desktop_files_with_ext}
+            check_and_delete /data/data/com.termux/files/usr/share/applications/pd_added/\${desktop_files_with_ext}
         done
     fi
 done
@@ -795,6 +797,8 @@ for arg in "\$@"; do
     fi
 
     # Remove the package
+    echo "\${R}[\${C}-\${R}]\${G} Removing packages...\${W}"
+    echo
     sudo dnf remove "\$package_name"
 
     # Handle desktop files
@@ -808,7 +812,7 @@ for arg in "\$@"; do
             # Check if package is really uninstalled
             if ! rpm -q "\$package_name" >/dev/null 2>&1; then 
                 print_success "Removing \${C}\${desktop_files_without_ext} \${G}From Termux Menu"
-                rm "/data/data/com.termux/files/usr/share/applications/pd_added/\${desktop_files_with_ext}"
+                check_and_delete "/data/data/com.termux/files/usr/share/applications/pd_added/\${desktop_files_with_ext}"
             else
                 print_failed "Package \${C}\$package_name\${R} is still installed; skipping desktop removal."
             fi

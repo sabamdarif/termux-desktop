@@ -152,8 +152,6 @@ PROMPT='
 # Right prompt shows exit status of previous command
 RPROMPT="\$exit_status"
 EOF
-
-    print_success "zsh setup successfully"
 }
 
 function check_paramitter() {

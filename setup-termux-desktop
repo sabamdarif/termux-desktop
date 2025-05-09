@@ -485,10 +485,6 @@ function download_and_extract() {
     local target_dir="$2"
     local filename="${url##*/}"
 
-    # Notify user about downloading
-    echo "${R}[${C}-${R}]${C}${BOLD}Downloading ${G}${filename}...${W}"
-    sleep 1.5
-
     cd "$target_dir" || return 1
 
     if download_file "$filename" "$url"; then
@@ -896,6 +892,8 @@ function ask_to_chose_de() {
     echo
     echo "${Y}8. Awesome($total_custom_awesome_setup)${W}"
     echo
+    echo "${Y}9. Fluxbox($total_custom_awesome_setup)${W}"
+    echo
     select_an_option 8 1 desktop_answer
     echo
     # set the variables based on chosen de
@@ -941,6 +939,11 @@ function ask_to_chose_de() {
         themes_folder="$HOME/.themes"
         icons_folder="$HOME/.icons"
         de_startup="awesome"
+    elif [[ "$desktop_answer" == "9" ]]; then
+        de_name="fluxbox"
+        themes_folder="$HOME/.themes"
+        icons_folder="$HOME/.icons"
+        de_startup="fluxbox"
     fi
     banner
     questions_theme_select
@@ -955,7 +958,7 @@ function questions_zsh_theme_select() {
     echo
     echo "${Y}3. Pure (pretty, minimal and fast zsh prompt) ${W}"
     echo
-    select_an_option 2 1 chosen_zsh_theme
+    select_an_option 3 1 chosen_zsh_theme
 
     if [[ "$chosen_zsh_theme" == "1" ]]; then
         selected_zsh_theme_name="td_zsh"
@@ -2201,6 +2204,10 @@ function install_desktop() {
         log_info "Installing AWESOME WM"
         echo "${R}[${C}-${R}]${G}${BOLD} Installing AWESOME WM${W}"
         package_install_and_check "awesome"
+    elif [[ "$de_name" == "fluxbox" ]]; then
+        echo "${R}[${C}-${R}]${G}${BOLD} Installing Fluxbox WM${W}"
+        echo
+        package_install_and_check "fluxbox xorg-xsetroot xorg-xprop lxappearance wmctrl feh firefox rofi bmon xcompmgr gtk3 gedit xmllint"
     fi
     package_install_and_check "kvantum xwayland pulseaudio file-roller pavucontrol gnome-font-viewer evince galculator libwayland-protocols xorg-xrdb"
     # Uncomment if additional package installation is needed
@@ -2552,6 +2559,11 @@ function setup_vncstart_cmd() {
         cat <<EOF >"$PREFIX/bin/vncstart"
 #!/data/data/com.termux/files/usr/bin/bash
 
+if [[ -z "\$PREFIX" && "\$PREFIX" != *"/com.termux/"* ]]; then 
+  echo "${R}[${R}☓${R}]${R}${BOLD}Please run it inside termux${W}"
+  exit 0
+fi
+
 termux-wake-lock
 
 # Prevent script from looping by checking if it's already running
@@ -2603,7 +2615,7 @@ EOF
         cat <<EOF >"$PREFIX/bin/vncstart"
 #!/data/data/com.termux/files/usr/bin/bash
 
-if [[ -z "$PREFIX" && "$PREFIX" != *"/com.termux/"* ]]; then 
+if [[ -z "\$PREFIX" && "\$PREFIX" != *"/com.termux/"* ]]; then 
   echo "${R}[${R}☓${R}]${R}${BOLD}Please run it inside termux${W}"
   exit 0
 fi
@@ -2721,10 +2733,10 @@ function setup_tx11start_cmd() {
         cat <<EOF >"$PREFIX/bin/tx11start"
 #!/data/data/com.termux/files/usr/bin/bash
 
-    if [[ -z "$PREFIX" && "$PREFIX" != *"/com.termux/"* ]]; then
-      echo "${R}[${R}☓${R}]${R}${BOLD}Please run it inside termux${W}"
-      exit 0
-    fi
+if [[ -z "\$PREFIX" && "\$PREFIX" != *"/com.termux/"* ]]; then
+  echo "${R}[${R}☓${R}]${R}${BOLD}Please run it inside termux${W}"
+  exit 0
+fi
 
     # Initialize flags
     use_nogpu=false
@@ -2860,7 +2872,7 @@ EOF
         cat <<EOF >"$PREFIX/bin/tx11start"
 #!/data/data/com.termux/files/usr/bin/bash
 
-if [[ -z "$PREFIX" && "$PREFIX" != *"/com.termux/"* ]]; then
+if [[ -z "\$PREFIX" && "\$PREFIX" != *"/com.termux/"* ]]; then
   echo "${R}[${R}☓${R}]${R}${BOLD}Please run it inside termux${W}"
   exit 0
 fi
@@ -2995,7 +3007,7 @@ function setup_tx11stop_cmd() {
         cat <<EOF >"$PREFIX/bin/tx11stop"
 #!/data/data/com.termux/files/usr/bin/bash
 
-if [[ -z "$PREFIX" && "$PREFIX" != *"/com.termux/"* ]]; then
+if [[ -z "\$PREFIX" && "\$PREFIX" != *"/com.termux/"* ]]; then
    echo "${R}[${R}☓${R}]${R}${BOLD}Please run it inside termux${W}"
    exit 0
 fi
@@ -3033,7 +3045,7 @@ EOF
         cat <<EOF >"$PREFIX/bin/tx11stop"
 #!/data/data/com.termux/files/usr/bin/bash
 
-if [[ -z "$PREFIX" && "$PREFIX" != *"/com.termux/"* ]]; then 
+if [[ -z "\$PREFIX" && "\$PREFIX" != *"/com.termux/"* ]]; then 
   echo "${R}[${R}☓${R}]${R}${BOLD}Please run it inside termux${W}"
   exit 0
 fi
@@ -3094,7 +3106,7 @@ function gui_termux_x11() {
     cat <<EOF >"$PREFIX/bin/gui"
 #!/data/data/com.termux/files/usr/bin/bash
 
-if [[ -z "$PREFIX" && "$PREFIX" != *"/com.termux/"* ]]; then 
+if [[ -z "\$PREFIX" && "\$PREFIX" != *"/com.termux/"* ]]; then 
   echo "${R}[${R}☓${R}]${R}${BOLD}Please run it inside termux${W}"
   exit 0
 fi
@@ -3124,7 +3136,7 @@ function gui_both() {
     cat <<EOF >"$PREFIX/bin/gui"
 #!/data/data/com.termux/files/usr/bin/bash
 
-if [[ -z "$PREFIX" && "$PREFIX" != *"/com.termux/"* ]]; then 
+if [[ -z "\$PREFIX" && "\$PREFIX" != *"/com.termux/"* ]]; then 
   echo "${R}[${R}☓${R}]${R}${BOLD}Please run it inside termux${W}"
   exit 0
 fi
@@ -3513,6 +3525,9 @@ function setup_zsh() {
         banner
         . install-zsh
         check_and_delete "install-zsh"
+        if [[ $SHELL == *zsh* ]]; then
+            print_success "zsh setup successfully"
+        fi
         clear
     fi
     get_shellrc_path
@@ -3549,7 +3564,7 @@ function terminal_utility_setup() {
         download_file "$HOME/.termux/colors.properties" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/other/colors.properties"
         download_file "$PREFIX/bin/termux-ssh" "https://raw.githubusercontent.com/sabamdarif/simple-linux-scripts/main/termux-ssh" && chmod +x "$PREFIX/bin/termux-ssh"
         download_file "$PREFIX/bin/termux-fastest-repo" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/other/termux-fastest-repo"
-        chmod +x $PREFIX/bin/termux-fastest-repo
+        chmod +x "$PREFIX/bin/termux-fastest-repo"
         cp "$shell_rc_file" "${shell_rc_file}-2"
         check_and_backup "$shell_rc_file"
         mv "${shell_rc_file}-2" "${shell_rc_file}"
@@ -3598,9 +3613,9 @@ function install_fm_tools() {
         check_and_backup "$HOME/.local/share/nautilus/scripts"
         check_and_create_directory "$HOME/.local/share/nautilus/scripts"
         # Clone repository
-        cd "$HOME"
+        cd "$HOME" || exit 1
         git clone https://github.com/sabamdarif/nautilus-scripts
-        cd nautilus-scripts
+        cd nautilus-scripts || exit 1
         # Download required files
         download_file "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/patches/fix-nautilus-scripts.patch"
         patch -p1 <fix-nautilus-scripts.patch
@@ -3612,7 +3627,7 @@ function install_fm_tools() {
         # Run setup script and move files
         download_file "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/other/setup-termux.sh"
         bash setup-termux.sh
-        cd "$HOME"
+        cd "$HOME" || exit 1
         check_and_delete "nautilus-scripts"
     fi
     print_to_config "fm_tools"
@@ -4077,8 +4092,8 @@ function change_hw() {
             print_log "break the desktop environment $confirmation_break_de"
 
             if [[ "$confirmation_break_de" == "y" ]]; then
-                echo "${R}[${C}-${R}]${R}${BOLD} This process might break your desktop environment${W}"
                 package_check_and_remove "vulkan-loader-android vulkan-loader-generic virglrenderer virglrenderer-android angle-android vulkan-icd mesa-vulkan-icd-freedreno mesa-zink-vulkan-icd-freedreno mesa-vulkan-icd-freedreno-dri3"
+                package_install_and_check "mesa"
             fi
 
             hw_questions
@@ -4120,7 +4135,7 @@ function change_distro() {
             local old_distro
             old_distro="${selected_distro}"
             if [[ -d "$PREFIX/var/lib/proot-distro/installed-rootfs/$selected_distro" ]]; then
-                echo "${R}[${C}-${R}]${G} Your currently installed distro is :${C}${BOLD}${selected_distro}${W}"
+                echo "${R}[${C}-${R}]${G} Your currently installed distro is: ${C}${BOLD}${selected_distro}${W}"
                 echo
                 echo "${R}[${C}-${R}]${R} Changing distro will delete all the data from your previous distro${W}"
                 echo
