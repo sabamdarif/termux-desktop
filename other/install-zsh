@@ -70,16 +70,20 @@ zinit wait lucid for \
     atload"!_zsh_autosuggest_start" \
         zsh-users/zsh-autosuggestions
 
-zinit wait lucid for \
-    blockf atpull'zinit creinstall -q .' \
-        zsh-users/zsh-completions
-
 # zsh-fzf-history-search
 zinit ice lucid wait
 zinit light joshskidmore/zsh-fzf-history-search
 
 # real-time, fish-style type-ahead completion
 zinit light marlonrichert/zsh-autocomplete
+
+# Make Tab and ShiftTab go to the menu
+bindkey              '^I' menu-select
+bindkey "$terminfo[kcbt]" menu-select
+
+# Make Tab and ShiftTab change the selection in the menu
+bindkey -M menuselect              '^I'         menu-complete
+bindkey -M menuselect "$terminfo[kcbt]" reverse-menu-complete
 
 export PATH="$HOME/.local/bin:$PATH"
 if [[ -n "$PREFIX" && "$PREFIX" = *"/com.termux/"* ]]; then

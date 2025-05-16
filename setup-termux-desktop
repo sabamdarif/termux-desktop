@@ -2934,7 +2934,7 @@ tx11start --debug    - Show debug log
       else
           rm -rf ~/.config/pulse/*-runtime/pid >/dev/null 2>&1 
       fi
-      pulseaudio --start --exit-idle-time=-1
+      pulseaudio --start --load="module-aaudio-sink" --exit-idle-time=-1 &
       if \$use_debug; then
         pactl load-module module-sles-source
       else
