@@ -15,10 +15,10 @@ W="$(printf '\033[0m')"
 BOLD="$(printf '\033[1m')"
 
 cd "$HOME" || exit
+############### Define basic values ######################
 termux_desktop_path="/data/data/com.termux/files/usr/etc/termux-desktop"
 config_file="$termux_desktop_path/configuration.conf"
 log_file="/data/data/com.termux/files/home/termux-desktop.log"
-
 # create log
 function debug() {
     exec > >(tee -a "$log_file") 2>&1
@@ -254,77 +254,144 @@ function detact_package_manager() {
 }
 
 # will check if the package is already installed or not, if it installed then reinstall and print success/failed message
-
+# NOTE:- I really really need to fix this half ai generated package_install_and_check function (in future or in the next commit)
 function package_install_and_check() {
     print_log "Starting package installation for: $*" "INFO"
     packs_list=($@)
     for package_name in "${packs_list[@]}"; do
         print_log "Processing package: $package_name" "DEBUG"
-        echo "${R}[${C}-${R}]${G}${BOLD} Processing package: ${C}$package_name ${W}"
+        retry_count=0
+        max_retries=5
+        install_success=false
 
-        if [[ "$PACKAGE_MANAGER" == "pacman" ]]; then
-            if pacman -Qi "$package_name" >/dev/null 2>&1; then
-                print_log "Package already installed: $package_name" "INFO"
-                continue
-            fi
-            if [[ $package_name == *"*"* ]]; then
-                print_log "Processing wildcard pattern: $package_name" "DEBUG"
-                echo "${R}[${C}-${R}]${C} Processing wildcard pattern: $package_name ${W}"
-                packages=$(pacman -Ssq "${package_name%*}" 2>/dev/null)
-                for pkgs in $packages; do
-                    echo "${R}[${C}-${R}]${G}${BOLD} Installing matched package: ${C}$pkgs ${W}"
-                    pacman -Sy --noconfirm --overwrite '*' "$pkgs"
-                    if [ $? -eq 0 ]; then
-                        print_log "Successfully installed package: $pkgs" "INFO"
-                    else
-                        print_log "Failed to install package: $pkgs" "ERROR"
-                    fi
-                done
+        while [[ $retry_count -lt $max_retries && $install_success == false ]]; do
+            retry_count=$((retry_count + 1))
+
+            if [[ "$PACKAGE_MANAGER" == "pacman" ]]; then
+                check_and_delete "$PREFIX/var/lib/pacman/db.lck"
             else
-                pacman -Sy --noconfirm --overwrite '*' "$package_name"
-                if [ $? -eq 0 ]; then
-                    print_log "Successfully installed package: $package_name" "INFO"
+                dpkg --configure -a >/dev/null 2>&1
+                apt --fix-broken install -y >/dev/null 2>&1
+            fi
+
+            if [[ "$PACKAGE_MANAGER" == "pacman" ]]; then
+                if [[ $package_name == *"*"* ]]; then
+                    print_log "Processing wildcard pattern: $package_name" "DEBUG"
+                    packages=$(pacman -Ssq "${package_name%*}" 2>/dev/null)
+                    for pkgs in $packages; do
+                        echo "${R}[${C}-${R}]${G}${BOLD} Installing matched package: ${C}$pkgs ${W}"
+                        pacman -Sy --noconfirm --overwrite '*' "$pkgs"
+                        install_status=$?
+
+                        if pacman -Qi "$pkgs" >/dev/null 2>&1 && [[ $install_status -eq 0 ]]; then
+                            print_success "Successfully installed package: ${C}$pkgs"
+                            install_success=true
+                        else
+                            print_log "Failed to install package: $pkgs (Attempt $retry_count)" "WARN"
+                            if [[ $retry_count -lt $max_retries ]]; then
+                                echo "${R}[${C}!${R}]${Y} Fixing package issues and retrying installation for: ${C}$pkgs ${W}"
+                            fi
+                        fi
+                    done
                 else
-                    print_log "Failed to install package: $package_name" "ERROR"
+                    echo "${R}[${C}-${R}]${G}${BOLD} Installing package: ${C}$package_name ${W}"
+                    pacman -Sy --noconfirm --overwrite '*' "$package_name"
+                    install_status=$?
+
+                    if pacman -Qi "$package_name" >/dev/null 2>&1 && [ $install_status -eq 0 ]; then
+                        print_success "Successfully installed package: ${C}$package_name"
+                        install_success=true
+                        break
+                    else
+                        print_log "Failed to install package: $package_name (Attempt $retry_count)" "WARN"
+                        if [[ $retry_count -lt $max_retries ]]; then
+                            echo "${R}[${C}!${R}]${Y} Fixing package issues and retrying installation for: ${C}$package_name ${W}"
+                        fi
+                    fi
+                fi
+            else
+                if [[ $package_name == *"*"* ]]; then
+                    print_log "Processing wildcard pattern: $package_name" "DEBUG"
+                    echo "${R}[${C}-${R}]${C} Processing wildcard pattern: $package_name ${W}"
+                    packages_by_name=$(apt-cache search "${package_name%*}" | awk "/^${package_name%*}/ {print \$1}")
+                    packages_by_description=$(apt-cache search "${package_name%*}" | grep -Ei "\b${package_name%*}\b" | awk '{print $1}')
+                    packages=$(echo -e "${packages_by_name}\n${packages_by_description}" | sort -u)
+
+                    pattern_success=true
+                    for pkgs in $packages; do
+                        echo "${R}[${C}-${R}]${G}${BOLD} Installing matched package: ${C}$pkgs ${W}"
+
+                        if dpkg -s "$pkgs" >/dev/null 2>&1; then
+                            print_log "Package already installed: $pkgs - reinstalling" "INFO"
+                            apt reinstall "$pkgs" -y
+                        else
+                            apt install "$pkgs" -y
+                        fi
+                        install_status=$?
+
+                        if dpkg -s "$pkgs" >/dev/null 2>&1 && [ $install_status -eq 0 ]; then
+                            print_success "Successfully installed package: ${C}$pkgs"
+                        else
+                            print_log "Failed to install package: $pkgs (Attempt $retry_count)" "WARN"
+                            pattern_success=false
+                            if [[ $retry_count -lt $max_retries ]]; then
+                                echo "${R}[${C}!${R}]${Y} Fixing package issues and retrying installation for: ${C}$pkgs ${W}"
+                            fi
+                        fi
+                    done
+
+                    if [[ $pattern_success == true ]]; then
+                        install_success=true
+                        break
+                    fi
+                else
+                    echo "${R}[${C}-${R}]${G}${BOLD} Installing package: ${C}$package_name ${W}"
+
+                    if dpkg -s "$package_name" >/dev/null 2>&1; then
+                        print_log "Package already installed: $package_name - reinstalling" "INFO"
+                        apt reinstall "$package_name" -y
+                    else
+                        apt install "$package_name" -y
+                    fi
+                    install_status=$?
+
+                    if dpkg -s "$package_name" >/dev/null 2>&1 && [ $install_status -eq 0 ]; then
+                        print_success "Successfully installed package: ${C}$package_name"
+                        install_success=true
+                        break
+                    else
+                        print_log "Failed to install package: $package_name (Attempt $retry_count)" "WARN"
+                        if [[ $retry_count -lt $max_retries ]]; then
+                            echo "${R}[${C}!${R}]${Y} Fixing package issues and retrying installation for: ${C}$package_name ${W}"
+
+                            if [[ $retry_count -gt 1 ]]; then
+                                if [[ "$PACKAGE_MANAGER" != "pacman" ]]; then
+                                    echo "${R}[${C}*${R}]${Y} Running dpkg --configure -a ${W}"
+                                    dpkg --configure -a
+                                    echo "${R}[${C}*${R}]${Y} Running apt --fix-broken install ${W}"
+                                    apt --fix-broken install -y
+                                else
+                                    echo "${R}[${C}*${R}]${Y} Running pacman database sync ${W}"
+                                    pacman -Syy
+                                fi
+                            fi
+                        fi
+                    fi
                 fi
             fi
-        else
-            dpkg --configure -a
-            if [[ $package_name == *"*"* ]]; then
-                log_debug "Processing wildcard pattern" "Pattern: $package_name"
-                echo "${R}[${C}-${R}]${C} Processing wildcard pattern: $package_name ${W}"
-                packages_by_name=$(apt-cache search "${package_name%*}" | awk "/^${package_name}/ {print \$1}")
-                packages_by_description=$(apt-cache search "${package_name%*}" | grep -Ei "\b${package_name%*}\b" | awk '{print $1}')
-                packages=$(echo -e "${packages_by_name}\n${packages_by_description}" | sort -u)
-                for pkgs in $packages; do
-                    echo "${R}[${C}-${R}]${G}${BOLD} Installing matched package: ${C}$pkgs ${W}"
-                    if dpkg -s "$pkgs" >/dev/null 2>&1; then
-                        log_info "Package already installed" "Package: $pkgs"
-                        apt reinstall "$pkgs" -y
-                    else
-                        apt install "$pkgs" -y
-                    fi
-                done
-            else
-                if dpkg -s "$package_name" >/dev/null 2>&1; then
-                    log_info "Package already installed" "Package: $package_name"
-                    apt reinstall "$package_name" -y
-                else
-                    apt install "$package_name" -y
-                fi
-            fi
-        fi
 
-        # Check installation success
-        if [ $? -ne 0 ]; then
-            log_error "Installation failed" "Package: $package_name" "Exit code: $?"
-        else
-            log_info "Installation successful" "Package: $package_name"
+            if [[ $retry_count -lt $max_retries && $install_success == false ]]; then
+                sleep 2
+            fi
+        done
+
+        if [[ $install_success == false ]]; then
+            echo "${R}[${C}X${R}]${R} Failed to install package after multiple attempts: ${C}$package_name ${W}"
+            print_log "FAILED TO INSTALL PACKAGE AFTER $max_retries ATTEMPTS: $package_name" "ERROR"
         fi
     done
     print_log "Package installation completed for: ${packs_list[*]}" "INFO"
 }
-
 # will check the package is installed or not then remove it
 function package_check_and_remove() {
     packs_list=($@)
@@ -490,7 +557,7 @@ function download_and_extract() {
     if download_file "$filename" "$url"; then
         if [[ -f "$filename" ]]; then
             echo
-            echo "${R}[${C}-${R}]${R}[${C}-${R}]${G} Extracting $filename${W}"
+            echo "${R}[${C}-${R}]${G} Extracting $filename${W}"
             extract_archive "$filename"
             check_and_delete "$filename"
         fi
@@ -988,13 +1055,15 @@ function questions_setup_manual() {
     echo
     echo "${Y}1. VS Code${W}"
     echo
-    echo "${Y}2. Geany (lightweight IDE)${W}"
+    echo "${Y}2. Geany${W}"
     echo
-    echo "${Y}3. VS Code & Geany (both)${W}"
+    echo "${Y}3. NeoVim${W}"
     echo
-    echo "${Y}4. Skip${W}"
+    echo "${Y}4. All of them${W}"
     echo
-    select_an_option 4 1 ide_answer
+    echo "${Y}5. Skip${W}"
+    echo
+    select_an_option 5 1 ide_answer
     banner
     echo "${R}[${C}-${R}]${G}${BOLD} Select Media Player you want to install${W}"
     echo
@@ -1024,7 +1093,7 @@ function questions_setup_manual() {
     echo
     echo "${Y}1. Native ${C}(can run only arm64 based exe)${W}"
     echo
-    echo "${Y}2. Using Mobox ${C}${W}"
+    echo "${Y}2. Mobox (Un-maintained) ${C}${W}"
     echo
     echo "${R}[${C}-${R}]${B} Know More About Mobox:- https://github.com/olegos2/mobox/${W}"
     echo
@@ -1582,8 +1651,10 @@ function define_value_name() {
     elif [[ "$ide_answer" == "2" ]]; then
         ide_name="Geany"
     elif [[ "$ide_answer" == "3" ]]; then
-        ide_name="Both VS Code and Geany"
+        ide_name="NeoVim"
     elif [[ "$ide_answer" == "4" ]]; then
+        ide_name="All"
+    elif [[ "$ide_answer" == "5" ]]; then
         ide_name="Skip"
     fi
     # WINE
@@ -1818,9 +1889,9 @@ ${W}"
     # Show selection options
     echo "${R}[${C}-${R}]${G} Select Install Type${W}"
     echo " "
-    echo "${Y}1. Generic Recommended With Hardware Acceleration${W}"
+    echo "${Y}1. Generic (with hardware acceleration)${W}"
     echo " "
-    echo "${Y}2. Generic Recommended Without Hardware Acceleration${W}"
+    echo "${Y}2. Generic (without hardware acceleration)${W}"
     echo " "
     echo "${Y}3. Custom${W}"
     echo " "
@@ -2262,7 +2333,7 @@ function theme_installer() {
         echo "${R}[${C}-${R}]${G}${BOLD} Installing Some Extra Wallpapers...${W}"
         echo
         check_and_create_directory "$PREFIX/share/backgrounds"
-        download_and_extract "https://archive.org/download/wallpaper-extra.tar/wallpaper-extra.tar.gz" "$PREFIX/share/backgrounds/"
+        # download_and_extract "https://archive.org/download/wallpaper-extra.tar/wallpaper-extra.tar.gz" "$PREFIX/share/backgrounds/"
         cd "${HOME}" || exit 1
         git clone --recursive --depth=1 -j "$(nproc)" https://github.com/JaKooLit/Wallpaper-Bank
         cd Wallpaper-Bank/wallpapers/ || exit 1
@@ -2801,7 +2872,7 @@ tx11start --debug    - Show debug log
       else
           rm -rf ~/.config/pulse/*-runtime/pid >/dev/null 2>&1 
       fi
-      pulseaudio --start --exit-idle-time=-1
+      pulseaudio --start --load="module-aaudio-sink" --exit-idle-time=-1
       if \$use_debug; then
         pactl load-module module-sles-source
       else
@@ -3399,9 +3470,12 @@ function ide_installer() {
         package_install_and_check "geany"
         print_to_config "installed_ide" "geany"
     elif [[ ${ide_answer} == "3" ]]; then
-        package_install_and_check "code-oss code-is-code-oss geany"
-        print_to_config "installed_ide" "both"
+        package_install_and_check "neovim"
+        print_to_config "installed_ide" "neovim"
     elif [[ ${ide_answer} == "4" ]]; then
+        package_install_and_check "code-oss code-is-code-oss geany neovim"
+        print_to_config "installed_ide" "all"
+    elif [[ ${ide_answer} == "5" ]]; then
         echo "${R}[${C}-${R}]${C} Skipping Ide Installation...${W}"
         echo
         print_to_config "installed_ide" "skip"
@@ -3924,10 +3998,12 @@ function remove_termux_desktop() {
             #remove ide
             if [[ "$installed_ide" == "code" ]]; then
                 package_check_and_remove "code-oss code-is-code-oss"
+            elif [[ "$installed_ide" == "neovim" ]]; then
+                package_check_and_remove "neovim"
             elif [[ "$installed_ide" == "geany" ]]; then
                 package_check_and_remove "geany"
-            elif [[ "$installed_ide" == "both" ]]; then
-                package_check_and_remove "code-oss code-is-code-oss geany"
+            elif [[ "$installed_ide" == "all" ]]; then
+                package_check_and_remove "code-oss code-is-code-oss geany neovim"
             fi
             #remove media player
             if [[ "$installed_media_player" == "vlc" ]]; then
@@ -4056,42 +4132,11 @@ function change_hw() {
             banner
             echo "${R}[${C}-${R}]${G} Your current hardware acceleration api for Termux is: ${C}${BOLD}${termux_hw_answer}${W}"
             echo "${R}[${C}-${R}]${G} Your current hardware acceleration api for $selected_distro is: ${C}${BOLD}${pd_hw_answer}${W}"
-            while true; do
-                echo
-                echo "${R}[${C}-${R}]${G} Changing drivers might break the desktop environment sometimes${W}"
-                echo "${R}[${C}-${R}]${G} Type 'a' if you want to continue anyway without breaking the desktop${W}"
-                read -r -p "${R}[${C}-${R}]${Y}${BOLD} Do you want to continue ${Y}(y/n/a) ${W}" confirmation_break_de
-                case $confirmation_break_de in
-                [yY]*)
-                    echo
-                    print_success "Continuing with answer: $confirmation_break_de"
-                    echo
-                    sleep 0.2
-                    break
-                    ;;
-                [aA]*)
-                    echo
-                    print_success "Continuing with answer: $confirmation_break_de"
-                    echo
-                    sleep 0.2
-                    break
-                    ;;
-                [nN]*)
-                    echo
-                    echo "${R}[${C}-${R}]${C} Skipping this step${W}"
-                    echo
-                    exit 1
-                    ;;
-                *)
-                    echo
-                    print_failed "Invalid input. Please enter 'y' / 'n' / 'a'."
-                    echo
-                    ;;
-                esac
-            done
-            print_log "break the desktop environment $confirmation_break_de"
-
-            if [[ "$confirmation_break_de" == "y" ]]; then
+            confirmation_y_or_n "Do you want to change hardware acceleration api" confirmation_chnage_hardware_acceleration
+            if [[ "$confirmation_chnage_hardware_acceleration" == "y" ]]; then
+                check_and_delete " /data/data/com.termux/files/usr/opt/angle-android/vulkan/libEGL.so.1"
+                check_and_delete "/data/data/com.termux/files/usr/opt/angle-android/vulkan/libGLESv1_CM.so.1"
+                check_and_delete "/data/data/com.termux/files/usr/opt/angle-android/vulkan/libGLESv2.so.2"
                 package_check_and_remove "vulkan-loader-android vulkan-loader-generic virglrenderer virglrenderer-android angle-android vulkan-icd mesa-vulkan-icd-freedreno mesa-zink-vulkan-icd-freedreno mesa-vulkan-icd-freedreno-dri3"
                 package_install_and_check "mesa"
             fi
@@ -4420,7 +4465,7 @@ function some_fixes() {
             sed -i 's|Exec=/data/data/com.termux/files/usr/bin/chromium-browser %U|Exec=/data/data/com.termux/files/usr/bin/chromium-browser --enable-features=Vulkan %U|' /data/data/com.termux/files/usr/share/applications/chromium.desktop
         fi
 
-        if [[ "$ide_answer" == "2" ]] || [[ "$ide_answer" == "3" ]]; then
+        if [[ "$ide_answer" == "2" ]] || [[ "$ide_answer" == "4" ]]; then
             sed -i 's|/data/data/com.termux/files/usr/bin/code-oss|/data/data/com.termux/files/usr/bin/code-oss --enable-features=Vulkan|g' /data/data/com.termux/files/usr/share/applications/code-oss*
         fi
     fi

@@ -1061,7 +1061,7 @@ function install_some_required_pack() {
         # Debian/Ubuntu
         some_required_pack_list="\
 zlib1g zlib1g-dev fuse xdg-utils apt-file dbus dbus-x11 \
-libnss3 libgtk-3-0 libasound2 libx11-xcb1 libxext6 libxrender1 libxrandr2 \
+libnss3 libgtk-3-0 libx11-xcb1 libxext6 libxrender1 libxrandr2 \
 libxi6 libxtst6 libatk1.0-0 libatk-bridge2.0-0 libglib2.0-0 libglib2.0-bin \
 libpango-1.0-0 libcairo2 libfreetype6 libfontconfig1 libcups2 libdbus-1-3 \
 libdrm2 libgbm1 libxcomposite1 libxdamage1 libxcb-dri3-0 libxshmfence1"

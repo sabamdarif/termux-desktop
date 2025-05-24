@@ -37,6 +37,7 @@ alias largefile="du -h -x -s -- * | sort -r -h | head -20"
 #System Information
 alias ls="eza --icons"
 alias la="eza --icons -lgha --group-directories-first"
+alias la="eza --icons -lgha --group-directories-first"
 alias lt="eza --icons --tree"
 alias lta="eza --icons --tree -lgha"
 alias bat="bat --theme OneHalfDark"
