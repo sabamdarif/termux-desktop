@@ -1,0 +1,23 @@
+## Show line numbers
+set linenumbers
+
+## Use soft line wrapping
+set softwrap
+
+## Highlight matching brackets
+set matchbrackets "(<[{)>]}"
+
+## Set tab size to 4
+set tabsize 4
+
+## Show the cursor position constantly
+set constantshow
+
+## Enable auto-indentation
+set autoindent
+
+## Enable word wrapping at column edge
+set softwrap
+
+## Enable syntax highlighting
+include "/data/data/com.termux/files/usr/share/nano/*.nanorc"

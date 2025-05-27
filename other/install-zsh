@@ -1,7 +1,7 @@
 #!/data/data/com.termux/files/usr/bin/bash
 
 function zshrc_setup() {
-    echo "${R}[${C}-${R}]${G} Setup zsh zinit... ${W}"
+    print_msg "Setup zsh zinit..."
     sleep 1.3
     cd "${HOME}" || return 0
     check_and_backup "$HOME/.zshrc"
@@ -184,7 +184,7 @@ function check_paramitter() {
                 break
                 ;;
             [nN]*)
-                echo "${R}[${C}-${R}]${G}Please provide username again.${W}"
+                print_msg "Please provide username again."
                 echo
                 ;;
             *)

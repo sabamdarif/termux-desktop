@@ -33,7 +33,7 @@ function hw_install_required_packages() {
     case "$exp_termux_vulkan_hw_answer" in
     "vulkan_icd")
         if [[ "$archtype" == "aarch64" || "$archtype" == "arm" ]]; then
-            echo "${R}[${C}-${R}]${G}${BOLD} Installing mesa-vulkan-icd-wrapper Driver...${W}"
+            print_msg "${BOLD}Installing mesa-vulkan-icd-wrapper Driver..."
             echo
             download_file "mesa-vulkan-icd-wrapper.deb" "https://github.com/sabamdarif/termux-desktop/releases/download/vulkan-wrapper-android_25.0.0-2/vulkan-wrapper-android_25.0.0-2_${archtype}.deb"
             apt install ./mesa-vulkan-icd-wrapper.deb -y
@@ -165,7 +165,7 @@ function setup_hw_environment_variables() {
         pd_hw_method="MESA_LOADER_DRIVER_OVERRIDE=kgsl MESA_GL_VERSION_OVERRIDE=3.3"
         ;;
     *)
-        echo "${R}[${C}-${R}]${G} Uses The Previous Selection For Distro${W}"
+        print_msg "Uses The Previous Selection For Distro"
         echo
         ;;
     esac
@@ -196,7 +196,7 @@ function setup_gpu_specific_environment_variables() {
 
 function setup_turnip_proot() {
     banner
-    echo "${R}[${C}-${R}]${G}${BOLD} Setting up Turnip for $selected_distro ...${W}"
+    print_msg "${BOLD}Setting up Turnip for $selected_distro ..."
     echo
     if [[ "$selected_distro" == "debian" ]] || [[ "$selected_distro" == "ubuntu" ]]; then
         proot-distro login $selected_distro --shared-tmp -- env DISPLAY=:$display_number apt install xdg-desktop-portal libgl1 libgl1-mesa-dri libvulkan1 glmark2 -y

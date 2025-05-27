@@ -11,13 +11,13 @@ function check_termux() {
 
 function setup_distro() {
     banner
-    echo "${R}[${C}-${R}]${G}${BOLD} Setting up ${C}proot-distro${W}"
+    print_msg "${BOLD}Setting up ${C}proot-distro"
     echo
 
     package_install_and_check "proot-distro"
 
     banner
-    echo "${R}[${C}-${R}]${G}${BOLD} Setting up Selected Linux Distro: ${C}${selected_distro}${W}"
+    print_msg "${BOLD}Setting up Selected Linux Distro: ${C}${selected_distro}"
     echo
     print_to_config "selected_distro"
 
@@ -34,7 +34,7 @@ function setup_distro() {
 
 function distro_fix_sound_issue() {
     banner
-    echo "${R}[${C}-${R}]${G}${BOLD} Fixing Proot Distro Sound Problem...${W}"
+    print_msg "${BOLD}Fixing Proot Distro Sound Problem..."
     echo
     echo "export PULSE_SERVER=127.0.0.1" >>"$distro_path/etc/profile"
     cat <<EOF >"$HOME/.pd-sound-service"
@@ -68,7 +68,7 @@ function pd_package_install_and_check() {
 
     # Install package
     for package_name in "${packs_list[@]}"; do
-        echo "${R}[${C}-${R}]${G}${BOLD} Installing package: ${C}$package_name ${W}"
+        print_msg "${BOLD}Installing package: ${C}$package_name"
         if [[ "$ID" == "debian" ]] || [[ "$ID" == "ubuntu" ]]; then
             if $use_sudo; then
                 sudo apt install "$package_name" -y
@@ -203,7 +203,7 @@ config_file="$termux_desktop_path/configuration.conf"
 log_file="/data/data/com.termux/files/home/termux-desktop.log"
 
 EOF
-    typeset -f banner print_log print_success print_failed check_and_delete get_latest_release pd_package_install_and_check >>"$script_path"
+    typeset -f banner log_debug print_msg print_success print_failed check_and_delete get_latest_release pd_package_install_and_check >>"$script_path"
     echo "$shell_setup_content" >>"$script_path"
 
     # Make script executable
@@ -218,7 +218,7 @@ EOF
 
 function distro_basic_task() {
     banner
-    echo "${R}[${C}-${R}]${G}${BOLD} Updating ${C}$selected_distro ${G}And Installing Required Packages${W}"
+    print_msg "${BOLD}Updating ${C}$selected_distro ${G}And Installing Required Packages"
     echo
     if [[ "$selected_distro" == "debian" ]] || [[ "$selected_distro" == "ubuntu" ]]; then
         proot-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:$display_number apt update
@@ -331,11 +331,11 @@ EOF
         )
         create_shell_script "$distro_path/root/pd_zsh_install.sh" "$zsh_setup_content"
         banner
-        echo "${R}[${C}-${R}]${G}${BOLD} Setting up shell for ${selected_distro}...${W}"
+        print_msg "${BOLD}Setting up shell for ${selected_distro}..."
         echo
         proot-distro login "$selected_distro" -- /bin/bash -c 'bash pd_zsh_install.sh'
     else
-        echo "${R}[${C}-${R}]${C} Canceling ZSH setup...${W}"
+        print_msg "${C}Canceling ZSH setup..."
     fi
     print_to_config "distro_zsh_answer"
 }
@@ -379,10 +379,9 @@ check_and_delete "pd_setup.sh"
 EOF
             )
         fi
-
         create_shell_script "$save_path/pd_setup.sh" "$terminal_utility_content"
         banner
-        echo "${R}[${C}-${R}]${C} Configuring Terminal Utility For $selected_distro ...${W}"
+        print_msg "${C}Configuring Terminal Utility For ${selected_distro}..."
         echo
         proot-distro login --user "$final_user_name" "$selected_distro" -- /bin/bash -c 'bash pd_setup.sh'
 
@@ -845,7 +844,7 @@ TOP_EOF
 
 function distro_create_app_installer() {
     banner
-    echo "${R}[${C}-${R}]${G}${BOLD} Creating distro app manager...${W}"
+    print_msg "${BOLD}Creating distro app manager..."
 
     save_root_path="$distro_path/root"
     add_installer_common
@@ -1083,7 +1082,7 @@ atk at-spi2-core glib2 pango cairo freetype2 fontconfig cups dbus \
 libdrm mesa-libgbm libxcomposite libxdamage libxcb libxshmfence"
     fi
     banner
-    echo "${R}[${C}-${R}]${G} Installing some distro specfic required packages${W}"
+    print_msg "Installing some distro specfic required packages"
     pd_setup_some_required_pack=$(
         cat <<EOF
 pd_package_install_and_check "$some_required_pack_list"
@@ -1125,7 +1124,7 @@ function disro_container_install_check() {
         while [[ "$retry_count" -lt "$max_retries" ]]; do
             print_failed "Some problem occurred in $selected_distro setup"
             echo
-            echo "${R}[${C}-${R}]${G} Trying again... (Attempt $((retry_count + 1)) of $max_retries)${W}"
+            print_msg "Trying again... (Attempt $((retry_count + 1)) of $max_retries)"
             install_distro_container
             if [[ -d "$PREFIX/bin/$selected_distro" ]] || [[ -d "$PREFIX/var/lib/proot-distro/installed-rootfs/$selected_distro" ]]; then
                 echo
