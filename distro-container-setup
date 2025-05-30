@@ -226,7 +226,7 @@ function distro_basic_task() {
     elif [[ "$selected_distro" == "archlinux" ]]; then
         proot-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:$display_number pacman -Syu --noconfirm
     elif [[ "$selected_distro" == "fedora" ]]; then
-        proot-distro login "$selected_distro" -- /bin/bash -c "echo 'max_parallel_downloads=10/' >> '/etc/dnf/dnf.conf'"
+        proot-distro login "$selected_distro" -- /bin/bash -c "echo 'max_parallel_downloads=10' >> '/etc/dnf/dnf.conf'"
         proot-distro login "$selected_distro" -- /bin/bash -c "echo 'fastestmirror=True/' >> '/etc/dnf/dnf.conf'"
         proot-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:$display_number dnf update -y
         proot-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:$display_number dnf upgrade -y
@@ -1096,7 +1096,7 @@ EOF
 function install_distro_container() {
     setup_distro
     distro_basic_task
-    if [[ "$call_from_change_pd" != "y" ]]; then
+    if [[ "$call_from_change_distro" == false ]]; then
         if [[ "$enable_hw_acc" == "y" ]]; then
             hw_config
         fi

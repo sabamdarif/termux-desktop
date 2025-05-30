@@ -14,11 +14,14 @@ C="$(printf '\033[1;36m')"
 W="$(printf '\033[0m')"
 BOLD="$(printf '\033[1m')"
 
-cd "$HOME" || exit
-############### Define basic values ######################
+cd "$HOME" || exit 1
+############### Define basic initial values ######################
 termux_desktop_path="/data/data/com.termux/files/usr/etc/termux-desktop"
 config_file="$termux_desktop_path/configuration.conf"
 log_file="/data/data/com.termux/files/home/termux-desktop.log"
+call_from_change_distro=false
+call_from_change_style=false
+##################################################################
 # create log
 function debug() {
     exec > >(tee -a "$log_file") 2>&1
@@ -2315,18 +2318,21 @@ function theme_installer() {
         print_msg "${C}Skipping Extra Wallpapers Setup..."
         echo
     elif [[ "$ext_wall_answer" == "y" ]]; then
-        print_msg "${BOLD}Installing Some Extra Wallpapers..."
-        echo
-        check_and_create_directory "$PREFIX/share/backgrounds"
-        # download_and_extract "https://archive.org/download/wallpaper-extra.tar/wallpaper-extra.tar.gz" "$PREFIX/share/backgrounds/"
-        cd "${HOME}" || exit 1
-        git clone --recursive --depth=1 -j "$(nproc)" https://github.com/JaKooLit/Wallpaper-Bank
-        cd Wallpaper-Bank/wallpapers/ || exit 1
-        mv Dynamic-Wallpapers/* "$PREFIX/share/backgrounds/"
-        check_and_delete "Dynamic-Wallpapers"
-        mv * "$PREFIX/share/backgrounds/"
-        cd "${HOME}" || exit 1
-        check_and_delete "Wallpaper-Bank"
+        # if we doesn't set this to only run when call_from_change_style == false then it will clone the wallpapers each time user run --change style
+        if [[ "$call_from_change_style" == false ]]; then
+            print_msg "${BOLD}Installing Some Extra Wallpapers..."
+            echo
+            check_and_create_directory "$PREFIX/share/backgrounds"
+            # download_and_extract "https://archive.org/download/wallpaper-extra.tar/wallpaper-extra.tar.gz" "$PREFIX/share/backgrounds/"
+            cd "${HOME}" || exit 1
+            git clone --recursive --depth=1 -j "$(nproc)" https://github.com/JaKooLit/Wallpaper-Bank
+            cd Wallpaper-Bank/wallpapers/ || exit 1
+            mv Dynamic-Wallpapers/* "$PREFIX/share/backgrounds/"
+            check_and_delete "Dynamic-Wallpapers"
+            mv * "$PREFIX/share/backgrounds/"
+            cd "${HOME}" || exit 1
+            check_and_delete "Wallpaper-Bank"
+        fi
     fi
     print_to_config "ext_wall_answer"
 
@@ -2590,8 +2596,8 @@ function distro_container_setup() {
         else
             download_file "${current_path}/distro-container-setup" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/distro-container-setup"
 
-            # Check if arguments are passed
-            if [[ ("$1" == "--change" || "$1" == "-c") && ("$2" == "distro" || "$2" == "pd") ]]; then
+            # it should only execute if user run --change distro / pd
+            if [[ "$call_from_change_distro" == true ]]; then
                 sed -i 's/\(call_from_change_d="\)[^"]*/\1y/' "${current_path}/distro-container-setup"
             fi
 
@@ -4161,7 +4167,6 @@ function change_distro() {
         read_conf
         banner
         if [[ "$distro_add_answer" == "y" ]]; then
-            call_from_change_pd="y"
             local old_distro
             old_distro="${selected_distro}"
             if [[ -d "$PREFIX/var/lib/proot-distro/installed-rootfs/$selected_distro" ]]; then
@@ -4183,7 +4188,7 @@ function change_distro() {
                         rm "$HOME/.${selected_distro}-sound-access"
                     fi
                     echo
-                    distro_container_setup "$1" "$2"
+                    distro_container_setup
                 else
                     print_msg "Canceling distro change process..."
                     sleep 2
@@ -4205,7 +4210,7 @@ function change_distro() {
             print_to_config "distro_add_answer"
             distro_questions
             distro_hw_questions
-            distro_container_setup "$1" "$2"
+            distro_container_setup
         fi
     fi
 }
@@ -4691,7 +4696,6 @@ function install_termux_desktop() {
     fi
     banner
     add_common_function
-    call_from_change_pd="n"
     distro_container_setup
     gui_launcher
     terminal_utility_setup
@@ -4765,10 +4769,12 @@ case $1 in
 --change | -c)
     case $2 in
     style)
+        call_from_change_style=true
         change_style
         ;;
     distro | pd)
-        change_distro "$1" "$2"
+        call_from_change_distro=true
+        change_distro
         ;;
     hw | hwa)
         change_hw
