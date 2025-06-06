@@ -1310,7 +1310,7 @@ function distro_hw_questions() {
 }
 
 # hardware accelrration related questions
-
+#NOTE: this get called first in hw_questions function
 function exp_vulkan_support() {
     print_msg "${BOLD}First Read This"
     echo
@@ -1386,6 +1386,7 @@ function exp_termux_gl_hw_support() {
     fi
 }
 
+#NOTE: it first call exp_vulkan_support then if user select vulkan_icd the it will go for exp_termux_gl_hw_answer (as name suggest it setup the opengl driver for termux) and user type 4=skip then it will go for everything using virgl option (it's kind of same as exp_termux_gl_hw_answer), then when it done for termux part it will call distro_hw_questions to setup hwa for the selected proot-distro
 function hw_questions() {
     banner
     exp_vulkan_support
@@ -1581,6 +1582,7 @@ function distro_questions() {
     fi
 }
 
+# it set all the value that wil be used for printing the setup configuration (in print_conf_info)
 function define_value_name() {
     # Gui mode
     if [[ "$gui_mode" == "termux_x11" ]]; then
@@ -1669,7 +1671,14 @@ function define_value_name() {
     fi
     # Shell
     if [[ "$zsh_answer" == "y" ]]; then
-        current_shell_name="Zsh"
+        if [[ "$selected_zsh_theme_name" == "td_zsh" ]]; then
+            zsh_theme_name="My Zsh Theme"
+        elif [[ "$selected_zsh_theme_name" == "p10k_zsh" ]]; then
+            zsh_theme_name="Powerlevel10k"
+        elif [[ "$selected_zsh_theme_name" == "pure_zsh" ]]; then
+            zsh_theme_name="Pure"
+        fi
+        current_shell_name="Zsh ($zsh_theme_name)"
     elif [[ "$zsh_answer" == "n" ]]; then
         current_shell_name="Bash"
     fi
@@ -2144,7 +2153,7 @@ function check_system_requirements() {
             local latest_termux_api_tag
             latest_termux_api_tag=$(get_latest_release "termux" "termux-api")
             print_failed "Termux-API: ${W}Not Installed"
-            print_msg "${BOLD}Install Termux-API:- ${W}https://github.com/termux/termux-api/releases/download/${latest_termux_api_tag}/termux-api_${latest_termux_api_tag}+github-debug.apk"
+            print_msg "${BOLD}Install Termux-API:- ${W}https://github.com/termux/termux-api/releases/download/${latest_termux_api_tag}/termux-api-app_${latest_termux_api_tag}+github-debug.apk"
             ((errors++))
         fi
         echo " "
@@ -2621,10 +2630,21 @@ function setup_vncstart_cmd() {
         cat <<EOF >"$PREFIX/bin/vncstart"
 #!/data/data/com.termux/files/usr/bin/bash
 
-if [[ -z "\$PREFIX" && "\$PREFIX" != *"/com.termux/"* ]]; then 
-  echo "${R}[${R}☓${R}]${R}${BOLD}Please run it inside termux${W}"
-  exit 0
+source /data/data/com.termux/files/usr/etc/termux-desktop/common_functions
+
+# This code block is taken from:- https://github.com/termux/proot-distro/blob/master/proot-distro.sh#L172C1-L184C1
+TRACER_PID=\$(grep TracerPid "/proc/\$\$/status" | cut -d \$'\t' -f 2)
+if [ "\$TRACER_PID" != 0 ]; then
+	TRACER_NAME=\$(grep Name "/proc/\${TRACER_PID}/status" | cut -d \$'\t' -f 2)
+	if [ "\$TRACER_NAME" = "proot" ]; then
+		msg
+		print_failed "vncstart command should not be executed under PRoot.\${W}"
+		msg
+		exit 1
+	fi
+	unset TRACER_NAME
 fi
+unset TRACER_PID
 
 termux-wake-lock
 
@@ -2677,10 +2697,21 @@ EOF
         cat <<EOF >"$PREFIX/bin/vncstart"
 #!/data/data/com.termux/files/usr/bin/bash
 
-if [[ -z "\$PREFIX" && "\$PREFIX" != *"/com.termux/"* ]]; then 
-  echo "${R}[${R}☓${R}]${R}${BOLD}Please run it inside termux${W}"
-  exit 0
+source /data/data/com.termux/files/usr/etc/termux-desktop/common_functions
+
+# This code block is taken from:- https://github.com/termux/proot-distro/blob/master/proot-distro.sh#L172C1-L184C1
+TRACER_PID=\$(grep TracerPid "/proc/\$\$/status" | cut -d \$'\t' -f 2)
+if [ "\$TRACER_PID" != 0 ]; then
+	TRACER_NAME=\$(grep Name "/proc/\${TRACER_PID}/status" | cut -d \$'\t' -f 2)
+	if [ "\$TRACER_NAME" = "proot" ]; then
+		msg
+		print_failed "vncstart command should not be executed under PRoot.\${W}"
+		msg
+		exit 1
+	fi
+	unset TRACER_NAME
 fi
+unset TRACER_PID
 
 termux-wake-lock
 
@@ -2744,10 +2775,21 @@ function setup_vncstop_cmd() {
     cat <<'EOF' >"$PREFIX/bin/vncstop"
 #!/data/data/com.termux/files/usr/bin/bash
 
-if [[ -z "$PREFIX" && "$PREFIX" != *"/com.termux/"* ]]; then 
-  echo "${R}[${R}☓${R}]${R}${BOLD}Please run it inside termux${W}"
-  exit 0
+source /data/data/com.termux/files/usr/etc/termux-desktop/common_functions
+
+# This code block is taken from:- https://github.com/termux/proot-distro/blob/master/proot-distro.sh#L172C1-L184C1
+TRACER_PID=\$(grep TracerPid "/proc/\$\$/status" | cut -d \$'\t' -f 2)
+if [ "\$TRACER_PID" != 0 ]; then
+	TRACER_NAME=\$(grep Name "/proc/\${TRACER_PID}/status" | cut -d \$'\t' -f 2)
+	if [ "\$TRACER_NAME" = "proot" ]; then
+		msg
+		print_failed "vncstop command should not be executed under PRoot.\${W}"
+		msg
+		exit 1
+	fi
+	unset TRACER_NAME
 fi
+unset TRACER_PID
 
 termux-wake-unlock
 
@@ -2795,10 +2837,21 @@ function setup_tx11start_cmd() {
         cat <<EOF >"$PREFIX/bin/tx11start"
 #!/data/data/com.termux/files/usr/bin/bash
 
-if [[ -z "\$PREFIX" && "\$PREFIX" != *"/com.termux/"* ]]; then
-  echo "${R}[${R}☓${R}]${R}${BOLD}Please run it inside termux${W}"
-  exit 0
+source /data/data/com.termux/files/usr/etc/termux-desktop/common_functions
+
+# This code block is taken from:- https://github.com/termux/proot-distro/blob/master/proot-distro.sh#L172C1-L184C1
+TRACER_PID=\$(grep TracerPid "/proc/\$\$/status" | cut -d \$'\t' -f 2)
+if [ "\$TRACER_PID" != 0 ]; then
+	TRACER_NAME=\$(grep Name "/proc/\${TRACER_PID}/status" | cut -d \$'\t' -f 2)
+	if [ "\$TRACER_NAME" = "proot" ]; then
+		msg
+		print_failed "tx11start command should not be executed under PRoot.\${W}"
+		msg
+		exit 1
+	fi
+	unset TRACER_NAME
 fi
+unset TRACER_PID
 
     # Initialize flags
     use_nogpu=false
@@ -2934,10 +2987,22 @@ EOF
         cat <<EOF >"$PREFIX/bin/tx11start"
 #!/data/data/com.termux/files/usr/bin/bash
 
-if [[ -z "\$PREFIX" && "\$PREFIX" != *"/com.termux/"* ]]; then
-  echo "${R}[${R}☓${R}]${R}${BOLD}Please run it inside termux${W}"
-  exit 0
+source /data/data/com.termux/files/usr/etc/termux-desktop/common_functions
+
+# This code block is taken from:- https://github.com/termux/proot-distro/blob/master/proot-distro.sh#L172C1-L184C1
+TRACER_PID=\$(grep TracerPid "/proc/\$\$/status" | cut -d \$'\t' -f 2)
+if [ "\$TRACER_PID" != 0 ]; then
+	TRACER_NAME=\$(grep Name "/proc/\${TRACER_PID}/status" | cut -d \$'\t' -f 2)
+	if [ "\$TRACER_NAME" = "proot" ]; then
+		msg
+		print_failed "tx11start command should not be executed under PRoot.\${W}"
+		msg
+		exit 1
+	fi
+	unset TRACER_NAME
 fi
+unset TRACER_PID
+
     # Initialize flags
     use_nodbus=false
     use_legacy=false
@@ -3069,10 +3134,21 @@ function setup_tx11stop_cmd() {
         cat <<EOF >"$PREFIX/bin/tx11stop"
 #!/data/data/com.termux/files/usr/bin/bash
 
-if [[ -z "\$PREFIX" && "\$PREFIX" != *"/com.termux/"* ]]; then
-   echo "${R}[${R}☓${R}]${R}${BOLD}Please run it inside termux${W}"
-   exit 0
+source /data/data/com.termux/files/usr/etc/termux-desktop/common_functions
+
+# This code block is taken from:- https://github.com/termux/proot-distro/blob/master/proot-distro.sh#L172C1-L184C1
+TRACER_PID=\$(grep TracerPid "/proc/\$\$/status" | cut -d \$'\t' -f 2)
+if [ "\$TRACER_PID" != 0 ]; then
+	TRACER_NAME=\$(grep Name "/proc/\${TRACER_PID}/status" | cut -d \$'\t' -f 2)
+	if [ "\$TRACER_NAME" = "proot" ]; then
+		msg
+		print_failed "tx11stop command should not be executed under PRoot.\${W}"
+		msg
+		exit 1
+	fi
+	unset TRACER_NAME
 fi
+unset TRACER_PID
 
 termux-wake-unlock
 
@@ -3107,10 +3183,21 @@ EOF
         cat <<EOF >"$PREFIX/bin/tx11stop"
 #!/data/data/com.termux/files/usr/bin/bash
 
-if [[ -z "\$PREFIX" && "\$PREFIX" != *"/com.termux/"* ]]; then 
-  echo "${R}[${R}☓${R}]${R}${BOLD}Please run it inside termux${W}"
-  exit 0
+source /data/data/com.termux/files/usr/etc/termux-desktop/common_functions
+
+# This code block is taken from:- https://github.com/termux/proot-distro/blob/master/proot-distro.sh#L172C1-L184C1
+TRACER_PID=\$(grep TracerPid "/proc/\$\$/status" | cut -d \$'\t' -f 2)
+if [ "\$TRACER_PID" != 0 ]; then
+	TRACER_NAME=\$(grep Name "/proc/\${TRACER_PID}/status" | cut -d \$'\t' -f 2)
+	if [ "\$TRACER_NAME" = "proot" ]; then
+		msg
+		print_failed "tx11stop command should not be executed under PRoot.\${W}"
+		msg
+		exit 1
+	fi
+	unset TRACER_NAME
 fi
+unset TRACER_PID
 
 termux-wake-unlock
 
@@ -3198,10 +3285,21 @@ function gui_both() {
     cat <<EOF >"$PREFIX/bin/gui"
 #!/data/data/com.termux/files/usr/bin/bash
 
-if [[ -z "\$PREFIX" && "\$PREFIX" != *"/com.termux/"* ]]; then 
-  echo "${R}[${R}☓${R}]${R}${BOLD}Please run it inside termux${W}"
-  exit 0
+source /data/data/com.termux/files/usr/etc/termux-desktop/common_functions
+
+# This code block is taken from:- https://github.com/termux/proot-distro/blob/master/proot-distro.sh#L172C1-L184C1
+TRACER_PID=\$(grep TracerPid "/proc/\$\$/status" | cut -d \$'\t' -f 2)
+if [ "\$TRACER_PID" != 0 ]; then
+	TRACER_NAME=\$(grep Name "/proc/\${TRACER_PID}/status" | cut -d \$'\t' -f 2)
+	if [ "\$TRACER_NAME" = "proot" ]; then
+		msg
+		print_failed "gui command should not be executed under PRoot.\${W}"
+		msg
+		exit 1
+	fi
+	unset TRACER_NAME
 fi
+unset TRACER_PID
 
 case \$1 in
     --start|-l)
@@ -3523,15 +3621,25 @@ function media_player_installer() {
 #
 #########################################################################
 
+function setup_gimp_plugins() {
+    download_file "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/other/install-resynthesizer-termux"
+    if [[ -f "install-resynthesizer-termux" ]]; then
+        chmod +x install-resynthesizer-termux
+        source install-resynthesizer-termux
+    fi
+}
+
 function photo_editor_installer() {
     banner
     print_to_config "installed_photo_editor"
     if [[ ${installed_photo_editor} == "gimp" ]]; then
         package_install_and_check "gimp"
+        setup_gimp_plugins
     elif [[ ${installed_photo_editor} == "inkscape" ]]; then
         package_install_and_check "inkscape"
     elif [[ ${installed_photo_editor} == "all" ]]; then
         package_install_and_check "gimp inkscape"
+        setup_gimp_plugins
     elif [[ ${installed_photo_editor} == "skip" ]]; then
         print_msg "${C}Skipping Photo Editor Installation..."
         echo

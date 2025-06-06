@@ -27,7 +27,6 @@
 - **listfont** To list all font
 - **largefile** To list large files
 - **preview** use fzf to search file and preview text file
-- **fcd** use fzf to search directories and cd into them
 - **fnvim** use fzf to search for an file and open the directly in neovim
 - **fvim** same as *fnvim* but for vim
   ##### For more cat $HOME/.aliases

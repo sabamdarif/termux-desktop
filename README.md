@@ -10,20 +10,14 @@
 
 ## Key Features:
 
-- :books: **Quick Setup:** Easy-to-follow installation process.
-- :desktop_computer: **Desktop Styles:** Supports **XFCE**, **LXQt**, and **OPENBOX** with beautiful themes.
-- :wine_glass: **Windows App Support:** Run Windows apps using Wine (x86_64 on ARM64 devices).
-- :mechanical_arm: **Hardware Acceleration:** Enhances performance for supported hardware.
-- :paperclips: **GUI Access:** Supports Termux:X11 and VNC.
+- :books: **Easy Setup:** Easy-to-follow installation process.
+- :desktop_computer: **Desktop Styles:** Supports **XFCE**, **LXQt**, and **OPENBOX**... with beautiful themes.
+- :mechanical_arm: **Hardware Acceleration:** It will install all the drivers in order to It will install all the drivers in order to get hardware acceleration working under termux.
+- :paperclips: **GUI Access:** Supports Termux:X11 and VNC (vnc is optional).
 - :package: **Package Management:** Compatible with both APT and [PACMAN](https://youtu.be/ditNvG5Nxj0).
 - :shopping: **App Store:** A appstore to install apps from termux and suppoted proot-distro.
-- :jigsaw: **One-Click App Installation:**
-  - Browsers: Firefox, Chromium
-  - Code Editors: VS Code, Geany
-  - Image Editors: GIMP, Inkscape
-  - And more...
-- :package: **Additional Apps:** Install apps like LibreOffice not available by default in Termux.
-- :art: **Customizations:** Extensive configuration options to suit user preferences.
+- :package: **Apps** Normally, you're limited to apps that are supported by Termux, but it have a option for installing apps like LibreOffice via proot-distro and use them as a native app.
+- And a lot more...
 
 ---
 

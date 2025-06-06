@@ -1,39 +1,44 @@
-# :mechanical_arm: Hardware Acceleration in Termux
+## :mechanical_arm: Hardware Acceleration in Termux
 
-When setting up hardware acceleration in Termux, follow these steps for optimal configuration:
+### When setting up hardware acceleration in Termux, follow these steps for optimal configuration:
+> Also one thing to note that hardware acceleration in termux isn't in great state so it might or might not work for your device
 
-## Installation
-- **Run the Installer Script:** Choose your preferred hardware acceleration method during the installation.
-- **Distro Container Setup:** If you opt for a distro container, select the hardware acceleration method for the distro as well.
+### Installation
+- Run the Installer Script and choose your preferred hardware acceleration method during the installation.
+- If you opt for a distro container, select the hardware acceleration method for the distro as well.
   >For Adreno GPU you don't nedd to chose, it will automatically use turnip if you use ubuntu/debian 
-- **Automatic Configuration:** Once selected, everything will be configured automatically.
+- Once selected, everything will be configured automatically.
 
-> Use [CPU-Z](https://play.google.com/store/apps/details?id=com.cpuid.cpu_z&pcampaignid=web_share) to identify your GPU. Research your GPU online to determine whether `virpipe` or `zink` works best; Reddit or similar forums often have useful insights.
+> Use [CPU-Z](https://play.google.com/store/apps/details?id=com.cpuid.cpu_z&pcampaignid=web_share) to identify your GPU. Research your GPU online to determine whether `virpipe` or `zink` or `icd-wrapper`... works best; Reddit or similar forums often have useful insights.
+
+> Although for most of the gpu icd-wrapper (vulkan) should work just fine
 
 ![CPU-Z Screenshot](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/cpu-z.png)
 
-## Using Hardware Acceleration in Termux
-1. **Start Termux Desktop** via VNC or Termux:x11 (recommended).
-2. **Run Your Programs** as needed.
+### Using Hardware Acceleration in Termux
+- Start Termux Desktop via Termux:x11 (recommended) or vnc and it should just work (if the hardware acceleration driver you selected that support your gpu).
 
-## Using Hardware Acceleration in Proot Distro (Distro Container)
+### Using Hardware Acceleration in Proot Distro (Distro Container)
 
-### Method 1: Terminal Commands
+#### Method 1: Terminal Commands (pdrun)
+> Remember you should always run pdrun from termux's shell, never run it from inside a proot-distro
+
 1. Launch Termux Desktop.
 2. Run programs in Termux terminal:
    ```bash
    pdrun program
    ```
-   - By default, this runs with GPU acceleration.
+   - By default pdrun runs programs with GPU acceleration.
    ```bash
    pdrun --nogpu program
    ```
-   - To run without GPU acceleration.
+   - To run program without GPU acceleration.
 
 ![GLMark2 Results](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/pdrun-glmark2.png)
 
 ### Method 2: Termux Menu
 1. Add the desired program to the Termux menu.
+> To know more no how to add a program from proot-distro to termux, check this:- [HERE](https://github.com/sabamdarif/termux-desktop/blob/main/readmes/proot-container.md#adding-apps-to-the-termux-desktop-app-menu)
 2. Launch the program directly from the Termux menu.
 
 ## Changing Hardware Acceleration Drivers
@@ -79,8 +84,6 @@ Run the following command to change drivers:
 ```bash
 setup-termux-desktop --change hw
 ```
-> **Warning:** Sometime this may occasionally cause desktop break issues.
-
 ---
 
 # :chart_with_upwards_trend: Performance Results

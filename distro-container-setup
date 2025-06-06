@@ -980,7 +980,7 @@ EOF
 
 #########################################################################
 #
-# App Launcher Setup
+# App Launcher Setup / setup the pdrun command
 #
 #########################################################################
 
@@ -991,11 +991,43 @@ function distro_app_launch_setup() {
             cat <<EOF >"$PREFIX/bin/pdrun"
 #!/data/data/com.termux/files/usr/bin/bash
 
+source /data/data/com.termux/files/usr/etc/termux-desktop/common_functions
+
+# This code block is taken from:- https://github.com/termux/proot-distro/blob/master/proot-distro.sh#L172C1-L184C1
+TRACER_PID=\$(grep TracerPid "/proc/\$\$/status" | cut -d \$'\t' -f 2)
+if [ "\$TRACER_PID" != 0 ]; then
+	TRACER_NAME=\$(grep Name "/proc/\${TRACER_PID}/status" | cut -d \$'\t' -f 2)
+	if [ "\$TRACER_NAME" = "proot" ]; then
+		msg
+		print_failed "tx11start should not be executed under PRoot.\${W}"
+		msg
+		exit 1
+	fi
+	unset TRACER_NAME
+fi
+unset TRACER_PID
+
 selected_pd_hw_method="$pd_hw_method"
 EOF
         else
             cat <<EOF >"$PREFIX/bin/pdrun"
 #!/data/data/com.termux/files/usr/bin/bash
+
+source /data/data/com.termux/files/usr/etc/termux-desktop/common_functions
+
+# This code block is taken from:- https://github.com/termux/proot-distro/blob/master/proot-distro.sh#L172C1-L184C1
+TRACER_PID=\$(grep TracerPid "/proc/\$\$/status" | cut -d \$'\t' -f 2)
+if [ "\$TRACER_PID" != 0 ]; then
+	TRACER_NAME=\$(grep Name "/proc/\${TRACER_PID}/status" | cut -d \$'\t' -f 2)
+	if [ "\$TRACER_NAME" = "proot" ]; then
+		msg
+		print_failed "tx11start should not be executed under PRoot.\${W}"
+		msg
+		exit 1
+	fi
+	unset TRACER_NAME
+fi
+unset TRACER_PID
 
 selected_pd_hw_method="$pd_hw_method"
 bash $HOME/.pd-sound-service
@@ -1023,10 +1055,42 @@ EOF
             cat <<EOF >"$PREFIX/bin/pdrun"
 #!/data/data/com.termux/files/usr/bin/bash
 
+source /data/data/com.termux/files/usr/etc/termux-desktop/common_functions
+
+# This code block is taken from:- https://github.com/termux/proot-distro/blob/master/proot-distro.sh#L172C1-L184C1
+TRACER_PID=\$(grep TracerPid "/proc/\$\$/status" | cut -d \$'\t' -f 2)
+if [ "\$TRACER_PID" != 0 ]; then
+	TRACER_NAME=\$(grep Name "/proc/\${TRACER_PID}/status" | cut -d \$'\t' -f 2)
+	if [ "\$TRACER_NAME" = "proot" ]; then
+		msg
+		print_failed "tx11start should not be executed under PRoot.\${W}"
+		msg
+		exit 1
+	fi
+	unset TRACER_NAME
+fi
+unset TRACER_PID
+
 EOF
         else
             cat <<EOF >"$PREFIX/bin/pdrun"
 #!/data/data/com.termux/files/usr/bin/bash
+
+source /data/data/com.termux/files/usr/etc/termux-desktop/common_functions
+
+# This code block is taken from:- https://github.com/termux/proot-distro/blob/master/proot-distro.sh#L172C1-L184C1
+TRACER_PID=\$(grep TracerPid "/proc/\$\$/status" | cut -d \$'\t' -f 2)
+if [ "\$TRACER_PID" != 0 ]; then
+	TRACER_NAME=\$(grep Name "/proc/\${TRACER_PID}/status" | cut -d \$'\t' -f 2)
+	if [ "\$TRACER_NAME" = "proot" ]; then
+		msg
+		print_failed "tx11start should not be executed under PRoot.\${W}"
+		msg
+		exit 1
+	fi
+	unset TRACER_NAME
+fi
+unset TRACER_PID
 
 bash $HOME/.pd-sound-service
 EOF
