@@ -21,6 +21,7 @@ config_file="$termux_desktop_path/configuration.conf"
 log_file="/data/data/com.termux/files/home/termux-desktop.log"
 call_from_change_distro=false
 call_from_change_style=false
+is_termux_api_installed=true
 ##################################################################
 # create log
 function debug() {
@@ -2148,11 +2149,13 @@ function check_system_requirements() {
         fi
         # Check termux API
         if cmd package list packages --user 0 -e -f | sed 's/package://; s/\.apk=/\.apk /' | grep -q "com.termux.api"; then
+            issue_for_termux_api="no"
             print_success "Termux-API: ${W}Installed"
         else
             local latest_termux_api_tag
             latest_termux_api_tag=$(get_latest_release "termux" "termux-api")
             print_failed "Termux-API: ${W}Not Installed"
+            issue_for_termux_api="yes"
             print_msg "${BOLD}Install Termux-API:- ${W}https://github.com/termux/termux-api/releases/download/${latest_termux_api_tag}/termux-api-app_${latest_termux_api_tag}+github-debug.apk"
             ((errors++))
         fi
@@ -2172,6 +2175,9 @@ function check_system_requirements() {
                     echo
                     print_success "Continuing aniway..."
                     echo
+                    if [[ "$issue_for_termux_api" == "yes" ]]; then
+                        is_termux_api_installed=false
+                    fi
                     sleep 0.2
                     break 2
                     ;;
@@ -2458,7 +2464,7 @@ function additional_required_steps() {
 
 #########################################################################
 #
-# Setup Selected Style And Wallpapers
+# Setup Selected Style And Wallpapers / setup config
 #
 #########################################################################
 
@@ -2474,6 +2480,12 @@ function setup_config() {
         print_failed "Failed to select style..."
     fi
 }
+
+#########################################################################
+#
+# Setup required permissions
+#
+#########################################################################
 
 function setup_folder() {
     banner
@@ -2499,6 +2511,27 @@ function setup_folder() {
     ln -s "$HOME/storage/shared/Music" "$HOME/"
     ln -s "$HOME/storage/shared/Pictures" "$HOME/"
     ln -s "$HOME/storage/shared/Videos" "$HOME/"
+}
+
+function setup_mic_permission() {
+    if [[ "$is_termux_api_installed" == true ]]; then
+        print_msg "Setting up mic permission..."
+        echo
+        print_msg "Please grant mic permission"
+        echo
+        sleep 2
+        termux-microphone-record -l 1 -f /dev/null >/dev/null 2>&1 &
+        sleep 5
+    else
+        print_msg "You can't use microphone because you didn't install Termux-Api apk"
+        sleep 3
+    fi
+
+}
+
+function setup_necessary_permissions() {
+    setup_folder
+    setup_mic_permission
 }
 
 #########################################################################
@@ -3661,7 +3694,7 @@ function install_termux_desktop_appstore() {
     echo
     download_file "$PREFIX/bin/appstore" "https://raw.githubusercontent.com/sabamdarif/Termux-AppStore/refs/heads/src/appstore"
     chmod +x "$PREFIX/bin/appstore"
-    appstore --install
+    appstore --install v0.5.4
     cp "${PREFIX}/share/applications/org.sabamdarif.termux.appstore.desktop" "/data/data/com.termux/files/home/Desktop"
     chmod +x /data/data/com.termux/files/home/Desktop/org.sabamdarif.termux.appstore.desktop
 }
@@ -3988,7 +4021,7 @@ termux_desktop_path="/data/data/com.termux/files/usr/etc/termux-desktop"
 config_file="$termux_desktop_path/configuration.conf"
 log_file="/data/data/com.termux/files/home/termux-desktop.log"
 EOF
-    typeset -f check_termux print_success print_failed wait_for_keypress print_msg check_and_create_directory check_and_delete check_and_backup download_file check_and_restore detact_package_manager package_install_and_check package_check_and_remove get_file_name_number extract_zip_with_progress extract_archive download_and_extract count_subfolders confirmation_y_or_n get_latest_release install_font_for_style select_an_option read_conf print_to_config >>"$PREFIX/etc/termux-desktop/common_functions"
+    typeset -f check_termux log_debug print_success print_failed wait_for_keypress print_msg check_and_create_directory check_and_delete check_and_backup download_file check_and_restore detact_package_manager package_install_and_check package_check_and_remove get_file_name_number extract_zip_with_progress extract_archive download_and_extract count_subfolders confirmation_y_or_n get_latest_release install_font_for_style select_an_option read_conf print_to_config >>"$PREFIX/etc/termux-desktop/common_functions"
     chmod +x "$PREFIX/etc/termux-desktop/common_functions"
 }
 
@@ -4785,7 +4818,7 @@ function install_termux_desktop() {
     check_and_create_directory "${termux_desktop_path}"
     log_debug "$config_file"
     print_basic_details
-    setup_folder
+    setup_necessary_permissions
     setup_zsh
     setup_fonts
     install_desktop

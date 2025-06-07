@@ -86,14 +86,14 @@ clear
 printf "%25s %b\n" "" "${G}${LOGO}${W}"
 
 echo -e "${W}${BOLD}System Info:
-${C} System          : ${G}  ${W}${DISTRO}
-${C} Host            : ${G}  ${W}${MODEL}
-${C} Kernel          : ${G}  ${W}$(uname -r | grep -o '^[0-9]*\.[0-9]*\.[0-9]*')
-${C} CPU             : ${G}  ${W}${soc_details} (${G}${PROCESSOR_COUNT}${W} vCPU)
-${C} Architectures   : ${G}${cpu_arch_icon}  ${W}${cpu_arch^^}
-${C} Termux Version  : ${G}  ${W}${TERMUX_VERSION}-${termux_build}${W}
-${C} Memory          : ${G}  ${USED}${W} used, ${TOTAL}${W} total
-${C} Temperature     : ${TEMP_ICON}  ${TEMP}°C${W}
+${C} System          : ${G} ${W}${DISTRO}
+${C} Host            : ${G}󰍹 ${W}${MODEL}
+${C} Kernel          : ${G} ${W}$(uname -r | grep -o '^[0-9]*\.[0-9]*\.[0-9]*')
+${C} CPU             : ${G}󰍛 ${W}${soc_details} (${G}${PROCESSOR_COUNT}${W} vCPU)
+${C} Architectures   : ${G}${cpu_arch_icon} ${W}${cpu_arch^^}
+${C} Termux Version  : ${G} ${W}${TERMUX_VERSION}-${termux_build}${W}
+${C} Memory          : ${G}󰘚 ${USED}${W} used, ${TOTAL}${W} total
+${C} Temperature     : ${TEMP_ICON} ${TEMP}°C${W}
 "
 
 # Disk usage bars
@@ -103,10 +103,17 @@ bar_width=45
 # Disk Usage header
 printf "%b\n" "${BOLD}Disk Usage:${W}"
 
-# Calculate dynamic mount-point width using COLUMNS (fallback to stty)
+# Get terminal width
 cols=${COLUMNS:-$(stty size 2>/dev/null | awk '{print $2}')}
 indent=1 # leading spaces in printf
-# leading spaces in printf
+
+# Calculate dynamic bar width
+margin=2 # Space on each side of the bar
+bar_width=$((cols - 2 * indent - 2 * margin))
+# Ensure minimum width
+bar_width=$((bar_width < 20 ? 20 : bar_width))
+
+# Calculate dynamic mount-point width
 trailer=20 # adjust this to match width of " used XX of YY"
 mount_width=$((cols - indent - trailer))
 
@@ -124,11 +131,7 @@ while read -r _ size used _ usep mount; do
     bar+="${UNDIM}]"
 
     # print filesystem usage with dynamic alignment
-    # use indent variable to align mount under the 'i' of "Disk Usage:"
-    printf "%*s%-*s used %-4s of %-4s
-" \
-        "$indent" "" "$mount_width" "$mount" "$used" "$size"
+    printf "%*s%-*s used %-4s of %-4s\n" "$indent" "" "$mount_width" "$mount" "$used" "$size"
     # print bar with same indent
-    printf "%*s%b
-" "$indent" "" "${bar}"
+    printf "%*s%b\n" "$indent" "" "$bar"
 done < <(df -H -t sdcardfs -t fuse -t fuse.rclone | tail -n +2)
