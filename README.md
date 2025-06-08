@@ -1,5 +1,9 @@
-<p align="center"><b style="font-size: xx-large">Easily Install Termux GUI Desktop</b></p>
+<div align="center">
 
+# Termux Desktop
+
+#### Easily Install Termux GUI Desktop
+</div>
 <div align="center">
 
 ![GitHub stars](https://img.shields.io/github/stars/sabamdarif/termux-desktop?style=for-the-badge) ![GitHub forks](https://img.shields.io/github/forks/sabamdarif/termux-desktop?color=teal&style=for-the-badge) ![GitHub issues](https://img.shields.io/github/issues/sabamdarif/termux-desktop?color=violet&style=for-the-badge) ![GitHub repo size](https://img.shields.io/github/repo-size/sabamdarif/termux-desktop?style=for-the-badge) ![GitHub License](https://img.shields.io/github/license/sabamdarif/termux-desktop?style=for-the-badge)
@@ -49,9 +53,9 @@
 ##### 4. Start Installation: 
 > Full Installation YouTube Video Guide:- [Here](https://youtu.be/SlR9f9hl5CQ?si=7O13ZAzdAnB_wwWw)
 
-> **Note:** Fresh installations are recommended for best results.
+> **Note: Fresh installations are recommended for best results.**
 
-> **Note:** If you are in android 12 or higher then first disable *Phantom Process Killer* **Guide:-** [Here](https://github.com/atamshkai/Phantom-Process-Killer)
+> **Note: If you are in android 12 or higher then first disable Phantom Process Killer Guide:-** [Here](https://github.com/atamshkai/Phantom-Process-Killer)
    ```bash
    curl -Lf https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop -o setup-termux-desktop && chmod +x setup-termux-desktop && ./setup-termux-desktop
    ```
@@ -75,7 +79,7 @@ Options:
 - `--help`: To show help.
 
 <details>
-<summary>Example:</summary>
+<summary>Full Example:</summary>
 
 - `tx11start` *to star Termux:11 with gpu acceleration*
 - `tx11start --nogpu` *to star Termux:11 without gpu acceleration*
@@ -125,7 +129,7 @@ Options:
 - `--help`: To show help.
 
 <details>
-<summary>Example:</summary>
+<summary>Full Example:</summary>
 
 ##### If you select only one of them to access gui
 - `gui --start / gui -l` *to start Termux gui*
@@ -153,7 +157,7 @@ Options:
 - `--help`: To show help.
 
 <details>
-<summary>Example:</summary>
+<summary>Full Example:</summary>
 
 - `setup-termux-desktop --change style` *To Change Desktop Style*
 - `setup-termux-desktop --change hw` *To Change Hardware Acceleration Method*
@@ -173,6 +177,7 @@ Options:
 <br>
 
 - `setup-termux-desktop --local-config / -config` 	*Start the installation from pre made config file*
+    > Each time you install the desktop environment or made some changes using the script it write all your config to the `/data/data/com.termux/files/usr/etc/termux-desktop/configuration.conf` file. Copy that somewhere else, so next time when you want to install the desktop environment with that old config all you have to do `setup-termux-desktop --local-config /path/to/configuration.conf`
 <br>
 
 - `setup-termux-desktop --debug` **(At The Start)** *To generate a log file for any of the above command*

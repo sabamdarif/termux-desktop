@@ -2052,7 +2052,7 @@ function check_system_requirements() {
             gpu_name="adreno"
         elif echo "$detected_gpu" | grep -iq "mali"; then
             gpu_name="mali"
-        elif echo "$detected_gpu" | grep -iq "xclipse"; then
+        elif echo "$detected_gpu" | grep -iqE "xclipse|samsung"; then
             gpu_name="xclipse"
         else
             gpu_name="unknown"
@@ -2950,6 +2950,7 @@ tx11start --debug    - Show debug log
           rm -rf ~/.config/pulse/*-runtime/pid >/dev/null 2>&1 
       fi
       pulseaudio --start --load="module-aaudio-sink" --exit-idle-time=-1
+      pacmd load-module module-native-protocol-tcp auth-ip-acl=127.0.0.1 auth-anonymous=1
       if \$use_debug; then
         pactl load-module module-sles-source
       else
@@ -3094,7 +3095,8 @@ tx11start --debug    - Show debug log
       else
           rm -rf ~/.config/pulse/*-runtime/pid >/dev/null 2>&1 
       fi
-      pulseaudio --start --load="module-aaudio-sink" --exit-idle-time=-1 &
+      pulseaudio --start --load="module-aaudio-sink" --exit-idle-time=-1
+      pacmd load-module module-native-protocol-tcp auth-ip-acl=127.0.0.1 auth-anonymous=1
       if \$use_debug; then
         pactl load-module module-sles-source
       else
