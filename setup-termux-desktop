@@ -136,21 +136,26 @@ function check_and_delete() {
 }
 
 # first check then backup
-check_and_backup() {
+function check_and_backup() {
+    log_debug "Starting backup for: $*"
+    local files_folders_list=($@)
     local files_folders
     local date_str
     date_str=$(date +"%d-%m-%Y")
-    for files_folders in "$@"; do
+
+    for files_folders in "${files_folders_list[@]}"; do
         if [[ -e "$files_folders" ]]; then
             local backup="${files_folders}-${date_str}.bak"
 
             if [[ -e "$backup" ]]; then
                 print_msg "Backup $backup already exists"
             else
-                print_msg "Backing up $file"
+                print_msg "Backing up $files_folders"
                 mv "$files_folders" "$backup"
-                log_debug "$file $backup"
+                log_debug "$files_folders $backup"
             fi
+        else
+            print_msg "Path $files_folders does not exist"
         fi
     done
 }
@@ -210,24 +215,28 @@ function download_file() {
 }
 
 # find a backup file which end with a number pattern and restore it
-check_and_restore() {
-    local target_path="$1"
-    local latest_backup
+function check_and_restore() {
+    log_debug "Starting restore for: $*"
+    local files_folders_list=($@)
+    local files_folders
 
-    latest_backup=$(find "$(dirname "$target_path")" -maxdepth 1 -name "$(basename "$target_path")-[0-9][0-9]-[0-9][0-9]-[0-9][0-9][0-9][0-9].bak" 2>/dev/null | sort | tail -n 1)
+    for files_folders in "${files_folders_list[@]}"; do
+        local latest_backup
+        latest_backup=$(find "$(dirname "$files_folders")" -maxdepth 1 -name "$(basename "$files_folders")-[0-9][0-9]-[0-9][0-9]-[0-9][0-9][0-9][0-9].bak" 2>/dev/null | sort | tail -n 1)
 
-    if [[ -z "$latest_backup" ]]; then
-        echo "No backup found for $target_path"
-        return 1
-    fi
+        if [[ -z "$latest_backup" ]]; then
+            print_msg "No backup found for $files_folders"
+            continue
+        fi
 
-    if [[ -e "$target_path" ]]; then
-        print_failed "File $target_path already exists"
-    else
-        mv "$latest_backup" "$target_path"
-        print_msg "Restored $target_path"
-        log_debug "$target_path $latest_backup"
-    fi
+        if [[ -e "$files_folders" ]]; then
+            print_msg "File $files_folders already exists"
+        else
+            print_msg "Restoring $files_folders"
+            mv "$latest_backup" "$files_folders"
+            log_debug "$latest_backup $files_folders"
+        fi
+    done
 }
 
 function detact_package_manager() {
@@ -339,7 +348,7 @@ function package_install_and_check {
 
 }
 # will check the package is installed or not then remove it
-# OPTIM:- it also need the changes liks package_install_and_check if ever did changes on that, mostly in the apt-cache part
+# OPTIM:- it also need the changes like package_install_and_check if ever did changes on that, mostly in the apt-cache part
 function package_check_and_remove() {
     log_debug "Starting package removal for: $*"
     packs_list=($@)
@@ -411,6 +420,7 @@ function package_check_and_remove() {
                     if ! dpkg -s "$package_name" >/dev/null 2>&1; then
                         print_success "Successfully remove package: ${C}$package_name"
                         remove_success=true
+                        break
                     else
                         print_warn "Failed to remove package: ${C}${package_name}. ${Y}Trying again... ($retry_count)"
                     fi
@@ -3657,11 +3667,14 @@ function media_player_installer() {
 #########################################################################
 
 function setup_gimp_plugins() {
-    download_file "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/other/install-resynthesizer-termux"
-    if [[ -f "install-resynthesizer-termux" ]]; then
-        chmod +x install-resynthesizer-termux
-        source install-resynthesizer-termux
-    fi
+    package_install_and_check "gimp-resynthesizer"
+    ### un-comment this if you want the bleeding edge version of resynthesizer
+    # download_file "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/other/install-resynthesizer-termux"
+    # if [[ -f "install-resynthesizer-termux" ]]; then
+    #     chmod +x install-resynthesizer-termux
+    #     source install-resynthesizer-termux
+    # fi
+    package_install_and_check "gimp-lqr-plugin"
 }
 
 function photo_editor_installer() {
@@ -3925,7 +3938,7 @@ function setup_wine() {
         cp "$PREFIX/share/applications/wine-explorer.desktop" "$HOME/Desktop/MoboxExplorer.desktop"
         run_wine_shortcut_script
     elif [[ "$installed_wine" == "wine_hangover" ]]; then
-        package_install_and_check "hangover hangover-wine"
+        package_install_and_check "hangover-wine"
         run_wine_shortcut_script
         if [[ ! -f "$PREFIX/bin/wine" ]]; then
             ln -s "$PREFIX/bin/hangover-wine" "$PREFIX/bin/wine"
