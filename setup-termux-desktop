@@ -338,6 +338,7 @@ function package_install_and_check {
                     if dpkg -s "$package_name" >/dev/null 2>&1; then
                         print_success "Successfully install package: ${C}$package_name"
                         install_success=true
+                        break
                     else
                         print_warn "Failed to install package: ${C}${package_name}. ${Y}Trying again... ($retry_count)"
                     fi
@@ -403,8 +404,10 @@ function package_check_and_remove() {
                     log_debug "matched packages: $packages"
                     for package in $packages; do
                         print_msg "Removing package: ${C}$package"
-                        dpkg --configure -a >/dev/null
-                        apt autoremove "$package" -y
+                        if dpkg -s "$package" >/dev/null 2>&1; then
+                            dpkg --configure -a >/dev/null
+                            apt autoremove "$package" -y
+                        fi
                         if ! dpkg -s "$package" >/dev/null 2>&1; then
                             print_success "Successfully remove package: ${C}$package"
                             remove_success=true
@@ -416,7 +419,7 @@ function package_check_and_remove() {
                 else
                     print_msg "Removing package: ${C}$package_name"
                     dpkg --configure -a >/dev/null
-                    apt autoremove "$package" -y
+                    apt autoremove "$package_name" -y
                     if ! dpkg -s "$package_name" >/dev/null 2>&1; then
                         print_success "Successfully remove package: ${C}$package_name"
                         remove_success=true
