@@ -227,13 +227,19 @@ Install additional apps like LibreOffice. Details [here](/readmes/proot-containe
 Enhance performance with GPU acceleration. Learn more [here](/readmes/hw-acceleration.md).
 
 ---
-
 ## Associated Repos:
-- [Termux-AppStore](https://github.com/sabamdarif/Termux-AppStore)
-- [sabamdarif/nautilus-scripts](https://github.com/sabamdarif/nautilus-scripts/tree/test)
 
-___
+- [Termux-AppStore](https://github.com/sabamdarif/Termux-AppStore)  
+  License: GPL
+   
+- [sabamdarif/nautilus-scripts](https://github.com/sabamdarif/nautilus-scripts/tree/termux)  
+  License: MIT  
+---
+## License
 
+This project is licensed under the [GNU General Public License v3.0](https://choosealicense.com/licenses/gpl-3.0/).
+
+---    
 ## Acknowledgments:
 Special thanks to:
 - [LinuxDroidMaster/Termux-Desktops](https://github.com/LinuxDroidMaster/Termux-Desktops)

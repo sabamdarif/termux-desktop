@@ -312,6 +312,7 @@ function package_install_and_check {
                         print_msg "Installing package: ${C}$package"
                         dpkg --configure -a
                         apt --fix-broken install -y
+                        apt install --fix-missing -y
                         if dpkg -s "$package" >/dev/null 2>&1; then
                             apt reinstall "$package" -y
                         else
@@ -329,6 +330,7 @@ function package_install_and_check {
                     print_msg "Installing package: ${C}$package_name"
                     dpkg --configure -a
                     apt --fix-broken install -y
+                    apt install --fix-missing -y
                     if dpkg -s "$package_name" >/dev/null 2>&1; then
                         apt reinstall "$package_name" -y
                     else
@@ -533,7 +535,6 @@ function download_and_extract() {
     if download_file "$filename" "$url"; then
         if [[ -f "$filename" ]]; then
             echo
-            print_msg "Extracting $filename"
             extract_archive "$filename"
             check_and_delete "$filename"
         fi
@@ -977,6 +978,47 @@ function questions_zsh_theme_select() {
     fi
 }
 
+function questions_nerd_font_select() {
+    print_msg "Select nerd font you want to install...${B}"
+    echo
+
+    latest_nf_version=$(get_latest_release "ryanoasis" "nerd-fonts")
+
+    release_json=$(curl -sSL "https://api.github.com/repos/ryanoasis/nerd-fonts/releases/tags/${latest_nf_version}")
+
+    mapfile -t ASSET_NAMES < <(
+        jq -r '
+        .assets // [] 
+        | map(select(.name | endswith(".tar.xz")))
+        | .[].name
+      ' <<<"$release_json"
+    )
+
+    FONT_DISPLAY=()
+    for asset in "${ASSET_NAMES[@]}"; do
+        FONT_DISPLAY+=("${asset%.tar.xz}")
+    done
+
+    ((${#ASSET_NAMES[@]} == 0)) && {
+        print_failed "No .tar.xz fonts found for ${latest_nf_version}." >&2
+        exit 1
+    }
+
+    term_width=$(tput cols 2>/dev/null || echo 80)
+    (
+        for i in "${!FONT_DISPLAY[@]}"; do
+            printf "%3d) %s\n" "$((i + 1))" "${FONT_DISPLAY[$i]}"
+        done
+    ) | pr -2 -t -w"$term_width"
+
+    echo
+    select_an_option "${#ASSET_NAMES[@]}" 1 nerd_choice
+
+    sel_asset_name="${ASSET_NAMES[$((nerd_choice - 1))]}"
+    sel_base_name="${FONT_DISPLAY[$((nerd_choice - 1))]}"
+
+}
+
 function questions_setup_manual() {
     ask_to_chose_de
     banner
@@ -1079,7 +1121,7 @@ function questions_setup_manual() {
     echo
     echo "${Y}1. Native ${C}(can run only arm64 based exe)${W}"
     echo
-    echo "${Y}2. Mobox (Un-maintained) ${C}${W}"
+    echo "${Y}2. Mobox ${C}(Un-maintained) ${W}"
     echo
     print_msg "${B}Know More About Mobox:- https://github.com/olegos2/mobox/"
     echo
@@ -1114,45 +1156,8 @@ function questions_setup_manual() {
     confirmation_y_or_n "Do you want install some terminal utility to make better terminal exprience" terminal_utility_setup_answer
     banner
     if [[ "$terminal_utility_setup_answer" == "y" ]]; then
-        print_msg "Select nerd font you want to install...${B}"
-        echo
-
-        latest_nf_version=$(get_latest_release "ryanoasis" "nerd-fonts")
-
-        release_json=$(curl -sSL "https://api.github.com/repos/ryanoasis/nerd-fonts/releases/tags/${latest_nf_version}")
-
-        mapfile -t ASSET_NAMES < <(
-            jq -r '
-        .assets // [] 
-        | map(select(.name | endswith(".tar.xz")))
-        | .[].name
-      ' <<<"$release_json"
-        )
-
-        FONT_DISPLAY=()
-        for asset in "${ASSET_NAMES[@]}"; do
-            FONT_DISPLAY+=("${asset%.tar.xz}")
-        done
-
-        ((${#ASSET_NAMES[@]} == 0)) && {
-            print_failed "No .tar.xz fonts found for ${latest_nf_version}." >&2
-            exit 1
-        }
-
-        term_width=$(tput cols 2>/dev/null || echo 80)
-        (
-            for i in "${!FONT_DISPLAY[@]}"; do
-                printf "%3d) %s\n" "$((i + 1))" "${FONT_DISPLAY[$i]}"
-            done
-        ) | pr -2 -t -w"$term_width"
-
-        echo
-        select_an_option "${#ASSET_NAMES[@]}" 1 nerd_choice
-
-        sel_asset_name="${ASSET_NAMES[$((nerd_choice - 1))]}"
-        sel_base_name="${FONT_DISPLAY[$((nerd_choice - 1))]}"
+        questions_nerd_font_select
     fi
-
     banner
     echo -e "${R}[${C}-${R}]${B} File Manager Tools Enhancement${W}
 
@@ -2962,7 +2967,8 @@ tx11start --debug    - Show debug log
       else
           rm -rf ~/.config/pulse/*-runtime/pid >/dev/null 2>&1 
       fi
-      pulseaudio --start --load="module-aaudio-sink" --exit-idle-time=-1
+      # pulseaudio --start --load="module-aaudio-sink" --exit-idle-time=-1
+      pulseaudio --start --exit-idle-time=-1
       pacmd load-module module-native-protocol-tcp auth-ip-acl=127.0.0.1 auth-anonymous=1
       if \$use_debug; then
         pactl load-module module-sles-source
@@ -3108,7 +3114,8 @@ tx11start --debug    - Show debug log
       else
           rm -rf ~/.config/pulse/*-runtime/pid >/dev/null 2>&1 
       fi
-      pulseaudio --start --load="module-aaudio-sink" --exit-idle-time=-1
+      # pulseaudio --start --load="module-aaudio-sink" --exit-idle-time=-1
+      pulseaudio --start --exit-idle-time=-1
       pacmd load-module module-native-protocol-tcp auth-ip-acl=127.0.0.1 auth-anonymous=1
       if \$use_debug; then
         pactl load-module module-sles-source
@@ -3607,8 +3614,9 @@ function ide_installer() {
     elif [[ ${installed_ide} == "geany" ]]; then
         package_install_and_check "geany"
     elif [[ ${installed_ide} == "neovim" ]]; then
-        package_install_and_check "neovim lua51 lua-language-server stylua tree-sitter-lua"
-        check_and_backup "~/.config/nvim"
+        package_install_and_check "neovim lua51 lua-language-server stylua"
+        package_install_and_check "tree-sitter-*"
+        check_and_backup "$HOME/.config/nvim"
         if [[ "$installed_nvim_distro" == "nvchad" ]]; then
             git clone https://github.com/NvChad/starter ~/.config/nvim
         elif [[ "$installed_nvim_distro" == "lazyvim" ]]; then
@@ -3619,8 +3627,9 @@ function ide_installer() {
         print_to_config "installed_nvim_distro"
         check_and_delete "$HOME/.config/nvim/.git"
     elif [[ ${installed_ide} == "all" ]]; then
-        package_install_and_check "code-oss code-is-code-oss geany neovim lua51 lua-language-server stylua tree-sitter-lua"
-        check_and_backup "~/.config/nvim"
+        package_install_and_check "code-oss code-is-code-oss geany neovim lua51 lua-language-server stylua"
+        package_install_and_check "tree-sitter-*"
+        check_and_backup "$HOME/.config/nvim"
         if [[ "$installed_nvim_distro" == "nvchad" ]]; then
             git clone https://github.com/NvChad/starter ~/.config/nvim
         elif [[ "$installed_nvim_distro" == "lazyvim" ]]; then
@@ -3843,18 +3852,8 @@ function install_fm_tools() {
         check_and_create_directory "$HOME/.local/share/nautilus/scripts"
         # Clone repository
         cd "$HOME" || exit 1
-        git clone https://github.com/sabamdarif/nautilus-scripts
+        git clone -b termux https://github.com/sabamdarif/nautilus-scripts
         cd nautilus-scripts || exit 1
-        # Download required files
-        download_file "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/patches/fix-nautilus-scripts.patch"
-        patch -p1 <fix-nautilus-scripts.patch
-        # Cleanup
-        check_and_delete "fix-nautilus-scripts.patch"
-        rm -rf 'Security and recovery'
-        find . -type f -name "*.orig" -exec rm -f {} \;
-        find . -type f -name "*.rej" -exec rm -f {} \;
-        # Run setup script and move files
-        download_file "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/other/setup-termux.sh"
         bash setup-termux.sh
         cd "$HOME" || exit 1
         check_and_delete "nautilus-scripts"
