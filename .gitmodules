@@ -2,3 +2,7 @@
 	path = appstore
 	url = https://github.com/sabamdarif/Termux-AppStore.git
 	branch = src
+[submodule "other/nautilus-scripts"]
+	path = other/nautilus-scripts
+	url = https://github.com/sabamdarif/nautilus-scripts
+	branch = termux
