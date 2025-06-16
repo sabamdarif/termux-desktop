@@ -2513,6 +2513,7 @@ function setup_folder() {
         termux-setup-storage
         sleep 4
         if [[ -d ~/storage ]]; then
+            print_success "Storage configured successfully"
             break
         else
             print_failed "Storage permission denied"
@@ -3719,9 +3720,10 @@ function install_termux_desktop_appstore() {
     banner
     print_msg "${C}Setting up AppStore..."
     echo
-    download_file "$PREFIX/bin/appstore" "https://raw.githubusercontent.com/sabamdarif/Termux-AppStore/refs/heads/src/appstore"
-    chmod +x "$PREFIX/bin/appstore"
-    appstore --install v0.5.4
+    download_file "https://raw.githubusercontent.com/sabamdarif/Termux-AppStore/refs/heads/src/appstore"
+    chmod +x "appstore"
+    appstore_install_from_td_installer=true
+    source appstore --install v0.5.4
     cp "${PREFIX}/share/applications/org.sabamdarif.termux.appstore.desktop" "/data/data/com.termux/files/home/Desktop"
     chmod +x /data/data/com.termux/files/home/Desktop/org.sabamdarif.termux.appstore.desktop
 }
@@ -3854,7 +3856,8 @@ function install_fm_tools() {
         cd "$HOME" || exit 1
         git clone -b termux https://github.com/sabamdarif/nautilus-scripts
         cd nautilus-scripts || exit 1
-        bash setup-termux.sh
+        fm_tools_install_from_td_installer=true
+        source setup-termux.sh
         cd "$HOME" || exit 1
         check_and_delete "nautilus-scripts"
     fi
@@ -4015,7 +4018,7 @@ function cleanup_cache() {
     banner
     print_msg "Cleaning up the cache..."
     if [[ "$PACKAGE_MANAGER" == "pacman" ]]; then
-        pacman -Scc
+        pacman -Scc --noconfirm
     else
         apt clean all
     fi
@@ -4038,7 +4041,7 @@ termux_desktop_path="/data/data/com.termux/files/usr/etc/termux-desktop"
 config_file="$termux_desktop_path/configuration.conf"
 log_file="/data/data/com.termux/files/home/termux-desktop.log"
 EOF
-    typeset -f check_termux log_debug print_success print_failed wait_for_keypress print_msg check_and_create_directory check_and_delete check_and_backup download_file check_and_restore detact_package_manager package_install_and_check package_check_and_remove get_file_name_number extract_zip_with_progress extract_archive download_and_extract count_subfolders confirmation_y_or_n get_latest_release install_font_for_style select_an_option read_conf print_to_config >>"$PREFIX/etc/termux-desktop/common_functions"
+    typeset -f check_termux log_debug print_success print_failed print_warn print_msg wait_for_keypress check_and_create_directory check_and_delete check_and_backup download_file check_and_restore detact_package_manager package_install_and_check package_check_and_remove get_file_name_number extract_zip_with_progress extract_archive download_and_extract count_subfolders confirmation_y_or_n get_latest_release install_font_for_style select_an_option read_conf print_to_config >>"$PREFIX/etc/termux-desktop/common_functions"
     chmod +x "$PREFIX/etc/termux-desktop/common_functions"
 }
 
@@ -4286,7 +4289,7 @@ function change_hw() {
                 check_and_delete " /data/data/com.termux/files/usr/opt/angle-android/vulkan/libEGL.so.1"
                 check_and_delete "/data/data/com.termux/files/usr/opt/angle-android/vulkan/libGLESv1_CM.so.1"
                 check_and_delete "/data/data/com.termux/files/usr/opt/angle-android/vulkan/libGLESv2.so.2"
-                package_check_and_remove "vulkan-loader-android vulkan-loader-generic virglrenderer virglrenderer-android angle-android vulkan-icd mesa-vulkan-icd-freedreno mesa-zink-vulkan-icd-freedreno mesa-vulkan-icd-freedreno-dri3"
+                package_check_and_remove "mesa-vulkan-icd-wrapper vulkan-loader-android vulkan-loader-generic virglrenderer virglrenderer-android angle-android vulkan-icd mesa-vulkan-icd-freedreno mesa-zink-vulkan-icd-freedreno mesa-vulkan-icd-freedreno-dri3"
                 package_install_and_check "mesa"
             fi
 
@@ -4806,8 +4809,8 @@ fi
 current_path=$(pwd)
 function install_termux_desktop() {
     banner
-    cleanup_cache
     update_sys
+    cleanup_cache
     termux-wake-lock
     install_required_packages
     if [[ "$1" != "--local-config" && "$1" != "--config" && "$1" != "-config" ]]; then

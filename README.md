@@ -18,7 +18,7 @@
 - :desktop_computer: **Desktop Styles:** Supports **XFCE**, **LXQt**, and **OPENBOX**... with beautiful themes.
 - :mechanical_arm: **Hardware Acceleration:** It will install all the drivers in order to It will install all the drivers in order to get hardware acceleration working under termux.
 - :paperclips: **GUI Access:** Supports Termux:X11 and VNC (vnc is optional).
-- :package: **Package Management:** Compatible with both APT and [PACMAN](https://youtu.be/ditNvG5Nxj0).
+- :package: **Package Management:** Compatible with both APT and [PACMAN](https://youtu.be/ditNvG5Nxj0) (pacman isn't well tested, so there might be some issues).
 - :shopping: **App Store:** A appstore to install apps from termux and suppoted proot-distro.
 - :package: **Apps** Normally, you're limited to apps that are supported by Termux, but it have a option for installing apps like LibreOffice via proot-distro and use them as a native app.
 - And a lot more...

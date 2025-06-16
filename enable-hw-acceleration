@@ -25,19 +25,23 @@ function hw_install_required_packages() {
         ;;
     esac
 
-    # Remove existing conflicting packages if using pacman
-    if [[ "$PACKAGE_MANAGER" == "pacman" ]]; then
-        package_check_and_remove "mesa vulkan-loader"
-    fi
-
     case "$exp_termux_vulkan_hw_answer" in
     "vulkan_icd")
         if [[ "$archtype" == "aarch64" || "$archtype" == "arm" ]]; then
             print_msg "${BOLD}Installing mesa-vulkan-icd-wrapper Driver..."
-            echo
-            download_file "mesa-vulkan-icd-wrapper.deb" "https://github.com/sabamdarif/termux-desktop/releases/download/vulkan-wrapper-android_25.0.0-2/vulkan-wrapper-android_25.0.0-2_${archtype}.deb"
-            apt install ./mesa-vulkan-icd-wrapper.deb -y
-            check_and_delete "mesa-vulkan-icd-wrapper.deb"
+            if [[ "$PACKAGE_MANAGER" == "pacman" ]]; then
+                download_file "vulkan-wrapper-android.pkg.tar.xz" "https://github.com/sabamdarif/termux-desktop/releases/download/vulkan-wrapper-android_25.0.0-2/vulkan-wrapper-android-25.0.0-2-${archtype}.pkg.tar.xz"
+                pacman -Syu --needed
+                pacman -U --noconfirm vulkan-wrapper-android.pkg.tar.xz
+                check_and_delete "vulkan-wrapper-android.pkg.tar.xz"
+            else
+                download_file "vulkan-wrapper-android.deb" "https://github.com/sabamdarif/termux-desktop/releases/download/vulkan-wrapper-android_25.0.0-2/vulkan-wrapper-android_25.0.0-2_${archtype}.deb"
+                dpkg --configure -a
+                apt --fix-broken install -y
+                apt install --fix-missing -y
+                apt install ./vulkan-wrapper-android.deb -y
+                check_and_delete "vulkan-wrapper-android.deb"
+            fi
         fi
         ;;
     "mesa_freedreno")
