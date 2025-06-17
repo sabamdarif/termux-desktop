@@ -2997,7 +2997,12 @@ tx11start --debug    - Show debug log
     sleep 1
 
     # Construct X11 command
-    x11_cmd="XDG_RUNTIME_DIR=\${XDG_RUNTIME_DIR} termux-x11 :0"
+    # x11_cmd="XDG_RUNTIME_DIR=\${XDG_RUNTIME_DIR} termux-x11 :0" # Comment this because i found that the sound doesn't working if i set this XDG_RUNTIME_DIR=\${XDG_RUNTIME_DIR}
+     if \$use_nogpu; then
+         x11_cmd="LIBGL_ALWAYS_SOFTWARE=1 termux-x11 :0"
+     else
+         x11_cmd="termux-x11 :0" 
+     fi
 
     if \$use_legacy; then
       x11_cmd+=" -legacy-drawing"
@@ -3126,7 +3131,8 @@ tx11start --debug    - Show debug log
     fi
 
     # Construct X11 command
-    x11_cmd="XDG_RUNTIME_DIR=\${XDG_RUNTIME_DIR} termux-x11 :0"
+    # x11_cmd="XDG_RUNTIME_DIR=\${XDG_RUNTIME_DIR} termux-x11 :0" # Comment this because i found that the sound doesn't working if i set this XDG_RUNTIME_DIR=\${XDG_RUNTIME_DIR}
+    x11_cmd="termux-x11 :0"
 
     if \$use_legacy; then
       x11_cmd+=" -legacy-drawing"
