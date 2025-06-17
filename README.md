@@ -60,8 +60,6 @@
    curl -Lf https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop -o setup-termux-desktop && chmod +x setup-termux-desktop && ./setup-termux-desktop
    ```
 
-#### NOTE:- If you are using zsh and have sound issue, please temporarily switch to bash, use the command `chsh -s bash` then restart termux. It just a temporary workaround it will get fix in future. And i found that it have something to do with the custom zsh theme i am using.
-
 ##### 5. Usage Instructions:
    - Commands for starting and stopping Termux:X11 and VNC sessions are provided below.
 

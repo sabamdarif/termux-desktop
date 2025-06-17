@@ -86,9 +86,6 @@ bindkey -M menuselect              '^I'         menu-complete
 bindkey -M menuselect "$terminfo[kcbt]" reverse-menu-complete
 
 export PATH="$HOME/.local/bin:$PATH"
-if [[ -n "$PREFIX" && "$PREFIX" = *"/com.termux/"* ]]; then
-    export LD_LIBRARY_PATH="$PREFIX/lib:$LD_LIBRARY_PATH"
-fi
 EOF
 
 }
