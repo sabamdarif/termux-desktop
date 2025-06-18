@@ -1708,9 +1708,9 @@ function define_value_name() {
         terminal_utility_setup_confirmation="No"
     fi
     # Nerd Font
-    if [[ "$install_type_answer" == "3" ]]; then
+    if [[ "$install_type_answer" == "1" ]]; then
         sel_font_name="$sel_base_name"
-    elif [[ "$install_type_answer" == "1" ]] || [[ "$install_type_answer" == "2" ]]; then
+    elif [[ "$install_type_answer" == "2" ]] || [[ "$install_type_answer" == "3" ]]; then
         sel_font_name="0xProto"
     else
         sel_font_name="N/A"
@@ -1899,22 +1899,23 @@ function questions_install_type() {
     echo "${R}[${Y}!${R}]${R} Important Note: ${W}"
     echo -e "${B}
 Generic is only recomended for beginners\n
-For most of the user who are familiar with termux, custom option recomended for them ${C}(So use the 3. Custom option, it's best)
+For most users who are familiar with Termux, the custom option is recommended, as most features are only available in the custom option
 ${W}"
 
     # Show selection options
     print_msg "Select Install Type"
     echo " "
-    echo "${Y}1. Generic (with hardware acceleration)${W}"
+    echo "${Y}1. Custom${W}"
     echo " "
-    echo "${Y}2. Generic (without hardware acceleration)${W}"
+    echo "${Y}2. Generic (with hardware acceleration)${W}"
     echo " "
-    echo "${Y}3. Custom${W}"
+    echo "${Y}3. Generic (without hardware acceleration)${W}"
     echo " "
 
     select_an_option 3 1 install_type_answer
-
     if [[ "$install_type_answer" == "1" ]]; then
+        questions_setup_manual
+    elif [[ "$install_type_answer" == "2" ]]; then
 
         ######################################################################
         # ********* Generic Recomended With Hardware Acceleration ********** #
@@ -1922,25 +1923,35 @@ ${W}"
         ask_to_chose_de
         setup_device_gpu_model
         # download configuration
+        download_file "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/configuration/generic/generic.conf"
+        source generic.conf
+        check_and_delete "generic.conf"
         local device_brand_name
         device_brand_name=$(getprop ro.product.brand | cut -d ' ' -f 1)
         if [[ "$device_gpu_model_name" == "adreno" ]]; then
-            download_file "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/configuration/generic/hwa/adreno/configuration.conf"
+            download_file "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/configuration/generic/hwa/adreno/generic-adreno.conf"
+            source generic-adreno.conf
+            check_and_delete "generic-adreno.conf"
         elif [[ "$device_gpu_model_name" == "mali" ]]; then
             if [[ $device_brand_name == samsung* ]]; then
-                download_file "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/configuration/generic/hwa/mali/samsung/configuration.conf"
+                download_file "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/configuration/generic/hwa/mali/samsung/generic-samsung-mali.conf"
+                source generic-samsung-mali.conf
+                check_and_delete "generic-samsung-mali.conf"
             else
-                download_file "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/configuration/generic/hwa/mali/configuration.conf"
+                download_file "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/configuration/generic/hwa/mali/generic-mali.conf"
+                source generic-mali.conf
+                check_and_delete "generic-mali.conf"
             fi
         else
-            download_file "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/configuration/generic/hwa/configuration.conf"
+            download_file "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/configuration/generic/hwa/generic-others.conf"
+            source generic-others.conf
+            check_and_delete "generic-others.conf"
         fi
-        source configuration.conf
-        check_and_delete "configuration.conf"
+
         # create username for distro
         banner
         setup_user_name_only
-    elif [[ "$install_type_answer" == "2" ]]; then
+    elif [[ "$install_type_answer" == "3" ]]; then
 
         ######################################################################
         # ******* Generic Recomended Without Hardware Acceleration ********* #
@@ -1953,8 +1964,6 @@ ${W}"
         # create username for distro
         banner
         setup_user_name_only
-    elif [[ "$install_type_answer" == "3" ]]; then
-        questions_setup_manual
     fi
 }
 
@@ -3728,8 +3737,7 @@ function install_termux_desktop_appstore() {
     echo
     download_file "https://raw.githubusercontent.com/sabamdarif/Termux-AppStore/refs/heads/src/appstore"
     chmod +x "appstore"
-    appstore_install_from_td_installer=true
-    source appstore --install v0.5.4
+    ./appstore --install v0.5.4
     cp "${PREFIX}/share/applications/org.sabamdarif.termux.appstore.desktop" "/data/data/com.termux/files/home/Desktop"
     chmod +x /data/data/com.termux/files/home/Desktop/org.sabamdarif.termux.appstore.desktop
 }
@@ -3862,8 +3870,7 @@ function install_fm_tools() {
         cd "$HOME" || exit 1
         git clone -b termux https://github.com/sabamdarif/nautilus-scripts
         cd nautilus-scripts || exit 1
-        fm_tools_install_from_td_installer=true
-        source setup-termux.sh
+        bash setup-termux.sh
         cd "$HOME" || exit 1
         check_and_delete "nautilus-scripts"
     fi
@@ -4824,7 +4831,7 @@ function install_termux_desktop() {
     fi
     if [[ "$1" != "--local-config" && "$1" != "--config" && "$1" != "-config" ]]; then
         questions_install_type
-        if [[ "$install_type_answer" == "3" ]]; then
+        if [[ "$install_type_answer" == "1" ]]; then
             if [[ "$distro_add_answer" == "y" ]]; then
                 distro_questions
             fi
