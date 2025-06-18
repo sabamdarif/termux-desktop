@@ -44,7 +44,7 @@ case "\$distro_id" in
   opensuse*|sles) DISTRO_ICON="" ;; # openSUSE
   gentoo) DISTRO_ICON="" ;; # Gentoo
   nixos) DISTRO_ICON="" ;; # NixOS
-  *) DISTRO_ICON="" ;;      # Default Linux Icon
+  *) DISTRO_ICON=" " ;;      # Default Linux Icon
 esac
 
 # Symbols

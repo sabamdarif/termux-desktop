@@ -2376,7 +2376,6 @@ function theme_installer() {
             check_and_delete "Wallpaper-Bank"
         fi
     fi
-    print_to_config "ext_wall_answer"
 
     banner
     print_msg "${BOLD}Configuring Icon Pack..."
@@ -2502,6 +2501,7 @@ function setup_config() {
         print_msg "${BOLD}Installing $de_name Style: ${C}${style_answer}"
         theme_installer
         additional_required_steps
+        print_to_config "ext_wall_answer"
         print_to_config "style_answer"
     else
         print_failed "Failed to select style..."
