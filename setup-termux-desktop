@@ -22,6 +22,7 @@ log_file="/data/data/com.termux/files/home/termux-desktop.log"
 call_from_change_distro=false
 call_from_change_style=false
 is_termux_api_installed=true
+lite_mode="${LITE,,}"
 ##################################################################
 # create log
 function debug() {
@@ -1947,6 +1948,12 @@ ${W}"
             source generic-others.conf
             check_and_delete "generic-others.conf"
         fi
+        # setup extra config if it's lite mode install
+        if [[ "$lite_mode" == "1" || "$lite_mode" == "true" ]]; then
+            download_file "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/configuration/generic/generic-lite.conf"
+            source generic-lite.conf
+            check_and_delete "generic-lite.conf"
+        fi
 
         # create username for distro
         banner
@@ -1958,9 +1965,18 @@ ${W}"
         ######################################################################
         ask_to_chose_de
         # download configuration
-        download_file "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/configuration/generic/nohwa/configuration.conf"
-        source configuration.conf
-        check_and_delete "configuration.conf"
+        download_file "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/configuration/generic/generic.conf"
+        source generic.conf
+        download_file "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/configuration/generic/nohwa/generic-nohwa.conf"
+        source generic-nohwa.conf
+        check_and_delete "generic-nohwa.conf"
+        # setup extra config if it's lite mode install
+        if [[ "$lite_mode" == "1" || "$lite_mode" == "true" ]]; then
+            download_file "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/configuration/generic/generic-lite.conf"
+            source generic-lite.conf
+            check_and_delete "generic-lite.conf"
+        fi
+
         # create username for distro
         banner
         setup_user_name_only
@@ -2310,7 +2326,9 @@ function install_desktop() {
         echo
         package_install_and_check "fluxbox xorg-xsetroot xorg-xprop lxappearance wmctrl feh firefox rofi bmon xcompmgr gtk3 gedit xmllint"
     fi
-    package_install_and_check "kvantum xwayland pulseaudio file-roller pavucontrol gnome-font-viewer evince galculator libwayland-protocols xorg-xrdb"
+    if [[ "$lite_mode" != "1" && "$lite_mode" != "true" ]]; then
+        package_install_and_check "kvantum xwayland pulseaudio file-roller pavucontrol gnome-font-viewer evince galculator libwayland-protocols xorg-xrdb"
+    fi
     # Uncomment if additional package installation is needed
     # if [[ "$distro_add_answer" == "y" ]]; then
     #     package_install_and_check "xdg-utils"

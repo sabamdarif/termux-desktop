@@ -1114,7 +1114,9 @@ function install_distro_container() {
     distro_zsh_setup
     distro_terminal_utility_setup
     distro_create_app_installer
-    install_some_required_pack
+    if [[ "$lite_mode" != "1" && "$lite_mode" != "true" ]]; then
+        install_some_required_pack
+    fi
     distro_app_launch_setup
 }
 

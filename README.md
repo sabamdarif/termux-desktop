@@ -60,6 +60,8 @@
    curl -Lf https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop -o setup-termux-desktop && chmod +x setup-termux-desktop && ./setup-termux-desktop
    ```
 
+- You can also do a lite install which will not install all the optional packages to do that run the install this `LITE=true ./setup-termux-desktop` or `LITE=1  ./setup-termux-desktop` instead of just running `./setup-termux-desktop`
+
 ##### 5. Usage Instructions:
    - Commands for starting and stopping Termux:X11 and VNC sessions are provided below.
 
