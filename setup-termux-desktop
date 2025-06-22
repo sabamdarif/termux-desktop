@@ -913,7 +913,7 @@ function ask_to_chose_de() {
         de_name="xfce"
         themes_folder="$HOME/.themes"
         icons_folder="$HOME/.icons"
-        de_startup="xfce4-session"
+        de_startup="startxfce4"
     elif [[ "$desktop_answer" == "2" ]]; then
         de_name="lxqt"
         themes_folder="$sys_themes_folder"
