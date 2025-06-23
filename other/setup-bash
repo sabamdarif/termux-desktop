@@ -54,8 +54,8 @@ function setup_ble_sh() {
     make -C ble.sh install PREFIX=~/.local
     check_and_delete "ble.sh"
     cat <<EOF >>"$HOME/.bashrc"
-    USER=$(whoami)
-    source $HOME/.local/share/blesh/ble.sh
+USER=$(whoami)
+source $HOME/.local/share/blesh/ble.sh
 EOF
 }
 
@@ -101,4 +101,8 @@ check_paramitter
 setup_bash_theme
 if [[ "$chosen_shell_name" == "bash_with_ble" ]]; then
     setup_ble_sh
+    # Delete the function block
+    sed -i '/^function ble\/util\/notify-broken-locale {/,/^}/d' "$HOME/.local/share/blesh/ble.sh"
+    # Delete all other occurrences of ble/util/notify-broken-locale
+    sed -i 's/ble\/util\/notify-broken-locale//g' "$HOME/.local/share/blesh/ble.sh"
 fi
