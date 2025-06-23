@@ -310,7 +310,7 @@ EOF
 
 function distro_zsh_setup() {
     # ZSH Setup
-    if [[ "$distro_zsh_answer" == "y" ]]; then
+    if [[ "$chosen_shell_name" == "zsh" ]]; then
         zsh_setup_content=$(
             cat <<EOF
 pd_package_install_and_check "git zsh wget"
@@ -328,10 +328,7 @@ EOF
         print_msg "${BOLD}Setting up shell for ${selected_distro}..."
         echo
         proot-distro login "$selected_distro" -- /bin/bash -c 'bash pd_zsh_install.sh'
-    else
-        print_msg "${C}Canceling ZSH setup..."
     fi
-    print_to_config "distro_zsh_answer"
 }
 
 function distro_terminal_utility_setup() {
@@ -379,10 +376,6 @@ EOF
         echo
         proot-distro login --user "$final_user_name" "$selected_distro" -- /bin/bash -c 'bash pd_setup.sh'
 
-        if [[ "$zsh_answer" == "y" ]] && [[ "$distro_zsh_answer" == "n" ]]; then
-            echo "source $HOME/.shell_rc_content" >>"$HOME/.bashrc"
-            echo "source $HOME/.aliases" >>"$HOME/.bashrc"
-        fi
     fi
 }
 

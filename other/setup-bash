@@ -1,0 +1,104 @@
+#!/data/data/com.termux/files/usr/bin/bash
+
+function setup_bash_theme() {
+    check_and_backup "$HOME/.bashrc"
+    cat <<EOF >"$HOME/.bashrc"
+# ─── Detect Linux Distro ─────────────────────────
+if command -v grep &> /dev/null && [ -f /etc/os-release ]; then
+    distro_id=\$(grep '^ID=' /etc/os-release | cut -d= -f2 | tr -d '"')
+else
+    distro_id="unknown"
+fi
+
+# ─── Set Distro Icon ─────────────────────────────
+case "\$distro_id" in 
+  kali) DISTRO_ICON="" ;;   # Kali Linux
+  arch) DISTRO_ICON="" ;;   # Arch Linux
+  ubuntu) DISTRO_ICON="" ;; # Ubuntu
+  debian) DISTRO_ICON="" ;; # Debian
+  fedora) DISTRO_ICON="" ;; # Fedora
+  alpine) DISTRO_ICON="" ;; # Alpine
+  void) DISTRO_ICON="" ;;   # Void Linux
+  opensuse*|sles) DISTRO_ICON="" ;; # openSUSE
+  gentoo) DISTRO_ICON="" ;; # Gentoo
+  nixos) DISTRO_ICON="" ;; # NixOS
+  *) DISTRO_ICON=" " ;;      # Default Linux Icon
+esac
+
+# ─── Username (special handling for Termux) ───────
+if [[ -n "\$PREFIX" && "\$PREFIX" == */com.termux/* ]]; then
+    USER_NAME=${final_user_name}
+else
+    USER_NAME="\$(whoami)"
+fi
+
+HOST_NAME="\h"
+
+# ─── First Line: User @ Host with Distro Icon ─────
+LINE1="${G}${BOLD}╭─${B}[${C}\${USER_NAME}${Y} \${DISTRO_ICON} ${C}\${HOST_NAME}${B}]${W}"
+
+# ─── Directory ────────────────────────────────────
+LINE1_DIR="${B}[${Y}\w${B}]${W}"
+
+# ─── Second Line: Prompt Symbol ───────────────────
+PROMPT_SYMBOL="${G}${BOLD}╰─❯ ${W}"
+
+# ─── Final PS1 ────────────────────────────────────
+PS1="\${LINE1} \${LINE1_DIR}\n\${PROMPT_SYMBOL}"
+EOF
+}
+
+function setup_ble_sh() {
+    print_msg "Installing Ble.sh..."
+    git clone --recursive --depth 1 --shallow-submodules https://github.com/akinomyoga/ble.sh.git
+    make -C ble.sh install PREFIX=~/.local
+    check_and_delete "ble.sh"
+    cat <<EOF >>"$HOME/.bashrc"
+    USER=$(whoami)
+    source $HOME/.local/share/blesh/ble.sh
+EOF
+}
+
+function check_paramitter() {
+    if [[ -n "$PREFIX" && "$PREFIX" == *"/com.termux/"* && -z "$user_name" ]]; then
+        while true; do
+            echo " "
+            while true; do
+                read -r -p "${R}[${C}-${R}]${G} Input username [Lowercase]: ${W}" user_name
+                if [[ -n "$user_name" ]]; then
+                    break
+                else
+                    print_warn "You can't leave the username empty. Please enter a valid username."
+                fi
+            done
+            echo
+            local choice
+            read -r -p "${R}[${C}-${R}]${Y} Do you want to continue with username ${C}$user_name ${Y}? (y/n) : ${W}" choice
+            echo
+            choice="${choice:-y}"
+            echo
+            print_success "Continuing with answer: $choice"
+            sleep 0.2
+            case $choice in
+            [yY]*)
+                print_success "Continuing with username ${C}$user_name"
+                break
+                ;;
+            [nN]*)
+                print_msg "Please provide username again."
+                echo
+                ;;
+            *)
+                print_failed "Invalid input, Please enter y or n"
+                ;;
+            esac
+        done
+    fi
+    final_user_name="${user_name}"
+}
+
+check_paramitter
+setup_bash_theme
+if [[ "$chosen_shell_name" == "bash_with_ble" ]]; then
+    setup_ble_sh
+fi

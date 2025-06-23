@@ -709,7 +709,7 @@ function validate_required_vars() {
         "installed_wine"
         # extra
         "ext_wall_answer"
-        "zsh_answer"
+        "chosen_shell_name"
         "terminal_utility_setup_answer"
         "fm_tools"
         # Distro
@@ -729,7 +729,6 @@ function validate_required_vars() {
         required_vars+=(
             "selected_distro"
             "pd_audio_config_answer"
-            "distro_zsh_answer"
             "pd_useradd_answer"
             "user_name"
         )
@@ -1146,8 +1145,21 @@ function questions_setup_manual() {
     echo
     confirmation_y_or_n "Do you want to add some more wallpapers" ext_wall_answer
     banner
-    confirmation_y_or_n "Do you want to use my zsh config" zsh_answer
-    if [[ "$zsh_answer" == "y" ]]; then
+    print_msg "${BOLD}Select Your shell${W}"
+    echo
+    echo "${Y}1. Custom Bash prompt${W}"
+    echo
+    echo "${Y}2. Custom Bash prompt + ble.sh (ble.sh kind of buggy right now)${W}"
+    echo
+    echo "${Y}3. Zsh + zinit${W}"
+    echo
+    select_an_option 4 1 chosen_shell_answer
+    case "$chosen_shell_answer" in
+    1) chosen_shell_name="bash" ;;
+    2) chosen_shell_name="bash_with_ble" ;;
+    3) chosen_shell_name="zsh" ;;
+    esac
+    if [[ "$chosen_shell_name" == "zsh" ]]; then
         questions_zsh_theme_select
     fi
     banner
@@ -1156,9 +1168,7 @@ function questions_setup_manual() {
     echo
     confirmation_y_or_n "Do you want install some terminal utility to make better terminal exprience" terminal_utility_setup_answer
     banner
-    if [[ "$terminal_utility_setup_answer" == "y" ]]; then
-        questions_nerd_font_select
-    fi
+    questions_nerd_font_select
     banner
     echo -e "${R}[${C}-${R}]${B} File Manager Tools Enhancement${W}
 
@@ -1571,14 +1581,6 @@ function distro_questions() {
     choose_distro
     banner
     confirmation_y_or_n "Do you want to configure audio support for Linux distro container" pd_audio_config_answer
-
-    if [[ "$distro_add_answer" == "y" ]] && [[ "$zsh_answer" == "y" ]]; then
-        banner
-        confirmation_y_or_n "Do you want to Configuring Zsh also for Linux distro container" distro_zsh_answer
-    else
-        distro_zsh_answer="$zsh_answer"
-    fi
-
     banner
     confirmation_y_or_n "Do you want to create a normal user account ${C}(Recomended)" pd_useradd_answer
     echo
@@ -1690,7 +1692,11 @@ function define_value_name() {
         fm_tools_confirmation="No"
     fi
     # Shell
-    if [[ "$zsh_answer" == "y" ]]; then
+    if [[ "$chosen_shell_name" == "bash" ]]; then
+        current_shell_name="Bash"
+    elif [[ "$chosen_shell_name" == "bash_with_ble" ]]; then
+        current_shell_name="Bash (With Ble.sh)"
+    elif [[ "$chosen_shell_name" == "zsh" ]]; then
         if [[ "$selected_zsh_theme_name" == "td_zsh" ]]; then
             zsh_theme_name="My Zsh Theme"
         elif [[ "$selected_zsh_theme_name" == "p10k_zsh" ]]; then
@@ -1699,8 +1705,6 @@ function define_value_name() {
             zsh_theme_name="Pure"
         fi
         current_shell_name="Zsh ($zsh_theme_name)"
-    elif [[ "$zsh_answer" == "n" ]]; then
-        current_shell_name="Bash"
     fi
     # Terminal Utilities
     if [[ "$terminal_utility_setup_answer" == "y" ]]; then
@@ -1808,12 +1812,6 @@ function define_value_name() {
     else
         distro_opengl_driver="Unable to select"
     fi
-    # Distro Shell
-    if [[ "$distro_zsh_answer" == "y" ]]; then
-        distro_current_shell="Zsh"
-    elif [[ "$distro_zsh_answer" == "n" ]]; then
-        distro_current_shell="Bash"
-    fi
     # Distro Terminal Utilities
     if [[ "$terminal_utility_setup_answer" == "y" ]]; then
         distro_terminal_utility_setup_confirmation="Yes"
@@ -1870,7 +1868,6 @@ function print_conf_info() {
     echo "   • Hardware Acceleration: ${distro_hw_acc_confirmation}"
     echo "   • Vulkan Driver: ${distro_vulkan_driver}"
     echo "   • OpenGL Driver: ${distro_opengl_driver}"
-    echo "   • Shell: ${distro_current_shell}"
     echo "   • Terminal Utilities: ${distro_terminal_utility_setup_confirmation}"
     sleep 0.015
     # Re-enable keyboard interruptions
@@ -3762,7 +3759,7 @@ function install_termux_desktop_appstore() {
 
 #########################################################################
 #
-# Setup Zsh And Terminal and File Manager Utility
+# Setup shell bash / zsh
 #
 #########################################################################
 
@@ -3782,28 +3779,43 @@ function get_shellrc_path() {
 
 function setup_zsh() {
     banner
-    if [[ "$zsh_answer" == "n" ]]; then
-        print_msg "${C}Canceling Zsh Setup..."
-        sleep 1.5
-        shell_name="bash"
-    else
-        shell_name="zsh"
-        print_msg "${BOLD}Configuring Zsh.."
-        echo
-        package_install_and_check "zsh git"
-        download_file "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/other/install-zsh"
-        chmod +x install-zsh
-        banner
-        . install-zsh
-        check_and_delete "install-zsh"
-        if [[ $SHELL == *zsh* ]]; then
-            print_success "zsh setup successfully"
-        fi
-        clear
+    shell_name="zsh"
+    print_msg "${BOLD}Configuring zsh.."
+    package_install_and_check "zsh git"
+    download_file "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/other/setup-zsh"
+    chmod +x setup-zsh
+    source setup-zsh
+    check_and_delete "setup-zsh"
+    if [[ -f "$HOME/.zshrc" ]]; then
+        print_success "zsh setup successfully"
+    fi
+    clear
+    print_to_config "selected_zsh_theme_name"
+}
+
+function setup_bash() {
+    banner
+    shell_name="bash"
+    print_msg "${BOLD}Configuring bash.."
+    package_install_and_check "git"
+    download_file "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/other/setup-bash"
+    chmod +x setup-bash
+    source setup-bash
+    check_and_delete "setup-bash"
+    if [[ -f "$HOME/.bashrc" ]]; then
+        print_success "bash setup successfully"
+    fi
+    clear
+}
+
+function setup_shell() {
+    print_to_config "chosen_shell_name"
+    if [[ "$chosen_shell_name" == "zsh" ]]; then
+        setup_zsh
+    elif [[ "$chosen_shell_name" == "bash" ]] || [[ "$chosen_shell_name" == "bash_with_ble" ]]; then
+        setup_bash
     fi
     get_shellrc_path
-    print_to_config "selected_zsh_theme_name"
-    print_to_config "zsh_answer"
 }
 
 function terminal_utility_setup() {
@@ -3878,13 +3890,17 @@ EOF
     print_to_config "terminal_utility_setup_answer"
 }
 
+#########################################################################
+#
+# Setup File Manager Utility
+#
+#########################################################################
 function install_fm_tools() {
     if [[ "$fm_tools" == "y" ]]; then
         banner
         print_msg "${BOLD}Installing File Manager Tools..."
         check_and_backup "$HOME/.local/share/nautilus/scripts"
         check_and_create_directory "$HOME/.local/share/nautilus/scripts"
-        # Clone repository
         cd "$HOME" || exit 1
         git clone -b termux https://github.com/sabamdarif/nautilus-scripts
         cd nautilus-scripts || exit 1
@@ -3902,40 +3918,38 @@ function install_fm_tools() {
 #########################################################################
 
 function setup_fonts() {
-    if [[ "$terminal_utility_setup_answer" == "y" ]]; then
-        banner
-        print_msg "${BOLD}Installing ${sel_base_name} Nerd Font..."
+    banner
+    print_msg "${BOLD}Installing ${sel_base_name} Nerd Font..."
 
-        package_install_and_check "nerdfix fontconfig-utils"
-        check_and_create_directory "$HOME/.termux"
-        check_and_create_directory "$HOME/.fonts"
-        check_and_backup "$HOME/.termux/font.ttf"
+    package_install_and_check "nerdfix fontconfig-utils"
+    check_and_create_directory "$HOME/.termux"
+    check_and_create_directory "$HOME/.fonts"
+    check_and_backup "$HOME/.termux/font.ttf"
 
-        if [[ -z "$latest_nf_version" ]]; then
-            latest_nf_version=$(get_latest_release "ryanoasis" "nerd-fonts")
-        fi
+    if [[ -z "$latest_nf_version" ]]; then
+        latest_nf_version=$(get_latest_release "ryanoasis" "nerd-fonts")
+    fi
 
-        if [[ -z "$sel_asset_name" ]]; then
-            sel_base_name="0xProto"
-        fi
-        print_to_config "sel_base_name"
+    if [[ -z "$sel_asset_name" ]]; then
+        sel_base_name="0xProto"
+    fi
+    print_to_config "sel_base_name"
 
-        download_and_extract "https://github.com/ryanoasis/nerd-fonts/releases/download/${latest_nf_version}/${sel_base_name}.tar.xz" "$HOME/.fonts"
-        nerd_font_file=$(find "$HOME/.fonts" -type f \( -iname "${sel_base_name}*NerdFont-Regular.ttf" -o -iname "${sel_base_name}*NerdFont-Regular.otf" \) | head -n1)
+    download_and_extract "https://github.com/ryanoasis/nerd-fonts/releases/download/${latest_nf_version}/${sel_base_name}.tar.xz" "$HOME/.fonts"
+    nerd_font_file=$(find "$HOME/.fonts" -type f \( -iname "${sel_base_name}*NerdFont-Regular.ttf" -o -iname "${sel_base_name}*NerdFont-Regular.otf" \) | head -n1)
 
-        if [[ -z "$nerd_font_file" ]]; then
-            nerd_font_file=$(find "$HOME/.fonts" -type f -iname "*NerdFont*" | head -n1)
-        fi
+    if [[ -z "$nerd_font_file" ]]; then
+        nerd_font_file=$(find "$HOME/.fonts" -type f -iname "*NerdFont*" | head -n1)
+    fi
 
-        check_and_delete "$HOME/.fonts/README.md $HOME/.fonts/LICENSE"
+    check_and_delete "$HOME/.fonts/README.md $HOME/.fonts/LICENSE"
 
-        if [[ -n "$nerd_font_file" ]]; then
-            cp "$nerd_font_file" "$HOME/.termux/font.ttf"
-            fc-cache -f
-        else
-            print_failed "Could not locate a NerdFont-Regular file for ${sel_base_name}."
-            exit 1
-        fi
+    if [[ -n "$nerd_font_file" ]]; then
+        cp "$nerd_font_file" "$HOME/.termux/font.ttf"
+        fc-cache -f
+    else
+        print_failed "Could not locate a NerdFont-Regular file for ${sel_base_name}."
+        exit 1
     fi
 }
 
@@ -4154,7 +4168,7 @@ function remove_termux_desktop() {
                 package_check_and_remove "openbox polybar xorg-xsetroot lxappearance wmctrl feh xwayland kvantum thunar firefox mpd rofi bmon xcompmgr xfce4-settings gedit"
             fi
             #remove zsh
-            if [[ "$zsh_answer" == "y" ]]; then
+            if [[ "$chosen_shell_name" == "zsh" ]]; then
                 package_check_and_remove "zsh"
                 check_and_delete "$HOME/.zsh_history $HOME/.zshrc"
             fi
@@ -4416,12 +4430,6 @@ function change_distro() {
 function change_autostart() {
     read_conf
     get_shellrc_path
-
-    if [[ "$zsh_answer" == "y" && "$current_shell" == "bash" ]] || [[ "$zsh_answer" == "n" && "$current_shell" == "zsh" ]]; then
-        print_failed "It looks like you have changed your shell after the installation"
-        exit 0
-    fi
-
     if [[ "$de_on_startup" == "y" ]]; then
         confirmation_y_or_n "You are sure you want to change auto" confirmation_change_auto_start
         if [[ "$confirmation_change_auto_start" == "y" ]]; then
@@ -4870,7 +4878,7 @@ function install_termux_desktop() {
     log_debug "$config_file"
     print_basic_details
     setup_necessary_permissions
-    setup_zsh
+    setup_shell
     setup_fonts
     install_desktop
     browser_installer
