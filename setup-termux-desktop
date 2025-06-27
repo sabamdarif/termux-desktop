@@ -3717,7 +3717,6 @@ function setup_gimp_plugins() {
     #     chmod +x install-resynthesizer-termux
     #     source install-resynthesizer-termux
     # fi
-    package_install_and_check "gimp-lqr-plugin"
 }
 
 function photo_editor_installer() {
