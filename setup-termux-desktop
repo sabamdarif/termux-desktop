@@ -4959,10 +4959,10 @@ if [[ $1 == "--debug" ]]; then
 fi
 
 case $1 in
---remove | -r)
+--remove | -r | --uninstall)
     remove_termux_desktop
     ;;
---install | -i)
+--install | -i | in)
     install_termux_desktop "$1"
     ;;
 --change | -c)

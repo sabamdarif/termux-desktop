@@ -895,7 +895,7 @@ case \$1 in
 --root|-r)
     proot-distro login --termux-home "$selected_distro"
     ;;
---remove)
+--remove | --uninstall)
     remove_distro_container
     ;;
 install | in | ins)
