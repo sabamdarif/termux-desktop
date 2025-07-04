@@ -531,7 +531,10 @@ function download_and_extract() {
     local target_dir="$2"
     local filename="${url##*/}"
 
-    cd "$target_dir" || return 1
+    if [[ -n "$target_dir" ]]; then
+        check_and_create_directory "$target_dir"
+        cd "$target_dir" || return 1
+    fi
 
     if download_file "$filename" "$url"; then
         if [[ -f "$filename" ]]; then
@@ -903,8 +906,13 @@ function ask_to_chose_de() {
     echo
     echo "${Y}9. Fluxbox($total_custom_awesome_setup)${W}"
     echo
-    select_an_option 8 1 desktop_answer
-    echo
+    if [[ "$PACKAGE_MANAGER" == "apt" ]]; then
+        echo "${Y}10. Gnome($total_custom_awesome_setup)(WIP, so expect bugs)${W}"
+        echo
+        select_an_option 10 1 desktop_answer
+    else
+        select_an_option 9 1 desktop_answer
+    fi
     # set the variables based on chosen de
     sys_icons_folder="$PREFIX/share/icons"
     sys_themes_folder="$PREFIX/share/themes"
@@ -953,6 +961,11 @@ function ask_to_chose_de() {
         themes_folder="$HOME/.themes"
         icons_folder="$HOME/.icons"
         de_startup="fluxbox"
+    elif [[ "$desktop_answer" == "10" ]]; then
+        de_name="gnome"
+        themes_folder="$HOME/.themes"
+        icons_folder="$HOME/.icons"
+        de_startup="gnome-session-minimal"
     fi
     banner
     questions_theme_select
@@ -2107,13 +2120,12 @@ function check_system_requirements() {
         # Check architecture
         app_arch=$(uname -m)
         supported_arch="$(getprop ro.product.cpu.abilist)"
-        local archtype
         case "$app_arch" in
-        aarch64) archtype="aarch64" ;;
-        armv7* | arm | armv8*) archtype="arm" ;;
+        aarch64) termux_arch="aarch64" ;;
+        armv7* | arm | armv8*) termux_arch="arm" ;;
         esac
 
-        if [[ "$archtype" == "aarch64" ]] || [[ "$archtype" == "arm" ]]; then
+        if [[ "$termux_arch" == "aarch64" ]] || [[ "$termux_arch" == "arm" ]]; then
             print_success "App architecture: ${W}$app_arch"
         else
             print_failed "Unsupported architecture: $app_arch, requires aarch64/arm/armv7*/armv8*"
@@ -2286,7 +2298,6 @@ function install_desktop() {
     log_debug "Starting desktop installation" "Desktop: $de_name"
     banner
     if [[ "$de_name" == "xfce" ]]; then
-        log_debug "Installing XFCE4"
         print_msg "${BOLD}Installing Xfce4 Desktop"
         package_install_and_check "xfce4 xfce4-goodies xfce4-pulseaudio-plugin xfce4-battery-plugin xfce4-docklike-plugin xfce4-notifyd-static xfce4-cpugraph-plugin"
     elif [[ "$de_name" == "lxqt" ]]; then
@@ -2303,25 +2314,34 @@ function install_desktop() {
         package_install_and_check "mate*"
         package_install_and_check "marco mousepad xfce4-taskmanager lximage-qt"
     elif [[ "$de_name" == "i3wm" ]]; then
-        log_debug "Installing I3wm"
         print_msg "${BOLD}Installing i3WM"
         package_install_and_check "i3"
     elif [[ "$de_name" == "dwm" ]]; then
-        log_debug "Installing dwm"
         print_msg "${BOLD}Installing DWM"
         package_install_and_check "dwm"
     elif [[ "$de_name" == "bspwm" ]]; then
-        log_debug "Installing BSPWM"
         print_msg "${BOLD}Installing BSPWM"
         package_install_and_check "bspwm"
     elif [[ "$de_name" == "awesome" ]]; then
-        log_debug "Installing AWESOME WM"
         print_msg "${BOLD}Installing AWESOME WM"
         package_install_and_check "awesome"
     elif [[ "$de_name" == "fluxbox" ]]; then
         print_msg "${BOLD}Installing Fluxbox WM"
         echo
         package_install_and_check "fluxbox xorg-xsetroot xorg-xprop lxappearance wmctrl feh firefox rofi bmon xcompmgr gtk3 gedit xmllint"
+    elif [[ "$de_name" == "gnome" ]]; then
+        print_msg "${BOLD}Installing Gnome (shell)"
+        echo
+        mkdir debs_files
+        cd debs_files || exit 1
+        download_and_extract "https://github.com/sabamdarif/termux-desktop/releases/download/gnome-shell/debs-${termux_arch}.zip"
+        dpkg --configure -a
+        apt --fix-broken install -y
+        apt install ./*deb -y
+        apt install --fix-missing -y
+        cd ..
+        check_and_delete "debs_files"
+        package_install_and_check "thunar xfce4-terminal"
     fi
     if [[ "$lite_mode" != "1" && "$lite_mode" != "true" ]]; then
         package_install_and_check "kvantum xwayland pulseaudio file-roller pavucontrol gnome-font-viewer evince galculator libwayland-protocols xorg-xrdb"
@@ -4165,7 +4185,25 @@ function remove_termux_desktop() {
                 package_check_and_remove "lxqt xorg-xsetroot papirus-icon-theme xwayland kvantum"
             elif [[ "$de_name" == "openbox" ]]; then
                 package_check_and_remove "openbox polybar xorg-xsetroot lxappearance wmctrl feh xwayland kvantum thunar firefox mpd rofi bmon xcompmgr xfce4-settings gedit"
+            elif [[ "$de_name" == "mate" ]]; then
+                package_check_and_remove "mate*"
+                package_check_and_remove "marco mousepad xfce4-taskmanager lximage-qt"
+            elif [[ "$de_name" == "i3wm" ]]; then
+                package_check_and_remove "i3"
+            elif [[ "$de_name" == "dwm" ]]; then
+                package_check_and_remove "dwm"
+            elif [[ "$de_name" == "bspwm" ]]; then
+                package_check_and_remove "bspwm"
+            elif [[ "$de_name" == "awesome" ]]; then
+                package_check_and_remove "awesome"
+            elif [[ "$de_name" == "fluxbox" ]]; then
+                package_check_and_remove "fluxbox xorg-xsetroot xorg-xprop lxappearance wmctrl feh firefox rofi bmon xcompmgr gtk3 gedit xmllint"
+            elif [[ "$de_name" == "gnome" ]]; then
+                package_check_and_remove "gnome*"
+                package_check_and_remove "thunar xfce4-terminal"
             fi
+
+            package_check_and_remove "kvantum xwayland pulseaudio file-roller pavucontrol gnome-font-viewer evince galculator libwayland-protocols xorg-xrdb"
             #remove zsh
             if [[ "$chosen_shell_name" == "zsh" ]]; then
                 package_check_and_remove "zsh"
@@ -4656,6 +4694,22 @@ function some_fixes() {
             sed -i 's|/data/data/com.termux/files/usr/bin/code-oss|/data/data/com.termux/files/usr/bin/code-oss --enable-features=Vulkan|g' /data/data/com.termux/files/usr/share/applications/code-oss*
         fi
     fi
+    # some fixes for gnome-desktop
+    sed -i 's|<policy user="root">|<policy user="\$USER">|' "$PREFIX/share/dbus-1/system.d/org.freedesktop.UPower.conf"
+    cat <<EOF >"$PREFIX/share/gnome-session/sessions/minimal.session"
+[GNOME Session]
+Name=Minimal GNOME
+RequiredComponents=org.gnome.Shell;org.gnome.SettingsDaemon.A11ySettings;org.gnome.SettingsDaemon.Color;org.gnome.SettingsDaemon.Datetime;org.gnome.SettingsDaemon.Housekeeping;org.gnome.SettingsDaemon.Keyboard;org.gnome.SettingsDaemon.Sound;
+DefaultProvider-wm=gnome-shell
+DesktopName=GNOME
+EOF
+    cat <<EOF >"$PREFIX/bin/gnome-session-minimal"
+rm -rf /data/data/com.termux/files/usr/var/run/dbus/pid
+dbus-launch --config-file $PREFIX/share/dbus-1/system.conf
+UPOWER_CONF_FILE_NAME=$PREFIX/etc/UPower/UPower.conf $PREFIX/libexec/upowerd -d
+gnome-session --session=minimal \$@
+EOF
+    chmod +x "$PREFIX/bin/gnome-session-minimal"
 }
 
 # add the basic details into a config file
