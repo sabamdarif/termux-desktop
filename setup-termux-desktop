@@ -2880,10 +2880,10 @@ function setup_vncstop_cmd() {
 source /data/data/com.termux/files/usr/etc/termux-desktop/common_functions
 
 # This code block is taken from:- https://github.com/termux/proot-distro/blob/master/proot-distro.sh#L172C1-L184C1
-TRACER_PID=\$(grep TracerPid "/proc/\$\$/status" | cut -d \$'\t' -f 2)
-if [ "\$TRACER_PID" != 0 ]; then
-	TRACER_NAME=\$(grep Name "/proc/\${TRACER_PID}/status" | cut -d \$'\t' -f 2)
-	if [ "\$TRACER_NAME" = "proot" ]; then
+TRACER_PID=$(grep TracerPid "/proc/$$/status" | cut -d $'\t' -f 2)
+if [ "$TRACER_PID" != 0 ]; then
+	TRACER_NAME=$(grep Name "/proc/${TRACER_PID}/status" | cut -d $'\t' -f 2)
+	if [ "$TRACER_NAME" = "proot" ]; then
 		msg
 		print_failed "vncstop command should not be executed under PRoot.\${W}"
 		msg
