@@ -1771,9 +1771,9 @@ function define_value_name() {
     fi
     # Linux Distro Container
     if [[ "$distro_add_answer" == "y" ]]; then
-        distro_container_confirmation="Yes"
+        distro_container_confirmation="Enabled"
     elif [[ "$distro_add_answer" == "n" ]]; then
-        distro_container_confirmation="No"
+        distro_container_confirmation="Disabled"
     fi
     # Distro User and Pass
     if [[ "$pd_useradd_answer" == "y" ]]; then
@@ -1867,20 +1867,26 @@ function print_conf_info() {
 
     echo "${G}Hardware Acceleration${W}"
     echo "   • Status: ${hw_acc_confirmation}"
-    echo "   • GPU: $(echo "$device_gpu_model_name" | tr '[:lower:]' '[:upper:]')"
-    echo "   • Vulkan Driver: ${vulkan_driver_name}"
-    echo "   • OpenGL Driver: ${opengl_driver_name}"
+    if [[ "$enable_hw_acc" == "y" ]]; then
+        echo "   • GPU: $(echo "$device_gpu_model_name" | tr '[:lower:]' '[:upper:]')"
+        echo "   • Vulkan Driver: ${vulkan_driver_name}"
+        echo "   • OpenGL Driver: ${opengl_driver_name}"
+    fi
     sleep 0.015
 
     echo "${G}Linux Distro Container${W}"
     echo "   • Distro Status: ${distro_container_confirmation}"
-    echo "   • Distribution: ${selected_distro}"
-    echo "   • Distro Username: ${distro_user_name}"
-    echo "   • Distro Pass: ${distro_pass}"
-    echo "   • Audio Support: ${pd_audio_config_confirmation}"
-    echo "   • Hardware Acceleration: ${distro_hw_acc_confirmation}"
-    echo "   • Vulkan Driver: ${distro_vulkan_driver}"
-    echo "   • OpenGL Driver: ${distro_opengl_driver}"
+    if [[ "$distro_add_answer" == "y" ]]; then
+        echo "   • Distribution: ${selected_distro}"
+        echo "   • Distro Username: ${distro_user_name}"
+        echo "   • Distro Pass: ${distro_pass}"
+        echo "   • Audio Support: ${pd_audio_config_confirmation}"
+    fi
+    if [[ "$enable_hw_acc" == "y" ]]; then
+        echo "   • Hardware Acceleration: ${distro_hw_acc_confirmation}"
+        echo "   • Vulkan Driver: ${distro_vulkan_driver}"
+        echo "   • OpenGL Driver: ${distro_opengl_driver}"
+    fi
     echo "   • Terminal Utilities: ${distro_terminal_utility_setup_confirmation}"
     sleep 0.015
     # Re-enable keyboard interruptions
@@ -4944,6 +4950,7 @@ function install_termux_desktop() {
         print_msg "${BOLD}Configuring Stock $de_name Style..."
         echo
         print_to_config "style_answer"
+        print_to_config "ext_wall_answer"
     else
         setup_config
     fi
