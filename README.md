@@ -46,11 +46,27 @@
    - **[OPENBOX](/readmes/openbox_styles.md)**
    - **[MATE](/readmes/mate_styles.md)**
 
-##### 3. Hardware Acceleration and Distro Container:
+##### 3. Currently supported Desktop Environments and Window Managers:
+
+###### **Desktop Environments**
+- **Xfce**
+- **LXQt**
+- **MATE**
+- **GNOME**
+
+###### **Window Managers**
+- **Openbox**
+- **i3**
+- **dwm**
+- **bspwm**
+- **Awesome**
+- **Fluxbox**
+
+##### 4. Hardware Acceleration and Distro Container:
    - Learn more about [hardware acceleration](/readmes/hw-acceleration.md).
    - Check out [distro container usage](/readmes/proot-container.md).
 
-##### 4. Start Installation: 
+##### 5. Start Installation: 
 > Full Installation YouTube Video Guide:- [Here](https://youtu.be/SlR9f9hl5CQ?si=7O13ZAzdAnB_wwWw)
 
 > **Note: Fresh installations are recommended for best results.**
@@ -62,7 +78,7 @@
 
 - You can also do a lite install which will not install all the optional packages to do that run the install this `LITE=true ./setup-termux-desktop` or `LITE=1  ./setup-termux-desktop` instead of just running `./setup-termux-desktop`
 
-##### 5. Usage Instructions:
+##### 6. Usage Instructions:
    - Commands for starting and stopping Termux:X11 and VNC sessions are provided below.
 
 ---
