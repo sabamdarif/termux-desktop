@@ -711,7 +711,6 @@ function validate_required_vars() {
         "installed_photo_editor"
         "installed_wine"
         # extra
-        "ext_wall_answer"
         "chosen_shell_name"
         "terminal_utility_setup_answer"
         "fm_tools"
@@ -2347,7 +2346,7 @@ function install_desktop() {
         apt install --fix-missing -y
         cd ..
         check_and_delete "debs_files"
-        package_install_and_check "thunar xfce4-terminal"
+        package_install_and_check "xfce4-terminal"
     fi
     if [[ "$lite_mode" != "1" && "$lite_mode" != "true" ]]; then
         package_install_and_check "kvantum xwayland pulseaudio file-roller pavucontrol gnome-font-viewer evince galculator libwayland-protocols xorg-xrdb"
@@ -2380,23 +2379,8 @@ function set_config_dir() {
     fi
 }
 
-function theme_installer() {
-    log_debug "Starting theme installation" "Theme: $style_name"
+function ext_wall_setup() {
     banner
-    print_msg "${BOLD}Configuring Theme: ${C}${style_name}"
-    echo
-
-    if [[ "$de_name" == "xfce" ]] || [[ "$de_name" == "openbox" ]]; then
-        package_install_and_check "gnome-themes-extra gtk2-engines-murrine"
-    fi
-
-    sleep 3
-    banner
-    print_msg "${BOLD}Configuring Wallpapers..."
-    echo
-    check_and_create_directory "$PREFIX/share/backgrounds"
-    download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/setup-files/setup-files/${de_name}/look_${style_answer}/wallpaper.tar.gz" "$PREFIX/share/backgrounds/"
-
     if [[ "$ext_wall_answer" == "n" ]]; then
         print_msg "${C}Skipping Extra Wallpapers Setup..."
         echo
@@ -2417,7 +2401,21 @@ function theme_installer() {
             check_and_delete "Wallpaper-Bank"
         fi
     fi
+    print_to_config "ext_wall_answer"
+}
 
+function theme_installer() {
+    log_debug "Starting theme installation" "Theme: $style_name"
+    banner
+    print_msg "${BOLD}Configuring Theme: ${C}${style_name}"
+    echo
+    package_install_and_check "gnome-themes-extra gtk2-engines-murrine"
+    sleep 3
+    banner
+    print_msg "${BOLD}Configuring Wallpapers..."
+    echo
+    check_and_create_directory "$PREFIX/share/backgrounds"
+    download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/setup-files/setup-files/${de_name}/look_${style_answer}/wallpaper.tar.gz" "$PREFIX/share/backgrounds/"
     banner
     print_msg "${BOLD}Configuring Icon Pack..."
     echo
@@ -2542,7 +2540,6 @@ function setup_config() {
         print_msg "${BOLD}Installing $de_name Style: ${C}${style_answer}"
         theme_installer
         additional_required_steps
-        print_to_config "ext_wall_answer"
         print_to_config "style_answer"
     else
         print_failed "Failed to select style..."
@@ -4374,7 +4371,7 @@ function change_hw() {
             print_msg "Your current hardware acceleration api for $selected_distro is: ${C}${BOLD}${pd_hw_answer}"
             confirmation_y_or_n "Do you want to change hardware acceleration api" confirmation_chnage_hardware_acceleration
             if [[ "$confirmation_chnage_hardware_acceleration" == "y" ]]; then
-                check_and_delete " /data/data/com.termux/files/usr/opt/angle-android/vulkan/libEGL.so.1"
+                check_and_delete "/data/data/com.termux/files/usr/opt/angle-android/vulkan/libEGL.so.1"
                 check_and_delete "/data/data/com.termux/files/usr/opt/angle-android/vulkan/libGLESv1_CM.so.1"
                 check_and_delete "/data/data/com.termux/files/usr/opt/angle-android/vulkan/libGLESv2.so.2"
                 package_check_and_remove "mesa-vulkan-icd-wrapper vulkan-loader-android vulkan-loader-generic virglrenderer virglrenderer-android angle-android vulkan-icd mesa-vulkan-icd-freedreno mesa-zink-vulkan-icd-freedreno mesa-vulkan-icd-freedreno-dri3"
@@ -4950,10 +4947,10 @@ function install_termux_desktop() {
         print_msg "${BOLD}Configuring Stock $de_name Style..."
         echo
         print_to_config "style_answer"
-        print_to_config "ext_wall_answer"
     else
         setup_config
     fi
+    ext_wall_setup
     banner
     add_common_function
     distro_container_setup
