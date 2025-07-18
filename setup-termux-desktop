@@ -259,182 +259,202 @@ function package_install_and_check {
     # pacman part
     if [[ "$PACKAGE_MANAGER" == "pacman" ]]; then
         for package_name in "${packs_list[@]}"; do
-            retry_count=0
-            max_retries=5
-            install_success=false
-            while [[ "$retry_count" -lt "$max_retries" && "$install_success" == false ]]; do
-                retry_count=$((retry_count + 1))
-                check_and_delete "$PREFIX/var/lib/pacman/db.lck"
-                if [[ "$package_name" == *"*"* ]]; then
-                    log_debug "Processing wildcard pattern: $package_name"
-                    packages=$(pacman -Ssq | grep -E "^${package_name//\*/.*}$")
-                    log_debug "matched packages: ${C}$packages"
-                    for package in $packages; do
+            if [[ "$package_name" == *"*"* ]]; then
+                log_debug "Processing wildcard pattern: $package_name"
+                packages=$(pacman -Ssq | grep -E "^${package_name//\*/.*}$")
+                log_debug "matched packages: ${C}$packages"
+                for package in $packages; do
+                    retry_count=0
+                    max_retries=5
+                    install_success=false
+                    while [[ "$retry_count" -lt "$max_retries" && "$install_success" == false ]]; do
+                        retry_count=$((retry_count + 1))
+                        check_and_delete "$PREFIX/var/lib/pacman/db.lck"
                         print_msg "Installing Package : ${C}$package"
-                        # INFO:- need know if --overwrite '*' is a good option or not, might need to change
-                        pacman -Sy --noconfirm --overwrite '*' "$package"
+                        pacman -S --noconfirm "$package"
                         if pacman -Qi "$package" >/dev/null 2>&1; then
                             print_success "Successfully install package: ${C}$package"
                             install_success=true
-                            break
                         else
-                            print_warn "Failed to install package: ${C}${package}. ${Y}Trying again..."
+                            print_warn "Failed to install package: ${C}${package}. ${Y}Trying again... ($retry_count)"
                         fi
                     done
-                else
+                done
+            else
+                retry_count=0
+                max_retries=5
+                install_success=false
+                while [[ "$retry_count" -lt "$max_retries" && "$install_success" == false ]]; do
+                    retry_count=$((retry_count + 1))
+                    check_and_delete "$PREFIX/var/lib/pacman/db.lck"
                     print_msg "Installing Package : ${C}$package_name"
-                    pacman -Sy --noconfirm --overwrite '*' "$package_name"
+                    pacman -S --noconfirm "$package_name"
                     if pacman -Qi "$package_name" >/dev/null 2>&1; then
                         print_success "Successfully install package: ${C}$package_name"
                         install_success=true
-                        break
                     else
                         print_warn "Failed to install package: ${C}${package_name}. ${Y}Trying again... ($retry_count)"
                     fi
-                fi
-            done
+                done
+            fi
         done
     else
         #apt part
         for package_name in "${packs_list[@]}"; do
-            retry_count=0
-            max_retries=5
-            install_success=false
-
-            while [[ "$retry_count" -lt "$max_retries" && "$install_success" == false ]]; do
-                retry_count=$((retry_count + 1))
-                if [[ "$package_name" == *"*"* ]]; then
-                    log_debug "Processng wildcard pattern: $package_name"
-                    # OPTIM:- have to find any easier command then this
-                    # TEST:- on first test it work much better
-                    packages=$(apt-cache search . | awk '{print $1}' | grep -E "^${package_name//\*/.*}$" | sort -u)
-                    log_debug "matched packages: $packages"
-                    for package in $packages; do
+            if [[ "$package_name" == *"*"* ]]; then
+                log_debug "Processing wildcard pattern: $package_name"
+                packages=$(apt-cache pkgnames | grep -E "^${package_name//\*/.*}$" | sort -u)
+                log_debug "matched packages: $packages"
+                for package in $packages; do
+                    retry_count=0
+                    max_retries=5
+                    install_success=false
+                    while [[ "$retry_count" -lt "$max_retries" && "$install_success" == false ]]; do
+                        retry_count=$((retry_count + 1))
                         print_msg "Installing package: ${C}$package"
-                        dpkg --configure -a
-                        apt --fix-broken install -y
-                        apt install --fix-missing -y
-                        if dpkg -s "$package" >/dev/null 2>&1; then
-                            apt reinstall "$package" -y
-                        else
-                            apt install "$package" -y
-                        fi
+                        apt install "$package" -y
                         if dpkg -s "$package" >/dev/null 2>&1; then
                             print_success "Successfully install package: ${C}$package"
                             install_success=true
-                            break
                         else
-                            print_warn "Failed to install package: ${C}${package}. ${Y}Trying again...($retry_count)"
+                            print_warn "Failed to install package: ${C}${package}. ${Y}Trying again... ($retry_count)"
+                            # Only run recovery commands on failure
+                            dpkg --configure -a
+                            apt --fix-broken install -y
+                            apt install --fix-missing -y
                         fi
                     done
-                else
+                done
+            else
+                retry_count=0
+                max_retries=5
+                install_success=false
+                while [[ "$retry_count" -lt "$max_retries" && "$install_success" == false ]]; do
+                    retry_count=$((retry_count + 1))
                     print_msg "Installing package: ${C}$package_name"
-                    dpkg --configure -a
-                    apt --fix-broken install -y
-                    apt install --fix-missing -y
-                    if dpkg -s "$package_name" >/dev/null 2>&1; then
-                        apt reinstall "$package_name" -y
-                    else
-                        apt install "$package_name" -y
-                    fi
-
+                    apt install "$package_name" -y
                     if dpkg -s "$package_name" >/dev/null 2>&1; then
                         print_success "Successfully install package: ${C}$package_name"
                         install_success=true
-                        break
                     else
                         print_warn "Failed to install package: ${C}${package_name}. ${Y}Trying again... ($retry_count)"
+                        # Only run recovery commands on failure
+                        dpkg --configure -a
+                        apt --fix-broken install -y
+                        apt install --fix-missing -y
                     fi
-                fi
-            done
+                done
+            fi
         done
     fi
-
 }
+
 # will check the package is installed or not then remove it
-# OPTIM:- it also need the changes like package_install_and_check if ever did changes on that, mostly in the apt-cache part
 function package_check_and_remove() {
     log_debug "Starting package removal for: $*"
-    packs_list=($@)
+    local packs_list=($@)
 
     if [[ "$PACKAGE_MANAGER" == "pacman" ]]; then
         for package_name in "${packs_list[@]}"; do
-            retry_count=0
-            max_retries=5
-            remove_success=false
-            while [[ "$retry_count" -lt "$max_retries" && "$remove_success" == false ]]; do
-                retry_count=$((retry_count + 1))
-                check_and_delete "$PREFIX/var/lib/pacman/db.lck"
-                if [[ "$package_name" == *"*"* ]]; then
-                    log_debug "Processing wildcard pattern: $package_name"
-                    packages=$(pacman -Ssq | grep -E "^${package_name//\*/.*}$")
-                    log_debug "matched packages: $packages"
-                    for package in $packages; do
+            if [[ "$package_name" == *"*"* ]]; then
+                log_debug "Processing wildcard pattern: $package_name"
+                local packages=$(pacman -Qsq | grep -E "^${package_name//\*/.*}$")
+                if [[ -z "$packages" ]]; then
+                    print_success "No installed packages found matching: ${C}$package_name"
+                    continue
+                fi
+                log_debug "matched packages: $packages"
+                for package in $packages; do
+                    local retry_count=0
+                    local max_retries=5
+                    local remove_success=false
+                    while [[ "$retry_count" -lt "$max_retries" && "$remove_success" == false ]]; do
+                        retry_count=$((retry_count + 1))
+                        check_and_delete "$PREFIX/var/lib/pacman/db.lck"
                         print_msg "Removing Package : ${C}$package"
                         pacman -Rnds --noconfirm "$package"
                         if ! pacman -Qi "$package" >/dev/null 2>&1; then
-                            print_success "Successfully remove package: ${C}$package"
+                            print_success "Successfully removed package: ${C}$package"
                             remove_success=true
-                            break
                         else
                             print_warn "Failed to remove package: ${C}${package}. ${Y}Trying again...($retry_count)"
                         fi
                     done
+                done
+            else
+                if pacman -Qi "$package_name" >/dev/null 2>&1; then
+                    local retry_count=0
+                    local max_retries=5
+                    local remove_success=false
+                    while [[ "$retry_count" -lt "$max_retries" && "$remove_success" == false ]]; do
+                        retry_count=$((retry_count + 1))
+                        check_and_delete "$PREFIX/var/lib/pacman/db.lck"
+                        print_msg "Removing Package : ${C}$package_name"
+                        pacman -Rnds --noconfirm "$package_name"
+                        if ! pacman -Qi "$package_name" >/dev/null 2>&1; then
+                            print_success "Successfully removed package: ${C}$package_name"
+                            remove_success=true
+                        else
+                            print_warn "Failed to remove package: ${C}${package_name}. ${Y}Trying again... ($retry_count)"
+                        fi
+                    done
                 else
-                    print_msg "Removing Package : ${C}$package_name"
-                    pacman -Rnds --noconfirm "$package_name"
-                    if ! pacman -Qi "$package_name" >/dev/null 2>&1; then
-                        print_success "Successfully remove package: ${C}$package_name"
-                        remove_success=true
-                        break
-                    else
-                        print_warn "Failed to remove package: ${C}${package_name}. ${Y}Trying again... ($retry_count)"
-                    fi
+                    print_success "Package ${C}$package_name${W} is not installed."
                 fi
-            done
+            fi
         done
     else
         for package_name in "${packs_list[@]}"; do
-            retry_count=0
-            max_retries=5
-            remove_success=false
+            if [[ "$package_name" == *"*"* ]]; then
+                log_debug "Processing wildcard pattern: $package_name"
+                local packages=$(dpkg-query -W -f='${binary:Package}\n' "${package_name}" 2>/dev/null | grep -v ' ')
 
-            while [[ "$retry_count" -lt "$max_retries" && "$remove_success" == false ]]; do
-                retry_count=$((retry_count + 1))
-                if [[ "$package_name" == *"*"* ]]; then
-                    log_debug "Processng wildcard pattern: $package_name"
-                    packages=$(apt-cache search . | awk '{print $1}' | grep -E "^${package_name//\*/.*}$" | sort -u)
-                    log_debug "matched packages: $packages"
-                    for package in $packages; do
+                if [[ -z "$packages" ]]; then
+                    print_success "No installed packages found matching: ${C}$package_name"
+                    continue
+                fi
+
+                log_debug "matched packages: $packages"
+                for package in $packages; do
+                    local retry_count=0
+                    local max_retries=5
+                    local remove_success=false
+                    while [[ "$retry_count" -lt "$max_retries" && "$remove_success" == false ]]; do
+                        retry_count=$((retry_count + 1))
                         print_msg "Removing package: ${C}$package"
-                        if dpkg -s "$package" >/dev/null 2>&1; then
-                            dpkg --configure -a >/dev/null
-                            apt autoremove "$package" -y
-                        fi
+                        dpkg --configure -a >/dev/null
+                        apt autoremove "$package" -y
                         if ! dpkg -s "$package" >/dev/null 2>&1; then
-                            print_success "Successfully remove package: ${C}$package"
+                            print_success "Successfully removed package: ${C}$package"
                             remove_success=true
-                            break
                         else
                             print_warn "Failed to remove package: ${C}${package}. ${Y}Trying again...($retry_count)"
                         fi
                     done
+                done
+            else
+                if dpkg -s "$package_name" >/dev/null 2>&1; then
+                    local retry_count=0
+                    local max_retries=5
+                    local remove_success=false
+                    while [[ "$retry_count" -lt "$max_retries" && "$remove_success" == false ]]; do
+                        retry_count=$((retry_count + 1))
+                        print_msg "Removing package: ${C}$package_name"
+                        dpkg --configure -a >/dev/null
+                        apt autoremove "$package_name" -y
+                        if ! dpkg -s "$package_name" >/dev/null 2>&1; then
+                            print_success "Successfully removed package: ${C}$package_name"
+                            remove_success=true
+                        else
+                            print_warn "Failed to remove package: ${C}${package_name}. ${Y}Trying again... ($retry_count)"
+                        fi
+                    done
                 else
-                    print_msg "Removing package: ${C}$package_name"
-                    dpkg --configure -a >/dev/null
-                    apt autoremove "$package_name" -y
-                    if ! dpkg -s "$package_name" >/dev/null 2>&1; then
-                        print_success "Successfully remove package: ${C}$package_name"
-                        remove_success=true
-                        break
-                    else
-                        print_warn "Failed to remove package: ${C}${package_name}. ${Y}Trying again... ($retry_count)"
-                    fi
+                    print_success "Package ${C}$package_name${W} is not installed."
                 fi
-            done
+            fi
         done
     fi
-
 }
 
 function get_file_name_number() {
@@ -4144,7 +4164,9 @@ function notes() {
         print_msg "vncstop          to stop the gui with vnc"
         echo
     fi
-    print_msg "${C}run:- $selected_distro, to login into $selected_distro"
+    if [[ "$distro_add_answer" == "y" ]]; then
+        print_msg "${C}run:- $selected_distro, to login into $selected_distro"
+    fi
     echo
     print_msg "${C}${BOLD}See Uses Section in github to know how to use it"
     echo
