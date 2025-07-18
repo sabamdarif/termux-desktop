@@ -4390,31 +4390,27 @@ function change_hw() {
         if [[ "$enable_hw_acc" == "y" ]]; then
             banner
             print_msg "Your current hardware acceleration api for Termux is: ${C}${BOLD}${termux_hw_answer}"
-            print_msg "Your current hardware acceleration api for $selected_distro is: ${C}${BOLD}${pd_hw_answer}"
+            if [[ "$distro_add_answer" == "y" ]]; then
+                print_msg "Your current hardware acceleration api for $selected_distro is: ${C}${BOLD}${pd_hw_answer}"
+            fi
             confirmation_y_or_n "Do you want to change hardware acceleration api" confirmation_chnage_hardware_acceleration
             if [[ "$confirmation_chnage_hardware_acceleration" == "y" ]]; then
-                check_and_delete "/data/data/com.termux/files/usr/opt/angle-android/vulkan/libEGL.so.1"
-                check_and_delete "/data/data/com.termux/files/usr/opt/angle-android/vulkan/libGLESv1_CM.so.1"
-                check_and_delete "/data/data/com.termux/files/usr/opt/angle-android/vulkan/libGLESv2.so.2"
-                package_check_and_remove "mesa-vulkan-icd-wrapper vulkan-loader-android vulkan-loader-generic virglrenderer virglrenderer-android angle-android vulkan-icd mesa-vulkan-icd-freedreno mesa-zink-vulkan-icd-freedreno mesa-vulkan-icd-freedreno-dri3"
-                package_install_and_check "mesa"
+                hw_questions
+                hw_config
+                if [[ "$gui_mode" == "termux_x11" ]]; then
+                    setup_tx11start_cmd
+                    some_fixes
+                elif [[ "$gui_mode" == "both" ]]; then
+                    setup_tx11start_cmd
+                    setup_vncstart_cmd
+                    some_fixes
+                fi
+                if [[ "$distro_add_answer" == "y" ]]; then
+                    sed -i "s|selected_pd_hw_method=\"[^\"]*\"|selected_pd_hw_method=\"$pd_hw_method\"|" "$PREFIX/bin/pdrun"
+                fi
+                clear
+                print_success "${BOLD}Hardware acceleration method changed successfully"
             fi
-
-            hw_questions
-            hw_config
-            if [[ "$gui_mode" == "termux_x11" ]]; then
-                setup_tx11start_cmd
-                some_fixes
-            elif [[ "$gui_mode" == "both" ]]; then
-                setup_tx11start_cmd
-                setup_vncstart_cmd
-                some_fixes
-            fi
-            if [[ "$distro_add_answer" == "y" ]]; then
-                sed -i "s|selected_pd_hw_method=\"[^\"]*\"|selected_pd_hw_method=\"$pd_hw_method\"|" "$PREFIX/bin/pdrun"
-            fi
-            clear
-            print_success "${BOLD}Hardware acceleration method changed successfully"
         elif [[ "$enable_hw_acc" == "n" ]]; then
             print_msg "This option is only used if have Hardware Acceleration enabled"
         fi
