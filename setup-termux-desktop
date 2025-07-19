@@ -888,14 +888,18 @@ function ask_to_chose_de() {
     local owner="sabamdarif"
     local repo="termux-desktop"
     local branch="setup-files"
+    # calculate availabe styles for all the desktop environments
     local total_custom_xfce_setup
     total_custom_xfce_setup=$(count_subfolders "$owner" "$repo" "setup-files/xfce" "$branch" 2>/dev/null)
     local total_custom_lxqt_setup
     total_custom_lxqt_setup=$(count_subfolders "$owner" "$repo" "setup-files/lxqt" "$branch" 2>/dev/null)
-    local total_custom_openbox_setup
-    total_custom_openbox_setup=$(count_subfolders "$owner" "$repo" "setup-files/openbox" "$branch" 2>/dev/null)
     local total_custom_mate_setup
     total_custom_mate_setup=$(count_subfolders "$owner" "$repo" "setup-files/mate" "$branch" 2>/dev/null)
+    local total_custom_gnome_setup
+    total_custom_gnome_setup=$(count_subfolders "$owner" "$repo" "setup-files/awesome" "$branch" 2>/dev/null)
+    # calculate availabe styles for all the window managers
+    local total_custom_openbox_setup
+    total_custom_openbox_setup=$(count_subfolders "$owner" "$repo" "setup-files/openbox" "$branch" 2>/dev/null)
     local total_custom_i3wm_setup
     total_custom_i3wm_setup=$(count_subfolders "$owner" "$repo" "setup-files/i3wm" "$branch" 2>/dev/null)
     local total_custom_dwm_setup
@@ -915,23 +919,19 @@ function ask_to_chose_de() {
     echo
     echo "${Y}4. MATE (Unstable)($total_custom_mate_setup)${W}"
     echo
-    echo "${Y}5. I3Wm($total_custom_i3wm_setup)${W}"
+    echo "${Y}5. Gnome($total_custom_gnome_setup)(WIP, so expect bugs)${W}"
     echo
-    echo "${Y}6. Dwm($total_custom_dwm_setup)${W}"
+    echo "${Y}6. I3Wm($total_custom_i3wm_setup)${W}"
     echo
-    echo "${Y}7. Bspwm($total_custom_bspwm_setup)${W}"
+    echo "${Y}7. Dwm($total_custom_dwm_setup)${W}"
     echo
-    echo "${Y}8. Awesome($total_custom_awesome_setup)${W}"
+    echo "${Y}8. Bspwm($total_custom_bspwm_setup)${W}"
     echo
-    echo "${Y}9. Fluxbox($total_custom_awesome_setup)${W}"
+    echo "${Y}9. Awesome($total_custom_awesome_setup)${W}"
     echo
-    if [[ "$PACKAGE_MANAGER" == "apt" ]]; then
-        echo "${Y}10. Gnome($total_custom_awesome_setup)(WIP, so expect bugs)${W}"
-        echo
-        select_an_option 10 1 desktop_answer
-    else
-        select_an_option 9 1 desktop_answer
-    fi
+    echo "${Y}10. Fluxbox($total_custom_awesome_setup)${W}"
+    echo
+    select_an_option 10 1 desktop_answer
     # set the variables based on chosen de
     sys_icons_folder="$PREFIX/share/icons"
     sys_themes_folder="$PREFIX/share/themes"
@@ -956,35 +956,35 @@ function ask_to_chose_de() {
         icons_folder="$HOME/.icons"
         de_startup="mate-session"
     elif [[ "$desktop_answer" == "5" ]]; then
-        de_name="i3wm"
-        themes_folder="$HOME/.themes"
-        icons_folder="$HOME/.icons"
-        de_startup="i3"
-    elif [[ "$desktop_answer" == "6" ]]; then
-        de_name="dwm"
-        themes_folder="$HOME/.themes"
-        icons_folder="$HOME/.icons"
-        de_startup="dwm"
-    elif [[ "$desktop_answer" == "7" ]]; then
-        de_name="bspwm"
-        themes_folder="$HOME/.themes"
-        icons_folder="$HOME/.icons"
-        de_startup="bspwm"
-    elif [[ "$desktop_answer" == "8" ]]; then
-        de_name="awesome"
-        themes_folder="$HOME/.themes"
-        icons_folder="$HOME/.icons"
-        de_startup="awesome"
-    elif [[ "$desktop_answer" == "9" ]]; then
-        de_name="fluxbox"
-        themes_folder="$HOME/.themes"
-        icons_folder="$HOME/.icons"
-        de_startup="fluxbox"
-    elif [[ "$desktop_answer" == "10" ]]; then
         de_name="gnome"
         themes_folder="$HOME/.themes"
         icons_folder="$HOME/.icons"
         de_startup="gnome-session-minimal"
+    elif [[ "$desktop_answer" == "6" ]]; then
+        de_name="i3wm"
+        themes_folder="$HOME/.themes"
+        icons_folder="$HOME/.icons"
+        de_startup="i3"
+    elif [[ "$desktop_answer" == "7" ]]; then
+        de_name="dwm"
+        themes_folder="$HOME/.themes"
+        icons_folder="$HOME/.icons"
+        de_startup="dwm"
+    elif [[ "$desktop_answer" == "8" ]]; then
+        de_name="bspwm"
+        themes_folder="$HOME/.themes"
+        icons_folder="$HOME/.icons"
+        de_startup="bspwm"
+    elif [[ "$desktop_answer" == "9" ]]; then
+        de_name="awesome"
+        themes_folder="$HOME/.themes"
+        icons_folder="$HOME/.icons"
+        de_startup="awesome"
+    elif [[ "$desktop_answer" == "10" ]]; then
+        de_name="fluxbox"
+        themes_folder="$HOME/.themes"
+        icons_folder="$HOME/.icons"
+        de_startup="fluxbox"
     fi
     banner
     questions_theme_select
@@ -2355,17 +2355,25 @@ function install_desktop() {
         echo
         package_install_and_check "fluxbox xorg-xsetroot xorg-xprop lxappearance wmctrl feh firefox rofi bmon xcompmgr gtk3 gedit xmllint"
     elif [[ "$de_name" == "gnome" ]]; then
-        print_msg "${BOLD}Installing Gnome (shell)"
+        print_msg "${BOLD}Installing Gnome"
         echo
-        mkdir debs_files
-        cd debs_files || exit 1
-        download_and_extract "https://github.com/sabamdarif/termux-desktop/releases/download/gnome-shell/debs-${termux_arch}.zip"
-        dpkg --configure -a
-        apt --fix-broken install -y
-        apt install ./*deb -y
-        apt install --fix-missing -y
+        mkdir gnome_packages_files
+        cd gnome_packages_files || exit 1
+        if [[ "$PACKAGE_MANAGER" == "apt" ]]; then
+            download_and_extract "https://github.com/sabamdarif/termux-desktop/releases/download/gnome-shell/debs-${termux_arch}.zip"
+            dpkg --configure -a
+            apt --fix-broken install -y
+            apt install ./*deb -y
+            apt install --fix-missing -y
+        elif [[ "$PACKAGE_MANAGER" == "pacman" ]]; then
+            download_and_extract "https://github.com/sabamdarif/termux-desktop/releases/download/gnome-shell/pkgs-${termux_arch}.zip"
+            pacman -U --noconfirm *.pkg.tar.xz
+        else
+            print_failed "Unsupported package manger, you need APT / PACMAN"
+            exit 1
+        fi
         cd ..
-        check_and_delete "debs_files"
+        check_and_delete "gnome_packages_files"
         package_install_and_check "xfce4-terminal"
     fi
     if [[ "$lite_mode" != "1" && "$lite_mode" != "true" ]]; then
