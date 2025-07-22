@@ -29,6 +29,8 @@ for zone in /sys/class/thermal/thermal_zone*/temp; do
 done
 if [[ $raw_temp =~ ^[0-9]+$ ]]; then
     TEMP=$((raw_temp > 1000 ? raw_temp / 1000 : raw_temp / 100))
+elif command -v termux-battery-status >/dev/null 2>&1; then
+    TEMP=$(termux-battery-status | jq -r .temperature | cut -d'.' -f1)
 else
     TEMP="N/A"
 fi
