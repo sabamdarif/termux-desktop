@@ -78,7 +78,7 @@ function check_paramitter() {
         while true; do
             echo " "
             while true; do
-                read -r -p "${R}[${C}-${R}]${G} Input username [Lowercase]: ${W}" user_name
+                read -r -p "${R}[${C}-${R}]${G} Input username [Lowercase]: ${NC}" user_name
                 if [[ -n "$user_name" ]]; then
                     break
                 else
@@ -87,7 +87,7 @@ function check_paramitter() {
             done
             echo
             local choice
-            read -r -p "${R}[${C}-${R}]${Y} Do you want to continue with username ${C}$user_name ${Y}? (y/n) : ${W}" choice
+            read -r -p "${R}[${C}-${R}]${Y} Do you want to continue with username ${C}$user_name ${Y}? (y/n) : ${NC}" choice
             echo
             choice="${choice:-y}"
             echo

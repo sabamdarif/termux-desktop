@@ -3,7 +3,7 @@
 # shellcheck disable=SC2154
 function check_termux() {
     if [[ -z "$PREFIX" && "$PREFIX" != *"/com.termux/"* ]]; then
-        echo "${R}[${R}☓${R}]${R}${BOLD}Please run it inside termux${W}"
+        echo "${R}[${R}☓${R}]${R}${BOLD}Please run it inside termux${NC}"
         exit 0
     fi
 }

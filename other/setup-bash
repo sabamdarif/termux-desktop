@@ -35,13 +35,13 @@ fi
 HOST_NAME="\h"
 
 # ─── First Line: User @ Host with Distro Icon ─────
-LINE1="${G}${BOLD}╭─${B}[${C}\${USER_NAME}${Y} \${DISTRO_ICON} ${C}\${HOST_NAME}${B}]${W}"
+LINE1="${G}${BOLD}╭─${B}[${C}\${USER_NAME}${Y} \${DISTRO_ICON} ${C}\${HOST_NAME}${B}]${NC}"
 
 # ─── Directory ────────────────────────────────────
-LINE1_DIR="${B}[${Y}\w${B}]${W}"
+LINE1_DIR="${B}[${Y}\w${B}]${NC}"
 
 # ─── Second Line: Prompt Symbol ───────────────────
-PROMPT_SYMBOL="${G}${BOLD}╰─❯ ${W}"
+PROMPT_SYMBOL="${G}${BOLD}╰─❯ ${NC}"
 
 # ─── Final PS1 ────────────────────────────────────
 PS1="\${LINE1} \${LINE1_DIR}\n\${PROMPT_SYMBOL}"
@@ -64,7 +64,7 @@ function check_paramitter() {
         while true; do
             echo " "
             while true; do
-                read -r -p "${R}[${C}-${R}]${G} Input username [Lowercase]: ${W}" user_name
+                read -r -p "${R}[${C}-${R}]${G} Input username [Lowercase]: ${NC}" user_name
                 if [[ -n "$user_name" ]]; then
                     break
                 else
@@ -73,7 +73,7 @@ function check_paramitter() {
             done
             echo
             local choice
-            read -r -p "${R}[${C}-${R}]${Y} Do you want to continue with username ${C}$user_name ${Y}? (y/n) : ${W}" choice
+            read -r -p "${R}[${C}-${R}]${Y} Do you want to continue with username ${C}$user_name ${Y}? (y/n) : ${NC}" choice
             echo
             choice="${choice:-y}"
             echo

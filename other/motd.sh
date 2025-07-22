@@ -1,6 +1,6 @@
 #!/data/data/com.termux/files/usr/bin/bash
 # Color codes
-W=$'\e[0;39m'
+NC=$'\e[0;39m'
 G=$'\e[1;32m'
 C=$'\e[1;36m'
 R=$'\e[1;31m'
@@ -75,7 +75,7 @@ LOGO="
   ;,           ,;
    ';,.-----.,;'
   ,'           ',
- /    ${W}O     O${G}    \\
+ /    ${NC}O     O${G}    \\
 |                 |
 '-----------------'
 "
@@ -83,17 +83,17 @@ LOGO="
 clear
 
 # print the logo
-printf "%25s %b\n" "" "${G}${LOGO}${W}"
+printf "%25s %b\n" "" "${G}${LOGO}${NC}"
 
-echo -e "${W}${BOLD}System Info:
-${C} System          : ${G} ${W}${DISTRO}
-${C} Host            : ${G}󰍹 ${W}${MODEL}
-${C} Kernel          : ${G} ${W}$(uname -r | grep -o '^[0-9]*\.[0-9]*\.[0-9]*')
-${C} CPU             : ${G}󰍛 ${W}${soc_details} (${G}${PROCESSOR_COUNT}${W} vCPU)
-${C} Architectures   : ${G}${cpu_arch_icon} ${W}${cpu_arch^^}
-${C} Termux Version  : ${G} ${W}${TERMUX_VERSION}-${termux_build}${W}
-${C} Memory          : ${G}󰘚 ${USED}${W} used, ${TOTAL}${W} total
-${C} Temperature     : ${TEMP_ICON} ${TEMP}°C${W}
+echo -e "${NC}${BOLD}System Info:
+${C} System          : ${G} ${NC}${DISTRO}
+${C} Host            : ${G}󰍹 ${NC}${MODEL}
+${C} Kernel          : ${G} ${NC}$(uname -r | grep -o '^[0-9]*\.[0-9]*\.[0-9]*')
+${C} CPU             : ${G}󰍛 ${NC}${soc_details} (${G}${PROCESSOR_COUNT}${NC} vCPU)
+${C} Architectures   : ${G}${cpu_arch_icon} ${NC}${cpu_arch^^}
+${C} Termux Version  : ${G} ${NC}${TERMUX_VERSION}-${termux_build}${NC}
+${C} Memory          : ${G}󰘚 ${USED}${NC} used, ${TOTAL}${NC} total
+${C} Temperature     : ${TEMP_ICON} ${TEMP}°C${NC}
 "
 
 # Disk usage bars
@@ -101,7 +101,7 @@ max_usage=95
 bar_width=45
 
 # Disk Usage header
-printf "%b\n" "${BOLD}Disk Usage:${W}"
+printf "%b\n" "${BOLD}Disk Usage:${NC}"
 
 # Get terminal width
 cols=${COLUMNS:-$(stty size 2>/dev/null | awk '{print $2}')}

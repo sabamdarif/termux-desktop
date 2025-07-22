@@ -4,7 +4,7 @@
 # shellcheck disable=SC2120
 function check_termux() {
     if [[ -z "$PREFIX" && "$PREFIX" != *"/com.termux/"* ]]; then
-        echo "${R}[${R}☓${R}]${R}${BOLD}Please run it inside termux${W}"
+        echo "${R}[${R}☓${R}]${R}${BOLD}Please run it inside termux${NC}"
         exit 0
     fi
 }
@@ -1003,7 +1003,7 @@ case \$1 in
 proot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp --termux-home -- eval "env DISPLAY=\$(echo \$DISPLAY) XDG_RUNTIME_DIR=\${TMPDIR} LIBGL_ALWAYS_SOFTWARE=1 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe \${@:2}"
 ;;
 --help|-h)
-echo "${G}Type ${C}pdrun launch command ${G}to start with GPU acceleration${W}"
+echo "${G}Type ${C}pdrun launch command ${G}to start with GPU acceleration${NC}"
 ;;
 *)
 proot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp --termux-home -- eval "env DISPLAY=\$(echo \$DISPLAY) XDG_RUNTIME_DIR=\${TMPDIR} \$selected_pd_hw_method \$@"
@@ -1038,7 +1038,7 @@ EOF
 xhost + > /dev/null 2>&1
 case \$1 in
 --help|-h)
-echo "${G}Type ${C}pdrun launch command ${G}to start with gpu acceleration${W}"
+echo "${G}Type ${C}pdrun launch command ${G}to start with gpu acceleration${NC}"
 ;;
 *)
 proot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp --termux-home -- eval "env DISPLAY=\$(echo \$DISPLAY) XDG_RUNTIME_DIR=\${TMPDIR} \$@"
@@ -1137,7 +1137,7 @@ function disro_container_install_check() {
             fi
             ((retry_count++))
             if [[ "$retry_count" == "$max_retries" ]]; then
-                print_failed "Failed to set up $selected_distro container after multiple attempts. Skipping...${W}"
+                print_failed "Failed to set up $selected_distro container after multiple attempts. Skipping...${NC}"
                 break
             fi
         done

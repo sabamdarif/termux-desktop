@@ -11,7 +11,7 @@ G="$(printf '\033[1;32m')"
 Y="$(printf '\033[1;33m')"
 B="$(printf '\033[1;34m')"
 C="$(printf '\033[1;36m')"
-W="$(printf '\033[0m')"
+NC="$(printf '\033[0m')"
 BOLD="$(printf '\033[1m')"
 
 cd "$HOME" || exit 1
@@ -36,7 +36,7 @@ function banner() {
     printf "%s#  ▀█▀ █▀▀ █▀█ █▀▄▀█ █ █ ▀▄▀   █▀▄ █▀▀ █▀ █▄▀ ▀█▀ █▀█ █▀█  #\n" "$C"
     printf "%s#   █  ██▄ █▀▄ █   █ █▄█ █ █   █▄▀ ██▄ ▄█ █ █  █  █▄█ █▀▀  #\n" "$C"
     printf "%s#                                                          #\n" "$C"
-    printf "%s######################### Termux Gui #######################%s\n" "$C" "$W"
+    printf "%s######################### Termux Gui #######################%s\n" "$C" "$NC"
 
     echo " "
 }
@@ -44,7 +44,7 @@ function banner() {
 # check if the script is running on termux or not
 function check_termux() {
     if [[ -z "$PREFIX" && "$PREFIX" != *"/com.termux/"* ]]; then
-        echo "${R}[${R}☓${R}]${R}${BOLD}Please run it inside termux${W}"
+        echo "${R}[${R}☓${R}]${R}${BOLD}Please run it inside termux${NC}"
         exit 0
     fi
 }
@@ -87,34 +87,34 @@ function log_debug() {
 function print_success() {
     local msg
     msg="$1"
-    echo "${R}[${G}✓${R}]${G} $msg${W}"
+    echo "${R}[${G}✓${R}]${G} $msg${NC}"
     log_debug "$msg"
 }
 
 function print_failed() {
     local msg
     msg="$1"
-    echo "${R}[${R}☓${R}]${R} $msg${W}"
+    echo "${R}[${R}☓${R}]${R} $msg${NC}"
     log_debug "$msg"
 }
 
 function print_warn() {
     local msg
     msg="$1"
-    echo "${R}[${Y}!${R}]${Y} $msg${W}"
+    echo "${R}[${Y}!${R}]${Y} $msg${NC}"
     log_debug "$msg"
 }
 
 function print_msg() {
     local msg
     msg="$1"
-    echo "${R}[${C}-${R}]${G} $msg${W}"
+    echo "${R}[${C}-${R}]${G} $msg${NC}"
     log_debug "$msg"
 
 }
 
 function wait_for_keypress() {
-    read -n1 -s -r -p "${R}[${C}-${R}]${G} Press any key to continue, CTRL+c to cancle...${W}"
+    read -n1 -s -r -p "${R}[${C}-${R}]${G} Press any key to continue, CTRL+c to cancle...${NC}"
     echo
 }
 
@@ -247,7 +247,7 @@ function detact_package_manager() {
     elif [[ "$TERMUX_APP_PACKAGE_MANAGER" == "pacman" ]]; then
         PACKAGE_MANAGER="pacman"
     else
-        print_failed "${C} Could not detact your package manager, Switching To ${C}pkg ${W}"
+        print_failed "${C} Could not detact your package manager, Switching To ${C}pkg ${NC}"
     fi
     log_debug "$PACKAGE_MANAGER"
 }
@@ -399,7 +399,7 @@ function package_check_and_remove() {
                         fi
                     done
                 else
-                    print_success "Package ${C}$package_name${W} is not installed."
+                    print_success "Package ${C}$package_name${NC} is not installed."
                 fi
             fi
         done
@@ -450,7 +450,7 @@ function package_check_and_remove() {
                         fi
                     done
                 else
-                    print_success "Package ${C}$package_name${W} is not installed."
+                    print_success "Package ${C}$package_name${NC} is not installed."
                 fi
             fi
         done
@@ -510,7 +510,7 @@ function extract_archive() {
         }
         ;;
     *.gz)
-        print_success "Extracting ${C}$archive${W}"
+        print_success "Extracting ${C}$archive${NC}"
         pv -s "$total_size" -p -r "$archive" | gunzip >"${archive%.gz}" || {
             print_failed "Failed to extract ${C}$archive"
             return 1
@@ -587,7 +587,7 @@ count_subfolders() {
 function confirmation_y_or_n() {
     while true; do
         # prompt
-        read -r -p "${R}[${C}-${R}]${Y}${BOLD} $1 ${Y}(y/n) ${W}" response
+        read -r -p "${R}[${C}-${R}]${Y}${BOLD} $1 ${Y}(y/n) ${NC}" response
         # apply default
         response="${response:-y}"
         # lowercase
@@ -627,7 +627,7 @@ function confirmation_y_or_n() {
             ;;
         n)
             echo
-            print_msg "${C}Skipping this step${W}"
+            print_msg "${C}Skipping this step${NC}"
             echo
             sleep 0.2
             break
@@ -664,7 +664,7 @@ function select_an_option() {
     local response
 
     while true; do
-        read -r -p "${Y}select an option (Default ${default_option}): ${W}" response
+        read -r -p "${Y}select an option (Default ${default_option}): ${NC}" response
         response=${response:-$default_option}
 
         if [[ $response =~ ^[0-9]+$ ]] && ((response >= 1 && response <= max_options)); then
@@ -849,18 +849,18 @@ function questions_theme_select() {
         echo
 
         grep -oP '## \d+\..+?(?=(\n## \d+\.|\Z))' "${current_path}/styles.md" | while read -r style; do
-            echo "${Y}${style#### }${W}"
+            echo "${Y}${style#### }${NC}"
         done
 
         while true; do
             echo
-            read -r -p "${R}[${C}-${R}]${Y} Type number of the style (Press Enter to select default): ${W}" style_answer
+            read -r -p "${R}[${C}-${R}]${Y} Type number of the style (Press Enter to select default): ${NC}" style_answer
             style_answer="${style_answer:-$default_selection}"
 
             if [[ "$style_answer" =~ ^[0-9]+$ ]] && [[ "$style_answer" -ge 0 ]] && [[ "$style_answer" -le "$subfolder_count_value" ]]; then
                 style_name=$(grep -oP "^## $style_answer\..+?(?=(\n## \d+\.|\Z))" "${current_path}/styles.md" | sed -e "s/^## $style_answer\. //" -e "s/:$//" -e 's/^[[:space:]]*//;s/[[:space:]]*$//')
                 echo
-                print_success "Continuing with style number ${C}$style_answer (Style: $style_name${W})"
+                print_success "Continuing with style number ${C}$style_answer (Style: $style_name${NC})"
                 echo
                 break
             else
@@ -911,25 +911,25 @@ function ask_to_chose_de() {
     banner
     print_msg "Select Desktop Environment"
     echo " "
-    echo "${Y}1. XFCE($total_custom_xfce_setup)${W}"
+    echo "${Y}1. XFCE($total_custom_xfce_setup)${NC}"
     echo
-    echo "${Y}2. LXQT($total_custom_lxqt_setup)${W}"
+    echo "${Y}2. LXQT($total_custom_lxqt_setup)${NC}"
     echo
-    echo "${Y}3. OPENBOX WM($total_custom_openbox_setup)${W}"
+    echo "${Y}3. OPENBOX WM($total_custom_openbox_setup)${NC}"
     echo
-    echo "${Y}4. MATE (Unstable)($total_custom_mate_setup)${W}"
+    echo "${Y}4. MATE (Unstable)($total_custom_mate_setup)${NC}"
     echo
-    echo "${Y}5. Gnome($total_custom_gnome_setup)(WIP, so expect bugs)${W}"
+    echo "${Y}5. Gnome($total_custom_gnome_setup)(WIP, so expect bugs)${NC}"
     echo
-    echo "${Y}6. I3Wm($total_custom_i3wm_setup)${W}"
+    echo "${Y}6. I3Wm($total_custom_i3wm_setup)${NC}"
     echo
-    echo "${Y}7. Dwm($total_custom_dwm_setup)${W}"
+    echo "${Y}7. Dwm($total_custom_dwm_setup)${NC}"
     echo
-    echo "${Y}8. Bspwm($total_custom_bspwm_setup)${W}"
+    echo "${Y}8. Bspwm($total_custom_bspwm_setup)${NC}"
     echo
-    echo "${Y}9. Awesome($total_custom_awesome_setup)${W}"
+    echo "${Y}9. Awesome($total_custom_awesome_setup)${NC}"
     echo
-    echo "${Y}10. Fluxbox($total_custom_awesome_setup)${W}"
+    echo "${Y}10. Fluxbox($total_custom_awesome_setup)${NC}"
     echo
     select_an_option 10 1 desktop_answer
     # set the variables based on chosen de
@@ -993,11 +993,11 @@ function ask_to_chose_de() {
 function questions_zsh_theme_select() {
     print_msg "${BOLD} Select zsh theme"
     echo
-    echo "${Y}1. My Zsh Theme (not customizable, made for my setup) ${W}"
+    echo "${Y}1. My Zsh Theme (not customizable, made for my setup) ${NC}"
     echo
-    echo "${Y}2. Powerlevel10k (highly customizable) ${W}"
+    echo "${Y}2. Powerlevel10k (highly customizable) ${NC}"
     echo
-    echo "${Y}3. Pure (pretty, minimal and fast zsh prompt) ${W}"
+    echo "${Y}3. Pure (pretty, minimal and fast zsh prompt) ${NC}"
     echo
     select_an_option 3 1 chosen_zsh_theme
 
@@ -1056,13 +1056,13 @@ function questions_setup_manual() {
     banner
     print_msg "${BOLD}Select browser you want to install"
     echo
-    echo "${Y}1. firefox${W}"
+    echo "${Y}1. firefox${NC}"
     echo
-    echo "${Y}2. chromium${W}"
+    echo "${Y}2. chromium${NC}"
     echo
-    echo "${Y}3. firefox & chromium (both)${W}"
+    echo "${Y}3. firefox & chromium (both)${NC}"
     echo
-    echo "${Y}4. Skip${W}"
+    echo "${Y}4. Skip${NC}"
     echo
     select_an_option 4 1 browser_answer
     case "$browser_answer" in
@@ -1074,15 +1074,15 @@ function questions_setup_manual() {
     banner
     print_msg "${BOLD}Select IDE you want to install"
     echo
-    echo "${Y}1. VS Code${W}"
+    echo "${Y}1. VS Code${NC}"
     echo
-    echo "${Y}2. Geany${W}"
+    echo "${Y}2. Geany${NC}"
     echo
-    echo "${Y}3. NeoVim${W}"
+    echo "${Y}3. NeoVim${NC}"
     echo
-    echo "${Y}4. All of them${W}"
+    echo "${Y}4. All of them${NC}"
     echo
-    echo "${Y}5. Skip${W}"
+    echo "${Y}5. Skip${NC}"
     echo
     select_an_option 5 1 ide_answer
     case "$ide_answer" in
@@ -1096,13 +1096,13 @@ function questions_setup_manual() {
     if [[ "$installed_ide" == "neovim" ]] || [[ "$installed_ide" == "all" ]]; then
         print_msg "${BOLD}Select neovim config"
         echo
-        echo "${Y}1. Stock${W}"
+        echo "${Y}1. Stock${NC}"
         echo
-        echo "${Y}2. NvChad${W}"
+        echo "${Y}2. NvChad${NC}"
         echo
-        echo "${Y}3. LazyVim${W}"
+        echo "${Y}3. LazyVim${NC}"
         echo
-        echo "${Y}4. mynvim (my personal neovim config)${W}"
+        echo "${Y}4. mynvim (my personal neovim config)${NC}"
         echo
         select_an_option 4 2 select_neovim_distro
         case "$select_neovim_distro" in
@@ -1115,13 +1115,13 @@ function questions_setup_manual() {
     banner
     print_msg "${BOLD}Select Media Player you want to install"
     echo
-    echo "${Y}1. Vlc${W}"
+    echo "${Y}1. Vlc${NC}"
     echo
-    echo "${Y}2. Mpv${W}"
+    echo "${Y}2. Mpv${NC}"
     echo
-    echo "${Y}3. Both${W}"
+    echo "${Y}3. Both${NC}"
     echo
-    echo "${Y}4. Skip${W}"
+    echo "${Y}4. Skip${NC}"
     echo
     select_an_option 4 1 player_answer
     case "$player_answer" in
@@ -1131,15 +1131,15 @@ function questions_setup_manual() {
     4) installed_media_player="skip" ;;
     esac
     banner
-    print_msg "${BOLD}Select Photo Editor${W}"
+    print_msg "${BOLD}Select Photo Editor${NC}"
     echo
-    echo "${Y}1. Gimp${W}"
+    echo "${Y}1. Gimp${NC}"
     echo
-    echo "${Y}2. Inkscape${W}"
+    echo "${Y}2. Inkscape${NC}"
     echo
-    echo "${Y}3. Gimp & Inkscape (both)${W}"
+    echo "${Y}3. Gimp & Inkscape (both)${NC}"
     echo
-    echo "${Y}4. Skip${W}"
+    echo "${Y}4. Skip${NC}"
     echo
     select_an_option 4 1 photo_editor_answer
     case "$photo_editor_answer" in
@@ -1151,15 +1151,15 @@ function questions_setup_manual() {
     banner
     print_msg "${BOLD}Do you want to install wine in termux ${C}(without proot-distro)"
     echo
-    echo "${Y}1. Native ${C}(can run only arm64 based exe)${W}"
+    echo "${Y}1. Native ${C}(can run only arm64 based exe)${NC}"
     echo
-    echo "${Y}2. Mobox ${C}(Un-maintained) ${W}"
+    echo "${Y}2. Mobox ${C}(Un-maintained) ${NC}"
     echo
     print_msg "${B}Know More About Mobox:- https://github.com/olegos2/mobox/"
     echo
-    echo "${Y}3. Wine Hangover${W}"
+    echo "${Y}3. Wine Hangover${NC}"
     echo
-    echo "${Y}4. Skip${W}"
+    echo "${Y}4. Skip${NC}"
     echo
     select_an_option 4 1 wine_answer
     case "$wine_answer" in
@@ -1177,13 +1177,13 @@ function questions_setup_manual() {
     echo
     confirmation_y_or_n "Do you want to add some more wallpapers" ext_wall_answer
     banner
-    print_msg "${BOLD}Select Your shell${W}"
+    print_msg "${BOLD}Select Your shell${NC}"
     echo
-    echo "${Y}1. Custom Bash prompt${W}"
+    echo "${Y}1. Custom Bash prompt${NC}"
     echo
-    echo "${Y}2. Custom Bash prompt + ble.sh (ble.sh kind of buggy right now)${W}"
+    echo "${Y}2. Custom Bash prompt + ble.sh (ble.sh kind of buggy right now)${NC}"
     echo
-    echo "${Y}3. Zsh + zinit${W}"
+    echo "${Y}3. Zsh + zinit${NC}"
     echo
     select_an_option 4 1 chosen_shell_answer
     case "$chosen_shell_answer" in
@@ -1202,12 +1202,12 @@ function questions_setup_manual() {
     banner
     questions_nerd_font_select
     banner
-    echo -e "${R}[${C}-${R}]${B} File Manager Tools Enhancement${W}
+    echo -e "${R}[${C}-${R}]${B} File Manager Tools Enhancement${NC}
 
-${B}Overview:${W}
+${B}Overview:${NC}
 This option enhances your file manager with powerful right-click menu features.
 
-${B}Key Features:${W}
+${B}Key Features:${NC}
    • Media Operations
      - Video processing and conversion
      - Image editing and optimization
@@ -1226,16 +1226,16 @@ ${B}Key Features:${W}
      - Batch processing
      - Quick actions menu
 
-${B}How to Access:${W}
+${B}How to Access:${NC}
 Access these features through the 'Scripts' menu in your file manager's right-click context menu.
-${W}"
+${NC}"
     confirmation_y_or_n "Do you want File Manager Tools tailored with powerful extra features" fm_tools
     banner
     print_msg "${BOLD} Select Gui Mode"
     echo
-    echo "${Y}1. Termux:x11${W}"
+    echo "${Y}1. Termux:x11${NC}"
     echo
-    echo "${Y}2. Both Termux:x11 and VNC${W}"
+    echo "${Y}2. Both Termux:x11 and VNC${NC}"
     echo
     select_an_option 2 1 gui_mode_num
 
@@ -1257,9 +1257,9 @@ ${W}"
         echo
         print_msg "Which will be your default"
         echo
-        echo "${Y}1. Termux:x11${W}"
+        echo "${Y}1. Termux:x11${NC}"
         echo
-        echo "${Y}2. Vnc${W}"
+        echo "${Y}2. Vnc${NC}"
         echo
         select_an_option 2 1 autostart_gui_mode_num
 
@@ -1272,7 +1272,7 @@ ${W}"
     fi
     banner
     echo -e "
-${R}[${C}-${R}]${G}${BOLD} Linux Distro Container (proot-distro):- ${W}
+${R}[${C}-${R}]${G}${BOLD} Linux Distro Container (proot-distro):- ${NC}
 
 It will help you to install apps that aren't available in Termux.
 So it will set up a Linux distro container and add options to install those apps.
@@ -1291,15 +1291,15 @@ function setup_device_gpu_model() {
             echo
             print_msg "${BOLD}Please Select Your Device GPU"
             echo
-            echo "${Y}1. Adreno${W}"
+            echo "${Y}1. Adreno${NC}"
             echo
-            echo "${Y}2. Mali${W}"
+            echo "${Y}2. Mali${NC}"
             echo
-            echo "${Y}3. Xclipse${W}"
+            echo "${Y}3. Xclipse${NC}"
             echo
-            echo "${Y}4. Others (Unstable)${W}"
+            echo "${Y}4. Others (Unstable)${NC}"
             echo
-            read -p "${Y}Enter your choice (1-4): ${W}" device_gpu_model
+            read -p "${Y}Enter your choice (1-4): ${NC}" device_gpu_model
 
             if [[ "$device_gpu_model" =~ ^[1-4]$ ]]; then
                 print_success "Continuing with answer: $device_gpu_model"
@@ -1330,9 +1330,9 @@ function distro_hw_questions() {
             if [[ "$device_gpu_model_name" == "adreno" ]]; then
                 banner
                 print_msg "${BOLD}Select Hardware Acceleration Driver For Linux Container"
-                echo "${Y}1. OpenGL (VIRGL ANGLE)${W}"
+                echo "${Y}1. OpenGL (VIRGL ANGLE)${NC}"
                 echo
-                echo "${Y}2. Turnip (Adreno GPU Only)${W}"
+                echo "${Y}2. Turnip (Adreno GPU Only)${NC}"
                 echo
                 select_an_option 2 1 pd_hw_answer_num
                 case "$pd_hw_answer_num" in
@@ -1353,11 +1353,11 @@ function distro_hw_questions() {
             echo
             print_msg "If You Skip It, It Will Use The Previous Selection"
             echo
-            echo "${Y}1. Vulkan (ZINK)${W}"
+            echo "${Y}1. Vulkan (ZINK)${NC}"
             echo
-            echo "${Y}2. OpenGL (VIRGL)${W}"
+            echo "${Y}2. OpenGL (VIRGL)${NC}"
             echo
-            echo "${Y}3. Turnip (Adreno GPU Only)${W}"
+            echo "${Y}3. Turnip (Adreno GPU Only)${NC}"
             echo
             select_an_option 3 1 pd_hw_answer_num
 
@@ -1380,13 +1380,13 @@ function exp_vulkan_support() {
     echo
     print_msg "${BOLD}Select the vulkan driver"
     echo
-    echo "${Y}1. vulkan-icd-wrapper${W}"
+    echo "${Y}1. vulkan-icd-wrapper${NC}"
     echo
-    echo "${Y}2. mesa-vulkan-icd-freedreno (Turnip) (adreno only)${W}"
+    echo "${Y}2. mesa-vulkan-icd-freedreno (Turnip) (adreno only)${NC}"
     echo
-    echo "${Y}3. mesa-zink-vulkan-icd-freedreno (Turnip) (adreno only)${W}"
+    echo "${Y}3. mesa-zink-vulkan-icd-freedreno (Turnip) (adreno only)${NC}"
     echo
-    echo "${Y}4. will use the old virgl way${W}"
+    echo "${Y}4. will use the old virgl way${NC}"
     echo
     select_an_option 4 1 exp_termux_vulkan_hw_answer_num
 
@@ -1404,19 +1404,19 @@ function exp_termux_gl_hw_support() {
     echo
     print_msg "${BOLD}It will be used to enable opengl support"
     echo
-    echo "${Y}1. Vulkan (ZINK)${W}"
+    echo "${Y}1. Vulkan (ZINK)${NC}"
     echo
-    echo "${Y}2. OpenGL (VIRGL)${W}"
+    echo "${Y}2. OpenGL (VIRGL)${NC}"
     echo
-    echo "${Y}3. OpenGL (VIRGL ANGLE)${W}"
+    echo "${Y}3. OpenGL (VIRGL ANGLE)${NC}"
     echo
-    echo "${Y}4. Vulkan (VIRGL ANGLE)${W}"
+    echo "${Y}4. Vulkan (VIRGL ANGLE)${NC}"
     echo
-    echo "${Y}5. OpenGL ES (ZINK VIRGL)${W}"
+    echo "${Y}5. OpenGL ES (ZINK VIRGL)${NC}"
     echo
-    echo "${Y}6. The Vulkan-Icd-Wrapper Driver With Mesa${W}"
+    echo "${Y}6. The Vulkan-Icd-Wrapper Driver With Mesa${NC}"
     echo
-    echo "${Y}7. The Vulkan-Icd-Wrapper Driver With Mesa-Zink${W}"
+    echo "${Y}7. The Vulkan-Icd-Wrapper Driver With Mesa-Zink${NC}"
     echo
     select_an_option 7 1 exp_termux_gl_hw_answer_num
 
@@ -1461,15 +1461,15 @@ function hw_questions() {
         echo
         print_msg "${BOLD}Select Hardware Acceleration API"
         echo
-        echo "${Y}1. Vulkan (ZINK)${W}"
+        echo "${Y}1. Vulkan (ZINK)${NC}"
         echo
-        echo "${Y}2. OpenGL (VIRGL)${W}"
+        echo "${Y}2. OpenGL (VIRGL)${NC}"
         echo
-        echo "${Y}3. OpenGL (VIRGL ANGLE)${W}"
+        echo "${Y}3. OpenGL (VIRGL ANGLE)${NC}"
         echo
-        echo "${Y}4. Vulkan (VIRGL ANGLE)${W}"
+        echo "${Y}4. Vulkan (VIRGL ANGLE)${NC}"
         echo
-        echo "${Y}5. OpenGL ES (ZINK VIRGL)${W}"
+        echo "${Y}5. OpenGL ES (ZINK VIRGL)${NC}"
         echo
         select_an_option 5 1 termux_hw_answer_num
 
@@ -1492,13 +1492,13 @@ function hw_questions() {
 function choose_distro() {
     print_msg "${BOLD}Select Linux Distro You Want To Add"
     echo " "
-    echo "${Y}1. Debian${W}"
+    echo "${Y}1. Debian${NC}"
     echo " "
-    echo "${Y}2. Ubuntu${W}"
+    echo "${Y}2. Ubuntu${NC}"
     echo " "
-    echo "${Y}3. Arch (Unstable | isn't fully suppoted by AppStore yet)${W}"
+    echo "${Y}3. Arch (Unstable | isn't fully suppoted by AppStore yet)${NC}"
     echo " "
-    echo "${Y}4. Fedora${W}"
+    echo "${Y}4. Fedora${NC}"
     echo " "
     select_an_option 4 1 distro_answer
 
@@ -1523,7 +1523,7 @@ function setup_user_name_only() {
         print_msg "Password:-${C}root"
         echo
         while true; do
-            read -r -p "${R}[${C}-${R}]${G} Input username [Lowercase]: ${W}" user_name
+            read -r -p "${R}[${C}-${R}]${G} Input username [Lowercase]: ${NC}" user_name
             if [[ -z "$user_name" ]]; then
                 print_warn "You can't leave the username empty. Please enter a valid username."
             elif [[ "$user_name" =~ \  ]]; then
@@ -1534,7 +1534,7 @@ function setup_user_name_only() {
         done
         echo
         local choice
-        read -r -p "${R}[${C}-${R}]${Y} Do you want to continue with username ${C}$user_name ${Y}? (y/n) : ${W}" choice
+        read -r -p "${R}[${C}-${R}]${Y} Do you want to continue with username ${C}$user_name ${Y}? (y/n) : ${NC}" choice
         echo
         choice="${choice:-y}"
         echo
@@ -1562,7 +1562,7 @@ function setup_user_name_and_pass() {
     echo
     while true; do
         while true; do
-            read -r -p "${R}[${C}-${R}]${G}Input username [Lowercase]: ${W}" user_name
+            read -r -p "${R}[${C}-${R}]${G}Input username [Lowercase]: ${NC}" user_name
             if [[ -z "$user_name" ]]; then
                 print_warn "You can't leave the username empty. Please enter a valid username."
             elif [[ "$user_name" =~ \  ]]; then
@@ -1573,7 +1573,7 @@ function setup_user_name_and_pass() {
         done
         echo
         while true; do
-            read -r -p "${R}[${C}-${R}]${G}Input Password (Minimum 4 characters): ${W}" pass
+            read -r -p "${R}[${C}-${R}]${G}Input Password (Minimum 4 characters): ${NC}" pass
             if [[ -z "$pass" ]]; then
                 print_warn "You can't leave the password empty. Please enter a valid password."
             elif [[ "$user_name" =~ \  ]]; then
@@ -1585,7 +1585,7 @@ function setup_user_name_and_pass() {
             fi
         done
         echo
-        read -r -p "${R}[${C}-${R}]${Y}Do you want to continue with username ${C}$user_name ${Y}and password ${C}$pass${Y} ? (y/n) : ${W}" choice
+        read -r -p "${R}[${C}-${R}]${Y}Do you want to continue with username ${C}$user_name ${Y}and password ${C}$pass${Y} ? (y/n) : ${NC}" choice
         echo
         choice="${choice:-y}"
         echo
@@ -1622,9 +1622,9 @@ function distro_questions() {
     else
         print_msg "${BOLD}Select user account type"
         echo
-        echo "${Y}1. User with no password confirmation${W}"
+        echo "${Y}1. User with no password confirmation${NC}"
         echo
-        echo "${Y}2. User with password confirmation${W}"
+        echo "${Y}2. User with password confirmation${NC}"
         echo
         select_an_option 2 1 pd_pass_type
         if [[ "$pd_pass_type" == "1" ]]; then
@@ -1858,14 +1858,14 @@ function print_conf_info() {
     banner
     print_msg "Installation Configuration Summary"
     echo
-    echo "${G}Desktop Environment${W}"
+    echo "${G}Desktop Environment${NC}"
     echo "   • Desktop: $(echo "$de_name" | tr '[:lower:]' '[:upper:]')"
     echo "   • Desktop Style: ${style_answer}) ${style_name}"
     echo "   • GUI Access: ${gui_mode_name}"
     echo "   • Auto-start: ${autostart_value}"
     sleep 0.015
 
-    echo "${G}Applications${W}"
+    echo "${G}Applications${NC}"
     echo "   • Browser: ${browser_name}"
     echo "   • Media Player: ${media_player_name}"
     echo "   • Image Editor: ${photo_editor_name}"
@@ -1873,18 +1873,18 @@ function print_conf_info() {
     echo "   • WINE: ${wine_type_name}"
     sleep 0.015
 
-    echo "${G}Customization${W}"
+    echo "${G}Customization${NC}"
     echo "   • Extra Wallpapers: ${ext_wall_answer_confirmation}"
     echo "   • File Manager Tools: ${fm_tools_confirmation}"
     sleep 0.015
 
-    echo "${G}Terminal Setup${W}"
+    echo "${G}Terminal Setup${NC}"
     echo "   • Shell: ${current_shell_name}"
     echo "   • Terminal Utilities: ${terminal_utility_setup_confirmation}"
     echo "   • Font: ${sel_font_name}"
     sleep 0.015
 
-    echo "${G}Hardware Acceleration${W}"
+    echo "${G}Hardware Acceleration${NC}"
     echo "   • Status: ${hw_acc_confirmation}"
     if [[ "$enable_hw_acc" == "y" ]]; then
         echo "   • GPU: $(echo "$device_gpu_model_name" | tr '[:lower:]' '[:upper:]')"
@@ -1893,7 +1893,7 @@ function print_conf_info() {
     fi
     sleep 0.015
 
-    echo "${G}Linux Distro Container${W}"
+    echo "${G}Linux Distro Container${NC}"
     echo "   • Distro Status: ${distro_container_confirmation}"
     if [[ "$distro_add_answer" == "y" ]]; then
         echo "   • Distribution: ${selected_distro}"
@@ -1926,26 +1926,26 @@ function questions_install_type() {
     echo
     sleep 0.2
 
-    echo -e "${R}[${C}-${R}]${G} Key Terms:${W}
+    echo -e "${R}[${C}-${R}]${G} Key Terms:${NC}
 • Generic: Pre-configured options that so far work best in most of the devices\n
 • Recommended: Tested configurations with minimal known issues\n
 • Hardware Acceleration: Uses your device's GPU for better graphics render\n
 • Custom: Full control over all installation options\n
 "
-    echo "${R}[${Y}!${R}]${R} Important Note: ${W}"
+    echo "${R}[${Y}!${R}]${R} Important Note: ${NC}"
     echo -e "${B}
 Generic is only recomended for beginners\n
 For most users who are familiar with Termux, the custom option is recommended, as most features are only available in the custom option
-${W}"
+${NC}"
 
     # Show selection options
     print_msg "Select Install Type"
     echo " "
-    echo "${Y}1. Custom${W}"
+    echo "${Y}1. Custom${NC}"
     echo " "
-    echo "${Y}2. Generic (with hardware acceleration)${W}"
+    echo "${Y}2. Generic (with hardware acceleration)${NC}"
     echo " "
-    echo "${Y}3. Generic (without hardware acceleration)${W}"
+    echo "${Y}3. Generic (without hardware acceleration)${NC}"
     echo " "
 
     select_an_option 3 1 install_type_answer
@@ -2091,7 +2091,7 @@ function check_system_requirements() {
         printf "%s#  ▀█▀ █▀▀ █▀█ █▀▄▀█ █ █ ▀▄▀   █▀▄ █▀▀ █▀ █▄▀ ▀█▀ █▀█ █▀█  #\n" "$C"
         printf "%s#   █  ██▄ █▀▄ █   █ █▄█ █ █   █▄▀ ██▄ ▄█ █ █  █  █▄█ █▀▀  #\n" "$C"
         printf "%s#                                                          #\n" "$C"
-        printf "%s################# System Compatibility Check ###############%s\n" "$C" "$W"
+        printf "%s################# System Compatibility Check ###############%s\n" "$C" "$NC"
         echo " "
         sleep 0.3
         # Check if running on Android
@@ -2099,9 +2099,9 @@ function check_system_requirements() {
 
         if [[ "$(uname -o)" == "Android" ]]; then
             if [[ "$android_version" -ge 8 ]]; then
-                print_success "Running on: ${W}Android $android_version"
+                print_success "Running on: ${NC}Android $android_version"
             else
-                print_failed "Running on: ${W}Android $android_version is not recomended"
+                print_failed "Running on: ${NC}Android $android_version is not recomended"
                 ((errors++))
             fi
         else
@@ -2111,15 +2111,15 @@ function check_system_requirements() {
         sleep 0.2
         # Android device soc & model details
         model="$(getprop ro.product.brand) $(getprop ro.product.model)"
-        print_success "Device: ${W}$model"
+        print_success "Device: ${NC}$model"
         sleep 0.2
         PROCESSOR_BRAND_NAME="$(getprop ro.soc.manufacturer)"
         PROCESSOR_NAME="$(getprop ro.soc.model)"
         HARDWARE="$(getprop ro.hardware)"
         if [[ -n "$PROCESSOR_BRAND_NAME" && -n "$PROCESSOR_NAME" ]]; then
-            print_success "SOC: ${W}$PROCESSOR_BRAND_NAME $PROCESSOR_NAME"
+            print_success "SOC: ${NC}$PROCESSOR_BRAND_NAME $PROCESSOR_NAME"
         else
-            print_success "SOC: ${W}$HARDWARE"
+            print_success "SOC: ${NC}$HARDWARE"
         fi
         sleep 0.2
         # Check GPU
@@ -2137,9 +2137,9 @@ function check_system_requirements() {
         fi
 
         if [[ "$gpu_name" == "adreno" ]] || [[ "$gpu_name" == "mali" ]] || [[ "$gpu_name" == "xclipse" ]]; then
-            print_success "GPU: ${W}$gpu_name"
+            print_success "GPU: ${NC}$gpu_name"
         else
-            print_warn "Unknown GPU: ${W}$detected_gpu"
+            print_warn "Unknown GPU: ${NC}$detected_gpu"
         fi
         sleep 0.2
         # Check architecture
@@ -2151,7 +2151,7 @@ function check_system_requirements() {
         esac
 
         if [[ "$termux_arch" == "aarch64" ]] || [[ "$termux_arch" == "arm" ]]; then
-            print_success "App architecture: ${W}$app_arch"
+            print_success "App architecture: ${NC}$app_arch"
         else
             print_failed "Unsupported architecture: $app_arch, requires aarch64/arm/armv7*/armv8*"
             ((errors++))
@@ -2159,31 +2159,31 @@ function check_system_requirements() {
         sleep 0.2
         # Check for termux app requirements
         if [[ -d "$PREFIX" ]]; then
-            print_success "Termux PREFIX: ${W}Directory found"
+            print_success "Termux PREFIX: ${NC}Directory found"
             sleep 0.2
             local latest_termux_app_tag
             latest_termux_app_tag=$(get_latest_release "termux" "termux-app")
             if [[ "$TERMUX_VERSION" == "${latest_termux_app_tag#v}" ]]; then
-                print_success "Termux Version: ${W}$TERMUX_VERSION"
+                print_success "Termux Version: ${NC}$TERMUX_VERSION"
                 sleep 0.2
                 local termux_build
                 termux_build=$(echo "$TERMUX_APK_RELEASE" | awk '{print tolower($0)}')
                 if [[ "$termux_build" == "github" ]] || [[ "$termux_build" == "fdroid" ]]; then
-                    print_success "Termux Build: ${W}$TERMUX_APK_RELEASE"
+                    print_success "Termux Build: ${NC}$TERMUX_APK_RELEASE"
                     sleep 0.2
                 else
                     print_failed "$TERMUX_APK_RELEASE build is not recomended"
-                    echo "${W} Update Termux:- https://github.com/termux/termux-app/releases ${W}"
+                    echo "${NC} Update Termux:- https://github.com/termux/termux-app/releases ${NC}"
                     sleep 0.2
                 fi
             else
-                print_warn "Termux Version: ${W}$TERMUX_VERSION (Not Recomended)"
+                print_warn "Termux Version: ${NC}$TERMUX_VERSION (Not Recomended)"
                 if [[ $(getprop ro.product.cpu.abi) == "arm64-v8a" ]]; then
-                    echo "${R}[${G}!${R}]${G} Update Termux:- https://github.com/termux/termux-app/releases/download/${latest_termux_app_tag}/termux-app_${latest_termux_app_tag}+github-debug_arm64-v8a.apk${W}"
+                    echo "${R}[${G}!${R}]${G} Update Termux:- https://github.com/termux/termux-app/releases/download/${latest_termux_app_tag}/termux-app_${latest_termux_app_tag}+github-debug_arm64-v8a.apk${NC}"
                 elif [[ $(getprop ro.product.cpu.abi) == "armeabi-v7a" ]]; then
-                    echo "${R}[${G}!${R}]${G} Update Termux:- https://github.com/termux/termux-app/releases/download/${latest_termux_app_tag}/termux-app_${latest_termux_app_tag}+github-debug_armeabi-v7a.apk${W}"
+                    echo "${R}[${G}!${R}]${G} Update Termux:- https://github.com/termux/termux-app/releases/download/${latest_termux_app_tag}/termux-app_${latest_termux_app_tag}+github-debug_armeabi-v7a.apk${NC}"
                 else
-                    echo "${R}[${G}!${R}]${G} Update Termux:- https://github.com/termux/termux-app/releases/download/${latest_termux_app_tag}/termux-app_${latest_termux_app_tag}+github-debug_universal.apk${W}"
+                    echo "${R}[${G}!${R}]${G} Update Termux:- https://github.com/termux/termux-app/releases/download/${latest_termux_app_tag}/termux-app_${latest_termux_app_tag}+github-debug_universal.apk${NC}"
                 fi
                 sleep 0.2
             fi
@@ -2195,45 +2195,45 @@ function check_system_requirements() {
         # Check available storage space
         free_space=$(df -h "$HOME" | awk 'NR==2 {print $4}')
         if [[ $(df "$HOME" | awk 'NR==2 {print $4}') -gt 4194304 ]]; then
-            print_success "Available storage: ${W}$free_space"
+            print_success "Available storage: ${NC}$free_space"
         else
-            print_warn "Low storage space: ${W}$free_space (4GB recommended)"
+            print_warn "Low storage space: ${NC}$free_space (4GB recommended)"
         fi
         sleep 0.2
         # Check RAM
         total_ram=$(free -htm | awk '/Mem:/ {print $2}')
         if [[ $(free -m | awk 'NR==2 {print $2}') -gt 2048 ]]; then
-            print_success "RAM: ${W}${total_ram}"
+            print_success "RAM: ${NC}${total_ram}"
         else
-            print_warn "Low RAM: ${W}${total_ram} (2GB recommended)"
+            print_warn "Low RAM: ${NC}${total_ram} (2GB recommended)"
         fi
         sleep 0.2
         # Check termux x11
         if cmd package list packages --user 0 -e -f | sed 's/package://; s/\.apk=/\.apk /' | grep -q "com.termux.x11"; then
-            print_success "Termux-x11: ${W}Installed"
+            print_success "Termux-x11: ${NC}Installed"
         else
             local latest_termux_x11_tag
             latest_termux_x11_tag=$(get_latest_release "termux" "termux-x11")
-            print_failed "Termux-x11: ${W}Not Installed"
+            print_failed "Termux-x11: ${NC}Not Installed"
             if [[ $(getprop ro.product.cpu.abi) == "arm64-v8a" ]]; then
-                print_msg "${BOLD}Install Termux-x11:- ${W}https://github.com/termux/termux-x11/releases/download/${latest_termux_x11_tag}/app-arm64-v8a-debug.apk"
+                print_msg "${BOLD}Install Termux-x11:- ${NC}https://github.com/termux/termux-x11/releases/download/${latest_termux_x11_tag}/app-arm64-v8a-debug.apk"
             elif [[ $(getprop ro.product.cpu.abi) == "armeabi-v7a" ]]; then
-                print_msg "${BOLD}Install Termux-x11:- ${W}https://github.com/termux/termux-x11/releases/download/${latest_termux_x11_tag}/app-armeabi-v7a-debug.apk"
+                print_msg "${BOLD}Install Termux-x11:- ${NC}https://github.com/termux/termux-x11/releases/download/${latest_termux_x11_tag}/app-armeabi-v7a-debug.apk"
             else
-                print_msg "${BOLD}Install Termux-x11:- ${W}https://github.com/termux/termux-x11/releases/download/${latest_termux_x11_tag}/app-universal-debug.apk"
+                print_msg "${BOLD}Install Termux-x11:- ${NC}https://github.com/termux/termux-x11/releases/download/${latest_termux_x11_tag}/app-universal-debug.apk"
             fi
             ((errors++))
         fi
         # Check termux API
         if cmd package list packages --user 0 -e -f | sed 's/package://; s/\.apk=/\.apk /' | grep -q "com.termux.api"; then
             issue_for_termux_api="no"
-            print_success "Termux-API: ${W}Installed"
+            print_success "Termux-API: ${NC}Installed"
         else
             local latest_termux_api_tag
             latest_termux_api_tag=$(get_latest_release "termux" "termux-api")
-            print_failed "Termux-API: ${W}Not Installed"
+            print_failed "Termux-API: ${NC}Not Installed"
             issue_for_termux_api="yes"
-            print_msg "${BOLD}Install Termux-API:- ${W}https://github.com/termux/termux-api/releases/download/${latest_termux_api_tag}/termux-api-app_${latest_termux_api_tag}+github-debug.apk"
+            print_msg "${BOLD}Install Termux-API:- ${NC}https://github.com/termux/termux-api/releases/download/${latest_termux_api_tag}/termux-api-app_${latest_termux_api_tag}+github-debug.apk"
             ((errors++))
         fi
         echo " "
@@ -2246,7 +2246,7 @@ function check_system_requirements() {
                 print_failed "Found $errors error(s). System requirements not met."
                 sleep 0.2
                 print_msg "Type 'a' to check again"
-                read -r -p "${R}[${C}-${R}]${Y}${BOLD} Do you want to continue anyway (Not Recomended) ${Y}(y/n/a) ${W}" sys_requirements_check
+                read -r -p "${R}[${C}-${R}]${Y}${BOLD} Do you want to continue anyway (Not Recomended) ${Y}(y/n/a) ${NC}" sys_requirements_check
                 case $sys_requirements_check in
                 [yY]*)
                     echo
@@ -2286,18 +2286,18 @@ function print_recomended_msg() {
     echo
     print_msg "${BOLD}Pre-Installation Requirements"
     echo
-    echo "${G}Essential Steps:${W}"
+    echo "${G}Essential Steps:${NC}"
     echo "   • Start with a clean installation"
     echo "   • Ensure at least 1GB of available data"
     echo "   • Use a stable internet connection or VPN"
     echo
-    echo "${G}Device Settings:${W}"
+    echo "${G}Device Settings:${NC}"
     echo "   • Enable 'Keep screen on' in Termux settings"
     if [[ "$android_version" -ge 12 ]]; then
         echo "   • Disable Phantom Process Killer (Android 12+ requirement)"
     fi
     echo
-    echo "${G}Important Notes:${W}"
+    echo "${G}Important Notes:${NC}"
     echo "   • Keep Termux open during the entire installation"
     echo "   • Review all README documentation carefully"
     echo "   • In the multi selection option press enter to go with the default option"
@@ -2515,7 +2515,7 @@ function theme_installer() {
 function additional_required_steps() {
     banner
     if [[ "$de_name" == "xfce" ]]; then
-        print_msg "${BOLD} Installing Additional Packages If Required...${W}"
+        print_msg "${BOLD} Installing Additional Packages If Required...${NC}"
         echo
         if [[ "$style_answer" == "4" ]] || [[ "$style_answer" == "5" ]]; then
             install_font_for_style "${style_answer}"
@@ -3300,7 +3300,7 @@ pkill -9 dbus-* > /dev/null 2>&1
 pkill -f com.termux.x11 > /dev/null 2>&1
 sleep 1
 	if [[ ! -n "\$termux_x11_pid" ]] || [[ ! -n "\$de_pid" ]]; then
-	echo -e "${G}Termux:X11 Stopped Successfully ${W}"
+	echo -e "${G}Termux:X11 Stopped Successfully ${NC}"
 	fi
 elif [[ "\$1" == "-f" ]] || [[ "\$1" == "--force" ]]; then
 pkill -f com.termux.x11 > /dev/null 2>&1
@@ -3308,7 +3308,7 @@ pkill -9 openbox* > /dev/null 2>&1
 killall virgl_test_server > /dev/null 2>&1
 pkill -9 pulseaudio > /dev/null 2>&1
 pkill -9 dbus-* > /dev/null 2>&1
-echo -e "${G}Termux:X11 Successfully Force Stopped ${W}"
+echo -e "${G}Termux:X11 Successfully Force Stopped ${NC}"
 elif [[ "\$1" == "-h" ]]; then
 echo -e "tx11stop       to stop termux:x11"
 echo -e "tx11stop -f    to kill termux:x11"
@@ -3348,7 +3348,7 @@ pkill -9 $de_name-* > /dev/null 2>&1
 pkill -9 dbus-* > /dev/null 2>&1
 pkill -f com.termux.x11 > /dev/null 2>&1
 	if [[ ! -n "\$termux_x11_pid" ]] || [[ ! -n "\$de_pid" ]]; then
-	echo -e "${G}Termux:X11 Stopped Successfully ${W}"
+	echo -e "${G}Termux:X11 Stopped Successfully ${NC}"
 	fi
 elif [[ "\$1" == "-f" ]] || [[ "\$1" == "--force" ]]; then
 pkill -f com.termux.x11 > /dev/null 2>&1
@@ -3356,7 +3356,7 @@ pkill -9 $de_name-* > /dev/null 2>&1
 killall virgl_test_server > /dev/null 2>&1
 pkill -9 pulseaudio > /dev/null 2>&1
 pkill -9 dbus-* > /dev/null 2>&1
-echo -e "${G}Termux:X11 Successfully Force Stopped ${W}"
+echo -e "${G}Termux:X11 Successfully Force Stopped ${NC}"
 elif [[ "\$1" == "-h" ]]; then
 echo -e "tx11stop       to stop termux:x11"
 echo -e "tx11stop -f    to kill termux:x11"
@@ -3393,7 +3393,7 @@ function gui_termux_x11() {
 #!/data/data/com.termux/files/usr/bin/bash
 
 if [[ -z "\$PREFIX" && "\$PREFIX" != *"/com.termux/"* ]]; then 
-  echo "${R}[${R}☓${R}]${R}${BOLD}Please run it inside termux${W}"
+  echo "${R}[${R}☓${R}]${R}${BOLD}Please run it inside termux${NC}"
   exit 0
 fi
 
@@ -3408,10 +3408,10 @@ tx11stop
 tx11stop -f
 ;;
 --help|-h)
-echo -e "${G} Use ${C}gui --start / gui -l ${G}to start termux:x11\n Use ${C}gui --stop / gui -s ${G}to stop termux:x11${W}"
+echo -e "${G} Use ${C}gui --start / gui -l ${G}to start termux:x11\n Use ${C}gui --stop / gui -s ${G}to stop termux:x11${NC}"
 ;;
 *)
-echo "${R}Invalid choise${W}"
+echo "${R}Invalid choise${NC}"
 gui -h
 ;;
 esac
@@ -3448,14 +3448,14 @@ case \$1 in
                 vncstart
                 ;;
             *)
-                echo -e "${R}Invalid choise. Use ${C}tx11${R} or ${C}vnc ${G}with it${W}"
+                echo -e "${R}Invalid choise. Use ${C}tx11${R} or ${C}vnc ${G}with it${NC}"
                 ;;
         esac
         ;;
 	--kill|-k|-kill)
 	vncstop -f > /dev/null 2>&1
 	tx11stop -f > /dev/null 2>&1
-	echo -e "${G}Gui services killed successfully ${W}"
+	echo -e "${G}Gui services killed successfully ${NC}"
 	;;
     --stop|-s)
         case \$2 in
@@ -3466,17 +3466,17 @@ case \$1 in
                 vncstop
                 ;;
             *)
-                echo -e "${R}Invalid choise. Use ${C}tx11${R} or ${C}vnc ${G}with it${W}"
+                echo -e "${R}Invalid choise. Use ${C}tx11${R} or ${C}vnc ${G}with it${NC}"
                 ;;
         esac
         ;;
     --help|-h)
         echo -e "${G}Use ${C}gui --start tx11/vnc${G} or ${C}gui -l tx11/vnc${G} to start a gui"
-        echo -e "Use ${C}gui --stop tx11/vnc${G} or ${C}gui -s tx11/vnc${G} to stop a gui${W}"
-		echo -e "Use ${C}gui --kill ${G} To kill both at once${W}"
+        echo -e "Use ${C}gui --stop tx11/vnc${G} or ${C}gui -s tx11/vnc${G} to stop a gui${NC}"
+		echo -e "Use ${C}gui --kill ${G} To kill both at once${NC}"
         ;;
     *)
-        echo -e "${R}Invalid choice${W}"
+        echo -e "${R}Invalid choice${NC}"
         gui -h
         ;;
 esac
@@ -4067,7 +4067,7 @@ function add_vnc_autostart() {
         cat <<EOF >>"$shell_rc_file"
 # Start Vnc
 if ! pgrep Xvnc > /dev/null; then
-echo "${G}Starting Vnc...${W}"
+echo "${G}Starting Vnc...${NC}"
 vncstart
 fi
 EOF
@@ -4083,7 +4083,7 @@ function add_tx11_autostart() {
 # Start Termux:X11
 termux_x11_pid=\$(pgrep -f "app_process -Xnoimage-dex2oat / com.termux.x11.Loader :${display_number}")
 if [ -z "\$termux_x11_pid" ]; then
-echo "${G}Starting Termux:x11...${W}"
+echo "${G}Starting Termux:x11...${NC}"
 tx11start
 fi
 EOF
@@ -4352,14 +4352,14 @@ function gui_check_up() {
     vnc_server_pid=$(pgrep -f "vncserver")
     de_pid=$(pgrep -f "$de_startup")
     if [[ -n "$termux_x11_pid" ]] || [[ -n "$de_pid" ]] || [[ -n "$vnc_server_pid" ]] >/dev/null 2>&1; then
-        echo "${G}Please Stop The Gui Desktop Server First${W}"
+        echo "${G}Please Stop The Gui Desktop Server First${NC}"
         exit 0
     fi
 }
 
 function change_style() {
     if [[ ! -e "$config_file" ]]; then
-        echo -e "${C} It look like you haven't install the desktop yet\n Please install the desktop first${W}"
+        echo -e "${C} It look like you haven't install the desktop yet\n Please install the desktop first${NC}"
         exit 1
     else
         read_conf
@@ -4433,7 +4433,7 @@ function change_hw() {
 
 function change_distro() {
     if [[ ! -e "$config_file" ]]; then
-        echo -e "${C} It look like you haven't install the desktop yet\n Please install the desktop first${W}"
+        echo -e "${C} It look like you haven't install the desktop yet\n Please install the desktop first${NC}"
         exit 1
     else
         read_conf
@@ -4519,9 +4519,9 @@ function change_autostart() {
                 echo
                 print_msg "Which will be your default"
                 echo
-                echo "${Y}1. Termux:x11${W}"
+                echo "${Y}1. Termux:x11${NC}"
                 echo
-                echo "${Y}2. Vnc${W}"
+                echo "${Y}2. Vnc${NC}"
                 echo
                 select_an_option 2 1 autostart_gui_mode_num
                 if [[ "$autostart_gui_mode_num" == "1" ]]; then
@@ -4555,7 +4555,7 @@ function change_display() {
         confirmation_y_or_n "Do you want to change the display port" change_display_port
         if [[ "$change_display_port" == "y" ]]; then
             while true; do
-                read -r -p "${R}[${C}-${R}]${Y}${BOLD} Type the Display Port number: ${W}" display_number
+                read -r -p "${R}[${C}-${R}]${Y}${BOLD} Type the Display Port number: ${NC}" display_number
                 if [[ "$display_number" =~ ^[0-9]+$ ]]; then
                     break
                 else
@@ -4863,7 +4863,7 @@ function check_for_appstore_update() {
 
 function reset_changes() {
     if [[ ! -e "$config_file" ]]; then
-        echo -e "${C} It looks like you haven't installed the desktop yet.\n Please install the desktop first.${W}"
+        echo -e "${C} It looks like you haven't installed the desktop yet.\n Please install the desktop first.${NC}"
         exit 1
     else
         read_conf
@@ -5125,7 +5125,7 @@ case $1 in
     fi
 
     if [[ -z "$PREFIX" && "$PREFIX" != *"/com.termux/"* ]]; then
-        print_failed "${BOLD}Please run it inside termux${W}"
+        print_failed "${BOLD}Please run it inside termux${NC}"
         exit 0
     fi
     ;;
