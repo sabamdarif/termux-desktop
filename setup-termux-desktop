@@ -2324,20 +2324,20 @@ function install_desktop() {
     banner
     if [[ "$de_name" == "xfce" ]]; then
         print_msg "${BOLD}Installing Xfce4 Desktop"
-        package_install_and_check "xfce4 xfce4-goodies xfce4-pulseaudio-plugin xfce4-battery-plugin xfce4-docklike-plugin xfce4-notifyd-static xfce4-cpugraph-plugin"
+        package_install_and_check "xfce4 xfce4-goodies xfce4-pulseaudio-plugin xfce4-battery-plugin xfce4-docklike-plugin xfce4-notifyd-static xfce4-cpugraph-plugin kvantum"
     elif [[ "$de_name" == "lxqt" ]]; then
         print_msg "${BOLD}Installing Lxqt Desktop"
         echo
-        package_install_and_check "lxqt openbox gtk3 papirus-icon-theme xorg-xsetroot"
+        package_install_and_check "lxqt openbox gtk3 papirus-icon-theme xorg-xsetroot kvantum"
     elif [[ "$de_name" == "openbox" ]]; then
         print_msg "${BOLD}Installing Openbox WM"
         echo
-        package_install_and_check "openbox polybar xorg-xsetroot xorg-xprop lxappearance wmctrl feh firefox rofi bmon xcompmgr gtk3 gedit xmllint"
+        package_install_and_check "openbox polybar xorg-xsetroot xorg-xprop lxappearance wmctrl feh firefox rofi bmon xcompmgr gtk3 gedit xmllint kvantum"
     elif [[ "$de_name" == "mate" ]]; then
         print_msg "${BOLD}Installing MATE"
         echo
         package_install_and_check "mate*"
-        package_install_and_check "marco mousepad xfce4-taskmanager lximage-qt"
+        package_install_and_check "marco mousepad xfce4-taskmanager eog kvantum"
     elif [[ "$de_name" == "i3wm" ]]; then
         print_msg "${BOLD}Installing i3WM"
         package_install_and_check "i3"
@@ -2361,12 +2361,14 @@ function install_desktop() {
         cd gnome_packages_files || exit 1
         if [[ "$PACKAGE_MANAGER" == "apt" ]]; then
             download_and_extract "https://github.com/sabamdarif/termux-desktop/releases/download/gnome-shell/debs-${termux_arch}.zip"
+            download_file "https://github.com/sabamdarif/Termux-AppStore/releases/download/files/refine_0.5.10_${termux_arch}.deb"
             dpkg --configure -a
             apt --fix-broken install -y
             apt install ./*deb -y
             apt install --fix-missing -y
         elif [[ "$PACKAGE_MANAGER" == "pacman" ]]; then
             download_and_extract "https://github.com/sabamdarif/termux-desktop/releases/download/gnome-shell/pkgs-${termux_arch}.zip"
+            download_file "https://github.com/sabamdarif/Termux-AppStore/releases/download/files/refine_0.5.10_${termux_arch}.pkg.tar.xz"
             pacman -U --noconfirm *.pkg.tar.xz
         else
             print_failed "Unsupported package manger, you need APT / PACMAN"
@@ -2374,10 +2376,10 @@ function install_desktop() {
         fi
         cd ..
         check_and_delete "gnome_packages_files"
-        package_install_and_check "xfce4-terminal"
+        package_install_and_check "xfce4-terminal eog"
     fi
     if [[ "$lite_mode" != "1" && "$lite_mode" != "true" ]]; then
-        package_install_and_check "kvantum xwayland pulseaudio file-roller pavucontrol gnome-font-viewer evince galculator libwayland-protocols xorg-xrdb"
+        package_install_and_check "xwayland pulseaudio file-roller pavucontrol gnome-font-viewer evince galculator libwayland-protocols xorg-xrdb"
     fi
     # Uncomment if additional package installation is needed
     # if [[ "$distro_add_answer" == "y" ]]; then
