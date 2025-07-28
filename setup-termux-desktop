@@ -896,7 +896,7 @@ function ask_to_chose_de() {
     local total_custom_mate_setup
     total_custom_mate_setup=$(count_subfolders "$owner" "$repo" "setup-files/mate" "$branch" 2>/dev/null)
     local total_custom_gnome_setup
-    total_custom_gnome_setup=$(count_subfolders "$owner" "$repo" "setup-files/awesome" "$branch" 2>/dev/null)
+    total_custom_gnome_setup=$(count_subfolders "$owner" "$repo" "setup-files/gnome" "$branch" 2>/dev/null)
     # calculate availabe styles for all the window managers
     local total_custom_openbox_setup
     total_custom_openbox_setup=$(count_subfolders "$owner" "$repo" "setup-files/openbox" "$branch" 2>/dev/null)
@@ -908,6 +908,10 @@ function ask_to_chose_de() {
     total_custom_bspwm_setup=$(count_subfolders "$owner" "$repo" "setup-files/bspwm" "$branch" 2>/dev/null)
     local total_custom_awesome_setup
     total_custom_awesome_setup=$(count_subfolders "$owner" "$repo" "setup-files/awesome" "$branch" 2>/dev/null)
+    local total_custom_fluxbox_setup
+    total_custom_fluxbox_setup=$(count_subfolders "$owner" "$repo" "setup-files/fluxbox" "$branch" 2>/dev/null)
+    local total_custom_icewm_setup
+    total_custom_icewm_setup=$(count_subfolders "$owner" "$repo" "setup-files/icewm" "$branch" 2>/dev/null)
     banner
     print_msg "Select Desktop Environment"
     echo " "
@@ -929,9 +933,11 @@ function ask_to_chose_de() {
     echo
     echo "${Y}9. Awesome($total_custom_awesome_setup)${NC}"
     echo
-    echo "${Y}10. Fluxbox($total_custom_awesome_setup)${NC}"
+    echo "${Y}10. Fluxbox($total_custom_fluxbox_setup)${NC}"
     echo
-    select_an_option 10 1 desktop_answer
+    echo "${Y}11. IceWM($total_custom_icewm_setup)${NC}"
+    echo
+    select_an_option 11 1 desktop_answer
     # set the variables based on chosen de
     sys_icons_folder="$PREFIX/share/icons"
     sys_themes_folder="$PREFIX/share/themes"
@@ -985,6 +991,11 @@ function ask_to_chose_de() {
         themes_folder="$HOME/.themes"
         icons_folder="$HOME/.icons"
         de_startup="fluxbox"
+    elif [[ "$desktop_answer" == "11" ]]; then
+        de_name="icewm"
+        themes_folder="$HOME/.themes"
+        icons_folder="$HOME/.icons"
+        de_startup="icewm-session"
     fi
     banner
     questions_theme_select
@@ -2354,6 +2365,11 @@ function install_desktop() {
         print_msg "${BOLD}Installing Fluxbox WM"
         echo
         package_install_and_check "fluxbox xorg-xsetroot xorg-xprop lxappearance wmctrl feh firefox rofi bmon xcompmgr gtk3 gedit xmllint"
+    elif [[ "$de_name" == "icewm" ]]; then
+        print_msg "${BOLD}Installing Ice WM"
+        echo
+        package_install_and_check "icewm"
+        package_install_and_check "xdg-menu"
     elif [[ "$de_name" == "gnome" ]]; then
         print_msg "${BOLD}Installing Gnome"
         echo
@@ -2390,6 +2406,15 @@ function install_desktop() {
     print_to_config "themes_folder"
     print_to_config "icons_folder"
     log_debug "Desktop installation process done"
+}
+
+function ext_setup_for_stock() {
+    if [[ "$de_name" == "icewm" ]]; then
+        print_msg "Genarating a simple menu for icewm..."
+        check_and_backup "$HOME/.icewm"
+        check_and_create_directory "$HOME/.icewm"
+        xdg_menu --format icewm --fullmenu --root-menu $PREFIX/etc/xdg/menus/termux-applications.menu >~/.icewm/programs
+    fi
 }
 
 #########################################################################
@@ -4975,6 +5000,7 @@ function install_termux_desktop() {
         print_msg "${BOLD}Configuring Stock $de_name Style..."
         echo
         print_to_config "style_answer"
+        ext_setup_for_stock
     else
         setup_config
     fi

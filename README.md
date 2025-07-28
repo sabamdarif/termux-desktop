@@ -61,6 +61,7 @@
 - **bspwm**
 - **Awesome**
 - **Fluxbox**
+- **IceWM**
 
 ##### 4. Hardware Acceleration and Distro Container:
    - Learn more about [hardware acceleration](/readmes/hw-acceleration.md).
