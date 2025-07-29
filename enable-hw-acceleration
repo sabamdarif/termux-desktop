@@ -14,7 +14,7 @@ function hw_install_required_packages() {
     check_and_delete "/data/data/com.termux/files/usr/opt/angle-android/vulkan/libEGL.so.1"
     check_and_delete "/data/data/com.termux/files/usr/opt/angle-android/vulkan/libGLESv1_CM.so.1"
     check_and_delete "/data/data/com.termux/files/usr/opt/angle-android/vulkan/libGLESv2.so.2"
-    package_check_and_remove "mesa-vulkan-icd-wrapper vulkan-loader-android vulkan-loader-generic virglrenderer virglrenderer-android angle-android vulkan-icd mesa-vulkan-icd-freedreno mesa-zink-vulkan-icd-freedreno mesa-vulkan-icd-freedreno-dri3"
+    package_check_and_remove "mesa-vulkan-icd-wrapper vulkan-loader-generic virglrenderer virglrenderer-android angle-android vulkan-icd mesa-vulkan-icd-freedreno mesa-zink-vulkan-icd-freedreno mesa-vulkan-icd-freedreno-dri3"
 
     case "$exp_termux_vulkan_hw_answer" in
     "vulkan_icd")
