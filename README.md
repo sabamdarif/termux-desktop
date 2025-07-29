@@ -273,4 +273,20 @@ Special thanks to:
 
 **If you enjoy this project, consider giving it a star!** :star2:
 
+---
+
+## Support the Project
+
+If you find Termux Desktop useful and would like to support its development, consider buying me a coffee! Your support helps me maintain and improve this project.
+
+- **USDT (BEP20,ERC20):-** `0x1d216cf986d95491a479ffe5415dff18dded7e71`
+- **USDT (TRC20):-** `TCjRKPLG4BgNdHibt2yeAwgaBZVB4JoPaD`
+- **BTC:-** `13Q7xf3qZ9xH81rS2gev8N4vD92L9wYiKH`
+- **DOGE (dogecoin):-** `DJkMCnBAFG14TV3BqZKmbbjD8Pi1zKLLG6`
+- **ETH (ERC20):-** `0x1d216cf986d95491a479ffe5415dff18dded7e71`
+
+*Every contribution, no matter how small, helps keep this project alive and growing! ❤️*
+
+---
+
 Join the conversation: [Telegram Chat](https://t.me/hello_android_0).
