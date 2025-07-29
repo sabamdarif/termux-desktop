@@ -21,7 +21,7 @@ config_file="$termux_desktop_path/configuration.conf"
 log_file="/data/data/com.termux/files/home/termux-desktop.log"
 call_from_change_distro=false
 call_from_change_style=false
-is_termux_api_installed=true
+is_termux_api_installed=false
 lite_mode="${LITE,,}"
 ##################################################################
 # create log
@@ -719,7 +719,6 @@ function validate_required_vars() {
         "de_on_startup"
         # Hardware acceleration variables
         "enable_hw_acc"
-        "device_gpu_model_name"
         # Configuration paths
         "config_file"
         "themes_folder"
@@ -741,6 +740,7 @@ function validate_required_vars() {
     # If hardware acceleration is enabled, add required variables
     if [[ "$enable_hw_acc" == "y" ]]; then
         required_vars+=(
+            "device_gpu_model_name"
             "exp_termux_vulkan_hw_answer"
             "termux_hw_answer"
         )
@@ -752,6 +752,10 @@ function validate_required_vars() {
             "selected_distro"
             "pd_audio_config_answer"
             "pd_useradd_answer"
+        )
+    fi
+    if [[ "$distro_add_answer" == "y" ]] && [[ "$pd_useradd_answer" == "y" ]]; then
+        required_vars+=(
             "user_name"
         )
     fi
@@ -1565,6 +1569,7 @@ function setup_user_name_only() {
             ;;
         esac
     done
+    print_to_config "user_name"
 }
 
 function setup_user_name_and_pass() {
@@ -1617,6 +1622,8 @@ function setup_user_name_and_pass() {
             ;;
         esac
     done
+    print_to_config "user_name"
+    print_to_config "pass"
 }
 
 function distro_questions() {
@@ -2237,13 +2244,12 @@ function check_system_requirements() {
         fi
         # Check termux API
         if cmd package list packages --user 0 -e -f | sed 's/package://; s/\.apk=/\.apk /' | grep -q "com.termux.api"; then
-            issue_for_termux_api="no"
+            is_termux_api_installed=true
             print_success "Termux-API: ${NC}Installed"
         else
             local latest_termux_api_tag
             latest_termux_api_tag=$(get_latest_release "termux" "termux-api")
             print_failed "Termux-API: ${NC}Not Installed"
-            issue_for_termux_api="yes"
             print_msg "${BOLD}Install Termux-API:- ${NC}https://github.com/termux/termux-api/releases/download/${latest_termux_api_tag}/termux-api-app_${latest_termux_api_tag}+github-debug.apk"
             ((errors++))
         fi
@@ -2263,9 +2269,6 @@ function check_system_requirements() {
                     echo
                     print_success "Continuing aniway..."
                     echo
-                    if [[ "$issue_for_termux_api" == "yes" ]]; then
-                        is_termux_api_installed=false
-                    fi
                     sleep 0.2
                     break 2
                     ;;
@@ -2721,6 +2724,8 @@ function distro_container_setup() {
         echo
         if [[ "$enable_hw_acc" == "y" ]]; then
             hw_config
+        else
+            print_to_config "enable_hw_acc"
         fi
     else
         banner
@@ -4447,7 +4452,7 @@ function change_hw() {
                 print_success "${BOLD}Hardware acceleration method changed successfully"
             fi
         elif [[ "$enable_hw_acc" == "n" ]]; then
-            print_msg "This option is only used if have Hardware Acceleration enabled"
+            print_msg "This option can only be used if have Hardware Acceleration enabled"
         fi
     fi
 }

@@ -250,7 +250,6 @@ EOF
     elif [[ "$pd_useradd_answer" == "y" ]]; then
         final_user_name="${user_name}"
     fi
-    print_to_config "user_name"
     print_to_config "pd_useradd_answer"
     print_to_config "final_user_name"
     if [[ "$pd_pass_type" == "2" ]]; then
