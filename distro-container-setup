@@ -9,39 +9,161 @@ function check_termux() {
     fi
 }
 
-function setup_distro() {
-    banner
+function setup_proot_distro() {
     print_msg "${BOLD}Setting up ${C}proot-distro"
-    echo
-
     package_install_and_check "proot-distro"
-
     banner
     print_msg "${BOLD}Setting up Selected Linux Distro: ${C}${selected_distro}"
     echo
     print_to_config "selected_distro"
-
     pd install "$selected_distro"
-
     distro_path="$PREFIX/var/lib/proot-distro/installed-rootfs/$selected_distro"
 }
 
-#########################################################################
-#
-# Fix Sound Issue
-#
-#########################################################################
+function check_root_access() {
+    if timeout 3s sudo -n whoami >/dev/null 2>&1; then
+        sudo_result=$(timeout 3s sudo -n whoami 2>/dev/null)
+        if [ "$sudo_result" = "root" ]; then
+            return 0
+        fi
+    fi
+    return 1
+}
 
-function distro_fix_sound_issue() {
-    banner
-    print_msg "${BOLD}Fixing Proot Distro Sound Problem..."
+function check_chroot_file() {
+    if timeout 3s sudo -n ls /system/bin/chroot-distro >/dev/null 2>&1; then
+        return 0
+    fi
+    return 1
+}
+
+function setup_chroot_distro() {
+    print_msg "Checking if you have root access or not"
+    package_install_and_check "sudo"
+    local retry_count
+    local max_retries
+    retry_count=0
+    max_retries=3
+    while [ $retry_count -lt $max_retries ]; do
+        if check_root_access; then
+            print_success "Root access is enabled"
+            break
+        else
+            ((retry_count++))
+            if [[ "$retry_count" -lt "$max_retries" ]]; then
+                print_failed "Please grant root access to termux"
+                print_msg "Want to check again (Attempt $retry_count/$max_retries)"
+                wait_for_keypress
+            else
+                print_failed "Failed to get root access after $max_retries attempts"
+                print_failed "Exiting..."
+                exit 1
+            fi
+        fi
+    done
+    print_msg "Checking access to chroot-distro"
+    retry_count=0
+    while [ $retry_count -lt $max_retries ]; do
+        if check_chroot_file; then
+            print_success "chroot-distro binary exist"
+            break
+        else
+            ((retry_count++))
+
+            if [ $retry_count -lt $max_retries ]; then
+                print_failed "Cannot access /system/bin/chroot-distro file"
+                print_msg "Please flash:- ${B}https://github.com/Magisk-Modules-Alt-Repo/chroot-distro"
+                print_msg "Want to check again (Attempt $retry_count/$max_retries)"
+                wait_for_keypress
+            else
+                print_failed "Failed to access chroot-distro after $max_retries attempts"
+                print_msg "Exiting..."
+                exit 1
+            fi
+        fi
+    done
+    print_msg "Creating a chroot-distro launcher..."
+    cat <<'EOF' >"$PREFIX/bin/chroot-distro"
+#!/data/data/com.termux/files/usr/bin/bash
+
+function check_chroot_file() {
+    if timeout 3s su -c 'ls /system/bin/chroot-distro' >/dev/null 2>&1; then
+        return 0
+    fi
+    return 1
+}
+
+function wait_for_keypress() {
+    read -n1 -s -r -p " Press any key to continue, CTRL+c to cancel..."
     echo
-    echo "export PULSE_SERVER=127.0.0.1" >>"$distro_path/etc/profile"
+}
+
+function checkup() {
+    local retry_count
+    local max_retries
+    retry_count=0
+    max_retries=3
+    while [ $retry_count -lt $max_retries ]; do
+        if check_chroot_file; then
+            break
+        else
+            ((retry_count++))
+            if [ $retry_count -lt $max_retries ]; then
+                echo "Cannot access /system/bin/chroot-distro file"
+                echo "Please flash:- ${B}https://github.com/Magisk-Modules-Alt-Repo/chroot-distro${NC}"
+                echo "Want to check again (Attempt $retry_count/$max_retries)"
+                wait_for_keypress
+            else
+                echo "Failed to access chroot-distro after $max_retries attempts"
+                echo "Exiting..."
+                exit 1
+            fi
+        fi
+    done
+}
+
+checkup
+
+# Fix: Use printf to properly escape arguments and pass them to su
+args=""
+for arg in "$@"; do
+    # Escape single quotes in arguments and wrap each argument in single quotes
+    escaped_arg=$(printf '%s' "$arg" | sed "s/'/'\\\\''/g")
+    args="$args '$escaped_arg'"
+done
+
+su -c "/system/bin/chroot-distro $args"
+EOF
+    chmod +x "$PREFIX/bin/chroot-distro"
+    # just want to make sure original file doesn't get modified anyway
+    sudo cp /system/bin/chroot-distro /tmp/chroot-distro-temp
+    su -c 'sed -i "/^chroot_distro_install()/,/^}$/{/^[ \t]*chroot_distro_jail \"\$distro_path\"$/d}" /tmp/chroot-distro-temp'
+    sudo cp /system/bin/chroot-distro /system/bin/chroot-distro.backup
+    sudo cp /tmp/chroot-distro-temp /system/bin/chroot-distro
+    chroot-distro download "$selected_distro"
+    chroot-distro install "$selected_distro"
+    # restore the original back
+    sudo cp /system/bin/chroot-distro.backup /system/bin/chroot-distro
+    distro_path="/data/local/chroot-distro/$selected_distro"
+}
+
+function setup_distro() {
+    banner
+    if [[ "$selected_distro_type" == "proot" ]]; then
+        setup_proot_distro
+    elif [[ "$selected_distro_type" == "chroot" ]]; then
+        setup_chroot_distro
+    else
+        print_failed "Unable to determine what distro type to use"
+        print_msg "Fallback to:- proot-distro"
+        setup_proot_distro
+    fi
+    print_to_config "selected_distro_type"
 }
 
 #########################################################################
 #
-# Update Distro | Install Required Packages | Add User
+# Update Distro | Install Required Packages | Add User | Fix audio issue
 #
 #########################################################################
 
@@ -85,7 +207,7 @@ function pd_package_install_and_check() {
 
         # Handle error in installation
         if [[ $? -ne 0 ]]; then
-            print_failed "${BOLD} Error detected during installation of: ${C}$package_name"
+            print_failed "${BOLD} Error detected during installation of: ${C}$package_name${NC}"
             if [[ "$ID" == "debian" ]] || [[ "$ID" == "ubuntu" ]]; then
                 if $use_sudo; then
                     sudo apt --fix-broken install -y
@@ -147,26 +269,26 @@ function pd_package_install_and_check() {
         # Check installation
         if [[ "$ID" == "debian" ]] || [[ "$ID" == "ubuntu" ]]; then
             if dpkg -s "$package_name" >/dev/null 2>&1; then
-                print_success "$package_name installed successfully"
+                print_success "$package_name ${G}installed successfully"
             else
                 if command -v wget &>/dev/null || ls "$PREFIX/bin/"*"$package_name"* >/dev/null 2>&1; then
-                    print_success "$package_name installed successfully"
+                    print_success "$package_name ${G}installed successfully"
                 fi
             fi
         elif [[ "$ID" == arch* ]]; then
             if pacman -Qi "$package_name" >/dev/null 2>&1; then
-                print_success "$package_name installed successfully"
+                print_success "$package_name ${G}installed successfully"
             else
                 if command -v wget &>/dev/null || ls "$PREFIX/bin/"*"$package_name"* >/dev/null 2>&1; then
-                    print_success "$package_name installed successfully"
+                    print_success "$package_name ${G}installed successfully"
                 fi
             fi
         elif [[ "$ID" == "fedora" ]]; then
             if rpm -q "$package_name" >/dev/null 2>&1; then
-                print_success "$package_name installed success"
+                print_success "$package_name ${G}installed successfully"
             else
                 if command -v wget &>/dev/null || ls "$PREFIX/bin/"*"$package_name"* >/dev/null 2>&1; then
-                    print_success "$package_name installed success"
+                    print_success "$package_name ${G}installed successfully"
                 fi
             fi
         fi
@@ -174,15 +296,22 @@ function pd_package_install_and_check() {
     echo ""
 }
 
-# Create Shell Setup Script
+#############################
+# Create Shell Setup Script #
+#############################
 function create_shell_script() {
     local script_path="$1"
     local shell_setup_content="$2"
 
     # Create directory if it doesn't exist
-    mkdir -p "$(dirname "$script_path")"
+    if [[ "$selected_distro_type" == "chroot" ]]; then
+        sudo mkdir -p "$(dirname "$script_path")"
+    else
+        mkdir -p "$(dirname "$script_path")"
+    fi
 
-    cat <<'EOF' >"$script_path"
+    if [[ "$selected_distro_type" == "chroot" ]]; then
+        sudo tee "$script_path" >/dev/null <<'EOF'
 #!/bin/bash
 
 R="$(printf '\033[1;31m')"
@@ -197,54 +326,128 @@ config_file="$termux_desktop_path/configuration.conf"
 log_file="/data/data/com.termux/files/home/termux-desktop.log"
 
 EOF
-    typeset -f banner log_debug print_msg print_success print_failed check_and_delete get_latest_release pd_package_install_and_check >>"$script_path"
-    echo "$shell_setup_content" >>"$script_path"
+    else
+        cat <<'EOF' >"$script_path"
+#!/bin/bash
+
+R="$(printf '\033[1;31m')"
+G="$(printf '\033[1;32m')"
+Y="$(printf '\033[1;33m')"
+C="$(printf '\033[1;36m')"
+W="$(printf '\033[0m')"
+BOLD="$(printf '\033[1m')"
+
+termux_desktop_path="/data/data/com.termux/files/usr/etc/termux-desktop"
+config_file="$termux_desktop_path/configuration.conf"
+log_file="/data/data/com.termux/files/home/termux-desktop.log"
+
+EOF
+    fi
+    if [[ "$selected_distro_type" == "chroot" ]]; then
+        typeset -f banner log_debug print_msg print_success print_failed check_and_delete get_latest_release pd_package_install_and_check | sudo tee -a "$script_path" >/dev/null
+        echo "$shell_setup_content" | sudo tee -a "$script_path" >/dev/null
+    else
+        typeset -f banner log_debug print_msg print_success print_failed check_and_delete get_latest_release pd_package_install_and_check >>"$script_path"
+        echo "$shell_setup_content" >>"$script_path"
+    fi
 
     # Make script executable
-    chmod +x "$script_path"
+    if [[ "$selected_distro_type" == "chroot" ]]; then
+        sudo chmod +x "$script_path"
+    else
+        chmod +x "$script_path"
+    fi
 
     # Verify script was created
-    if [[ ! -f "$script_path" ]]; then
-        print_failed "Failed to create script at $script_path"
-        return 1
+    if [[ "$selected_distro_type" == "chroot" ]]; then
+        if ! timeout 3s sudo test -f "$script_path"; then
+            print_failed "Failed to create script at $script_path"
+        fi
+    else
+        if [[ ! -f "$script_path" ]]; then
+            print_failed "Failed to create script at $script_path"
+        fi
     fi
 }
 
-function distro_basic_task() {
-    banner
+#################
+# Update distro #
+#################
+function update_distro_repo() {
     print_msg "${BOLD}Updating ${C}$selected_distro ${G}And Installing Required Packages"
     echo
-    if [[ "$selected_distro" == "debian" ]] || [[ "$selected_distro" == "ubuntu" ]]; then
-        proot-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:$display_number apt update
-        proot-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:$display_number apt upgrade -y -o Dpkg::Options::="--force-confnew"
-    elif [[ "$selected_distro" == "archlinux" ]]; then
-        proot-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:$display_number pacman -Syu --noconfirm
-    elif [[ "$selected_distro" == "fedora" ]]; then
-        proot-distro login "$selected_distro" -- /bin/bash -c "echo 'max_parallel_downloads=10' >> '/etc/dnf/dnf.conf'"
-        proot-distro login "$selected_distro" -- /bin/bash -c "echo 'fastestmirror=True/' >> '/etc/dnf/dnf.conf'"
-        proot-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:$display_number dnf update -y
-        proot-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:$display_number dnf upgrade -y
+    if [[ "$selected_distro_type" == "chroot" ]]; then
+        if [[ "$selected_distro" == "debian" ]] || [[ "$selected_distro" == "ubuntu" ]]; then
+            chroot-distro command "${selected_distro}" "apt update"
+            chroot-distro command "${selected_distro}" 'apt upgrade -y -o Dpkg::Options::="--force-confnew"'
+            chroot-distro command "${selected_distro}" "apt install sudo -y"
+        fi
+        # sudo chmod -R +w "$distro_path/"
+    else
+        if [[ "$selected_distro" == "debian" ]] || [[ "$selected_distro" == "ubuntu" ]]; then
+            proot-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:"$display_number" apt update
+            proot-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:"$display_number" apt upgrade -y -o Dpkg::Options::="--force-confnew"
+            proot-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:"$display_number" apt install sudo -y
+        elif [[ "$selected_distro" == "archlinux" ]]; then
+            proot-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:"$display_number" pacman -Syu --noconfirm
+            proot-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:"$display_number" pacman -S --noconfirm sudo
+        elif [[ "$selected_distro" == "fedora" ]]; then
+            proot-distro login "$selected_distro" -- /bin/bash -c "echo 'max_parallel_downloads=10' >> '/etc/dnf/dnf.conf'"
+            proot-distro login "$selected_distro" -- /bin/bash -c "echo 'fastestmirror=True/' >> '/etc/dnf/dnf.conf'"
+            proot-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:"$display_number" dnf update -y
+            proot-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:"$display_number" dnf upgrade -y
+            proot-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:"$display_number" dnf install sudo -y
+        fi
+        chmod -R +w "$distro_path/"
     fi
-    chmod -R +w "$distro_path/"
-    # Set proot timezone
+}
+
+###################
+# Setup time zone #
+###################
+function set_distro_time_zone() {
     timezone=$(getprop persist.sys.timezone)
-    proot-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:$display_number rm /etc/localtime
-    proot-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:$display_number cp "/usr/share/zoneinfo/$timezone" /etc/localtime
-    if [[ "$pd_audio_config_answer" == "y" ]]; then
-        distro_packs="sudo pulseaudio"
-        distro_fix_sound_issue
-    elif [[ "$pd_audio_config_answer" == "n" ]]; then
-        distro_packs="sudo"
+    if [[ "$selected_distro_type" == "chroot" ]]; then
+        chroot-distro command "${selected_distro}" "rm /etc/localtime"
+        chroot-distro command "${selected_distro}" "cp /usr/share/zoneinfo/$timezone /etc/localtime"
+    else
+        proot-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:"$display_number" rm /etc/localtime
+        proot-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:"$display_number" cp "/usr/share/zoneinfo/$timezone" /etc/localtime
     fi
-    print_to_config "pd_audio_config_answer"
-    pd_basic_setup_content=$(
+}
+
+###################
+# Fix Sound Issue #
+###################
+function distro_fix_sound_issue() {
+    banner
+    print_msg "${BOLD}Fixing ${selected_distro_type} distro Sound Problem..."
+    echo
+    audio_related_packs="pulseaudio"
+    install_audio_related_packs=$(
         cat <<EOF
-pd_package_install_and_check --root "${distro_packs}"
-check_and_delete "pd_basic_setup.sh"
+pd_package_install_and_check "$audio_related_packs"
+check_and_delete "install_audio_related_packs.sh"
 EOF
     )
-    create_shell_script "$distro_path/root/pd_basic_setup.sh" "$pd_basic_setup_content"
-    proot-distro login "$selected_distro" -- /bin/bash -c 'bash pd_basic_setup.sh'
+    create_shell_script "$save_path/install_audio_related_packs.sh" "$install_audio_related_packs"
+    if [[ "$selected_distro_type" == "chroot" ]]; then
+        chroot-distro command "$selected_distro" "bash install_audio_related_packs.sh"
+    else
+        proot-distro login "$selected_distro" -- /bin/bash -c 'bash install_audio_related_packs.sh'
+    fi
+    if [[ "$selected_distro_type" == "chroot" ]]; then
+        echo "export PULSE_SERVER=127.0.0.1" | sudo tee -a "$distro_path/etc/profile" >/dev/null
+    else
+        echo "export PULSE_SERVER=127.0.0.1" >>"$distro_path/etc/profile"
+    fi
+}
+
+###########################################
+# create a user account inside the distro #
+###########################################
+function distro_setup_user() {
+    # set user name value
     if [[ "$pd_useradd_answer" == "n" ]]; then
         final_user_name="root"
     elif [[ "$pd_useradd_answer" == "y" ]]; then
@@ -252,53 +455,68 @@ EOF
     fi
     print_to_config "pd_useradd_answer"
     print_to_config "final_user_name"
+
+    # set password value
     if [[ "$pd_pass_type" == "2" ]]; then
         final_pass="${pass}"
     else
         final_pass="root"
     fi
     print_to_config "pd_pass_type"
+
     if [[ "$pd_useradd_answer" == "y" ]]; then
-        cat <<EOF >"$distro_path/root/useradd.sh"
-#!/bin/bash
-
-groupadd storage
-groupadd wheel
-useradd -m -g users -s \$(which bash) ${final_user_name}
-usermod -aG wheel,polkitd,audio,video,storage ${final_user_name}
-echo "${final_user_name}:${final_pass}" | chpasswd
-rm useradd.sh
-EOF
-
-        proot-distro login "$selected_distro" -- /bin/sh -c 'bash useradd.sh'
-
-        if [[ "$pd_pass_type" == "1" ]]; then
-
-            cat <<EOF >"$distro_path/root/user_permission.sh"
-#!/bin/bash
-
-chmod u+rw /etc/sudoers
-echo "$final_user_name ALL=(ALL) NOPASSWD:ALL" | tee -a /etc/sudoers > /dev/null 2>&1
-chmod u-w /etc/sudoers
-rm user_permission.sh
-EOF
-
-        elif [[ "$pd_pass_type" == "2" ]]; then
-
-            cat <<EOF >"$distro_path/root/user_permission.sh"
-#!/bin/bash
-
-chmod u+rw /etc/sudoers
-echo "$final_user_name ALL=(ALL:ALL) ALL" | tee -a /etc/sudoers > /dev/null 2>&1
-chmod u-w /etc/sudoers
-rm user_permission.sh
-EOF
-
+        # first setup the user
+        if [[ "$selected_distro_type" == "chroot" ]]; then
+            chroot-distro command "$selected_distro" 'groupadd storage'
+            chroot-distro command "$selected_distro" 'groupadd wheel'
+            chroot-distro command "$selected_distro" "useradd -m -g users -s \$(which bash) ${final_user_name}"
+            chroot-distro command "$selected_distro" "usermod -aG wheel,polkitd,audio,video,storage ${final_user_name}"
+            chroot-distro command "$selected_distro" "echo '${final_user_name}:${final_pass}' | chpasswd"
+        else
+            proot-distro login "$selected_distro" -- /bin/sh -c 'groupadd storage'
+            proot-distro login "$selected_distro" -- /bin/sh -c 'groupadd wheel'
+            proot-distro login "$selected_distro" -- /bin/sh -c "useradd -m -g users -s \$(which bash) ${final_user_name}"
+            proot-distro login "$selected_distro" -- /bin/sh -c "usermod -aG wheel,polkitd,audio,video,storage ${final_user_name}"
+            proot-distro login "$selected_distro" -- /bin/sh -c "echo '${final_user_name}:${final_pass}' | chpasswd"
         fi
 
-        proot-distro login "$selected_distro" -- /bin/sh -c 'bash user_permission.sh'
-        proot-distro login "$selected_distro" -- /bin/sh -c 'sudo -k'
+        # setup user without password confirmation
+        if [[ "$pd_pass_type" == "1" ]]; then
+            if [[ "$selected_distro_type" == "chroot" ]]; then
+                chroot-distro command "$selected_distro" "chmod u+rw /etc/sudoers"
+                chroot-distro command "$selected_distro" "echo '$final_user_name ALL=(ALL) NOPASSWD:ALL' | tee -a /etc/sudoers > /dev/null 2>&1"
+                chroot-distro command "$selected_distro" "chmod u-w /etc/sudoers"
+                chroot-distro command "$selected_distro" 'sudo -k'
+            else
+                proot-distro login "$selected_distro" -- /bin/sh -c "chmod u+rw /etc/sudoers"
+                proot-distro login "$selected_distro" -- /bin/sh -c "echo '$final_user_name ALL=(ALL) NOPASSWD:ALL' | tee -a /etc/sudoers > /dev/null 2>&1"
+                proot-distro login "$selected_distro" -- /bin/sh -c "chmod u-w /etc/sudoers"
+                proot-distro login "$selected_distro" -- /bin/sh -c 'sudo -k'
+            fi
+        # setup user with password
+        elif [[ "$pd_pass_type" == "2" ]]; then
+            if [[ "$selected_distro_type" == "chroot" ]]; then
+                chroot-distro command "$selected_distro" "chmod u+rw /etc/sudoers"
+                chroot-distro command "$selected_distro" "echo '$final_user_name ALL=(ALL:ALL) ALL' | tee -a /etc/sudoers > /dev/null 2>&1"
+                chroot-distro command "$selected_distro" "chmod u-w /etc/sudoers"
+                chroot-distro command "$selected_distro" 'sudo -k'
+            else
+                proot-distro login "$selected_distro" -- /bin/sh -c "chmod u+rw /etc/sudoers"
+                proot-distro login "$selected_distro" -- /bin/sh -c "echo '$final_user_name ALL=(ALL:ALL) ALL' | tee -a /etc/sudoers > /dev/null 2>&1"
+                proot-distro login "$selected_distro" -- /bin/sh -c "chmod u-w /etc/sudoers"
+                proot-distro login "$selected_distro" -- /bin/sh -c 'sudo -k'
+            fi
+        fi
+
     fi
+}
+
+function distro_basic_task() {
+    banner
+    update_distro_repo
+    set_distro_time_zone
+    distro_fix_sound_issue
+    distro_setup_user
 }
 
 #########################################################################
@@ -307,8 +525,10 @@ EOF
 #
 #########################################################################
 
+#############
+# ZSH Setup #
+#############
 function distro_zsh_setup() {
-    # ZSH Setup
     if [[ "$chosen_shell_name" == "zsh" ]]; then
         zsh_setup_content=$(
             cat <<EOF
@@ -326,38 +546,41 @@ EOF
         banner
         print_msg "${BOLD}Setting up shell for ${selected_distro}..."
         echo
-        proot-distro login "$selected_distro" -- /bin/bash -c 'bash pd_zsh_install.sh'
+        if [[ "$selected_distro_type" == "chroot" ]]; then
+            if [[ "$pd_useradd_answer" == "y" ]]; then
+                sudo cp "$HOME/.zshrc" "$distro_path/home/$final_user_name/"
+                chroot-distro command "$selected_distro" "sudo chmod 644 /home/$final_user_name/.zshrc"
+                if [[ "$selected_zsh_theme_name" == "td_zsh" ]]; then
+                    chroot-distro command "$selected_distro" "mkdir -p /home/$final_user_name/.zsh-themes/"
+                    sudo cp "$HOME/.zsh-themes/td.zsh-theme" "$distro_path/home/$final_user_name/.zsh-themes/"
+                    chroot-distro command "$selected_distro" "sudo chmod 644 /home/$final_user_name/.zsh-themes/td.zsh-theme"
+                fi
+            else
+                sudo cp "$HOME/.zshrc" "$distro_path/root"
+                chroot-distro command "$selected_distro" "sudo chmod 644 /root/.zshrc"
+                if [[ "$selected_zsh_theme_name" == "td_zsh" ]]; then
+                    chroot-distro command "$selected_distro" "mkdir -p /root/.zsh-themes/"
+                    sudo cp "$HOME/.zsh-themes/td.zsh-theme" "$distro_path/root/.zsh-themes/"
+                    chroot-distro command "$selected_distro" "sudo chmod 644 /root/.zsh-themes/td.zsh-theme"
+                fi
+            fi
+            chroot-distro command "$selected_distro" 'bash pd_zsh_install.sh'
+        else
+            proot-distro login "$selected_distro" -- /bin/bash -c 'bash pd_zsh_install.sh'
+        fi
     fi
 }
 
+##########################
+# Terminal Utility Setup #
+##########################
 function distro_terminal_utility_setup() {
-    # Terminal Utility Setup
     if [[ "$terminal_utility_setup_answer" == "y" ]]; then
 
         if [[ "$selected_distro" == "debian" ]] || [[ "$selected_distro" == "ubuntu" ]]; then
             terminal_utility_content=$(
                 cat <<'EOF'
-pd_package_install_and_check "zoxide bat wget gpg fzf"
-device_arch=$(uname -m)
-case "$device_arch" in
-    aarch64) archtype="aarch64" ;;
-    arm) archtype="armhf" ;;
-    amd64|x86_64) archtype="amd64" ;;
-    i*86|x86) archtype="i386" ;;
-    *) echo "${R} Unknown architecture${W}" ;;
-esac
-
-version=$(get_latest_release "fastfetch-cli" "fastfetch")
-wget --tries=5 --retry-connrefused -O fastfetch.deb https://github.com/fastfetch-cli/fastfetch/releases/download/${version}/fastfetch-linux-${archtype}.deb
-sudo apt install ./fastfetch.deb -y
-check_and_delete "fastfetch.deb"
-
-mkdir -p /etc/apt/keyrings
-wget --tries=5 --retry-connrefused -qO- https://raw.githubusercontent.com/eza-community/eza/main/deb.asc | sudo gpg --dearmor -o /etc/apt/keyrings/gierens.gpg
-echo "deb [signed-by=/etc/apt/keyrings/gierens.gpg] http://deb.gierens.de stable main" | sudo tee /etc/apt/sources.list.d/gierens.list
-chmod 644 /etc/apt/keyrings/gierens.gpg /etc/apt/sources.list.d/gierens.list
-apt update
-pd_package_install_and_check "eza"
+pd_package_install_and_check "zoxide bat wget gpg fzf eza fastfetch"
 check_and_delete "pd_setup.sh"
 EOF
             )
@@ -371,9 +594,13 @@ EOF
         fi
         create_shell_script "$save_path/pd_setup.sh" "$terminal_utility_content"
         banner
-        print_msg "${C}Configuring Terminal Utility For ${selected_distro}..."
+        print_msg "Configuring Terminal Utility For ${selected_distro}..."
         echo
-        proot-distro login --user "$final_user_name" "$selected_distro" -- /bin/bash -c 'bash pd_setup.sh'
+        if [[ "$selected_distro_type" == "chroot" ]]; then
+            chroot-distro command "$selected_distro" 'bash pd_setup.sh'
+        else
+            proot-distro login --user "$final_user_name" "$selected_distro" -- /bin/bash -c 'bash pd_setup.sh'
+        fi
 
     fi
 }
@@ -384,7 +611,20 @@ EOF
 #
 #########################################################################
 function add_installer_common() {
-    cat <<EOF >"$PREFIX/bin/$selected_distro"
+    if [[ "$selected_distro_type" == "chroot" ]]; then
+        cat <<EOF >"$PREFIX/bin/$selected_distro"
+#!/data/data/com.termux/files/usr/bin/bash
+
+source $PREFIX/etc/termux-desktop/common_functions
+
+xhost + >/dev/null 2>&1
+if [ "\$#" -eq 0 ]; then
+    chroot-distro command ubuntu "su - $final_user_name"
+    check_and_create_directory "/data/data/com.termux/files/usr/share/applications/pd_added"
+fi
+EOF
+    else
+        cat <<EOF >"$PREFIX/bin/$selected_distro"
 #!/data/data/com.termux/files/usr/bin/bash
 
 source $PREFIX/etc/termux-desktop/common_functions
@@ -400,12 +640,14 @@ if [ "\$#" -eq 0 ]; then
     check_and_create_directory "/data/data/com.termux/files/usr/share/applications/pd_added"
 fi
 EOF
+    fi
 }
 
 #######################################################
 ################ Debian Distro Command ################
 #######################################################
-function debian_based_app_installer() {
+
+function proot_distro_debian_based_app_installer() {
 
     cat <<TOP_EOF >>"$PREFIX/bin/$selected_distro"
     package_install_and_add_to_menu() {
@@ -420,12 +662,12 @@ function debian_based_app_installer() {
 source /data/data/com.termux/files/usr/etc/termux-desktop/common_functions
 
 # First configure dpkg and update apt
-sudo dpkg --configure -a
-sudo apt update
+dpkg --configure -a
+apt update
 apt-file update
 
 # Install the packages - get arguments directly
-sudo apt install "\$@"
+apt install "\$@"
 
 # Process desktop files for non-option arguments
 for arg in "\$@"; do
@@ -441,7 +683,7 @@ for arg in "\$@"; do
         if [ -z "\$desktop_files" ]; then 
             if ! apt-file list "\$package_name" >/dev/null 2>&1; then 
                 echo "\${R}[\${C}-\${R}]\${G} Updating apt-file cache… \${W}"
-                sudo apt-file update 
+                apt-file update 
             fi
 
             if command -v apt-file >/dev/null; then
@@ -504,7 +746,7 @@ for arg in "\$@"; do
         if command -v apt-file >/dev/null; then
             if ! apt-file list "\$package_name" >/dev/null 2>&1; then
                 echo "\${R}[\${C}-\${R}]\${G} Updating apt-file cache… \${W}"
-                sudo apt-file update
+                apt-file update
             fi
         desktop_files=\$(apt-file list "\$package_name" | awk -F': ' -v pkg="\$package_name" '\$1 == pkg && \$2 ~ /\.desktop\$/ { print \$2 }')
         fi
@@ -513,7 +755,7 @@ for arg in "\$@"; do
     # Remove the package
     echo "\${R}[\${C}-\${R}]\${G} Removing packages...\${W}"
     echo 
-    sudo apt "\$removal_command" "\$package_name"
+    apt "\$removal_command" "\$package_name"
 
     # Handle desktop files
     if [[ -z "\$desktop_files" ]]; then 
@@ -555,6 +797,166 @@ EOF
     } 
 TOP_EOF
 }
+
+function chroot_distro_debian_based_app_installer() {
+    cat <<TOP_EOF >>"$PREFIX/bin/$selected_distro"
+    package_install_and_add_to_menu() {
+        #################################################
+        ## Handle install package and add to menu part ##
+        #################################################
+
+        # Create the packinstall.sh script
+         sudo tee "${save_root_path}/packinstall.sh" >/dev/null <<'EOF'
+#!/bin/bash
+
+source /data/data/com.termux/files/usr/etc/termux-desktop/common_functions
+
+# First configure dpkg and update apt
+dpkg --configure -a
+apt update
+apt-file update
+
+# Install the packages - get arguments directly
+apt install "\$@"
+
+# Process desktop files for non-option arguments
+for arg in "\$@"; do
+    # Skip options (starting with -)
+    if [[ "\$arg" != -* ]]; then
+        package_name="\$arg"
+        
+        # Find desktop files for this package
+        echo "\${R}[\${C}-\${R}]\${G} Searchling for .desktop file… \${W}"
+        echo 
+        desktop_files=\$(dpkg-query -W -f='\${binary:Package}\n' | grep "^\$package_name\(-.*\)\?\$" | xargs dpkg-query -L | grep "^/usr/share/applications/.*\.desktop\$")
+        # If not found
+        if [ -z "\$desktop_files" ]; then 
+            if ! apt-file list "\$package_name" >/dev/null 2>&1; then 
+                echo "\${R}[\${C}-\${R}]\${G} Updating apt-file cache… \${W}"
+                apt-file update 
+            fi
+
+            if command -v apt-file >/dev/null; then
+                desktop_files=\$(apt-file list "\$package_name" | awk -F': ' -v pkg="\$package_name" '\$1 == pkg && \$2 ~ /\.desktop\$/ { print \$2 }')
+            fi
+            if [ -z "\$desktop_files" ]; then 
+                print_failed "No .desktop files found for package \${C} \$package_name \${R}/usr/share/applications."
+            fi
+        else
+            for desktop_files_name in \$desktop_files; do
+                desktop_files_with_ext=\$(basename "\$desktop_files_name")
+                desktop_files_without_ext="\${desktop_files_with_ext%.desktop}"
+                if dpkg -s "\$package_name" >/dev/null 2>&1; then
+                    print_success "Adding \${C}\${desktop_files_without_ext} \${G}To Termux Menu"
+                    cp "/usr/share/applications/\${desktop_files_with_ext}" "/data/data/com.termux/files/usr/share/applications/pd_added/"
+                    sed -i 's/Exec=/Exec=pdrun /g' "/data/data/com.termux/files/usr/share/applications/pd_added/\${desktop_files_with_ext}"
+                fi
+            done
+        fi
+    fi
+done
+check_and_delete 'packinstall.sh'
+EOF
+        # Make the script executable
+        chroot-distro command "${selected_distro}" "chmod +x /root/packinstall.sh"
+        # Execute the script with all arguments
+        chroot-distro command "${selected_distro}" "export DISPLAY=:${display_number}; export XDG_RUNTIME_DIR=${TMPDIR}; bash packinstall.sh \$@"
+    }
+
+    package_uninstall_and_remove_from_menu() {
+        ###################################################
+        # Handle remove package and remove from menu part #
+        ###################################################
+        # Create the packremove.sh script
+        sudo tee "${save_root_path}/packremove.sh" >/dev/null <<'EOF'
+#!/bin/bash
+
+source /data/data/com.termux/files/usr/etc/termux-desktop/common_functions
+
+# Get the removal command (remove or autoremove)
+removal_command="\$1"
+shift
+
+# Process each non-option argument (package)
+for arg in "\$@"; do
+    # Skip options
+    if [[ "\$arg" == -* ]]; then
+        continue
+    fi
+
+    package_name="\$arg"
+    desktop_files=""
+
+    # Find desktop files for this package
+    echo "\${R}[\${C}-\${R}]\${G} Searchling for .desktop file… \${W}"
+    echo
+     desktop_files=\$(dpkg-query -W -f='\${binary:Package}\n' | grep "^\$package_name\(-.*\)\?\$" | xargs dpkg-query -L | grep "^/usr/share/applications/.*\.desktop\$" || true)
+    # If not found
+    if [[ -z "\$desktop_files" ]]; then
+        if command -v apt-file >/dev/null; then
+            if ! apt-file list "\$package_name" >/dev/null 2>&1; then
+                echo "\${R}[\${C}-\${R}]\${G} Updating apt-file cache… \${W}"
+                apt-file update
+            fi
+        desktop_files=\$(apt-file list "\$package_name" | awk -F': ' -v pkg="\$package_name" '\$1 == pkg && \$2 ~ /\.desktop\$/ { print \$2 }')
+        fi
+    fi
+
+    # Remove the package
+    echo "\${R}[\${C}-\${R}]\${G} Removing packages...\${W}"
+    echo 
+    apt "\$removal_command" "\$package_name"
+
+    # Handle desktop files
+    if [[ -z "\$desktop_files" ]]; then 
+        print_failed "No .desktop files found for package \${C}\$package_name\${R} /usr/share/applications"
+    else
+        for desktop_files_name in \$desktop_files; do 
+            desktop_files_with_ext=\$(basename "\$desktop_files_name")
+            desktop_files_without_ext="\${desktop_files_with_ext%.desktop}"
+
+            # Check if package is really uninstalled
+            if ! dpkg -s "\$package_name" >/dev/null 2>&1; then 
+                print_success "Removing \${C}\${desktop_files_without_ext} \${G}From Termux Menu"
+                check_and_delete "/data/data/com.termux/files/usr/share/applications/pd_added/\${desktop_files_with_ext}"
+            else
+                print_failed "Package \${C}\$package_name\${R} is still installed; skipping desktop removal."
+            fi
+        done
+    fi
+
+done
+
+check_and_delete 'packremove.sh'
+EOF
+
+        # Make the script executable
+        chroot-distro command "${selected_distro}" "chmod +x /root/packremove.sh"
+
+        # Execute the script with all arguments
+        chroot-distro command "${selected_distro}" "export DISPLAY=:${display_number}; export XDG_RUNTIME_DIR=/data/data/com.termux/files/usr/tmp; bash packremove.sh \$1 \${@:2}"
+
+    }
+
+    update_distro() {
+        #################################################
+        ############### Handle update part ##############
+        #################################################
+        chroot-distro command "${selected_distro}" "apt update"
+        chroot-distro command "${selected_distro}" "apt-file update"
+    } 
+TOP_EOF
+
+}
+
+function debian_based_app_installer() {
+    if [[ "$selected_distro_type" == "chroot" ]]; then
+        chroot_distro_debian_based_app_installer
+    else
+        proot_distro_debian_based_app_installer
+    fi
+}
+
 #######################################################
 ################# Arch Distro Command #################
 #######################################################
@@ -828,20 +1230,82 @@ EOF
 TOP_EOF
 }
 
-function distro_create_app_installer() {
-    banner
-    print_msg "${BOLD}Creating distro app manager..."
+function add_chroot_distro_function_caller() {
+    cat <<EOF >>"$PREFIX/bin/$selected_distro"
+remove_distro_container() {
+    confirmation_y_or_n "Do you want to remove the distro\${R}it can't be undone" ans_remove_distro
+    case \$ans_remove_distro in
+        [yY]* )
+            print_success "Continuing with answer: \$ans_remove_distro"
+            sleep 0.2
+            if [[ -d $distro_path ]]; then
+                chroot-distro uninstall "$selected_distro"
+                distro_file_list=(
+                    "$PREFIX/bin/pdrun"
+                    "$PREFIX/share/applications/pd_added"
+                    "$PREFIX/bin/add2menu"
+                    "$PREFIX/share/applications/add2menu.desktop"
+                    "$PREFIX/bin/$selected_distro"
+                )
+                for distro_file in "\${distro_file_list[@]}"; do
+                    if [[ -e "\$distro_file" ]]; then
+                        check_and_delete "\$distro_file"
+                    else
+                        print_failed "File does not exist: \$distro_file"
+                    fi
+                done
+                print_success "$selected_distro removed successfully"
+                print_to_config "distro_add_answer" "n"
+            else
+                print_failed "$selected_distro does not exist"
+            fi
+            ;;
+        [nN]* )
+            echo "\${R}[\${C}-\${R}]\${C} Skipping distro remove\${W}"
+            sleep 0.2
+            ;;
+        * )
+            print_failed "Invalid input, Please enter y or n"
+            ;;
+    esac
+}
 
-    save_root_path="$distro_path/root"
-    add_installer_common
-    if [[ "$selected_distro" == "debian" ]] || [[ "$selected_distro" == "ubuntu" ]]; then
-        debian_based_app_installer
-    elif [[ "$selected_distro" == "archlinux" ]]; then
-        arch_based_app_installer
-    elif [[ "$selected_distro" == "fedora" ]]; then
-        fedora_based_app_installer
-    fi
+function help_distro_container() {
+echo -e "
+$selected_distro install packagename     to install packages and add them to termux desktop\n
+$selected_distro remove packagename      to remove packages and also remove them to termux desktop\n
+$selected_distro update                  to update the Linux distro\n
+$selected_distro -r                      to login as root\n
+$selected_distro --remove                to complitely remove the Linux distro and delete all files and data related to it\n
+"
+}
+case \$1 in
+--root|-r)
+    chroot-distro login "${selected_distro}"
+    ;;
+--remove | --uninstall)
+    remove_distro_container
+    ;;
+install | in | ins)
+    shift
+    package_install_and_add_to_menu "\$@"
+    ;;
+remove | autoremove | rm)
+    command="\$1"
+    shift
+    package_uninstall_and_remove_from_menu "\$command" "\$@"
+    ;;
+update | up)
+    update_distro
+    ;;
+--help|-h)
+    help_distro_container
+    ;;
+esac
+EOF
+}
 
+function add_proot_distro_function_caller() {
     cat <<EOF >>"$PREFIX/bin/$selected_distro"
 remove_distro_container() {
     confirmation_y_or_n "Do you want to remove the distro\${R}it can't be undone" ans_remove_distro
@@ -892,7 +1356,7 @@ $selected_distro --remove                to complitely remove the Linux distro a
 }
 case \$1 in
 --root|-r)
-    proot-distro login --termux-home "$selected_distro"
+    "$selected_distro"
     ;;
 --remove | --uninstall)
     remove_distro_container
@@ -914,12 +1378,38 @@ update | up)
     ;;
 esac
 EOF
+}
 
+function add_distro_function_caller() {
+    if [[ "$selected_distro_type" == "chroot" ]]; then
+        add_chroot_distro_function_caller
+    else
+        add_proot_distro_function_caller
+    fi
+}
+
+function distro_create_app_installer() {
+    banner
+    print_msg "${BOLD}Creating distro app manager..."
+
+    save_root_path="$distro_path/root"
+    add_installer_common
+    if [[ "$selected_distro" == "debian" ]] || [[ "$selected_distro" == "ubuntu" ]]; then
+        debian_based_app_installer
+    elif [[ "$selected_distro" == "archlinux" ]]; then
+        arch_based_app_installer
+    elif [[ "$selected_distro" == "fedora" ]]; then
+        fedora_based_app_installer
+    fi
+    add_distro_function_caller
     chmod +x "$PREFIX/bin/$selected_distro"
 
-    #########################################################################
-    ########################### Add To Menu Setup ###########################
-    #########################################################################
+}
+
+#####################
+# Add To Menu Setup #
+#####################
+function add_add_to_menu() {
     banner
     package_install_and_check "zenity"
 
@@ -970,7 +1460,7 @@ EOF
 #
 #########################################################################
 
-function distro_app_launch_setup() {
+function proot_distro_app_launch_setup() {
     if [[ "$enable_hw_acc" == "y" ]]; then
 
         cat <<EOF >"$PREFIX/bin/pdrun"
@@ -1002,7 +1492,7 @@ case \$1 in
 proot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp --termux-home -- eval "env DISPLAY=\$(echo \$DISPLAY) XDG_RUNTIME_DIR=\${TMPDIR} LIBGL_ALWAYS_SOFTWARE=1 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe \${@:2}"
 ;;
 --help|-h)
-echo "${G}Type ${C}pdrun launch command ${G}to start with GPU acceleration${NC}"
+echo "${G}Type ${C}pdrun PACKAGE-NAME ${G}to start with GPU acceleration${NC}"
 ;;
 *)
 proot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp --termux-home -- eval "env DISPLAY=\$(echo \$DISPLAY) XDG_RUNTIME_DIR=\${TMPDIR} \$selected_pd_hw_method \$@"
@@ -1037,7 +1527,7 @@ EOF
 xhost + > /dev/null 2>&1
 case \$1 in
 --help|-h)
-echo "${G}Type ${C}pdrun launch command ${G}to start with gpu acceleration${NC}"
+echo "${G}Type ${C}pdrun PACKAGE-NAME ${G}to start with gpu acceleration${NC}"
 ;;
 *)
 proot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp --termux-home -- eval "env DISPLAY=\$(echo \$DISPLAY) XDG_RUNTIME_DIR=\${TMPDIR} \$@"
@@ -1046,6 +1536,67 @@ esac
 EOF
     fi
     chmod +x "$PREFIX/bin/pdrun"
+}
+
+function chroot_distro_app_launch_setup() {
+    if [[ "$enable_hw_acc" == "y" ]]; then
+
+        cat <<EOF >"$PREFIX/bin/pdrun"
+#!/data/data/com.termux/files/usr/bin/bash
+
+source /data/data/com.termux/files/usr/etc/termux-desktop/common_functions
+
+xhost + > /dev/null 2>&1
+case \$1 in
+--nogpu)
+export CHROOT_DISTRO_TMP=false
+sudo busybox mount --bind "$PREFIX/tmp" "$distro_path/tmp"
+sudo chmod 1777 $PREFIX/tmp
+chroot-distro command $selected_distro "sudo -u $final_user_name  env DISPLAY=\$(echo \$DISPLAY) LIBGL_ALWAYS_SOFTWARE=1 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe \${@:2}"
+;;
+--help|-h)
+echo "${G}Type ${C}pdrun PACKAGE-NAME ${G}to start with GPU acceleration${NC}"
+;;
+*)
+export CHROOT_DISTRO_TMP=false
+sudo busybox mount --bind "$PREFIX/tmp" "$distro_path/tmp"
+sudo chmod 1777 $PREFIX/tmp
+chroot-distro command $selected_distro "sudo -u $final_user_name env DISPLAY=\$(echo \$DISPLAY) \$@"
+;;
+esac
+EOF
+
+    elif [[ "$enable_hw_acc" == "n" ]]; then
+
+        cat <<EOF >"$PREFIX/bin/pdrun"
+#!/data/data/com.termux/files/usr/bin/bash
+
+source /data/data/com.termux/files/usr/etc/termux-desktop/common_functions
+
+xhost + > /dev/null 2>&1
+case \$1 in
+--help|-h)
+echo "${G}Type ${C}pdrun launch command ${G}to start with gpu acceleration${NC}"
+;;
+*)
+export CHROOT_DISTRO_TMP=false
+sudo busybox mount --bind "$PREFIX/tmp" "$distro_path/tmp"
+sudo chmod 1777 $PREFIX/tmp
+chroot-distro command $selected_distro "sudo -u $final_user_name env DISPLAY=\$(echo \$DISPLAY) \$@"
+;;
+esac
+EOF
+    fi
+    chmod +x "$PREFIX/bin/pdrun"
+
+}
+
+function distro_app_launch_setup() {
+    if [[ "$selected_distro_type" == "chroot" ]]; then
+        chroot_distro_app_launch_setup
+    else
+        proot_distro_app_launch_setup
+    fi
 }
 
 #########################################################################
@@ -1091,10 +1642,15 @@ check_and_delete "some_required_pack.sh"
 EOF
     )
     create_shell_script "$save_path/some_required_pack.sh" "$pd_setup_some_required_pack"
-    proot-distro login "$selected_distro" -- /bin/bash -c 'bash some_required_pack.sh'
+    if [[ "$selected_distro_type" == "chroot" ]]; then
+        chroot-distro command "$selected_distro" "bash some_required_pack.sh"
+    else
+        proot-distro login "$selected_distro" -- /bin/bash -c 'bash some_required_pack.sh'
+    fi
 }
 
 function install_distro_container() {
+    save_path="$distro_path/root"
     setup_distro
     distro_basic_task
     if [[ "$call_from_change_distro" == false ]]; then
@@ -1102,10 +1658,12 @@ function install_distro_container() {
             hw_config
         fi
     fi
-    save_path="$distro_path/root"
     distro_zsh_setup
     distro_terminal_utility_setup
     distro_create_app_installer
+    if [[ "$selected_distro_type" == "proot" ]]; then
+        add_add_to_menu
+    fi
     if [[ "$lite_mode" != "1" && "$lite_mode" != "true" ]]; then
         install_some_required_pack
     fi
@@ -1145,4 +1703,6 @@ function disro_container_install_check() {
 
 check_termux
 install_distro_container
-disro_container_install_check
+if [[ "$selected_distro_type" == "proot" ]]; then
+    disro_container_install_check
+fi

@@ -87,28 +87,28 @@ function log_debug() {
 function print_success() {
     local msg
     msg="$1"
-    echo "${R}[${G}✓${R}]${G} $msg${NC}"
+    echo "${R}[${G}✓${R}]${G} $msg ${NC}"
     log_debug "$msg"
 }
 
 function print_failed() {
     local msg
     msg="$1"
-    echo "${R}[${R}☓${R}]${R} $msg${NC}"
+    echo "${R}[${R}☓${R}]${R} $msg ${NC}"
     log_debug "$msg"
 }
 
 function print_warn() {
     local msg
     msg="$1"
-    echo "${R}[${Y}!${R}]${Y} $msg${NC}"
+    echo "${R}[${Y}!${R}]${Y} $msg ${NC}"
     log_debug "$msg"
 }
 
 function print_msg() {
     local msg
     msg="$1"
-    echo "${R}[${C}-${R}]${G} $msg${NC}"
+    echo "${R}[${C}-${R}]${G} $msg ${NC}"
     log_debug "$msg"
 
 }
@@ -399,7 +399,7 @@ function package_check_and_remove() {
                         fi
                     done
                 else
-                    print_success "Package ${C}$package_name${NC} is not installed."
+                    print_success "Package ${C}$package_name${G} is not installed.${NC}"
                 fi
             fi
         done
@@ -450,7 +450,7 @@ function package_check_and_remove() {
                         fi
                     done
                 else
-                    print_success "Package ${C}$package_name${NC} is not installed."
+                    print_success "Package ${C}$package_name${G} is not installed.${NC}"
                 fi
             fi
         done
@@ -749,6 +749,7 @@ function validate_required_vars() {
     # If a distro is enabled, add required variables
     if [[ "$distro_add_answer" == "y" ]]; then
         required_vars+=(
+            "selected_distro_type"
             "selected_distro"
             "pd_audio_config_answer"
             "pd_useradd_answer"
@@ -1287,7 +1288,7 @@ ${NC}"
     fi
     banner
     echo -e "
-${R}[${C}-${R}]${G}${BOLD} Linux Distro Container (proot-distro):- ${NC}
+${R}[${C}-${R}]${G}${BOLD} Linux Distro Container:- ${NC}
 
 It will help you to install apps that aren't available in Termux.
 So it will set up a Linux distro container and add options to install those apps.
@@ -1504,19 +1505,51 @@ function hw_questions() {
 }
 
 # distro related questions
-function choose_distro() {
-    print_msg "${BOLD}Select Linux Distro You Want To Add"
+function distro_type_select() {
+    print_msg "${BOLD}Select the distro type"
     echo " "
-    echo "${Y}1. Debian${NC}"
+    echo "${G}chroot-distro:- ${B}https://github.com/Magisk-Modules-Alt-Repo/chroot-distro${NC}"
     echo " "
-    echo "${Y}2. Ubuntu${NC}"
+    echo "${G}proot-distro:- ${B}https://github.com/termux/proot-distro${NC}"
     echo " "
-    echo "${Y}3. Arch (Unstable | isn't fully suppoted by AppStore yet)${NC}"
+    echo "${Y}1. Proot Distro${NC}"
     echo " "
-    echo "${Y}4. Fedora${NC}"
+    echo "${Y}2. Chroot Distro (root required)${NC}"
     echo " "
-    select_an_option 4 1 distro_answer
+    select_an_option 2 1 distro_type_answer
 
+    case "$distro_type_answer" in
+    1) selected_distro_type="proot" ;;
+    2) selected_distro_type="chroot" ;;
+    *) selected_distro_type="proot" ;;
+    esac
+}
+
+function choose_distro() {
+    if [[ "$selected_distro_type" == "chroot" ]]; then
+        print_msg "${BOLD}Select Linux Distro You Want To Add"
+        echo " "
+        echo "${Y}1. Debian${NC}"
+        echo " "
+        echo "${Y}2. Ubuntu${NC}"
+        echo " "
+        select_an_option 2 1 distro_answer
+    elif [[ "$selected_distro_type" == "proot" ]]; then
+        print_msg "${BOLD}Select Linux Distro You Want To Add"
+        echo " "
+        echo "${Y}1. Debian${NC}"
+        echo " "
+        echo "${Y}2. Ubuntu${NC}"
+        echo " "
+        echo "${Y}3. Arch (Unstable | isn't fully suppoted by AppStore yet)${NC}"
+        echo " "
+        echo "${Y}4. Fedora${NC}"
+        echo " "
+        select_an_option 4 1 distro_answer
+    else
+        print_failed "Unable to determine what distro type to use"
+        exit 1
+    fi
     case "$distro_answer" in
     1) selected_distro="debian" ;;
     2) selected_distro="ubuntu" ;;
@@ -1628,6 +1661,7 @@ function setup_user_name_and_pass() {
 
 function distro_questions() {
     banner
+    distro_type_select
     choose_distro
     banner
     confirmation_y_or_n "Do you want to configure audio support for Linux distro container" pd_audio_config_answer
@@ -1812,6 +1846,13 @@ function define_value_name() {
     elif [[ "$distro_add_answer" == "n" ]]; then
         distro_container_confirmation="Disabled"
     fi
+    if [[ "$selected_distro_type" == "chroot" ]]; then
+        distro_type=CHROOT
+    elif [[ "$selected_distro_type" == "proot" ]]; then
+        distro_type=PROOT
+    else
+        distro_type="Unable to select distro type"
+    fi
     # Distro User and Pass
     if [[ "$pd_useradd_answer" == "y" ]]; then
         distro_user_name="${user_name}"
@@ -1914,6 +1955,7 @@ function print_conf_info() {
     echo "${G}Linux Distro Container${NC}"
     echo "   • Distro Status: ${distro_container_confirmation}"
     if [[ "$distro_add_answer" == "y" ]]; then
+        echo "   • Distro Type: ${distro_type}"
         echo "   • Distribution: ${selected_distro}"
         echo "   • Distro Username: ${distro_user_name}"
         echo "   • Distro Pass: ${distro_pass}"
@@ -5015,7 +5057,9 @@ function install_termux_desktop() {
     distro_container_setup
     gui_launcher
     terminal_utility_setup
-    install_termux_desktop_appstore
+    if [[ "$selected_distro_type" == "proot" ]]; then
+        install_termux_desktop_appstore
+    fi
     add_to_autostart
     check_desktop_process
     install_fm_tools

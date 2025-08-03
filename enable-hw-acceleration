@@ -193,14 +193,20 @@ function setup_turnip_proot() {
     print_msg "${BOLD}Setting up Turnip for $selected_distro ..."
     echo
     if [[ "$selected_distro" == "debian" ]] || [[ "$selected_distro" == "ubuntu" ]]; then
-        proot-distro login $selected_distro --shared-tmp -- env DISPLAY=:$display_number apt install xdg-desktop-portal libgl1 libgl1-mesa-dri libvulkan1 glmark2 -y
-        if [[ "$selected_distro" == "ubuntu" ]]; then
-            proot-distro login $selected_distro --shared-tmp -- env DISPLAY=:$display_number apt install mesa-vulkan-drivers libllvm15t64 -y
+        if [[ "$selected_distro_type" == "chroot" ]]; then
+            chroot-distro command "${selected_distro}" "apt install xdg-desktop-portal libgl1 libgl1-mesa-dri libvulkan1 mesa-vulkan-drivers -y"
+        else
+            proot-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:"$display_number" apt install xdg-desktop-portal libgl1 libgl1-mesa-dri libvulkan1 mesa-vulkan-drivers -y
         fi
         download_file "$HOME/mesa-vulkan-kgsl_arm64.deb" "https://github.com/sabamdarif/termux-desktop/releases/download/mesa-vulkan/mesa-vulkan-kgsl_24.1.0-devel-20240120_arm64.deb"
-        proot-distro login $selected_distro --shared-tmp -- env DISPLAY=:$display_number dpkg -i $HOME/mesa-vulkan-kgsl_arm64.deb
-        proot-distro login $selected_distro --shared-tmp -- env DISPLAY=:$display_number rm $HOME/mesa-vulkan-kgsl_arm64.deb
-        proot-distro login $selected_distro --shared-tmp -- env DISPLAY=:$display_number apt-mark hold mesa-vulkan-drivers libgl1-mesa-dri mesa-libgallium
+        if [[ "$selected_distro_type" == "chroot" ]]; then
+            chroot-distro command "${selected_distro}" "dpkg -i $HOME/mesa-vulkan-kgsl_arm64.deb"
+            chroot-distro command "${selected_distro}" "apt-mark hold mesa-vulkan-drivers libgl1-mesa-dri mesa-libgallium"
+        else
+            proot-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:"$display_number" dpkg -i "$HOME/mesa-vulkan-kgsl_arm64.deb"
+            proot-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:"$display_number" apt-mark hold mesa-vulkan-drivers libgl1-mesa-dri mesa-libgallium
+        fi
+        check_and_delete "$HOME/mesa-vulkan-kgsl_arm64.deb"
     fi
 }
 

@@ -20,7 +20,7 @@
 - :paperclips: **GUI Access:** Supports Termux:X11 and VNC (vnc is optional).
 - :package: **Package Management:** Compatible with both APT and [PACMAN](https://youtu.be/ditNvG5Nxj0) (pacman isn't well tested, so there might be some issues).
 - :shopping: **App Store:** A appstore to install apps from termux and suppoted proot-distro.
-- :package: **Apps** Normally, you're limited to apps that are supported by Termux, but it have a option for installing apps like LibreOffice via proot-distro and use them as a native app.
+- :package: **Apps** Normally, you're limited to apps that are supported by Termux, but it have a option for installing apps like LibreOffice via proot-distro/chroot-distro and use them as a native app.
 - And a lot more...
 
 ---
@@ -38,6 +38,7 @@
    - Minimum 2GB of RAM (3GB recommended)
    - 1.5-2GB of Internet data
    - 3-4GB of free storage
+   - Root: Optional (only for chroot-distro)
    - VNC Client [RealVNC](https://play.google.com/store/apps/details?id=com.realvnc.viewer.android) or [NetHunter Kex](https://store.nethunter.com/en/packages/com.offsec.nethunter.kex/) _(Optional)_
 
 ##### 2. Explore Desktop Styles:

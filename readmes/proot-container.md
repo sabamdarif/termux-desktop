@@ -1,7 +1,7 @@
 ## Expanding Termux Functionality with Distro Containers
 #### Video Guide:- [YouTube](https://youtu.be/KiUTyGZ2grE?si=9L8pg00Vf--64Tsp)
 
-Termux natively supports a limited selection of applications. However, with this script, you can extend Termux's capabilities by integrating applications from other Linux distributions using a **Distro Container**. The best part? There’s no need to log in to the Proot-based distro to access these apps; they seamlessly integrate into Termux, appearing in its desktop app menu and launching directly from the Termux terminal.
+Termux natively supports a limited selection of applications. However, with this script, you can extend Termux's capabilities by integrating applications from other Linux distributions using a **Distro Container**. The best part? There’s no need to log in to the Proot/chroot-distro to access these apps; they seamlessly integrate into Termux, appearing in its desktop app menu and launching directly from the Termux terminal.
 
 ---
 
@@ -14,6 +14,8 @@ Termux natively supports a limited selection of applications. However, with this
 ---
 
 ### How to Use the Script
+
+#### NOTE:- for chroot-distro flash this module first:- [https://github.com/Magisk-Modules-Alt-Repo/chroot-distro](https://github.com/Magisk-Modules-Alt-Repo/chroot-distro)
 
 1. **Run the Installer Script**:
     - When prompted about setting up a Distro Container, type `y` to continue.
