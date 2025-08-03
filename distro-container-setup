@@ -1552,7 +1552,7 @@ case \$1 in
 export CHROOT_DISTRO_TMP=false
 sudo busybox mount --bind "$PREFIX/tmp" "$distro_path/tmp"
 sudo chmod 1777 $PREFIX/tmp
-chroot-distro command $selected_distro "sudo -u $final_user_name  env DISPLAY=\$(echo \$DISPLAY) LIBGL_ALWAYS_SOFTWARE=1 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe \${@:2}"
+chroot-distro command $selected_distro "sudo -u $final_user_name  env DISPLAY=\$(echo \$DISPLAY) LIBGL_ALWAYS_SOFTWARE=1 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe bash -c 'cd ~ && \${*:2}'"
 ;;
 --help|-h)
 echo "${G}Type ${C}pdrun PACKAGE-NAME ${G}to start with GPU acceleration${NC}"
@@ -1561,7 +1561,7 @@ echo "${G}Type ${C}pdrun PACKAGE-NAME ${G}to start with GPU acceleration${NC}"
 export CHROOT_DISTRO_TMP=false
 sudo busybox mount --bind "$PREFIX/tmp" "$distro_path/tmp"
 sudo chmod 1777 $PREFIX/tmp
-chroot-distro command $selected_distro "sudo -u $final_user_name env DISPLAY=\$(echo \$DISPLAY) \$@"
+chroot-distro command $selected_distro "sudo -u $final_user_name env DISPLAY=\$(echo \$DISPLAY) bash -c 'cd ~ && \${*:1}'"
 ;;
 esac
 EOF
@@ -1582,7 +1582,7 @@ echo "${G}Type ${C}pdrun launch command ${G}to start with gpu acceleration${NC}"
 export CHROOT_DISTRO_TMP=false
 sudo busybox mount --bind "$PREFIX/tmp" "$distro_path/tmp"
 sudo chmod 1777 $PREFIX/tmp
-chroot-distro command $selected_distro "sudo -u $final_user_name env DISPLAY=\$(echo \$DISPLAY) \$@"
+chroot-distro command $selected_distro "sudo -u $final_user_name env DISPLAY=\$(echo \$DISPLAY) bash -c 'cd ~ && \${*:1}'"
 ;;
 esac
 EOF
