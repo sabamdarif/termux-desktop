@@ -139,3 +139,58 @@ This document provides a list of keybindings used in Openbox for quick reference
 - `chrome://flags/#enable-vulkan` Enable this then relaunch chromium
 
 ---
+
+## :hammer_and_wrench:How to use x11 display forwarding option
+
+- Command to use:-
+```bash
+gui --display IP_ADDRESS:DISPLAY_PORT
+```
+`ex: gui --display 192.0.2.1:0`
+
+#### On Windows:- 
+`run:- ifconfig`
+```bash
+Ethernet adapter Ethernet 8:
+
+   Connection-specific DNS Suffix  . :
+   Link-local IPv6 Address . . . . . : fe80::7f3c:6323:b82f:679b%30
+   IPv4 Address. . . . . . . . . . . : 192.168.127.228                 # Desktop IP set in x11 session on android
+   Subnet Mask . . . . . . . . . . . : 255.255.255.0
+   Default Gateway . . . . . . . . . : 192.168.127.84                  # Android Phone IP
+```
+
+- Install:- `VcXsrc`
+- Launch VcXsrc then set
+
+    1. Open window without titlebar
+    2. Start no client
+    3. Disable access control
+
+
+#### On Linux:- 
+
+`run:- ip a | grep inet`
+
+```bash
+    inet 127.0.0.1/8 scope host lo
+    inet6 ::1/128 scope host noprefixroute
+    inet 192.168.255.88/24 brd 192.168.255.255 scope global dynamic noprefixroute wlp2s0 # Here 192.168.255.88 is the ip address
+    inet6 fe80::7c82:230f:89fb:5b5b/64 scope link noprefixroute
+    inet 192.168.122.1/24 brd 192.168.122.255 scope global virbr0
+    inet 172.17.0.1/16 brd 172.17.255.255 scope global docker0`
+```
+- Install `xserver-xephyr` (package name might be different on other Linux distro)
+- Then run:- 
+    ```bash
+    xhost +
+    ```
+    ```bash
+    Xephyr :1 -ac -screen 1920x1080 -listen tcp -nolisten unix -fullscreen
+    ```
+    `here:- :1 will set the display port so make sure you use the right display port on gui --display command`
+
+
+- On termux:-
+
+    `gui --display 192.168.127.228:0` or just `192.168.127.228`(then it will use the default port 0)

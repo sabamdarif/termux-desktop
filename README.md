@@ -144,6 +144,7 @@ gui [options]
 ```
 Options:
 - `--start`: Start GUI (use `vnc` or `tx11` as arguments).
+- `--display` To launch the current desktop environment on another x11 display server over the same network
 - `--stop`: Stop GUI.
 - `--kill`: Stop all GUI sessions.
 - `--help`: To show help.
@@ -154,6 +155,7 @@ Options:
 ##### If you select only one of them to access gui
 - `gui --start / gui -l` *to start Termux gui*
 - `gui --stop / gui -s` *to stop gui*
+- `gui --display / gui -d` `<IP_ADDRESS>:<DISPLAY_PORT>` *To launch the current desktop environment on another x11 display server over the same network*
 
 ##### If you select both for gui access
 - `gui -l / --start` `vnc` *to start VNC*
@@ -161,6 +163,8 @@ Options:
 - `gui -s / --stop` `vnc` *to stop VNC*
 - `gui -s / --stop` `tx11` *to stop Termux:X11*
 - `gui -k / --kill / -kill` *to kill both vncserver and Termux:x11 At Once*
+- `gui --display / gui -d` `<IP_ADDRESS>:<DISPLAY_PORT>` *To launch the current desktop environment on another x11 display server over the same network*
+    - for more click :- [Here](https://github.com/sabamdarif/termux-desktop/blob/main/readmes/see-more.md#hammer_and_wrenchhow-to-use-x11-display-forwarding-option)
 
 </details>
 

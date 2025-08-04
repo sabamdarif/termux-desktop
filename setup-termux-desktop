@@ -3463,96 +3463,177 @@ function setup_termux_x11() {
 }
 
 function gui_termux_x11() {
-    cat <<EOF >"$PREFIX/bin/gui"
-#!/data/data/com.termux/files/usr/bin/bash
-
-if [[ -z "\$PREFIX" && "\$PREFIX" != *"/com.termux/"* ]]; then 
-  echo "${R}[${R}☓${R}]${R}${BOLD}Please run it inside termux${NC}"
-  exit 0
-fi
-
-case \$1 in
---start|-l)
-tx11start
-;;
---stop|-s)
-tx11stop
-;;
---kill|-k|-kill)
-tx11stop -f
-;;
---help|-h)
-echo -e "${G} Use ${C}gui --start / gui -l ${G}to start termux:x11\n Use ${C}gui --stop / gui -s ${G}to stop termux:x11${NC}"
-;;
-*)
-echo "${R}Invalid choise${NC}"
-gui -h
-;;
-esac
-EOF
-}
-
-function gui_both() {
-    cat <<EOF >"$PREFIX/bin/gui"
+    cat <<'EOF' >"$PREFIX/bin/gui"
 #!/data/data/com.termux/files/usr/bin/bash
 
 source /data/data/com.termux/files/usr/etc/termux-desktop/common_functions
 
 # This code block is taken from:- https://github.com/termux/proot-distro/blob/master/proot-distro.sh#L172C1-L184C1
-TRACER_PID=\$(grep TracerPid "/proc/\$\$/status" | cut -d \$'\t' -f 2)
-if [ "\$TRACER_PID" != 0 ]; then
-	TRACER_NAME=\$(grep Name "/proc/\${TRACER_PID}/status" | cut -d \$'\t' -f 2)
-	if [ "\$TRACER_NAME" = "proot" ]; then
-		msg
-		print_failed "gui command should not be executed under PRoot.\${W}"
-		msg
-		exit 1
-	fi
-	unset TRACER_NAME
+TRACER_PID=$(grep TracerPid "/proc/\$\$/status" | cut -d $'\t' -f 2)
+if [ "$TRACER_PID" != 0 ]; then
+    TRACER_NAME=$(grep Name "/proc/${TRACER_PID}/status" | cut -d $'\t' -f 2)
+    if [ "$TRACER_NAME" = "proot" ]; then
+        msg
+        print_failed "gui command should not be executed under PRoot.\${W}"
+        msg
+        exit 1
+    fi
+    unset TRACER_NAME
 fi
 unset TRACER_PID
 
-case \$1 in
-    --start|-l)
-        case \$2 in
-            tx11)
-                tx11start
-                ;;
-            vnc)
-                vncstart
-                ;;
-            *)
-                echo -e "${R}Invalid choise. Use ${C}tx11${R} or ${C}vnc ${G}with it${NC}"
-                ;;
-        esac
+forward_display() {
+    echo "${R}[${C}-${R}]${G} Starting display on: ${given_ip}:${display_port} ${NC}"
+    pkill -9 "$de_startup" >/dev/null 2>&1
+    pulseaudio --start --exit-idle-time=-1
+    pacmd load-module module-native-protocol-tcp auth-ip-acl=127.0.0.1 auth-anonymous=1
+    rm -rf ~/.config/pulse/*-runtime/pid >/dev/null 2>&1
+    pactl load-module module-sles-source >/dev/null 2>&1
+    export XDG_RUNTIME_DIR=/data/data/com.termux/files/usr/tmp
+    mkdir -p "$XDG_RUNTIME_DIR"
+    env DISPLAY=${given_ip}:${display_port} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg dbus-launch --exit-with-session $de_startup
+}
+
+case $1 in
+--start | -l)
+    tx11start
+    ;;
+--display | -d)
+    if [[ "$2" == *":"* ]]; then
+        # Everything before the last colon
+        given_ip="${2%:*}"
+        # Everything after the last colon
+        display_port="${2##*:}"
+    else
+        given_ip="$2"
+        display_port="0"
+    fi
+
+    if [ -z "$given_ip" ]; then
+        print_failed "No IP address provided"
+        echo -e "Usage: gui --display <IP_ADDRESS>[:<PORT>]\nExamples:\n  gui --display 192.168.1.100:0\n  gui --display 192.168.1.100"
+        exit 1
+    fi
+    forward_display
+    unset given_ip display_port
+    ;;
+--stop | -s)
+    tx11stop
+    ;;
+--kill | -k | -kill)
+    tx11stop -f
+    print_success "gui services killed successfully"
+    ;; 
+--help | -h)
+    echo -e "gui --start / gui -l to start termux:x11"
+    echo -e "gui --display / gui -d to forward display to IP address"
+    echo -e "gui --stop / gui -s to stop termux:x11"
+    echo -e "gui --kill / gui -k to kill gui services"
+    ;;
+*)
+    echo "${R}Invalid choise${NC}"
+    gui -h
+    ;;
+esac
+EOF
+}
+
+function gui_both() {
+    cat <<'EOF' >"$PREFIX/bin/gui"
+#!/data/data/com.termux/files/usr/bin/bash
+
+source /data/data/com.termux/files/usr/etc/termux-desktop/common_functions
+
+# This code block is taken from:- https://github.com/termux/proot-distro/blob/master/proot-distro.sh#L172C1-L184C1
+TRACER_PID=$(grep TracerPid "/proc/\$\$/status" | cut -d $'\t' -f 2)
+if [ "$TRACER_PID" != 0 ]; then
+    TRACER_NAME=$(grep Name "/proc/${TRACER_PID}/status" | cut -d $'\t' -f 2)
+    if [ "$TRACER_NAME" = "proot" ]; then
+        msg
+        print_failed "gui command should not be executed under PRoot.\${W}"
+        msg
+        exit 1
+    fi
+    unset TRACER_NAME
+fi
+unset TRACER_PID
+
+forward_display() {
+    echo "${R}[${C}-${R}]${G} Starting display on: ${given_ip}:${display_port} ${NC}"
+    pkill -9 "$de_startup" >/dev/null 2>&1
+    pulseaudio --start --exit-idle-time=-1
+    pacmd load-module module-native-protocol-tcp auth-ip-acl=127.0.0.1 auth-anonymous=1
+    rm -rf ~/.config/pulse/*-runtime/pid >/dev/null 2>&1
+    pactl load-module module-sles-source >/dev/null 2>&1
+    export XDG_RUNTIME_DIR=/data/data/com.termux/files/usr/tmp
+    mkdir -p "$XDG_RUNTIME_DIR"
+    env DISPLAY=${given_ip}:${display_port} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg dbus-launch --exit-with-session $de_startup &
+}
+
+case $1 in
+--start | -l)
+    case \$2 in
+    tx11)
+        tx11start
         ;;
-	--kill|-k|-kill)
-	vncstop -f > /dev/null 2>&1
-	tx11stop -f > /dev/null 2>&1
-	echo -e "${G}Gui services killed successfully ${NC}"
-	;;
-    --stop|-s)
-        case \$2 in
-            tx11)
-                tx11stop
-                ;;
-            vnc)
-                vncstop
-                ;;
-            *)
-                echo -e "${R}Invalid choise. Use ${C}tx11${R} or ${C}vnc ${G}with it${NC}"
-                ;;
-        esac
-        ;;
-    --help|-h)
-        echo -e "${G}Use ${C}gui --start tx11/vnc${G} or ${C}gui -l tx11/vnc${G} to start a gui"
-        echo -e "Use ${C}gui --stop tx11/vnc${G} or ${C}gui -s tx11/vnc${G} to stop a gui${NC}"
-		echo -e "Use ${C}gui --kill ${G} To kill both at once${NC}"
+    vnc)
+        vncstart
         ;;
     *)
-        echo -e "${R}Invalid choice${NC}"
-        gui -h
+        echo -e "${R}Invalid choise. Use ${C}tx11${R} or ${C}vnc ${G}with it${NC}"
         ;;
+    esac
+    ;;
+--display | -d)
+    if [[ "$2" == *":"* ]]; then
+        # Everything before the last colon
+        given_ip="${2%:*}"
+        # Everything after the last colon
+        display_port="${2##*:}"
+    else
+        given_ip="$2"
+        display_port="0"
+    fi
+
+    if [ -z "$given_ip" ]; then
+        print_failed "No IP address provided"
+        echo -e "Usage: gui --display <IP_ADDRESS>[:<PORT>]\nExamples:\n  gui --display 192.168.1.100:0\n  gui --display 192.168.1.100"
+        exit 1
+    fi
+    forward_display
+    unset given_ip display_port
+    ;;
+--kill | -k | -kill)
+    vncstop -f >/dev/null 2>&1
+    tx11stop -f >/dev/null 2>&1
+    print_success "gui services killed successfully"
+    ;;
+--stop | -s)
+    case $2 in
+    tx11)
+        tx11stop
+        ;;
+    vnc)
+        vncstop
+        ;;
+    *)
+        echo -e "${R}Invalid choise. Use ${C}tx11${R} or ${C}vnc ${G}with it${NC}"
+        ;;
+    esac
+    ;;
+--help | -h)
+    echo -e "Usage: gui [OPTION] [ARGUMENT]\n"
+    echo -e "Options:"
+    echo -e "  --start, -l [tx11/vnc]    Start a GUI (termux:x11 or VNC)"
+    echo -e "  --display, -d <IP_ADDRESS:DISPLAY_PORT]> Forward display to IP address"
+    echo -e "  --stop, -s [tx11/vnc]     Stop a GUI (termux:x11 or VNC)"
+    echo -e "  --kill, -k                Kill both GUI services at once"
+    echo -e "  --help, -h                Show this help message"
+    ;;
+*)
+    echo -e "${R}Invalid choice${NC}"
+    gui -h
+    ;;
 esac
 EOF
 }
