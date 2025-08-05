@@ -145,6 +145,7 @@ EOF
     # restore the original back
     sudo cp /system/bin/chroot-distro.backup /system/bin/chroot-distro
     distro_path="/data/local/chroot-distro/$selected_distro"
+    print_to_config "selected_distro"
 }
 
 function setup_distro() {
