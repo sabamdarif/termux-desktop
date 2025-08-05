@@ -300,10 +300,11 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
         self.set_default_size(600, 500)
         self.set_position(Gtk.WindowPosition.CENTER)
         
+        # Read configuration and set constants
+        self.read_termux_desktop_config()
+        
         # Constants
         self.PREFIX = os.getenv("PREFIX", "/data/data/com.termux/files/usr")
-        self.DISTRO_NAME = os.getenv("distro_name", "debian")
-        self.DISTRO_PATH = os.getenv("distro_path", f"/data/data/com.termux/files/usr/var/lib/proot-distro/installed-rootfs/{self.DISTRO_NAME}")
         self.APPLICATIONS_DIR = os.path.join(self.PREFIX, "share/applications")
         self.ADDED_DIR = os.path.join(self.APPLICATIONS_DIR, "pd_added")
         
@@ -367,6 +368,67 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
         
         # Delay app loading to let the UI render first
         GLib.timeout_add(100, self._delayed_load)
+
+    def read_termux_desktop_config(self):
+        """Read termux-desktop configuration to determine distro type and settings"""
+        config_path = os.path.join(self.PREFIX if hasattr(self, 'PREFIX') else "/data/data/com.termux/files/usr", 
+                                   "etc/termux-desktop/configuration.conf")
+        
+        # Default values
+        self.distro_add_answer = "n"
+        self.selected_distro_type = "proot"
+        self.selected_distro = "debian"
+        self.DISTRO_NAME = "debian"
+        self.DISTRO_PATH = "/data/data/com.termux/files/usr/var/lib/proot-distro/installed-rootfs/debian"
+        self.use_sudo = False
+        
+        try:
+            if os.path.exists(config_path):
+                with open(config_path, 'r', encoding='utf-8') as f:
+                    for line in f:
+                        line = line.strip()
+                        if '=' in line and not line.startswith('#'):
+                            key, value = line.split('=', 1)
+                            key = key.strip()
+                            value = value.strip()
+                            
+                            if key == "distro_add_answer":
+                                self.distro_add_answer = value
+                            elif key == "selected_distro_type":
+                                self.selected_distro_type = value
+                            elif key == "selected_distro":
+                                self.selected_distro = value
+                
+                # Set distro name and path based on configuration
+                self.DISTRO_NAME = self.selected_distro
+                
+                if self.distro_add_answer == "y":
+                    if self.selected_distro_type == "chroot":
+                        self.DISTRO_PATH = f"/data/local/chroot-distro/{self.DISTRO_NAME}"
+                        self.use_sudo = True
+                    else:  # proot
+                        self.DISTRO_PATH = f"/data/data/com.termux/files/usr/var/lib/proot-distro/installed-rootfs/{self.DISTRO_NAME}"
+                        self.use_sudo = False
+                else:
+                    # Fallback to environment variables if distro support is disabled
+                    self.DISTRO_NAME = os.getenv("distro_name", "debian")
+                    self.DISTRO_PATH = os.getenv("distro_path", f"/data/data/com.termux/files/usr/var/lib/proot-distro/installed-rootfs/{self.DISTRO_NAME}")
+                    self.use_sudo = False
+                    
+                print(f"Configuration loaded: distro_type={self.selected_distro_type}, distro={self.DISTRO_NAME}, path={self.DISTRO_PATH}, use_sudo={self.use_sudo}")
+            else:
+                print(f"Configuration file not found at {config_path}, using defaults")
+                # Fallback to environment variables
+                self.DISTRO_NAME = os.getenv("distro_name", "debian")
+                self.DISTRO_PATH = os.getenv("distro_path", f"/data/data/com.termux/files/usr/var/lib/proot-distro/installed-rootfs/{self.DISTRO_NAME}")
+                self.use_sudo = False
+                
+        except Exception as e:
+            print(f"Error reading configuration: {e}")
+            # Fallback to environment variables
+            self.DISTRO_NAME = os.getenv("distro_name", "debian")
+            self.DISTRO_PATH = os.getenv("distro_path", f"/data/data/com.termux/files/usr/var/lib/proot-distro/installed-rootfs/{self.DISTRO_NAME}")
+            self.use_sudo = False
 
     def setup_css(self):
         css = """
@@ -824,6 +886,11 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
     def list_desktop_files(self, directory):
         """Parse desktop files with efficient caching"""
         desktop_files = []
+        
+        # Handle chroot case where we need sudo to access files
+        if self.use_sudo and directory.startswith(self.DISTRO_PATH):
+            return self.list_desktop_files_with_sudo(directory)
+        
         if not os.path.exists(directory):
             return desktop_files
             
@@ -854,6 +921,94 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
                               if path.startswith(self.ADDED_DIR)]
                         
         return desktop_files
+
+    def list_desktop_files_with_sudo(self, directory):
+        """List desktop files using sudo for chroot environments"""
+        desktop_files = []
+        
+        try:
+            # Use sudo to list files in the chroot directory
+            result = subprocess.run(['sudo', 'find', directory, '-name', '*.desktop', '-type', 'f'], 
+                                  capture_output=True, text=True, timeout=30)
+            
+            if result.returncode == 0:
+                desktop_file_paths = result.stdout.strip().split('\n')
+                desktop_file_paths = [path for path in desktop_file_paths if path.strip()]
+                
+                for filepath in desktop_file_paths:
+                    try:
+                        desktop_entry = self.parse_desktop_file_with_sudo(filepath)
+                        if desktop_entry and not desktop_entry.get('no_display', False):
+                            display_name = desktop_entry.get('name') or os.path.splitext(os.path.basename(filepath))[0]
+                            display_name = display_name.replace("_", " ").strip()
+                            icon = desktop_entry.get('icon') or "application-x-executable"
+                            exec_cmd = desktop_entry.get('exec') or ""
+                            description = desktop_entry.get('comment') or ""
+                            desktop_files.append((display_name, filepath, icon, exec_cmd, description))
+                    except Exception as e:
+                        print(f"Error processing {filepath}: {str(e)}")
+            else:
+                print(f"Error listing desktop files with sudo: {result.stderr}")
+                
+        except subprocess.TimeoutExpired:
+            print("Timeout while listing desktop files with sudo")
+        except Exception as e:
+            print(f"Error running sudo command: {e}")
+            
+        return desktop_files
+
+    def file_exists_with_sudo(self, filepath):
+        """Check if a file exists using sudo for chroot environments"""
+        try:
+            result = subprocess.run(['sudo', 'test', '-f', filepath], 
+                                  capture_output=True, timeout=5)
+            return result.returncode == 0
+        except (subprocess.TimeoutExpired, Exception):
+            return False
+
+    def parse_desktop_file_with_sudo(self, filepath):
+        """Parse a desktop file using sudo for chroot environments"""
+        result = {
+            'name': None,
+            'icon': None,
+            'no_display': False,
+            'exec': None,
+            'comment': None
+        }
+        
+        try:
+            # Use sudo to read the file
+            cmd_result = subprocess.run(['sudo', 'cat', filepath], 
+                                      capture_output=True, text=True, timeout=10)
+            
+            if cmd_result.returncode == 0:
+                content = cmd_result.stdout
+                for line in content.split('\n'):
+                    line = line.strip()
+                    if not line or line.startswith('#'):
+                        continue
+                    if line.startswith('Name=') and not result['name']:
+                        result['name'] = line.split("=", 1)[1].strip()
+                    elif line.startswith('Icon='):
+                        icon_name = line.split("=", 1)[1].strip()
+                        # Try to find the real icon path
+                        result['icon'] = self.find_icon_cached(icon_name)
+                    elif line.startswith('Exec='):
+                        result['exec'] = line.split("=", 1)[1].strip()
+                    elif line.startswith('Comment='):
+                        result['comment'] = line.split("=", 1)[1].strip()
+                    elif line.startswith('NoDisplay=true'):
+                        result['no_display'] = True
+                        break
+            else:
+                print(f"Error reading desktop file with sudo: {cmd_result.stderr}")
+                
+        except subprocess.TimeoutExpired:
+            print(f"Timeout while reading desktop file with sudo: {filepath}")
+        except Exception as e:
+            print(f"Error parsing desktop file with sudo {filepath}: {e}")
+            
+        return result
 
     def parse_desktop_file(self, filepath):
         """Parse a desktop file and return a dict of key attributes"""
@@ -918,7 +1073,21 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
             # It might be a path inside the distro
             distro_relative_path = icon_name.lstrip('/')
             distro_full_path = os.path.join(self.DISTRO_PATH, distro_relative_path)
-            if os.path.isfile(distro_full_path):
+            
+            # Check if file exists, using sudo for chroot if needed
+            if self.use_sudo and distro_full_path.startswith(self.DISTRO_PATH):
+                if self.file_exists_with_sudo(distro_full_path):
+                    if VERBOSE_ICON_SEARCH:
+                        print(f"Found icon in distro path (with sudo): {distro_full_path}")
+                    # For chroot, we can't directly access the file, so use a fallback
+                    # Try to find a similar icon in accessible locations first
+                    icon_basename = os.path.basename(icon_name)
+                    fallback = self.get_fallback_icon_path(icon_basename)
+                    if not fallback:
+                        fallback = "application-x-executable"
+                    ICON_CACHE[icon_name] = fallback
+                    return fallback
+            elif os.path.isfile(distro_full_path):
                 if VERBOSE_ICON_SEARCH:
                     print(f"Found icon in distro path: {distro_full_path}")
                 ICON_CACHE[icon_name] = distro_full_path
@@ -941,10 +1110,11 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
         if os.path.exists(system_theme_dir):
             search_paths.append(system_theme_dir)
         
-        # Try distro's icon theme
-        distro_theme_dir = os.path.join(self.DISTRO_PATH, "usr/share/icons", self.current_theme_name)
-        if os.path.exists(distro_theme_dir):
-            search_paths.append(distro_theme_dir)
+        # Try distro's icon theme (skip for chroot to avoid permission errors)
+        if not self.use_sudo:
+            distro_theme_dir = os.path.join(self.DISTRO_PATH, "usr/share/icons", self.current_theme_name)
+            if os.path.exists(distro_theme_dir):
+                search_paths.append(distro_theme_dir)
             
         # Add default fallback themes
         for theme_name in ["hicolor", "Adwaita"]:
@@ -958,15 +1128,17 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
             if os.path.exists(system_theme):
                 search_paths.append(system_theme)
             
-            # Distro theme
-            distro_theme = os.path.join(self.DISTRO_PATH, "usr/share/icons", theme_name)
-            if os.path.exists(distro_theme):
-                search_paths.append(distro_theme)
+            # Distro theme (skip for chroot to avoid permission errors)
+            if not self.use_sudo:
+                distro_theme = os.path.join(self.DISTRO_PATH, "usr/share/icons", theme_name)
+                if os.path.exists(distro_theme):
+                    search_paths.append(distro_theme)
         
-        # Try distro's pixmaps folder
-        distro_pixmaps = os.path.join(self.DISTRO_PATH, "usr/share/pixmaps")
-        if os.path.exists(distro_pixmaps):
-            search_paths.append(distro_pixmaps)
+        # Try distro's pixmaps folder (skip for chroot to avoid permission errors)
+        if not self.use_sudo:
+            distro_pixmaps = os.path.join(self.DISTRO_PATH, "usr/share/pixmaps")
+            if os.path.exists(distro_pixmaps):
+                search_paths.append(distro_pixmaps)
         
         if VERBOSE_ICON_SEARCH:
             print(f"Searching in {len(search_paths)} icon paths")
@@ -1292,47 +1464,20 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
             if os.path.exists(new_path) or os.path.exists(desktop_path):
                 continue
             
-            # Build the pdrun command with appropriate flags
-            pdrun_cmd = "Exec=pdrun"
+            # Copy and modify the file based on distro type
+            if self.use_sudo and filepath.startswith(self.DISTRO_PATH):
+                # For chroot, use sudo to copy the file
+                self.copy_desktop_file_with_sudo(filepath, new_path)
+            else:
+                # For proot, use regular copy
+                shutil.copy(filepath, new_path)
             
-            # Add --nogpu flag if enabled
-            if self.nogpu_action.get_state().get_boolean():
-                pdrun_cmd += " --nogpu"
+            # Read and modify the desktop file content
+            content = self.read_and_modify_desktop_file(new_path)
             
-            # Copy and modify the file
-            shutil.copy(filepath, new_path)
-            
-            # Read the original desktop file contents
-            with open(new_path, "r", encoding="utf-8") as f:
-                content = f.read()
-                
-            # Replace the Exec line with our modified pdrun command
-            exec_pattern = re.compile(r'Exec=(.+)')
-            
-            if exec_pattern.search(content):
-                # Extract the original command
-                original_cmd = exec_pattern.search(content).group(1)
-                
-                # Build new command with the original command, but without duplicating "Exec="
-                new_cmd = f"pdrun"
-                
-                # Add --nogpu flag if enabled
-                if self.nogpu_action.get_state().get_boolean():
-                    new_cmd += " --nogpu"
-                
-                # Add the original command
-                new_cmd += f" {original_cmd}"
-                
-                # Add --no-sandbox at the end if enabled
-                if self.no_sandbox_action.get_state().get_boolean():
-                    new_cmd += " --no-sandbox"
-                
-                # Replace the Exec line
-                content = exec_pattern.sub(f"Exec={new_cmd}", content)
-                
-                # Write the modified content back
-                with open(new_path, "w", encoding="utf-8") as f:
-                    f.write(content)
+            # Write the modified content back
+            with open(new_path, "w", encoding="utf-8") as f:
+                f.write(content)
             
             # Copy to desktop
             shutil.copy2(new_path, desktop_path)
@@ -1341,6 +1486,63 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
         # Update system
         self.update_system()
         return len(selected)
+
+    def copy_desktop_file_with_sudo(self, source_path, dest_path):
+        """Copy desktop file from chroot using sudo"""
+        try:
+            # Use sudo to read the file content and write it normally
+            # This avoids permission issues with direct copying
+            read_result = subprocess.run(['sudo', 'cat', source_path], 
+                                       capture_output=True, text=True, timeout=10)
+            
+            if read_result.returncode == 0:
+                # Write the content to the destination file
+                with open(dest_path, 'w', encoding='utf-8') as f:
+                    f.write(read_result.stdout)
+                
+                # Set proper permissions
+                os.chmod(dest_path, 0o644)
+                print(f"Successfully copied {source_path} to {dest_path}")
+            else:
+                raise Exception(f"Failed to read source file with sudo: {read_result.stderr}")
+                    
+        except subprocess.TimeoutExpired:
+            print(f"Timeout while copying file with sudo: {source_path}")
+            raise
+        except Exception as e:
+            print(f"Error copying desktop file with sudo: {e}")
+            raise
+
+    def read_and_modify_desktop_file(self, filepath):
+        """Read desktop file and modify the Exec line for the appropriate distro type"""
+        with open(filepath, "r", encoding="utf-8") as f:
+            content = f.read()
+            
+        # Replace the Exec line with our modified command
+        exec_pattern = re.compile(r'Exec=(.+)')
+        
+        if exec_pattern.search(content):
+            # Extract the original command
+            original_cmd = exec_pattern.search(content).group(1)
+            
+            # Use pdrun for both chroot and proot since pdrun now supports both
+            new_cmd = f"pdrun"
+            
+            # Add --nogpu flag if enabled
+            if self.nogpu_action.get_state().get_boolean():
+                new_cmd += " --nogpu"
+            
+            # Add the original command
+            new_cmd += f" {original_cmd}"
+            
+            # Add --no-sandbox at the end if enabled
+            if self.no_sandbox_action.get_state().get_boolean():
+                new_cmd += " --no-sandbox"
+            
+            # Replace the Exec line
+            content = exec_pattern.sub(f"Exec={new_cmd}", content)
+            
+        return content
 
     def process_remove_applications(self, selected):
         """Background task to remove applications"""
@@ -1823,17 +2025,23 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
         if os.path.exists(self.USER_ICONS_DIR):
             self.icon_theme.append_search_path(self.USER_ICONS_DIR)
         
-        # Add distro's icon paths if available
-        distro_icon_dir = os.path.join(self.DISTRO_PATH, "usr/share/icons")
-        if os.path.exists(distro_icon_dir):
-            self.icon_theme.append_search_path(distro_icon_dir)
+        # Add distro's icon paths if available (skip for chroot to avoid permission errors)
+        if not self.use_sudo:
+            distro_icon_dir = os.path.join(self.DISTRO_PATH, "usr/share/icons")
+            if os.path.exists(distro_icon_dir):
+                self.icon_theme.append_search_path(distro_icon_dir)
         
         # Get current icon theme name
         self.current_theme_name = self.detect_current_icon_theme()
         
         # Add specific paths for Qogir-dark theme
         if self.current_theme_name == "Qogir-dark":
-            for base_path in [self.USER_ICONS_DIR, self.SYSTEM_ICONS_DIR, os.path.join(self.DISTRO_PATH, "usr/share/icons")]:
+            base_paths = [self.USER_ICONS_DIR, self.SYSTEM_ICONS_DIR]
+            # Only add distro path if not using sudo (to avoid permission errors)
+            if not self.use_sudo:
+                base_paths.append(os.path.join(self.DISTRO_PATH, "usr/share/icons"))
+                
+            for base_path in base_paths:
                 qogir_path = os.path.join(base_path, "Qogir-dark")
                 if os.path.exists(qogir_path):
                     self.icon_theme.append_search_path(qogir_path)
@@ -2009,7 +2217,7 @@ class Add2MenuApplication(Gtk.Application):
         
         about_dialog = Gtk.AboutDialog(transient_for=self.window, modal=True)
         about_dialog.set_program_name("Add To Menu")
-        about_dialog.set_version("2.3")
+        about_dialog.set_version("2.3.1")
         about_dialog.set_comments("A utility to add Linux applications to Termux desktop")
         about_dialog.set_copyright(f"© {current_year} Termux-desktop (sabamdarif)")
         about_dialog.set_license_type(Gtk.License.GPL_3_0)
