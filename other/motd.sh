@@ -9,6 +9,20 @@ WHITE=$'\e[0;37m'
 DIM=$'\e[2m'
 UNDIM=$'\e[22m'
 
+if cmd package list packages --user 0 -e -f | sed 's/package://; s/\.apk=/\.apk /' | grep -q "com.termux.api"; then
+    is_termux_api_installed=true
+    if ! command -v termux-api-start &>/dev/null; then
+        echo "PLEASE RUN: pkg install termux-api"
+    fi
+else
+    is_termux_api_installed=false
+fi
+
+if [[ "$is_termux_api_installed" == "true" ]]; then
+    #battry level
+    BATTERY=$(termux-battery-status | jq '.percentage')
+    BATTERY_STATUS=$(termux-battery-status | jq -r '.status')
+fi
 # Android distro info
 if [[ -d /system/app/ && -d /system/priv-app ]]; then
     DISTRO="Android $(getprop ro.build.version.release)"
@@ -69,6 +83,30 @@ else
     cpu_arch_icon="󰻟"
 fi
 
+# Pick icon based on battery level
+if [[ "$BATTERY" =~ ^[0-9]+$ ]]; then
+    if ((BATTERY < 20)); then
+        BAT_ICON="${R} " # Empty
+    elif ((BATTERY < 40)); then
+        BAT_ICON="${Y} " # Low
+    elif ((BATTERY < 60)); then
+        BAT_ICON="${Y} " # Medium
+    elif ((BATTERY < 80)); then
+        BAT_ICON="${G} " # High
+    else
+        BAT_ICON="${G} " # Full
+    fi
+else
+    BAT_ICON="${R} "
+    BATTERY="N/A"
+fi
+
+if [[ $BATTERY_STATUS == "CHARGING" ]]; then
+    CHARGE_ICON="${BOLD}${G}"
+else
+    CHARGE_ICON=""
+fi
+
 # Memory usage
 IFS=' ' read -r USED TOTAL <<<"$(free -htm | awk '/Mem/ { print $3, $2 }')"
 
@@ -94,6 +132,7 @@ ${C} Kernel          : ${G} ${NC}$(uname -r | grep -o '^[0-9]*\.[0-9]*\.[0-9]
 ${C} CPU             : ${G}󰍛 ${NC}${soc_details} (${G}${PROCESSOR_COUNT}${NC} vCPU)
 ${C} Architectures   : ${G}${cpu_arch_icon} ${NC}${cpu_arch^^}
 ${C} Termux Version  : ${G} ${NC}${TERMUX_VERSION}-${termux_build}${NC}
+${C} Battery Level   : ${BAT_ICON}${NC}${BATTERY}%${NC} ${CHARGE_ICON}${NC}
 ${C} Memory          : ${G}󰘚 ${USED}${NC} used, ${TOTAL}${NC} total
 ${C} Temperature     : ${TEMP_ICON} ${TEMP}°C${NC}
 "
@@ -137,3 +176,4 @@ while read -r _ size used _ usep mount; do
     # print bar with same indent
     printf "%*s%b\n" "$indent" "" "$bar"
 done < <(df -H -t sdcardfs -t fuse -t fuse.rclone | tail -n +2)
+
