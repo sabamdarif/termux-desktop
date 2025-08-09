@@ -1651,8 +1651,8 @@ EOF
 }
 
 function install_distro_container() {
-    save_path="$distro_path/root"
     setup_distro
+    save_path="$distro_path/root"
     distro_basic_task
     if [[ "$call_from_change_distro" == false ]]; then
         if [[ "$enable_hw_acc" == "y" ]]; then
