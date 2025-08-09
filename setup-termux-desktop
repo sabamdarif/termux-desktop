@@ -470,63 +470,62 @@ function extract_archive() {
         print_failed "$archive doesn't exist"
     fi
 
-    local total_size
-    total_size=$(stat -c '%s' "$archive")
-
     case "$archive" in
     *.tar.gz | *.tgz)
         print_success "Extracting ${C}$archive"
-        pv -s "$total_size" -p -r "$archive" | tar xzf - || {
+        tar xzvf "$archive" || {
             print_failed "Failed to extract ${C}$archive"
             return 1
         }
         ;;
     *.tar.xz)
         print_success "Extracting ${C}$archive"
-        pv -s "$total_size" -p -r "$archive" | tar xJf - || {
+        tar xJvf "$archive" || {
             print_failed "Failed to extract ${C}$archive"
             return 1
         }
         ;;
     *.tar.bz2 | *.tbz2)
         print_success "Extracting ${C}$archive"
-        pv -s "$total_size" -p -r "$archive" | tar xjf - || {
+        tar xjvf "$archive" || {
             print_failed "Failed to extract ${C}$archive"
             return 1
         }
         ;;
     *.tar)
         print_success "Extracting ${C}$archive"
-        pv -s "$total_size" -p -r "$archive" | tar xf - || {
+        tar xvf "$archive" || {
             print_failed "Failed to extract ${C}$archive"
             return 1
         }
         ;;
     *.bz2)
         print_success "Extracting ${C}$archive"
-        pv -s "$total_size" -p -r "$archive" | bunzip2 >"${archive%.bz2}" || {
+        bunzip2 -v "$archive" || {
             print_failed "Failed to extract ${C}$archive"
             return 1
         }
         ;;
     *.gz)
         print_success "Extracting ${C}$archive${NC}"
-        pv -s "$total_size" -p -r "$archive" | gunzip >"${archive%.gz}" || {
+        gunzip -v "$archive" || {
             print_failed "Failed to extract ${C}$archive"
             return 1
         }
         ;;
     *.7z)
         print_success "Extracting ${C}$archive"
-        pv -s "$total_size" -p -r "$archive" | 7z x -si -y >/dev/null || {
+        7z x "$archive" -y || {
             print_failed "Failed to extract ${C}$archive"
             return 1
         }
         ;;
     *.zip)
-        # TODO:- currenly i didn't find any way to implement progress bar for zip extracting
         print_success "Extracting ${C}$archive"
-        unzip "${archive}"
+        unzip "${archive}" || {
+            print_failed "Failed to extract ${C}$archive"
+            return 1
+        }
         ;;
     *.rar)
         print_success "Extracting ${C}$archive"
@@ -540,7 +539,6 @@ function extract_archive() {
         return 1
         ;;
     esac
-
     print_success "Successfully extracted ${C}$archive"
     log_debug "$archive"
 }
@@ -2369,9 +2367,9 @@ function install_required_packages() {
     echo
 
     if [[ "$PACKAGE_MANAGER" == "pacman" ]]; then
-        package_install_and_check "wget git pv jq curl tar xz-utils gzip libpopt termux-am termux-api"
+        package_install_and_check "wget git jq curl tar xz-utils gzip libpopt termux-am termux-api"
     else
-        package_install_and_check "wget git pv jq curl tar xz-utils gzip libpopt termux-am x11-repo tur-repo termux-api"
+        package_install_and_check "wget git jq curl tar xz-utils gzip libpopt termux-am x11-repo tur-repo termux-api"
     fi
 }
 
