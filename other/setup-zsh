@@ -1,13 +1,5 @@
 #!/data/data/com.termux/files/usr/bin/bash
 
-function zshrc_setup() {
-    print_msg "Setup zsh zinit..."
-    sleep 1.3
-    cd "${HOME}" || return 0
-    check_and_backup "$HOME/.zshrc"
-    download_file "$HOME/.zshrc" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/other/.zshrc"
-}
-
 function setup_td_zsh_theme() {
     check_and_create_directory "$HOME/.zsh-themes"
     cat <<EOF >"$HOME/.zsh-themes/td.zsh-theme"
@@ -73,7 +65,7 @@ RPROMPT="\$exit_status"
 EOF
 }
 
-function check_paramitter() {
+function check_parameter() {
     if [[ -n "$PREFIX" && "$PREFIX" == *"/com.termux/"* && -z "$user_name" ]]; then
         while true; do
             echo " "
@@ -111,9 +103,15 @@ function check_paramitter() {
     final_user_name="${user_name}"
 }
 
+function install_zinit() {
+    print_msg "Installing zinit..."
+    NO_INPUT=1 bash -c "$(curl --fail --show-error --silent --location https://raw.githubusercontent.com/zdharma-continuum/zinit/HEAD/scripts/install.sh)" && chsh -s zsh
+}
+
 function set_theme() {
+    print_msg "Installing zsh theme..."
     if [[ "$selected_zsh_theme_name" == "td_zsh" ]]; then
-        check_paramitter
+        check_parameter
         setup_td_zsh_theme
         cat <<'EOF' >>"$HOME/.zshrc"
 # Load theme
@@ -131,15 +129,23 @@ zinit ice pick"async.zsh" src"pure.zsh" # with zsh-async library that's bundled 
 zinit light sindresorhus/pure
 EOF
     else
-        check_paramitter
+        check_parameter
         setup_td_zsh_theme
         cat <<'EOF' >>"$HOME/.zshrc"
 # Load theme
 source "$HOME/.zsh-themes/td.zsh-theme"
 EOF
     fi
-    NO_INPUT=1 bash -c "$(curl --fail --show-error --silent --location https://raw.githubusercontent.com/zdharma-continuum/zinit/HEAD/scripts/install.sh)" && chsh -s zsh
 }
 
-zshrc_setup
+write_zshrc() {
+    download_file "$HOME/.zshrc2" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/other/.zshrc"
+    cat "$HOME/.zshrc2" >>"$HOME/.zshrc"
+    check_and_delete "$HOME/.zshrc2"
+}
+
+check_and_backup "$HOME/.zshrc"
+check_and_delete "$HOME/.zshrc"
+install_zinit
+write_zshrc
 set_theme

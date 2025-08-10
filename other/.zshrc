@@ -6,10 +6,6 @@
 # -----------------------------------------------------------------------------
 # ENVIRONMENT VARIABLES & PATH
 # -----------------------------------------------------------------------------
-# Essential PATH exports
-export PATH="$HOME/bin:/usr/local/bin:$PATH"
-export PATH="$HOME/.local/bin:$PATH"
-export PATH="$HOME/.npm-global/bin:$PATH"
 
 # Editor preferences
 export EDITOR="nvim"
