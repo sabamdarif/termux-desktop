@@ -15,7 +15,7 @@ Termux natively supports a limited selection of applications. However, with this
 
 ### How to Use the Script
 
-#### NOTE:- for chroot-distro flash this module first:- [https://github.com/Magisk-Modules-Alt-Repo/chroot-distro](https://github.com/Magisk-Modules-Alt-Repo/chroot-distro)
+#### NOTE:- for chroot-distro flash this module first:- [sabamdarif/chroot-distro](https://github.com/sabamdarif/chroot-distro)
 
 1. **Run the Installer Script**:
     - When prompted about setting up a Distro Container, type `y` to continue.

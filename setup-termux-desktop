@@ -1506,7 +1506,7 @@ function hw_questions() {
 function distro_type_select() {
     print_msg "${BOLD}Select the distro type"
     echo " "
-    echo "${G}chroot-distro:- ${B}https://github.com/Magisk-Modules-Alt-Repo/chroot-distro${NC}"
+    echo "${G}chroot-distro:- ${B}https://github.com/sabamdarif/chroot-distro${NC}"
     echo " "
     echo "${G}proot-distro:- ${B}https://github.com/termux/proot-distro${NC}"
     echo " "
