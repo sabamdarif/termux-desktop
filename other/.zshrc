@@ -1,81 +1,145 @@
-# Turn off “no match” errors
-setopt nonomatch
+#!/usr/bin/env zsh
+# =============================================================================
+# ZSH Configuration File (.zshrc)
+# Based on:- https://github.com/zdharma-continuum/zinit-configs/tree/master/vladdoster
+# =============================================================================
+# -----------------------------------------------------------------------------
+# ENVIRONMENT VARIABLES & PATH
+# -----------------------------------------------------------------------------
+# Essential PATH exports
+export PATH="$HOME/bin:/usr/local/bin:$PATH"
+export PATH="$HOME/.local/bin:$PATH"
+export PATH="$HOME/.npm-global/bin:$PATH"
+
+# Editor preferences
+export EDITOR="nvim"
+export VISUAL="nvim"
 
 # Enable auto-cd
 setopt AUTO_CD
+# Turn off "no match" errors
+setopt nonomatch
 
-### Added by Zinit's installer
-if [[ ! -f $HOME/.local/share/zinit/zinit.git/zinit.zsh ]]; then
-    print -P "%F{33} %F{220}Installing %F{33}ZDHARMA-CONTINUUM%F{220} Initiative Plugin Manager (%F{33}zdharma-continuum/zinit%F{220})…%f"
-    command mkdir -p "$HOME/.local/share/zinit" && command chmod g-rwX "$HOME/.local/share/zinit"
-    command git clone https://github.com/zdharma-continuum/zinit "$HOME/.local/share/zinit/zinit.git" && \
-        print -P "%F{33} %F{34}Installation successful.%f%b" || \
-        print -P "%F{160} The clone has failed.%f%b"
-fi
+# -----------------------------------------------------------------------------
+# HELPER FUNCTIONS (moved after instant prompt to avoid console output)
+# -----------------------------------------------------------------------------
+function error() {
+    print -P "%F{red}[ERROR]%f: %F{yellow}$1%f" && return 1
+}
 
-source "$HOME/.local/share/zinit/zinit.git/zinit.zsh"
-autoload -Uz _zinit
-(( ${+_comps} )) && _comps[zinit]=_zinit
+function info() {
+    print -P "%F{blue}[INFO]%f: %F{cyan}$1%f"
+}
 
-# Load a few important annexes, without Turbo
-zinit light-mode for \
-    zdharma-continuum/zinit-annex-as-monitor \
-    zdharma-continuum/zinit-annex-bin-gem-node \
-    zdharma-continuum/zinit-annex-patch-dl \
-    zdharma-continuum/zinit-annex-rust
+# -----------------------------------------------------------------------------
+# ZINIT CONFIGURATION
+# -----------------------------------------------------------------------------
+# Zinit directory structure - UPDATED TO MATCH DEFAULT PATH
+typeset -gAH ZINIT
+ZINIT[HOME_DIR]="$HOME/.local/share/zinit"
+ZINIT[BIN_DIR]="$ZINIT[HOME_DIR]/zinit.git"
+ZINIT[COMPLETIONS_DIR]="$ZINIT[HOME_DIR]/completions"
+ZINIT[SNIPPETS_DIR]="$ZINIT[HOME_DIR]/snippets"
+ZINIT[ZCOMPDUMP_PATH]="$ZINIT[HOME_DIR]/zcompdump"
+ZINIT[PLUGINS_DIR]="$ZINIT[HOME_DIR]/plugins"
+ZINIT[OPTIMIZE_OUT_DISK_ACCESSES]=1
 
-# Load Oh My Zsh libraries
-zinit lucid light-mode for \
-    OMZL::history.zsh \
-    OMZL::completion.zsh \
-    OMZL::key-bindings.zsh
+# Zinit variables
+ZPFX="$ZINIT[HOME_DIR]/polaris"
+ZI_FORK='vladdoster'
+ZI_REPO='zdharma-continuum'
+GH_RAW_URL='https://raw.githubusercontent.com'
 
-# Fix for proot-distro library issues
-if [[ -z "$PREFIX" && "$PREFIX" != *"/com.termux/"* ]]; then
-    # Set LD_LIBRARY_PATH for proot environments if needed
-    export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/usr/lib:/lib"
-    # Disable commands that might cause errors in proot
-    function fix_proot_cmd() {
-        if ! command -v $1 &> /dev/null; then
-            alias $1="echo '$1 not available in this proot environment'"
-        fi
-    }
-    # Fix commonly problematic commands
-    fix_proot_cmd uname
-    fix_proot_cmd sleep
-    fix_proot_cmd mkdir
-fi
+# -----------------------------------------------------------------------------
+# OH-MY-ZSH & PREZTO PLUGINS
+# -----------------------------------------------------------------------------
+# Load useful Oh My Zsh library functions and plugins
+zi for is-snippet \
+    OMZL::{clipboard,compfix,completion,git,grep,key-bindings}.zsh \
+    OMZP::brew \
+    PZT::modules/{history,rsync}
 
-# Ensure completion is properly initialized in Termux
-if [[ -n "$PREFIX" && "$PREFIX" = *"/com.termux/"* ]]; then
-  autoload -Uz compinit
-  compinit
-fi
+# Load completions for specific tools
+zi as'completion' for \
+    OMZP::{golang/_golang,pip/_pip,terraform/_terraform}
 
-# Load plugins with Turbo mode
-zinit wait lucid for \
-    zdharma-continuum/fast-syntax-highlighting \
-    OMZP::colored-man-pages \
-    OMZP::git
+# -----------------------------------------------------------------------------
+# CUSTOM COMPLETIONS
+# -----------------------------------------------------------------------------
+# Helper function to install completions from GitHub
+install_completion() {
+    zinit for as'completion' nocompile id-as"$1" is-snippet "$GH_RAW_URL/$2"
+}
 
-zinit wait lucid for \
-    atload"!_zsh_autosuggest_start" \
-        zsh-users/zsh-autosuggestions
+# -----------------------------------------------------------------------------
+# ZINIT ANNEXES
+# -----------------------------------------------------------------------------
+# Load useful Zinit extensions
+zi light-mode for \
+    "$ZI_REPO"/zinit-annex-{bin-gem-node,binary-symlink,patch-dl,submods}
 
-# zsh-fzf-history-search
-zinit ice lucid wait
-zinit light joshskidmore/zsh-fzf-history-search
+# Install additional command-line tools
+zi as'command' light-mode for \
+    pick'revolver' @molovo/revolver \
+    pick'zunit' atclone'./build.zsh' @zunit-zsh/zunit
 
-# real-time, fish-style type-ahead completion
-zinit light marlonrichert/zsh-autocomplete
+# -----------------------------------------------------------------------------
+# PYTHON CONFIGURATION
+# -----------------------------------------------------------------------------
+# Custom pip completion function
+function _pip_completion() {
+    local words cword
+    read -Ac words
+    read -cn cword
+    reply=(
+        $(
+            COMP_WORDS="$words[*]"
+            COMP_CWORD=$((cword - 1))
+            PIP_AUTO_COMPLETE=1 $words 2>/dev/null
+        )
+    )
+}
+compctl -K _pip_completion pip3
 
-# Make Tab and ShiftTab go to the menu
-bindkey              '^I' menu-select
-bindkey "$terminfo[kcbt]" menu-select
+# -----------------------------------------------------------------------------
+# ZSH ENHANCEMENT PLUGINS
+# -----------------------------------------------------------------------------
 
-# Make Tab and ShiftTab change the selection in the menu
-bindkey -M menuselect              '^I'         menu-complete
-bindkey -M menuselect "$terminfo[kcbt]" reverse-menu-complete
+# Enhanced completions - Additional completion definitions
+zi light-mode for zsh-users/zsh-completions
 
-export PATH="$HOME/.local/bin:$PATH"
+# Auto-suggestions - Suggests commands as you type based on history
+zi ice atload'_zsh_autosuggest_start' \
+    atinit'
+           ZSH_AUTOSUGGEST_BUFFER_MAX_SIZE=50
+           bindkey "^_" autosuggest-execute
+           bindkey "^ " autosuggest-accept'
+zi light zsh-users/zsh-autosuggestions
 
+# Fast syntax highlighting - Real-time command syntax validation
+zi ice atclone'(){local f;cd -q →*;for f (*~*.zwc){zcompile -Uz -- ${f}};}' \
+    atload'FAST_HIGHLIGHT[chroma-man]=' \
+    atpull'%atclone' \
+    compile'.*fast*~*.zwc' \
+    nocompletions
+zi light "$ZI_REPO"/fast-syntax-highlighting
+
+# FZF history search - Fuzzy search through command history
+zi light joshskidmore/zsh-fzf-history-search
+
+# Zsh autocomplete - Real-time type-ahead autocompletion
+zi ice atload'
+        bindkey              "^I" menu-select
+        bindkey -M menuselect "$terminfo[kcbt]" reverse-menu-complete'
+zi light marlonrichert/zsh-autocomplete
+
+# -----------------------------------------------------------------------------
+# FINALIZATION
+# -----------------------------------------------------------------------------
+# Initialize completions and replay cached completions
+zi for atload'
+    zicompinit; zicdreplay
+    _zsh_highlight_bind_widgets
+    _zsh_autosuggest_bind_widgets' \
+    as'null' id-as'zinit/cleanup' lucid nocd wait \
+    "$ZI_REPO"/null
