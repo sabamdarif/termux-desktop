@@ -404,7 +404,7 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
                 
                 if self.distro_add_answer == "y":
                     if self.selected_distro_type == "chroot":
-                        self.DISTRO_PATH = f"/data/local/chroot-distro/{self.DISTRO_NAME}"
+                        self.DISTRO_PATH = f"/data/local/chroot-distro/installed-rootfs/{self.DISTRO_NAME}"
                         self.use_sudo = True
                     else:  # proot
                         self.DISTRO_PATH = f"/data/data/com.termux/files/usr/var/lib/proot-distro/installed-rootfs/{self.DISTRO_NAME}"
