@@ -1512,7 +1512,7 @@ function distro_type_select() {
     echo " "
     echo "${Y}1. Proot Distro${NC}"
     echo " "
-    echo "${Y}2. Chroot Distro (WIP, root required)${NC}"
+    echo "${Y}2. Chroot Distro${NC}"
     echo " "
     select_an_option 2 1 distro_type_answer
 
@@ -1524,30 +1524,17 @@ function distro_type_select() {
 }
 
 function choose_distro() {
-    if [[ "$selected_distro_type" == "chroot" ]]; then
-        print_msg "${BOLD}Select Linux Distro You Want To Add"
-        echo " "
-        echo "${Y}1. Debian${NC}"
-        echo " "
-        echo "${Y}2. Ubuntu${NC}"
-        echo " "
-        select_an_option 2 1 distro_answer
-    elif [[ "$selected_distro_type" == "proot" ]]; then
-        print_msg "${BOLD}Select Linux Distro You Want To Add"
-        echo " "
-        echo "${Y}1. Debian${NC}"
-        echo " "
-        echo "${Y}2. Ubuntu${NC}"
-        echo " "
-        echo "${Y}3. Arch (Unstable | isn't fully suppoted by AppStore yet)${NC}"
-        echo " "
-        echo "${Y}4. Fedora${NC}"
-        echo " "
-        select_an_option 4 1 distro_answer
-    else
-        print_failed "Unable to determine what distro type to use"
-        exit 1
-    fi
+    print_msg "${BOLD}Select Linux Distro You Want To Add"
+    echo " "
+    echo "${Y}1. Debian${NC}"
+    echo " "
+    echo "${Y}2. Ubuntu${NC}"
+    echo " "
+    echo "${Y}3. Arch (Unstable | isn't fully suppoted by AppStore yet)${NC}"
+    echo " "
+    echo "${Y}4. Fedora${NC}"
+    echo " "
+    select_an_option 4 1 distro_answer
     case "$distro_answer" in
     1) selected_distro="debian" ;;
     2) selected_distro="ubuntu" ;;
