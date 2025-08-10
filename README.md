@@ -20,7 +20,7 @@
 - :paperclips: **GUI Access:** Supports Termux:X11 and VNC (vnc is optional).
 - :package: **Package Management:** Compatible with both APT and [PACMAN](https://youtu.be/ditNvG5Nxj0) (pacman isn't well tested, so there might be some issues).
 - :shopping: **App Store:** A appstore to install apps from termux and suppoted proot-distro.
-- :package: **Apps** Normally, you're limited to apps that are supported by Termux, but it have a option for installing apps like LibreOffice via proot-distro/chroot-distro and use them as a native app.
+- :package: **Container** Normally, you're limited to apps that are supported by Termux, but it have a option for installing apps like LibreOffice via proot-distro / chroot-distro and use them as a native app.
 - And a lot more...
 
 ---
@@ -257,7 +257,10 @@ Enhance performance with GPU acceleration. Learn more [here](/readmes/hw-acceler
   License: GPL
    
 - [sabamdarif/nautilus-scripts](https://github.com/sabamdarif/nautilus-scripts/tree/termux)  
-  License: MIT  
+  License: MIT 
+
+- [chroot-distro](https://github.com/sabamdarif/chroot-distro)  
+  License: GPL
 ---
 ## License
 
