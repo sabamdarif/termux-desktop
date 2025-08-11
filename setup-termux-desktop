@@ -2365,9 +2365,6 @@ function install_desktop() {
     banner
     if [[ "$de_name" == "xfce" ]]; then
         print_msg "${BOLD}Installing Xfce4 Desktop"
-        # clang part is needed because termux have a issue installing psutil and it fix that issue
-        package_install_and_check "clang-16"
-        export CC=clang-16
         package_install_and_check "xfce4 xfce4-goodies xfce4-pulseaudio-plugin xfce4-battery-plugin xfce4-docklike-plugin xfce4-notifyd-static xfce4-cpugraph-plugin kvantum"
     elif [[ "$de_name" == "lxqt" ]]; then
         print_msg "${BOLD}Installing Lxqt Desktop"
