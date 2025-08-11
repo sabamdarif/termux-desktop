@@ -53,7 +53,7 @@ alias psu="ps aux"
 alias psg="ps aux | grep -i"  # Usage: psg process_name  
 alias kill9="kill -9"
 alias myip="curl ifconfig.me"  # Show public IP
-alias speedtest="curl -s https://raw.githubusercontent.com/sivel/speedtest-cli/master/speedtest.py | python -"
+alias speedtest="curl -s https://raw.githubusercontent.com/noreplyui5/speedtest-cli/master/speedtest.py | python"
 
 #######################################################
 # SPECIAL FUNCTIONS
