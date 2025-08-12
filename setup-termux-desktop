@@ -1358,8 +1358,8 @@ function distro_hw_questions() {
                 pd_hw_answer="virgl"
             fi
             ;;
-        "freedreno")
-            pd_hw_answer="freedreno"
+        "freedreno_kgsl")
+            pd_hw_answer="$termux_hw_answer"
             ;;
         *)
             banner
@@ -1400,7 +1400,9 @@ function exp_vulkan_support() {
     echo
     echo "${Y}3. mesa-zink-vulkan-icd-freedreno (Turnip) (adreno only)${NC}"
     echo
-    echo "${Y}4. will use the old virgl way${NC}"
+    echo "${Y}4. mesa-vulkan-icd-freedreno (Kgsl) (adreno only)${NC}"
+    echo
+    echo "${Y}5. will use the old virgl way${NC}"
     echo
     select_an_option 4 1 exp_termux_vulkan_hw_answer_num
 
@@ -1409,7 +1411,8 @@ function exp_vulkan_support() {
     1) exp_termux_vulkan_hw_answer="vulkan_icd" ;;
     2) exp_termux_vulkan_hw_answer="mesa_freedreno" ;;
     3) exp_termux_vulkan_hw_answer="mesa_zink_freedreno" ;;
-    4) exp_termux_vulkan_hw_answer="skip" ;;
+    4) exp_termux_vulkan_hw_answer="freedreno_kgsl" ;;
+    5) exp_termux_vulkan_hw_answer="skip" ;;
     esac
 }
 
@@ -1468,10 +1471,16 @@ function hw_questions() {
     exp_vulkan_support
     if [[ "$exp_termux_vulkan_hw_answer" == "vulkan_icd" ]]; then
         exp_termux_gl_hw_support
+    elif [[ "$exp_termux_vulkan_hw_answer" == "freedreno_kgsl" ]]; then
+        termux_hw_answer="${exp_termux_vulkan_hw_answer}"
+        distro_hw_questions
     elif [[ "$exp_termux_vulkan_hw_answer" == "skip" ]]; then
         print_msg "${BOLD}First Read This"
         echo
         print_msg "${B}This:- https://github.com/sabamdarif/termux-desktop/blob/main/readmes/hw-acceleration.md"
+        echo
+        print_msg "${BOLD}Select Hardware Acceleration API"
+        echo
         echo
         print_msg "${BOLD}Select Hardware Acceleration API"
         echo
@@ -1495,9 +1504,6 @@ function hw_questions() {
         4) termux_hw_answer="virgl_vulkan" ;;
         5) termux_hw_answer="zink_virgl" ;;
         esac
-        distro_hw_questions
-    elif [[ "$exp_termux_vulkan_hw_answer" == "mesa_zink_freedreno" ]] || [[ "$exp_termux_vulkan_hw_answer" == "mesa_freedreno" ]]; then
-        termux_hw_answer="freedreno"
         distro_hw_questions
     fi
 }
@@ -3120,12 +3126,9 @@ tx11start --debug    - Show debug log
       else
         ${initialize_server_method} >/dev/null 2>&1 &
       fi
-      export ${gpu_environment_variable}
-      export ${hw_method}
-    else
-      export LIBGL_ALWAYS_SOFTWARE=1
-      export MESA_LOADER_DRIVER_OVERRIDE=llvmpipe
-      export GALLIUM_DRIVER=llvmpipe
+      export ${gpu_environment_variable} ${hw_method}   
+  else
+        export LIBGL_ALWAYS_SOFTWARE=1 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe      
     fi
 
     sleep 1
@@ -4847,7 +4850,7 @@ function some_fixes() {
     # fix blank export in tx11start
     sed -i '/^export\s*$/d' "$PREFIX/bin/tx11start"
     # tx11start and vncstart
-    if [[ "$termux_hw_answer" == "freedreno" ]] || [[ $termux_hw_answer == "zink_with_mesa" ]] || [[ $termux_hw_answer == "zink_with_mesa_zink" ]]; then
+    if [[ "$termux_hw_answer" == "mesa_freedreno" ]] || [[ "$termux_hw_answer" == "mesa_zink_freedreno" ]] || [[ "$termux_hw_answer" == "freedreno_kgsl" ]] || [[ $termux_hw_answer == "zink_with_mesa" ]] || [[ $termux_hw_answer == "zink_with_mesa_zink" ]]; then
         sed -i "/if ! \$use_nogpu; then/,/fi/ {/if \$use_debug; then/,/fi/d}" "$PREFIX/bin/tx11start"
         sed -i "s/^[[:space:]]*&[[:space:]]*$/ /" "$PREFIX/bin/vncstart"
     fi

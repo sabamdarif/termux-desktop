@@ -41,6 +41,25 @@ function hw_install_required_packages() {
     "mesa_zink_freedreno")
         package_install_and_check "mesa-zink-vulkan-icd-freedreno"
         ;;
+    "freedreno_kgsl")
+        check_and_create_directory "freedreno"
+        cd freedreno || exit 1
+        if [[ "$PACKAGE_MANAGER" == "pacman" ]]; then
+            download_and_extract "https://github.com/sabamdarif/termux-desktop/releases/download/freedreno-kgsl-25.1/Freedreno-kgsl-${termux_arch}-pkgs.zip"
+            pacman -Syu --needed
+            pacman -U --noconfirm ./*.pkg.tar.xz
+            check_and_delete "vulkan-wrapper-android.pkg.tar.xz"
+
+        else
+            download_and_extract "https://github.com/sabamdarif/termux-desktop/releases/download/freedreno-kgsl-25.1/Freedreno-kgsl-${termux_arch}-debs.zip"
+            dpkg --configure -a
+            apt --fix-broken install -y
+            apt install ./*.deb -y
+            apt install --fix-missing -y
+        fi
+        cd ..
+        check_and_delete "freedreno"
+        ;;
     esac
     print_to_config "exp_termux_vulkan_hw_answer"
 
@@ -137,7 +156,19 @@ function setup_hw_environment_variables() {
         initialize_server_method=" "
         pd_hw_method="${hw_method}"
         ;;
-    "freedreno")
+    "mesa_freedreno")
+        set_to_export="MESA_NO_ERROR=1 vblank_mode=0"
+        initialize_server_method=" "
+        hw_method="MESA_LOADER_DRIVER_OVERRIDE=zink"
+        pd_hw_method="${hw_method}"
+        ;;
+    "mesa_zink_freedreno")
+        set_to_export="MESA_NO_ERROR=1 vblank_mode=0"
+        initialize_server_method=" "
+        hw_method="MESA_LOADER_DRIVER_OVERRIDE=zink"
+        pd_hw_method="${hw_method}"
+        ;;
+    "freedreno_kgsl")
         set_to_export="MESA_NO_ERROR=1 vblank_mode=0"
         initialize_server_method=" "
         hw_method="MESA_LOADER_DRIVER_OVERRIDE=kgsl MESA_GL_VERSION_OVERRIDE=3.3"
@@ -156,7 +187,7 @@ function setup_hw_environment_variables() {
     "turnip")
         pd_hw_method="MESA_LOADER_DRIVER_OVERRIDE=zink TU_DEBUG=noconform"
         ;;
-    "freedreno")
+    "freedreno_kgsl")
         pd_hw_method="MESA_LOADER_DRIVER_OVERRIDE=kgsl MESA_GL_VERSION_OVERRIDE=3.3"
         ;;
     *)
