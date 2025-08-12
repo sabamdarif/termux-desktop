@@ -4573,6 +4573,22 @@ function change_hw() {
 #
 #########################################################################
 
+function add_distro_again() {
+    print_msg "${BOLD}Do you want to add a Linux distro container"
+    echo
+    print_msg "It will help you to install those app which are not avilable in termux"
+    echo
+    print_msg "You can launch those installed apps from termux like other apps"
+    echo
+    confirmation_y_or_n "Do you want to continue" distro_add_answer
+    if [[ "$distro_add_answer" == "y" ]]; then
+        print_to_config "distro_add_answer"
+        distro_questions
+        distro_hw_questions
+        distro_container_setup
+    fi
+}
+
 function change_distro() {
     if [[ ! -e "$config_file" ]]; then
         echo -e "${C} It look like you haven't install the desktop yet\n Please install the desktop first${NC}"
@@ -4583,55 +4599,56 @@ function change_distro() {
         if [[ "$distro_add_answer" == "y" ]]; then
             local old_distro
             old_distro="${selected_distro}"
-            if [[ -d "$PREFIX/var/lib/proot-distro/installed-rootfs/$selected_distro" ]]; then
-                print_msg "Your currently installed distro is: ${C}${BOLD}${selected_distro}"
-                echo
-                print_msg "${R}Changing distro will delete all the data from your previous distro"
-                echo
-                confirmation_y_or_n "Do you want to continue" distro_change_confirmation
-                if [[ "$distro_change_confirmation" == "y" ]]; then
-                    if [[ -z "$selected_distro_type" ]]; then
-                        if command -v chroot-distro >/dev/null 2>&1; then
-                            selected_distro_type=chroot
-                        else
-                            selected_distro_type=proot
-                        fi
-                    fi
-                    choose_distro
-                    print_msg "Removing $selected_distro and it's data"
-                    "${selected_distro_type}"-distro remove "${old_distro}"
-                    check_and_delete "$PREFIX/share/applications/pd_added"
-                    check_and_delete "/data/data/com.termux/files/usr/share/bash-completion/completions/${old_distro}"
-                    check_and_delete "/data/data/com.termux/files/usr/share/zsh/site-functions/_${old_distro}"
-                    check_and_delete "$PREFIX/bin/$selected_distro"
-                    pd_hw_method=$(grep 'selected_pd_hw_method=' "$PREFIX/bin/pdrun" | sed -e 's/.*selected_pd_hw_method="\([^"]*\)".*/\1/')
-                    if [[ "$pd_audio_config_answer" == "y" ]]; then
-                        rm "$HOME/.${selected_distro}-sound-access"
-                    fi
-                    echo
-                    distro_container_setup
+            if [[ -z "$selected_distro_type" ]]; then
+                if command -v chroot-distro >/dev/null 2>&1; then
+                    selected_distro_type=chroot
                 else
-                    print_msg "Canceling distro change process..."
-                    sleep 2
+                    selected_distro_type=proot
+                fi
+            fi
+
+            if [[ "$selected_distro_type" == "chroot" ]]; then
+                if ! timeout 3s su -c "ls /data/local/chroot-distro/installed-rootfs/$selected_distro" >/dev/null 2>&1; then
+                    print_failed "${selected_distro} isn't installed"
+                    add_distro_again
                     exit 0
                 fi
             else
-                print_failed "${selected_distro} isn't installed"
+                if [[ ! -d "$PREFIX/var/lib/proot-distro/installed-rootfs/$selected_distro" ]]; then
+                    print_failed "${selected_distro} isn't installed"
+                    add_distro_again
+                    exit 0
+                fi
+            fi
+
+            print_msg "Your currently installed distro is: ${C}${BOLD}${selected_distro}"
+            echo
+            print_msg "${R}Changing distro will delete all the data from your previous distro"
+            echo
+            confirmation_y_or_n "Do you want to continue" distro_change_confirmation
+            if [[ "$distro_change_confirmation" == "y" ]]; then
+                choose_distro
+                print_msg "Removing $selected_distro and it's data"
+                "${selected_distro_type}"-distro remove "${old_distro}"
+                check_and_delete "$PREFIX/share/applications/pd_added"
+                check_and_delete "/data/data/com.termux/files/usr/share/bash-completion/completions/${old_distro}"
+                check_and_delete "/data/data/com.termux/files/usr/share/zsh/site-functions/_${old_distro}"
+                check_and_delete "$PREFIX/bin/$selected_distro"
+                pd_hw_method=$(grep 'selected_pd_hw_method=' "$PREFIX/bin/pdrun" | sed -e 's/.*selected_pd_hw_method="\([^"]*\)".*/\1/')
+                if [[ "$pd_audio_config_answer" == "y" ]]; then
+                    rm "$HOME/.${selected_distro}-sound-access"
+                fi
+                echo
+                distro_container_setup
+            else
+                print_msg "Canceling distro change process..."
+                sleep 2
+                exit 0
             fi
         else
             print_msg "It look like you haven't install any distro yet"
             echo
-            print_msg "${BOLD}Do you want to add a Linux distro container (proot distro)"
-            echo
-            print_msg "It will help you to install those app which are not avilable in termux"
-            echo
-            print_msg "You can launch those installed apps from termux like other apps"
-            echo
-            confirmation_y_or_n "Do you want to continue" distro_add_answer
-            print_to_config "distro_add_answer"
-            distro_questions
-            distro_hw_questions
-            distro_container_setup
+            add_distro_again
         fi
     fi
 }
