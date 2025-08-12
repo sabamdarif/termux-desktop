@@ -443,6 +443,7 @@ EOF
     else
         echo "export PULSE_SERVER=127.0.0.1" >>"$distro_path/etc/profile"
     fi
+    print_to_config "pd_audio_config_answer"
 }
 
 ###########################################
