@@ -4588,9 +4588,16 @@ function change_distro() {
                 echo
                 confirmation_y_or_n "Do you want to continue" distro_change_confirmation
                 if [[ "$distro_change_confirmation" == "y" ]]; then
+                    if [[ -z "$selected_distro_type" ]]; then
+                        if command -v chroot-distro >/dev/null 2>&1; then
+                            selected_distro_type=chroot
+                        else
+                            selected_distro_type=proot
+                        fi
+                    fi
                     choose_distro
                     print_msg "Removing $selected_distro and it's data"
-                    proot-distro remove "${old_distro}"
+                    "${selected_distro_type}"-distro remove "${old_distro}"
                     check_and_delete "$PREFIX/share/applications/pd_added"
                     check_and_delete "/data/data/com.termux/files/usr/share/bash-completion/completions/${old_distro}"
                     check_and_delete "/data/data/com.termux/files/usr/share/zsh/site-functions/_${old_distro}"
