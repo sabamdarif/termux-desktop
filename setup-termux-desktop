@@ -24,9 +24,11 @@ call_from_change_style=false
 is_termux_api_installed=false
 lite_mode="${LITE,,}"
 ##################################################################
-# create log
-function debug() {
-    exec > >(tee -a "$log_file") 2>&1
+# create detailed log output
+function debug_msg() {
+    local debug_message="[DEBUG] running: $BASH_COMMAND"
+    echo "$debug_message"
+    echo "$(date '+%Y-%m-%d %H:%M:%S') - $debug_message" >>"$log_file"
 }
 
 function banner() {
@@ -5188,7 +5190,7 @@ example uses : --reinstall icons,themes...etc to reinstall them at once
 }
 
 if [[ $1 == "--debug" ]]; then
-    debug
+    trap debug_msg debug
     shift
 fi
 
