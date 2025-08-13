@@ -21,8 +21,10 @@ function setup_proot_distro() {
 }
 
 function check_su_access() {
-    if command -v su >/dev/null 2>&1 && timeout 3s su -c true >/dev/null 2>&1; then
-        return 0
+    if command -v su >/dev/null 2>&1; then
+        if su -c true >/dev/null 2>&1; then
+            return 0
+        fi
     fi
     return 1
 }
@@ -33,7 +35,7 @@ function check_root_access() {
     fi
 
     local whoami_out
-    if whoami_out=$(timeout 3s su -c 'whoami' 2>/dev/null) && [ "$whoami_out" = "root" ]; then
+    if whoami_out=$(su -c 'whoami' 2>/dev/null) && [ "$whoami_out" = "root" ]; then
         return 0
     fi
     return 1
@@ -44,7 +46,7 @@ function check_chroot_file() {
         return 1
     fi
 
-    if timeout 3s su -c 'ls /system/bin/chroot-distro' >/dev/null 2>&1; then
+    if su -c 'ls /system/bin/chroot-distro' >/dev/null 2>&1; then
         return 0
     fi
     return 1
@@ -100,8 +102,10 @@ function setup_chroot_distro() {
 #!/data/data/com.termux/files/usr/bin/bash
 
 function check_su_access() {
-    if command -v su >/dev/null 2>&1 && timeout 3s su -c true >/dev/null 2>&1; then
-        return 0
+    if command -v su >/dev/null 2>&1; then
+        if su -c true >/dev/null 2>&1; then
+            return 0
+        fi
     fi
     return 1
 }
@@ -111,7 +115,7 @@ function check_chroot_file() {
         return 1
     fi
 
-    if timeout 3s su -c 'ls /system/bin/chroot-distro' >/dev/null 2>&1; then
+    if su -c 'ls /system/bin/chroot-distro' >/dev/null 2>&1; then
         return 0
     fi
     return 1
