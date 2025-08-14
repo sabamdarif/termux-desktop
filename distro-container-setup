@@ -340,7 +340,7 @@ R="$(printf '\033[1;31m')"
 G="$(printf '\033[1;32m')"
 Y="$(printf '\033[1;33m')"
 C="$(printf '\033[1;36m')"
-W="$(printf '\033[0m')"
+NC="$(printf '\033[0m')"
 BOLD="$(printf '\033[1m')"
 termux_desktop_path="/data/data/com.termux/files/usr/etc/termux-desktop"
 config_file="$termux_desktop_path/configuration.conf"
@@ -353,7 +353,7 @@ R="$(printf '\033[1;31m')"
 G="$(printf '\033[1;32m')"
 Y="$(printf '\033[1;33m')"
 C="$(printf '\033[1;36m')"
-W="$(printf '\033[0m')"
+NC="$(printf '\033[0m')"
 BOLD="$(printf '\033[1m')"
 termux_desktop_path="/data/data/com.termux/files/usr/etc/termux-desktop"
 config_file="$termux_desktop_path/configuration.conf"
@@ -375,7 +375,7 @@ EOF
     fi
     # Verify script was created
     if [[ "$selected_distro_type" == "chroot" ]]; then
-        if ! timeout 3s sudo test -f "$script_path"; then
+        if ! su -c "ls '$script_path'" >/dev/null 2>&1; then
             print_failed "Failed to create script at $script_path"
         fi
     else
@@ -434,7 +434,7 @@ check_and_delete "install_audio_related_packs.sh"
 EOF
     )
     create_shell_script "$save_path/install_audio_related_packs.sh" "$install_audio_related_packs"
-    "${selected_distro_type}"-distro login "$selected_distro" -- /bin/bash -c 'bash install_audio_related_packs.sh'
+    "${selected_distro_type}"-distro login "$selected_distro" -- /bin/bash -c 'bash /root/install_audio_related_packs.sh'
     if [[ "$selected_distro_type" == "chroot" ]]; then
         echo "export PULSE_SERVER=127.0.0.1" | sudo tee -a "$distro_path/etc/profile" >/dev/null
     else
@@ -525,7 +525,7 @@ EOF
         banner
         print_msg "${BOLD}Setting up shell for ${selected_distro}..."
         echo
-        proot-distro login "$selected_distro" -- /bin/bash -c 'bash pd_zsh_install.sh'
+        "${selected_distro_type}"-distro login "$selected_distro" -- /bin/bash -c 'bash /root/pd_zsh_install.sh'
     fi
 }
 
@@ -554,7 +554,7 @@ EOF
         banner
         print_msg "Configuring Terminal Utility For ${selected_distro}..."
         echo
-        "${selected_distro_type}"-distro login --user "$final_user_name" "$selected_distro" -- /bin/bash -c 'bash pd_setup.sh'
+        "${selected_distro_type}"-distro login --user "$final_user_name" "$selected_distro" -- /bin/bash -c 'bash /root/pd_setup.sh'
     fi
 }
 
@@ -650,7 +650,7 @@ EOF
     # Make the script executable
     proot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "chmod +x /root/packinstall.sh"
     # Execute the script with all arguments
-    proot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "export DISPLAY=:${display_number}; export XDG_RUNTIME_DIR=${TMPDIR}; bash packinstall.sh \$@"
+    proot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "export DISPLAY=:${display_number}; export XDG_RUNTIME_DIR=${TMPDIR}; bash /root/packinstall.sh \$@"
 }
 
 package_uninstall_and_remove_from_menu() {
@@ -724,7 +724,7 @@ EOF
     proot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "chmod +x /root/packremove.sh"
 
     # Execute the script with all arguments
-    proot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "export DISPLAY=:${display_number}; export XDG_RUNTIME_DIR=/data/data/com.termux/files/usr/tmp; bash packremove.sh \$1 \${@:2}"
+    proot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "export DISPLAY=:${display_number}; export XDG_RUNTIME_DIR=/data/data/com.termux/files/usr/tmp; bash /root/packremove.sh \$1 \${@:2}"
 
 }
 
@@ -800,7 +800,7 @@ EOF
     # Make the script executable
     chroot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "chmod +x /root/packinstall.sh"
     # Execute the script with all arguments
-    chroot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "export DISPLAY=:${display_number}; export XDG_RUNTIME_DIR=${TMPDIR}; bash packinstall.sh \$@"
+    chroot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "export DISPLAY=:${display_number}; export XDG_RUNTIME_DIR=${TMPDIR}; bash /root/packinstall.sh \$@"
 
 }
 
@@ -872,9 +872,9 @@ check_and_delete 'packremove.sh'
 EOF
 
     # Make the script executable
-    proot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "chmod +x /root/packremove.sh"
+    chroot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "chmod +x /root/packremove.sh"
     # Execute the script with all arguments
-    proot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "export DISPLAY=:${display_number}; export XDG_RUNTIME_DIR=/data/data/com.termux/files/usr/tmp; bash packremove.sh \$1 \${@:2}"
+    chroot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "export DISPLAY=:${display_number}; export XDG_RUNTIME_DIR=/data/data/com.termux/files/usr/tmp; bash /root/packremove.sh \$1 \${@:2}"
 
 }
 
@@ -955,7 +955,7 @@ check_and_delete 'packinstall.sh'
 EOF
 
     # Execute the script with all arguments
-    proot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "export DISPLAY=:${display_number}; export XDG_RUNTIME_DIR=${TMPDIR}; bash packinstall.sh"
+    proot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "export DISPLAY=:${display_number}; export XDG_RUNTIME_DIR=${TMPDIR}; bash /root/packinstall.sh"
 
     # Update icon cache and desktop database
     gtk-update-icon-cache
@@ -1004,7 +1004,7 @@ check_and_delete 'packremove.sh'
 EOF
 
     # Execute the script with all arguments
-    proot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "export DISPLAY=:${display_number}; export XDG_RUNTIME_DIR=${TMPDIR}; bash packremove.sh"
+    proot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "export DISPLAY=:${display_number}; export XDG_RUNTIME_DIR=${TMPDIR}; bash /root/packremove.sh"
 
     # Remove the packages using the package manager
     proot-distro login "${selected_distro}" --shared-tmp -- env DISPLAY=:${display_number} sudo pacman -R"\${options[@]}" --noconfirm "\${packages[@]}"
@@ -1076,7 +1076,7 @@ check_and_delete 'packinstall.sh'
 EOF
 
     # Execute the script with all arguments
-    chroot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "export DISPLAY=:${display_number}; export XDG_RUNTIME_DIR=${TMPDIR}; bash packinstall.sh"
+    chroot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "export DISPLAY=:${display_number}; export XDG_RUNTIME_DIR=${TMPDIR}; bash /root/packinstall.sh"
 
     # Update icon cache and desktop database
     gtk-update-icon-cache
@@ -1125,7 +1125,7 @@ check_and_delete 'packremove.sh'
 EOF
 
     # Execute the script with all arguments
-    chroot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "export DISPLAY=:${display_number}; export XDG_RUNTIME_DIR=${TMPDIR}; bash packremove.sh"
+    chroot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "export DISPLAY=:${display_number}; export XDG_RUNTIME_DIR=${TMPDIR}; bash /root/packremove.sh"
 
     # Remove the packages using the package manager
     chroot-distro login "${selected_distro}" --shared-tmp -- env DISPLAY=:${display_number} sudo pacman -R"\${options[@]}" --noconfirm "\${packages[@]}"
@@ -1214,7 +1214,7 @@ EOF
     # Make the script executable
     proot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "chmod +x /root/packinstall.sh"
     # Execute the script with all arguments
-    proot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "export DISPLAY=:${display_number}; export XDG_RUNTIME_DIR=${TMPDIR}; bash packinstall.sh \$@"
+    proot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "export DISPLAY=:${display_number}; export XDG_RUNTIME_DIR=${TMPDIR}; bash /root/packinstall.sh \$@"
 
     # Update icon cache and desktop database
     gtk-update-icon-cache
@@ -1288,7 +1288,7 @@ EOF
     proot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "chmod +x /root/packremove.sh"
 
     # Execute the script with all arguments
-    proot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "export DISPLAY=:${display_number}; export XDG_RUNTIME_DIR=/data/data/com.termux/files/usr/tmp; bash packremove.sh \$1 \${@:2}"
+    proot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "export DISPLAY=:${display_number}; export XDG_RUNTIME_DIR=/data/data/com.termux/files/usr/tmp; bash /root/packremove.sh \$1 \${@:2}"
 
     # Update icon cache and desktop database
     gtk-update-icon-cache
@@ -1360,7 +1360,7 @@ EOF
     # Make the script executable
     chroot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "chmod +x /root/packinstall.sh"
     # Execute the script with all arguments
-    chroot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "export DISPLAY=:${display_number}; export XDG_RUNTIME_DIR=${TMPDIR}; bash packinstall.sh \$@"
+    chroot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "export DISPLAY=:${display_number}; export XDG_RUNTIME_DIR=${TMPDIR}; bash /root/packinstall.sh \$@"
 
     # Update icon cache and desktop database
     gtk-update-icon-cache
@@ -1434,7 +1434,7 @@ EOF
     chroot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "chmod +x /root/packremove.sh"
 
     # Execute the script with all arguments
-    chroot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "export DISPLAY=:${display_number}; export XDG_RUNTIME_DIR=/data/data/com.termux/files/usr/tmp; bash packremove.sh \$1 \${@:2}"
+    chroot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "export DISPLAY=:${display_number}; export XDG_RUNTIME_DIR=/data/data/com.termux/files/usr/tmp; bash /root/packremove.sh \$1 \${@:2}"
 
     # Update icon cache and desktop database
     gtk-update-icon-cache
@@ -1468,7 +1468,7 @@ remove_distro_container() {
         [yY]* )
             print_success "Continuing with answer: \$ans_remove_distro"
             sleep 0.2
-            if [[ -d $distro_path ]]; then
+            if ! su -c "ls '$distro_path'" >/dev/null 2>&1; then 
                 chroot-distro uninstall "$selected_distro"
                 distro_file_list=(
                     "$PREFIX/bin/pdrun"
@@ -1698,6 +1698,7 @@ function distro_app_launch_setup() {
 
 source /data/data/com.termux/files/usr/etc/termux-desktop/common_functions
 
+if [[ "${selected_distro_type}" == "proot" ]]; then
 # This code block is taken from:- https://github.com/termux/proot-distro/blob/master/proot-distro.sh#L172C1-L184C1
 TRACER_PID=\$(grep TracerPid "/proc/\$\$/status" | cut -d \$'\t' -f 2)
 if [ "\$TRACER_PID" != 0 ]; then
@@ -1711,7 +1712,7 @@ if [ "\$TRACER_PID" != 0 ]; then
 	unset TRACER_NAME
 fi
 unset TRACER_PID
-
+fi
 selected_pd_hw_method="$pd_hw_method"
 EOF
 
@@ -1737,6 +1738,7 @@ EOF
 
 source /data/data/com.termux/files/usr/etc/termux-desktop/common_functions
 
+if [[ "${selected_distro_type}" == "proot" ]]; then
 # This code block is taken from:- https://github.com/termux/proot-distro/blob/master/proot-distro.sh#L172C1-L184C1
 TRACER_PID=\$(grep TracerPid "/proc/\$\$/status" | cut -d \$'\t' -f 2)
 if [ "\$TRACER_PID" != 0 ]; then
@@ -1750,6 +1752,7 @@ if [ "\$TRACER_PID" != 0 ]; then
 	unset TRACER_NAME
 fi
 unset TRACER_PID
+fi
 
 EOF
 
@@ -1811,7 +1814,7 @@ check_and_delete "some_required_pack.sh"
 EOF
     )
     create_shell_script "$save_path/some_required_pack.sh" "$pd_setup_some_required_pack"
-    "${selected_distro_type}"-distro login "$selected_distro" -- /bin/bash -c 'bash some_required_pack.sh'
+    "${selected_distro_type}"-distro login "$selected_distro" -- /bin/bash -c 'bash /root/some_required_pack.sh'
 }
 
 function install_distro_container() {
