@@ -178,6 +178,7 @@ function setup_distro() {
     else
         print_failed "Unable to determine what distro type to use"
         print_msg "Fallback to:- proot-distro"
+        selected_distro_type=proot
         setup_proot_distro
     fi
     print_to_config "selected_distro_type"
