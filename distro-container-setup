@@ -165,7 +165,7 @@ su -c "/system/bin/chroot-distro $args"
 EOF
     chmod +x "$PREFIX/bin/chroot-distro"
     chroot-distro install "$selected_distro"
-    distro_path="/data/local/chroot-distro/$selected_distro"
+    distro_path="/data/local/chroot-distro/installed-rootfs/$selected_distro"
     print_to_config "selected_distro"
 }
 
