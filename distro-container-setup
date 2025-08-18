@@ -1849,7 +1849,7 @@ function install_distro_container() {
 #########################################################################
 
 function chroot_disro_container_install_check() {
-    if [[ -d "$PREFIX/bin/$selected_distro" ]] && su -c "ls /data/local/chroot-distro/installed-rootfs/$selected_distro" &>/dev/null; then
+    if [[ -f "$PREFIX/bin/$selected_distro" ]] && su -c "ls /data/local/chroot-distro/installed-rootfs/$selected_distro" &>/dev/null; then
         echo
         print_success "${BOLD} $selected_distro container setup successfully"
     else
@@ -1860,7 +1860,7 @@ function chroot_disro_container_install_check() {
             echo
             print_msg "Trying again... (Attempt $((retry_count + 1)) of $max_retries)"
             install_distro_container
-            if [[ -d "$PREFIX/bin/$selected_distro" ]] && su -c "ls /data/local/chroot-distro/installed-rootfs/$selected_distro" &>/dev/null; then
+            if [[ -f "$PREFIX/bin/$selected_distro" ]] && su -c "ls /data/local/chroot-distro/installed-rootfs/$selected_distro" &>/dev/null; then
                 echo
                 print_success "${BOLD} $selected_distro container setup successfully"
                 break
@@ -1875,7 +1875,7 @@ function chroot_disro_container_install_check() {
 }
 
 function proot_disro_container_install_check() {
-    if [[ -d "$PREFIX/bin/$selected_distro" ]] && [[ -d "$PREFIX/var/lib/proot-distro/installed-rootfs/$selected_distro" ]]; then
+    if [[ -f "$PREFIX/bin/$selected_distro" ]] && [[ -d "$PREFIX/var/lib/proot-distro/installed-rootfs/$selected_distro" ]]; then
         echo
         print_success "${BOLD} $selected_distro container setup successfully"
     else
@@ -1886,7 +1886,7 @@ function proot_disro_container_install_check() {
             echo
             print_msg "Trying again... (Attempt $((retry_count + 1)) of $max_retries)"
             install_distro_container
-            if [[ -d "$PREFIX/bin/$selected_distro" ]] && [[ -d "$PREFIX/var/lib/proot-distro/installed-rootfs/$selected_distro" ]]; then
+            if [[ -f "$PREFIX/bin/$selected_distro" ]] && [[ -d "$PREFIX/var/lib/proot-distro/installed-rootfs/$selected_distro" ]]; then
                 echo
                 print_success "${BOLD} $selected_distro container setup successfully"
                 break
