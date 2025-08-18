@@ -574,9 +574,9 @@ source $PREFIX/etc/termux-desktop/common_functions
 xhost + >/dev/null 2>&1
 if [ "\$#" -eq 0 ]; then
     if [ "\$PWD" = "$HOME" ]; then
-        ${selected_distro_type}-distro login --user "$final_user_name" "$selected_distro" --shared-tmp --termux-home
+        ${selected_distro_type}-distro login --user "$final_user_name" "$selected_distro" --shared-tmp $termux_home_link
     else
-        ${selected_distro_type}-distro login --user "$final_user_name" "$selected_distro" --shared-tmp --work-dir "\$PWD" --termux-home
+        ${selected_distro_type}-distro login --user "$final_user_name" "$selected_distro" --shared-tmp --work-dir "\$PWD" $termux_home_link
     fi
 
     check_and_create_directory "/data/data/com.termux/files/usr/share/applications/pd_added"
@@ -883,8 +883,8 @@ update_distro() {
     #################################################
     ############### Handle update part ##############
     #################################################
-    chroot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp --termux-home -- env DISPLAY=:"$display_number" sudo apt update
-    chroot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp --termux-home -- env DISPLAY=:"$display_number" sudo apt-file update
+    chroot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp -- env DISPLAY=:"$display_number" sudo apt update
+    chroot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp -- env DISPLAY=:"$display_number" sudo apt-file update
 
 }  
 TOP_EOF
@@ -1140,7 +1140,7 @@ update_distro() {
     #################################################
     ############### Handle update part ##############
     #################################################
-    chroot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp --termux-home -- env DISPLAY=:"$display_number" sudo pacman -Su
+    chroot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp -- env DISPLAY=:"$display_number" sudo pacman -Su
 }
 TOP_EOF
 
@@ -1446,7 +1446,7 @@ update_distro() {
     #################################################
     ############### Handle update part ##############
     #################################################
-    chroot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp --termux-home -- env DISPLAY=:"$display_number" sudo dnf update
+    chroot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp -- env DISPLAY=:"$display_number" sudo dnf update
 }
 TOP_EOF
 
@@ -1721,13 +1721,13 @@ EOF
 xhost + > /dev/null 2>&1
 case \$1 in
 --nogpu)
-"${selected_distro_type}"-distro login --user "$final_user_name" "$selected_distro" --shared-tmp --termux-home -- eval "env DISPLAY=\$(echo \$DISPLAY) XDG_RUNTIME_DIR=\${TMPDIR} LIBGL_ALWAYS_SOFTWARE=1 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe \${@:2}"
+"${selected_distro_type}"-distro login --user "$final_user_name" "$selected_distro" --shared-tmp $termux_home_link -- eval "env DISPLAY=\$(echo \$DISPLAY) XDG_RUNTIME_DIR=\${TMPDIR} LIBGL_ALWAYS_SOFTWARE=1 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe \${@:2}"
 ;;
 --help|-h)
 echo "${G}Type ${C}pdrun PACKAGE-NAME ${G}to start with GPU acceleration${NC}"
 ;;
 *)
-"${selected_distro_type}"-distro login --user "$final_user_name" "$selected_distro" --shared-tmp --termux-home -- eval "env DISPLAY=\$(echo \$DISPLAY) XDG_RUNTIME_DIR=\${TMPDIR} \$selected_pd_hw_method \$@"
+"${selected_distro_type}"-distro login --user "$final_user_name" "$selected_distro" --shared-tmp $termux_home_link -- eval "env DISPLAY=\$(echo \$DISPLAY) XDG_RUNTIME_DIR=\${TMPDIR} \$selected_pd_hw_method \$@"
 ;;
 esac
 EOF
@@ -1764,7 +1764,7 @@ case \$1 in
 echo "${G}Type ${C}pdrun PACKAGE-NAME ${G}to start with gpu acceleration${NC}"
 ;;
 *)
-"${selected_distro_type}"-distro login --user "$final_user_name" "$selected_distro" --shared-tmp --termux-home -- eval "env DISPLAY=\$(echo \$DISPLAY) XDG_RUNTIME_DIR=\${TMPDIR} \$@"
+"${selected_distro_type}"-distro login --user "$final_user_name" "$selected_distro" --shared-tmp $termux_home_link -- eval "env DISPLAY=\$(echo \$DISPLAY) XDG_RUNTIME_DIR=\${TMPDIR} \$@"
 ;;
 esac
 EOF
@@ -1821,6 +1821,11 @@ EOF
 function install_distro_container() {
     setup_distro
     save_path="$distro_path/root"
+    if [[ "$selected_distro_type" == "chroot" ]]; then
+        termux_home_link=" "
+    else
+        termux_home_link="--termux-home"
+    fi
     distro_basic_task
     if [[ "$call_from_change_distro" == false ]]; then
         if [[ "$enable_hw_acc" == "y" ]]; then
