@@ -1835,9 +1835,7 @@ function install_distro_container() {
     distro_zsh_setup
     distro_terminal_utility_setup
     distro_create_app_installer
-    if [[ "$selected_distro_type" == "proot" ]]; then
-        add_add_to_menu
-    fi
+    add_add_to_menu
     if [[ "$lite_mode" != "1" && "$lite_mode" != "true" ]]; then
         install_some_required_pack
     fi
@@ -1849,8 +1847,9 @@ function install_distro_container() {
 # Check Installation
 #
 #########################################################################
-function disro_container_install_check() {
-    if [[ -d "$PREFIX/bin/$selected_distro" ]] || [[ -d "$PREFIX/var/lib/proot-distro/installed-rootfs/$selected_distro" ]]; then
+
+function chroot_disro_container_install_check() {
+    if [[ -d "$PREFIX/bin/$selected_distro" ]] && su -c "ls /data/local/chroot-distro/installed-rootfs/$selected_distro" &>/dev/null; then
         echo
         print_success "${BOLD} $selected_distro container setup successfully"
     else
@@ -1861,22 +1860,54 @@ function disro_container_install_check() {
             echo
             print_msg "Trying again... (Attempt $((retry_count + 1)) of $max_retries)"
             install_distro_container
-            if [[ -d "$PREFIX/bin/$selected_distro" ]] || [[ -d "$PREFIX/var/lib/proot-distro/installed-rootfs/$selected_distro" ]]; then
+            if [[ -d "$PREFIX/bin/$selected_distro" ]] && su -c "ls /data/local/chroot-distro/installed-rootfs/$selected_distro" &>/dev/null; then
                 echo
                 print_success "${BOLD} $selected_distro container setup successfully"
                 break
             fi
             ((retry_count++))
-            if [[ "$retry_count" == "$max_retries" ]]; then
-                print_failed "Failed to set up $selected_distro container after multiple attempts. Skipping...${NC}"
+        done
+
+        if [[ "$retry_count" -eq "$max_retries" ]]; then
+            print_failed "Failed to set up $selected_distro container after multiple attempts. Skipping...${NC}"
+        fi
+    fi
+}
+
+function proot_disro_container_install_check() {
+    if [[ -d "$PREFIX/bin/$selected_distro" ]] && [[ -d "$PREFIX/var/lib/proot-distro/installed-rootfs/$selected_distro" ]]; then
+        echo
+        print_success "${BOLD} $selected_distro container setup successfully"
+    else
+        max_retries=2
+        retry_count=0
+        while [[ "$retry_count" -lt "$max_retries" ]]; do
+            print_failed "Some problem occurred in $selected_distro setup"
+            echo
+            print_msg "Trying again... (Attempt $((retry_count + 1)) of $max_retries)"
+            install_distro_container
+            if [[ -d "$PREFIX/bin/$selected_distro" ]] && [[ -d "$PREFIX/var/lib/proot-distro/installed-rootfs/$selected_distro" ]]; then
+                echo
+                print_success "${BOLD} $selected_distro container setup successfully"
                 break
             fi
+            ((retry_count++))
         done
+
+        if [[ "$retry_count" -eq "$max_retries" ]]; then
+            print_failed "Failed to set up $selected_distro container after multiple attempts. Skipping...${NC}"
+        fi
+    fi
+}
+
+function disro_container_install_check() {
+    if [[ "$selected_distro_type" == "chroot" ]]; then
+        chroot_disro_container_install_check
+    else
+        proot_disro_container_install_check
     fi
 }
 
 check_termux
 install_distro_container
-if [[ "$selected_distro_type" == "proot" ]]; then
-    disro_container_install_check
-fi
+disro_container_install_check
