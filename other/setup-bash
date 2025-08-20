@@ -50,6 +50,7 @@ EOF
 
 function setup_ble_sh() {
     print_msg "Installing Ble.sh..."
+    package_install_and_check "make"
     git clone --recursive --depth 1 --shallow-submodules https://github.com/akinomyoga/ble.sh.git
     make -C ble.sh install PREFIX=~/.local
     check_and_delete "ble.sh"
