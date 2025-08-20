@@ -1358,8 +1358,8 @@ function distro_hw_questions() {
                 pd_hw_answer="virgl"
             fi
             ;;
-        "freedreno_kgsl")
-            pd_hw_answer="$termux_hw_answer"
+        "freedreno_kgsl" | "mesa_freedreno" | "mesa_zink_freedreno")
+            pd_hw_answer="turnip"
             ;;
         *)
             banner
@@ -1448,21 +1448,7 @@ function exp_termux_gl_hw_support() {
     7) exp_termux_gl_hw_answer="zink_with_mesa_zink" ;;
     esac
     termux_hw_answer="${exp_termux_gl_hw_answer}"
-
-    if [[ "$distro_add_answer" == "y" ]]; then
-        case "$exp_termux_gl_hw_answer" in
-        "virgl" | "virgl_vulkan")
-            if [[ "$device_gpu_model_name" == "adreno" ]]; then
-                distro_hw_questions
-            else
-                pd_hw_answer="virgl"
-            fi
-            ;;
-        *)
-            distro_hw_questions
-            ;;
-        esac
-    fi
+    distro_hw_questions
 }
 
 #NOTE: it first call exp_vulkan_support then if user select vulkan_icd the it will go for exp_termux_gl_hw_answer (as name suggest it setup the opengl driver for termux) and user type 4=skip then it will go for everything using virgl option (it's kind of same as exp_termux_gl_hw_answer), then when it done for termux part it will call distro_hw_questions to setup hwa for the selected proot-distro
@@ -1471,7 +1457,7 @@ function hw_questions() {
     exp_vulkan_support
     if [[ "$exp_termux_vulkan_hw_answer" == "vulkan_icd" ]]; then
         exp_termux_gl_hw_support
-    elif [[ "$exp_termux_vulkan_hw_answer" == "freedreno_kgsl" ]]; then
+    elif [[ "$exp_termux_vulkan_hw_answer" == "freedreno_kgsl" ]] || [[ "$exp_termux_vulkan_hw_answer" == "mesa_freedreno" ]] || [[ "$exp_termux_vulkan_hw_answer" == "mesa_zink_freedreno" ]]; then
         termux_hw_answer="${exp_termux_vulkan_hw_answer}"
         distro_hw_questions
     elif [[ "$exp_termux_vulkan_hw_answer" == "skip" ]]; then
@@ -1494,7 +1480,13 @@ function hw_questions() {
         echo
         echo "${Y}5. OpenGL ES (ZINK VIRGL)${NC}"
         echo
-        select_an_option 5 1 termux_hw_answer_num
+        echo "${Y}6. mesa-vulkan-icd-freedreno (Turnip) (adreno only)${NC}"
+        echo
+        echo "${Y}7. mesa-zink-vulkan-icd-freedreno (Turnip) (adreno only)${NC}"
+        echo
+        echo "${Y}8. mesa-vulkan-icd-freedreno (Kgsl) (adreno only)${NC}"
+        echo
+        select_an_option 8 1 termux_hw_answer_num
 
         # set gpu api name
         case "$termux_hw_answer_num" in
@@ -1503,6 +1495,9 @@ function hw_questions() {
         3) termux_hw_answer="virgl_angle" ;;
         4) termux_hw_answer="virgl_vulkan" ;;
         5) termux_hw_answer="zink_virgl" ;;
+        6) termux_hw_answer="mesa_freedreno" ;;
+        7) termux_hw_answer="mesa_zink_freedreno" ;;
+        8) termux_hw_answer="freedreno_kgsl" ;;
         esac
         distro_hw_questions
     fi
