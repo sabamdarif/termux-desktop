@@ -29,6 +29,9 @@
 - **preview** use fzf to search file and preview text file
 - **fnvim** use fzf to search for an file and open the directly in neovim
 - **fvim** same as *fnvim* but for vim
+- **fkill** to fuzzy find and kill the process
+- **myip** shows your ip address
+- **speedtest** run a speedtest
   ##### For more cat $HOME/.aliases
 
 #### :jigsaw:3.Special Programs (scripts):-
@@ -36,73 +39,75 @@
 
 ---
 
-## :hammer_and_wrench:Openbox Keybindings Cheat Sheet
+## :hammer_and_wrench: Openbox Keybindings Cheat Sheet
 
 This document provides a list of keybindings used in Openbox for quick reference.
 
+- <kbd>⊞</kbd> = Meta key / the Windows key
+
 #### General Navigation
 
-| **Keybinding**              | **Action**                                 |
-|-----------------------------|--------------------------------------------|
-| `Ctrl + Alt + Left`          | Go to the previous desktop                 |
-| `Ctrl + Alt + Right`         | Go to the next desktop                     |
-| `Ctrl + Alt + Up`            | Go to the desktop above                    |
-| `Ctrl + Alt + Down`          | Go to the desktop below                    |
-| `Shift + Alt + Left`         | Send window to the previous desktop        |
-| `Shift + Alt + Right`        | Send window to the next desktop            |
-| `Shift + Alt + Up`           | Send window to the desktop above           |
-| `Shift + Alt + Down`         | Send window to the desktop below           |
-| `Win + F1`                   | Go to desktop 1                            |
-| `Win + F2`                   | Go to desktop 2                            |
-| `Win + F3`                   | Go to desktop 3                            |
-| `Win + F4`                   | Go to desktop 4                            |
+| **Keybinding** | **Action** |
+|----------------|------------|
+| <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Left</kbd> | Go to the previous desktop |
+| <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Right</kbd> | Go to the next desktop |
+| <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Up</kbd> | Go to the desktop above |
+| <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Down</kbd> | Go to the desktop below |
+| <kbd>Shift</kbd> + <kbd>Alt</kbd> + <kbd>Left</kbd> | Send window to the previous desktop |
+| <kbd>Shift</kbd> + <kbd>Alt</kbd> + <kbd>Right</kbd> | Send window to the next desktop |
+| <kbd>Shift</kbd> + <kbd>Alt</kbd> + <kbd>Up</kbd> | Send window to the desktop above |
+| <kbd>Shift</kbd> + <kbd>Alt</kbd> + <kbd>Down</kbd> | Send window to the desktop below |
+| <kbd>⊞</kbd> + <kbd>F1</kbd> | Go to desktop 1 |
+| <kbd>⊞</kbd> + <kbd>F2</kbd> | Go to desktop 2 |
+| <kbd>⊞</kbd> + <kbd>F3</kbd> | Go to desktop 3 |
+| <kbd>⊞</kbd> + <kbd>F4</kbd> | Go to desktop 4 |
 
 #### Window Management
 
-| **Keybinding**              | **Action**                                 |
-|-----------------------------|--------------------------------------------|
-| `Win + Space`                | Launch Rofi (launcher)                     |
-| `Win + Shift + Space`        | Launch Rofi (dashboard)                    |
-| `Alt + Tab`                  | Switch to the next window                  |
-| `Win + Tab`                  | Switch to the next window                  |
-| `Win + Left`                 | Unmaximize horizontally                    |
-| `Win + Right`                | Unmaximize horizontally                    |
-| `Win + Up`                   | Maximize window                            |
-| `Win + Down`                 | Unmaximize window                          |
-| `Alt + F4`                   | Close window                               |
-| `Alt + Escape`               | Lower window                               |
-| `Alt + Space`                | Open client menu                           |
-| `Alt + Shift + Tab`          | Switch to the previous window              |
-| `Win + Shift + Right`        | Cycle windows to the right                 |
-| `Win + Shift + Left`         | Cycle windows to the left                  |
-| `Win + Shift + Up`           | Cycle windows upwards                      |
-| `Win + Shift + Down`         | Cycle windows downwards                    |
-| `Ctrl + Alt + M`             | Unminimize all windows                     |
-| `Ctrl + Alt + T`             | Open terminal (aterm)                      |
+| **Keybinding** | **Action** |
+|----------------|------------|
+| <kbd>⊞</kbd> + <kbd>Space</kbd> | Launch Rofi (launcher) |
+| <kbd>⊞</kbd> + <kbd>Shift</kbd> + <kbd>Space</kbd> | Launch Rofi (dashboard) |
+| <kbd>Alt</kbd> + <kbd>Tab</kbd> | Switch to the next window |
+| <kbd>⊞</kbd> + <kbd>Tab</kbd> | Switch to the next window |
+| <kbd>⊞</kbd> + <kbd>Left</kbd> | Unmaximize horizontally |
+| <kbd>⊞</kbd> + <kbd>Right</kbd> | Unmaximize horizontally |
+| <kbd>⊞</kbd> + <kbd>Up</kbd> | Maximize window |
+| <kbd>⊞</kbd> + <kbd>Down</kbd> | Unmaximize window |
+| <kbd>Alt</kbd> + <kbd>F4</kbd> | Close window |
+| <kbd>Alt</kbd> + <kbd>Escape</kbd> | Lower window |
+| <kbd>Alt</kbd> + <kbd>Space</kbd> | Open client menu |
+| <kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>Tab</kbd> | Switch to the previous window |
+| <kbd>⊞</kbd> + <kbd>Shift</kbd> + <kbd>Right</kbd> | Cycle windows to the right |
+| <kbd>⊞</kbd> + <kbd>Shift</kbd> + <kbd>Left</kbd> | Cycle windows to the left |
+| <kbd>⊞</kbd> + <kbd>Shift</kbd> + <kbd>Up</kbd> | Cycle windows upwards |
+| <kbd>⊞</kbd> + <kbd>Shift</kbd> + <kbd>Down</kbd> | Cycle windows downwards |
+| <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>M</kbd> | Unminimize all windows |
+| <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>T</kbd> | Open terminal (aterm) |
 
 #### Window Movement and Resizing
 
-| **Keybinding**              | **Action**                                 |
-|-----------------------------|--------------------------------------------|
-| `Win + Alt + Up`             | Move window up                            |
-| `Win + Alt + Down`           | Move window down                          |
-| `Win + Alt + Left`           | Move window left                          |
-| `Win + Alt + Right`          | Move window right                         |
-| `Ctrl + Alt + Right`         | Resize window horizontally (increase)     |
-| `Ctrl + Alt + Left`          | Resize window horizontally (decrease)     |
-| `Ctrl + Alt + Down`          | Resize window vertically (increase)       |
-| `Ctrl + Alt + Up`            | Resize window vertically (decrease)       |
+| **Keybinding** | **Action** |
+|----------------|------------|
+| <kbd>⊞</kbd> + <kbd>Alt</kbd> + <kbd>Up</kbd> | Move window up |
+| <kbd>⊞</kbd> + <kbd>Alt</kbd> + <kbd>Down</kbd> | Move window down |
+| <kbd>⊞</kbd> + <kbd>Alt</kbd> + <kbd>Left</kbd> | Move window left |
+| <kbd>⊞</kbd> + <kbd>Alt</kbd> + <kbd>Right</kbd> | Move window right |
+| <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Right</kbd> | Resize window horizontally (increase) |
+| <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Left</kbd> | Resize window horizontally (decrease) |
+| <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Down</kbd> | Resize window vertically (increase) |
+| <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Up</kbd> | Resize window vertically (decrease) |
 
 #### Miscellaneous
 
-| **Keybinding**              | **Action**                                 |
-|-----------------------------|--------------------------------------------|
-| `Win + D`                   | Toggle show desktop                        |
-| `Shift + Win + 1`           | Send window to desktop 1                   |
-| `Shift + Win + 2`           | Send window to desktop 2                   |
-| `Shift + Win + 3`           | Send window to desktop 3                   |
-| `Shift + Win + 4`           | Send window to desktop 4                   |
-| `Shift + Win + 5`           | Send window to desktop 5                   |
+| **Keybinding** | **Action** |
+|----------------|------------|
+| <kbd>⊞</kbd> + <kbd>D</kbd> | Toggle show desktop |
+| <kbd>Shift</kbd> + <kbd>⊞</kbd> + <kbd>1</kbd> | Send window to desktop 1 |
+| <kbd>Shift</kbd> + <kbd>⊞</kbd> + <kbd>2</kbd> | Send window to desktop 2 |
+| <kbd>Shift</kbd> + <kbd>⊞</kbd> + <kbd>3</kbd> | Send window to desktop 3 |
+| <kbd>Shift</kbd> + <kbd>⊞</kbd> + <kbd>4</kbd> | Send window to desktop 4 |
+| <kbd>Shift</kbd> + <kbd>⊞</kbd> + <kbd>5</kbd> | Send window to desktop 5 |
 
 ---
 

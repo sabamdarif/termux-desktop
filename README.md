@@ -15,24 +15,28 @@
 ## Key Features:
 
 - :books: **Easy Setup:** Easy-to-follow installation process.
-- :desktop_computer: **Desktop Styles:** Supports **XFCE**, **LXQt**, and **OPENBOX**... with beautiful themes.
+- :desktop_computer: **Desktop Styles:** Supports **XFCE**, **LXQt**, and **OPENBOX**... others with beautiful themes.
 - :mechanical_arm: **Hardware Acceleration:** It will install all the drivers in order to It will install all the drivers in order to get hardware acceleration working under termux.
-- :paperclips: **GUI Access:** Supports Termux:X11 and VNC (vnc is optional).
-- :package: **Package Management:** Compatible with both APT and [PACMAN](https://youtu.be/ditNvG5Nxj0) (pacman isn't well tested, so there might be some issues).
+- :paperclips: **GUI Access:**
+    - Termux:X11 (Default) 
+    - VNC (vnc is optional and only available if chose it from custom install section).
+- :package: **Package Management:** 
+    - APT (Termux's default and also recommended)
+    - [PACMAN](https://youtu.be/ditNvG5Nxj0) (pacman isn't well tested, so there might be some bugs).
 - :shopping: **App Store:** A appstore to install apps from termux and suppoted proot-distro.
-- :package: **Container** Normally, you're limited to apps that are supported by Termux, but it have a option for installing apps like LibreOffice via proot-distro / chroot-distro and use them as a native app.
-- And a lot more...
+- :package: **Container** Normally, you're limited to apps that are supported by Termux, but you have a option for installing apps like LibreOffice via proot-distro / chroot-distro and use them as a native app. Here the proot / chroot distro works as container
+- And a lot more
+    - I will always recommended chose the custom option during the setup and see what you can do
 
 ---
 
 ## Getting Started:
 
 ##### 1. Ensure Requirements Are Met:
+> [!NOTE]
+> This Only Works On Termux From Github Or Fdroid. Avoid using Termux from Google Play that doesn't work due to API limitations.
    - Android 8+ device
    - **[Termux](https://termux.dev/en/)** (download from [GitHub](https://github.com/termux/termux-app/releases) or [F-Droid](https://f-droid.org/en/packages/com.termux/))
-      >NOTE: This Only Works On Termux From Github Or Fdroid
-
-     > Avoid using Termux from Google Play due to API limitations.
    - **[Termux:X11](https://github.com/termux/termux-x11/releases)**
    - **[Termux-API](https://github.com/termux/termux-api/releases)**
    - Minimum 2GB of RAM (3GB recommended)
@@ -71,9 +75,10 @@
 ##### 5. Start Installation: 
 > Full Installation YouTube Video Guide:- [Here](https://youtu.be/SlR9f9hl5CQ?si=7O13ZAzdAnB_wwWw)
 
-> **Note: Fresh installations are recommended for best results.**
-
-> **Note: If you are in android 12 or higher then first disable Phantom Process Killer Guide:-** [Here](https://github.com/atamshkai/Phantom-Process-Killer)
+> [!IMPORTANT]
+> **Fresh installations are recommended for best results.**  
+> **If you are in android 12 or higher then first disable Phantom Process Killer Guide:-** [Here](https://github.com/atamshkai/Phantom-Process-Killer)
+ 
    ```bash
    curl -Lf https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop -o setup-termux-desktop && chmod +x setup-termux-desktop && ./setup-termux-desktop
    ```
@@ -239,16 +244,12 @@ Options:
 
 ---
 
-## Advanced Topics:
+### Quick Navigation
+<div align="center">
 
-### Wine:
-Run Windows applications seamlessly. Learn more [here](https://github.com/sabamdarif/termux-desktop/blob/main/readmes/wine.md#wine_glasslearn-about-wine).
+**:package: [Distro Containers](/readmes/proot-container.md) • :mechanical_arm: [Hardware Acceleration](/readmes/hw-acceleration.md) • :wine_glass:[Wine](/readmes/wine.md#wine_glasslearn-about-wine) • :bulb: [Others](/readmes/see-more.md)**
 
-### Distro Containers:
-Install additional apps like LibreOffice. Details [here](/readmes/proot-container.md).
-
-### Hardware Acceleration:
-Enhance performance with GPU acceleration. Learn more [here](/readmes/hw-acceleration.md).
+</div>
 
 ---
 ## Associated Repos:
