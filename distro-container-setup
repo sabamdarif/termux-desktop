@@ -455,7 +455,7 @@ function distro_setup_user() {
         final_user_name="${user_name}"
     fi
     print_to_config "pd_useradd_answer"
-    print_to_config "final_user_name"
+    print_to_config "user_name"
 
     # set password value
     if [[ "$pd_pass_type" == "2" ]]; then
@@ -464,6 +464,7 @@ function distro_setup_user() {
         final_pass="root"
     fi
     print_to_config "pd_pass_type"
+    print_to_config "pass"
 
     if [[ "$pd_useradd_answer" == "y" ]]; then
         # first setup the user

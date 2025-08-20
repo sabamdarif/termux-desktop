@@ -1589,7 +1589,6 @@ function setup_user_name_only() {
             ;;
         esac
     done
-    print_to_config "user_name"
 }
 
 function setup_user_name_and_pass() {
@@ -1642,8 +1641,6 @@ function setup_user_name_and_pass() {
             ;;
         esac
     done
-    print_to_config "user_name"
-    print_to_config "pass"
 }
 
 function distro_questions() {
@@ -5075,10 +5072,6 @@ function reset_changes() {
 
         check_and_delete "$shell_rc_file"
         check_and_restore "$shell_rc_file"
-        check_and_backup "$config_file"
-        touch "$config_file"
-        print_basic_details
-
         print_success "${BOLD}Reset successful. Now restart Termux."
     fi
 }
