@@ -32,6 +32,14 @@
 - **fkill** to fuzzy find and kill the process
 - **myip** shows your ip address
 - **speedtest** run a speedtest
+- **backup**: Quick backup of a file or directory with timestamp
+- **freplace**: Find and replace text in files
+- **duf**: Show disk usage of directories in current path (top 20 largest)
+- **note**: Quick note taking
+- **findbig**: Find files larger than specified size (default >100M)
+- **encrypt**: Encrypt files using OpenSSL AES-256-CBC encryption
+- **decrypt**: Decrypt files that were encrypted with the encrypt function
+- **checksum**: Calculate MD5, SHA1, and SHA256 checksums for files
   ##### For more cat $HOME/.aliases
 
 #### :jigsaw:3.Special Programs (scripts):-

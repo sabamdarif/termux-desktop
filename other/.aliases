@@ -1,179 +1,523 @@
-# fzf
-alias preview="fzf --preview='bat --color=always --style=numbers --theme OneHalfDark {}' --preview-window=down"
-alias fnvim='nvim $(fzf -m --preview="bat --color=always --style=numbers --theme OneHalfDark {}" --preview-window=down)'
-alias fvim='vim $(fzf -m --preview="bat --color=always --style=numbers --theme OneHalfDark {}" --preview-window=down)'
-
-#System    
+###################################################################
+# this shell configuration is inspired
+# from
+# https://github.com/mayTermux/myTermux/blob/main/.aliases
+# and
+# https://github.com/ChrisTitusTech/mybash/blob/main/.bashrc
+####################################################################
 alias q="exit"
 alias c="clear"
+alias g="git"
+alias f="find . | grep "
 alias sd="cd /sdcard"
-alias pf="cd $PREFIX"
-alias mkdir='mkdir -p'
-alias startssh='termux-ssh'
-alias stopssh='termux-ssh stop'
-
-# Define .. and ../.. shortcuts for navigation
+alias pf='cd "$PREFIX"'
+alias ss="cd /sdcard/Pictures/Screenshots/"
+alias ms="cd /sdcard/Movies"
+alias dl="cd /sdcard/Download"
+alias ds="cd /sdcard/Documents"
 alias '..'='cd ..'
 alias '...'='cd ../..'
 alias '....'='cd ../../..'
 alias '.....'='cd ../../../..'
-
-#Photos
-alias ss="cd /sdcard/Pictures/Screenshots/"
-
-#Movies
-alias ms="cd /sdcard/Movies"
-
-#Downloads
-alias dl="cd /sdcard/Download"
-
-#Documents
-alias ds="cd /sdcard/Documents"
-
-#Largest Files
-alias largefile="du -h -x -s -- * | sort -r -h | head -20"
-
-#System Information
 alias ls="eza --icons"
 alias la="eza --icons -lgha --group-directories-first"
-alias la="eza --icons -lgha --group-directories-first"
+alias l="eza --icons -lgha --group-directories-first"
+alias ly="eza --icons -lgha --group-directories-first"
 alias lt="eza --icons --tree"
 alias lta="eza --icons --tree -lgha"
-alias bat="bat --theme OneHalfDark"
-alias cat="bat --theme OneHalfDark -p $@"
-alias neofetch='fastfetch'
-
-#Magick
-alias listfont="magick convert -list font | grep -iE 'font:.*'"
-
-#termux-reload
+alias preview="fzf --preview='bat --color=always --style=numbers --theme OneHalfDark {}' --preview-window=down"
+alias fnvim='nvim $(fzf -m --preview="bat --color=always --style=numbers --theme OneHalfDark {}" --preview-window=down)'
+alias fvim='vim $(fzf -m --preview="bat --color=always --style=numbers --theme OneHalfDark {}" --preview-window=down)'
+alias fcd="cd \$(find . -type d | fzf)"
+alias vi='nvim'
+alias vim='nvim'
+alias n='nvim'
+if command -v batcat &>/dev/null; then
+    alias cat='batcat --theme OneHalfDark -p'
+else
+    alias cat='bat --theme OneHalfDark -p'
+fi
+alias mkdir='mkdir -p'
 alias reload="termux-reload-settings"
-
-alias psu="ps aux"  
-alias psg="ps aux | grep -i"  # Usage: psg process_name  
+alias psu="ps aux"
+alias psg="ps aux | grep -i" # Usage: psg process_name
 alias kill9="kill -9"
-alias myip="curl ifconfig.me"  # Show public IP
+alias startssh='termux-ssh'
+alias stopssh='termux-ssh stop'
+alias myip="curl ifconfig.me" # Show public IP
 alias speedtest="curl -s https://raw.githubusercontent.com/noreplyui5/speedtest-cli/master/speedtest.py | python"
+alias neofetch='fastfetch'
+alias largefile="du -h -x -s -- * | sort -r -h | head -20"
+alias listfont="magick convert -list font | grep -iE 'font:.*'"
 
 #######################################################
 # SPECIAL FUNCTIONS
 #######################################################
 # Extracts any archive(s)
 extract() {
-	for archive in "$@"; do
+    local archive="$1"
+
+    # Check if the archive exists
     if [[ ! -f "$archive" ]]; then
-        echo "Error: '$archive' does not exist!"
-        continue
+        echo "[x] $archive doesn't exist"
+        return 1
     fi
 
-    total_size=$(stat -c '%s' "$archive")
+    echo "[i] Archive: $archive"
+    echo "[i] Size: $(du -h "$archive" | cut -f1)"
+    echo "[i] Type: $(file -b "$archive")"
+    echo
 
+    # Get absolute paths
+    local archive_dir
+    archive_dir=$(dirname "$(realpath "$archive")")
+    local archive_name
+    archive_name=$(basename "$archive")
+
+    # Remember existing files before extraction
+    local temp_before
+    temp_before=$(mktemp)
+    find "$archive_dir" -maxdepth 1 ! -path "$archive_dir" -printf '%f\n' 2>/dev/null | sort >"$temp_before"
+
+    # Handle different archive formats with verbose output
     case "$archive" in
-        *.tar.gz|*.tgz)
-            pv -s "$total_size" "$archive" | tar xzf -
-            ;;
-        *.tar.xz)
-            pv -s "$total_size" "$archive" | tar xJf -
-            ;;
-        *.tar.bz2|*.tbz2)
-            pv -s "$total_size" "$archive" | tar xjf -
-            ;;
-        *.tar)
-            pv -s "$total_size" "$archive" | tar xf -
-            ;;
-        *.bz2)
-            pv -s "$total_size" "$archive" | bunzip2 > "${archive%.bz2}"
-            ;;
-        *.gz)
-            pv -s "$total_size" "$archive" | gunzip > "${archive%.gz}"
-            ;;
-        *.7z)
-            pv -s "$total_size" "$archive" | 7z x -si -y > /dev/null
-            ;;
-        *.rar)
-            pv -s "$total_size" "$archive" | unrar x -
-            ;;
-        *.zip)
-            unzip "$archive"
-            ;;
-        *.Z)
-            pv -s "$total_size" "$archive" | uncompress -
-            ;;
-        *)
-            echo "Unsupported archive format: $archive"
-            ;;
+    *.tar.gz | *.tgz)
+        echo "[✓] Extracting tar.gz archive: $archive"
+        (cd "$archive_dir" && tar -xzvf "$archive_name") || {
+            echo "[x] Failed to extract $archive"
+            return 1
+        }
+        ;;
+    *.tar.xz | *.txz)
+        echo "[✓] Extracting tar.xz archive: $archive"
+        (cd "$archive_dir" && tar -xJvf "$archive_name") || {
+            echo "[x] Failed to extract $archive"
+            return 1
+        }
+        ;;
+    *.tar.bz2 | *.tbz2 | *.tbz)
+        echo "[✓] Extracting tar.bz2 archive: $archive"
+        (cd "$archive_dir" && tar -xjvf "$archive_name") || {
+            echo "[x] Failed to extract $archive"
+            return 1
+        }
+        ;;
+    *.tar.Z | *.tZ)
+        echo "[✓] Extracting tar.Z archive: $archive"
+        (cd "$archive_dir" && tar -xZvf "$archive_name") || {
+            echo "[x] Failed to extract $archive"
+            return 1
+        }
+        ;;
+    *.tar.lz | *.tlz)
+        echo "[✓] Extracting tar.lz archive: $archive"
+        (cd "$archive_dir" && tar --lzip -xvf "$archive_name") || {
+            echo "[x] Failed to extract $archive"
+            return 1
+        }
+        ;;
+    *.tar.lzma)
+        echo "[✓] Extracting tar.lzma archive: $archive"
+        (cd "$archive_dir" && tar --lzma -xvf "$archive_name") || {
+            echo "[x] Failed to extract $archive"
+            return 1
+        }
+        ;;
+    *.tar.lzo)
+        echo "[✓] Extracting tar.lzo archive: $archive"
+        (cd "$archive_dir" && tar --lzop -xvf "$archive_name") || {
+            echo "[x] Failed to extract $archive"
+            return 1
+        }
+        ;;
+    *.tar.zst | *.tzst)
+        echo "[✓] Extracting tar.zst archive: $archive"
+        (cd "$archive_dir" && tar --zstd -xvf "$archive_name") || {
+            echo "[x] Failed to extract $archive"
+            return 1
+        }
+        ;;
+    *.tar)
+        echo "[✓] Extracting tar archive: $archive"
+        (cd "$archive_dir" && tar -xvf "$archive_name") || {
+            echo "[x] Failed to extract $archive"
+            return 1
+        }
+        ;;
+    *.bz2)
+        echo "[✓] Extracting bz2 file: $archive"
+        (cd "$archive_dir" && bunzip2 -v "$archive_name") || {
+            echo "[x] Failed to extract $archive"
+            return 1
+        }
+        ;;
+    *.gz)
+        echo "[✓] Extracting gz file: $archive"
+        (cd "$archive_dir" && gunzip -v "$archive_name") || {
+            echo "[x] Failed to extract $archive"
+            return 1
+        }
+        ;;
+    *.xz)
+        echo "[✓] Extracting xz file: $archive"
+        (cd "$archive_dir" && unxz -v "$archive_name") || {
+            echo "[x] Failed to extract $archive"
+            return 1
+        }
+        ;;
+    *.lzma)
+        echo "[✓] Extracting lzma file: $archive"
+        (cd "$archive_dir" && unlzma -v "$archive_name") || {
+            echo "[x] Failed to extract $archive"
+            return 1
+        }
+        ;;
+    *.Z)
+        echo "[✓] Extracting Z file: $archive"
+        (cd "$archive_dir" && uncompress -v "$archive_name") || {
+            echo "[x] Failed to extract $archive"
+            return 1
+        }
+        ;;
+    *.lz)
+        echo "[✓] Extracting lz file: $archive"
+        (cd "$archive_dir" && lzip -dv "$archive_name") || {
+            echo "[x] Failed to extract $archive"
+            return 1
+        }
+        ;;
+    *.lzo)
+        echo "[✓] Extracting lzo file: $archive"
+        (cd "$archive_dir" && lzop -dv "$archive_name") || {
+            echo "[x] Failed to extract $archive"
+            return 1
+        }
+        ;;
+    *.zst)
+        echo "[✓] Extracting zstd file: $archive"
+        (cd "$archive_dir" && zstd -dv "$archive_name") || {
+            echo "[x] Failed to extract $archive"
+            return 1
+        }
+        ;;
+    *.7z)
+        echo "[✓] Extracting 7z archive: $archive"
+        (cd "$archive_dir" && 7z x "$archive_name") || {
+            echo "[x] Failed to extract $archive"
+            return 1
+        }
+        ;;
+    *.zip | *.jar | *.war | *.ear | *.apk)
+        echo "[✓] Extracting zip-based archive: $archive"
+        (cd "$archive_dir" && unzip "$archive_name") || {
+            echo "[x] Failed to extract $archive"
+            return 1
+        }
+        ;;
+    *.rar)
+        echo "[✓] Extracting rar archive: $archive"
+        (cd "$archive_dir" && unrar x "$archive_name") || {
+            echo "[x] Failed to extract $archive"
+            return 1
+        }
+        ;;
+    *.ace)
+        echo "[✓] Extracting ace archive: $archive"
+        (cd "$archive_dir" && unace x "$archive_name") || {
+            echo "[x] Failed to extract $archive"
+            return 1
+        }
+        ;;
+    *.arj)
+        echo "[✓] Extracting arj archive: $archive"
+        (cd "$archive_dir" && arj e "$archive_name") || {
+            echo "[x] Failed to extract $archive"
+            return 1
+        }
+        ;;
+    *.cab)
+        echo "[✓] Extracting cab archive: $archive"
+        (cd "$archive_dir" && cabextract "$archive_name") || {
+            echo "[x] Failed to extract $archive"
+            return 1
+        }
+        ;;
+    *.lha | *.lzh)
+        echo "[✓] Extracting lha/lzh archive: $archive"
+        (cd "$archive_dir" && lha x "$archive_name") || {
+            echo "[x] Failed to extract $archive"
+            return 1
+        }
+        ;;
+    *.deb)
+        echo "[✓] Extracting deb package: $archive"
+        (cd "$archive_dir" && ar x "$archive_name") || {
+            echo "[x] Failed to extract $archive"
+            return 1
+        }
+        ;;
+    *.cpio)
+        echo "[✓] Extracting cpio archive: $archive"
+        (cd "$archive_dir" && cpio -idmv <"$archive_name") || {
+            echo "[x] Failed to extract $archive"
+            return 1
+        }
+        ;;
+    *.a)
+        echo "[✓] Extracting ar archive: $archive"
+        (cd "$archive_dir" && ar x "$archive_name") || {
+            echo "[x] Failed to extract $archive"
+            return 1
+        }
+        ;;
+    *)
+        (cd "$archive_dir" && 7z x "$archive_name") || {
+            echo "[x] Failed to extract $archive"
+            echo "[i] Supported formats:"
+            echo "    Tar: .tar, .tar.gz/.tgz, .tar.xz/.txz, .tar.bz2/.tbz2/.tbz"
+            echo "    Tar: .tar.Z/.tZ, .tar.lz/.tlz, .tar.lzma, .tar.lzo, .tar.zst/.tzst"
+            echo "    Compressed: .gz, .bz2, .xz, .lzma, .Z, .lz, .lzo, .zst"
+            echo "    Archives: .zip, .7z, .rar, .ace, .arj, .cab, .lha/.lzh"
+            echo "    Packages: .rpm, .deb, .jar, .war, .ear, .apk"
+            echo "    Other: .cpio, .a"
+            return 1
+        }
+        ;;
     esac
-	done
+
+    echo
+    echo "[✓] Successfully extracted $archive"
+
+    #################### yes this might be too much listings newly extracted files
+    #################### and i think i will remove this in future if it turns out
+    #################### be useless
+
+    # Get current files after extraction
+    local temp_after
+    temp_after=$(mktemp)
+    find "$archive_dir" -maxdepth 1 ! -path "$archive_dir" -printf '%f\n' 2>/dev/null | sort >"$temp_after"
+
+    # Find newly added files
+    local newly_added
+    newly_added=$(comm -13 "$temp_before" "$temp_after")
+
+    if [[ -n "$newly_added" ]]; then
+        echo "[i] Extracted files:"
+        while IFS= read -r file; do
+            if [[ -n "$file" ]]; then
+                echo "    $file"
+            fi
+        done <<<"$newly_added"
+    else
+        echo "[i] No new files found (files may have been extracted to subdirectories)"
+    fi
+
+    # Clean up temporary files
+    rm -f "$temp_before" "$temp_after" 2>/dev/null
+
+    # Change to the archive directory if not already there
+    local current_dir
+    current_dir=$(pwd)
+    if [[ "$current_dir" != "$archive_dir" ]]; then
+        cd "$archive_dir" || return
+        echo "[i] Changed to directory: $archive_dir"
+    fi
 }
+
 # Searches for text in all files in the current folder
 ftext() {
-	# -i case-insensitive
-	# -I ignore binary files
-	# -H causes filename to be printed
-	# -r recursive search
-	# -n causes line number to be printed
-	# optional: -F treat search term as a literal, not a regular expression
-	# optional: -l only print filenames and not the matching lines ex. grep -irl "$1" *
-	grep -iIHrn --color=always "$1" . | less -r
+    # -i case-insensitive
+    # -I ignore binary files
+    # -H causes filename to be printed
+    # -r recursive search
+    # -n causes line number to be printed
+    # optional: -F treat search term as a literal, not a regular expression
+    # optional: -l only print filenames and not the matching lines ex. grep -irl "$1" *
+    grep -iIHrn --color=always "$1" . | less -r
 }
+
 # Copy and go to the directory
 cpg() {
-	if [ -d "$2" ]; then
-		cp "$1" "$2" && cd "$2"
-	else
-		cp "$1" "$2"
-	fi
+    if [ -d "$2" ]; then
+        cp "$1" "$2" && cd "$2" || return
+    else
+        cp "$1" "$2"
+    fi
 }
+
 # Move and go to the directory
 mvg() {
-	if [ -d "$2" ]; then
-		mv "$1" "$2" && cd "$2"
-	else
-		mv "$1" "$2"
-	fi
+    if [ -d "$2" ]; then
+        mv "$1" "$2" && cd "$2" || return
+    else
+        mv "$1" "$2"
+    fi
 }
+
 # Create and go to the directory
 mkdirg() {
-	mkdir -p "$1"
-	cd "$1"
+    mkdir -p "$1"
+    cd "$1" || return
 }
 
+# fuzzy find and kill a process
 fkill() {
-  local selected pid
+    local pid
 
-  # Use a temp file to hold selected lines
-  local tmpfile
-  tmpfile=$(mktemp)
+    # Use a temp file to hold selected lines
+    local tmpfile
+    tmpfile=$(mktemp)
 
-  ps -eo user,pid,cmd --sort=-%mem \
-    | sed 1d \
-    | fzf --multi \
-          --reverse \
-          --header=" Select processes to kill (Tab to mark, Enter to kill)" \
-          --preview 'ps -p {2} -o pid,user,%cpu,%mem,cmd' \
-          --bind 'ctrl-s:toggle-sort' > "$tmpfile"
+    ps -eo user,pid,cmd --sort=-%mem |
+        sed 1d |
+        fzf --multi \
+            --reverse \
+            --header=" Select processes to kill (Tab to mark, Enter to kill)" \
+            --preview 'ps -p {2} -o pid,user,%cpu,%mem,cmd' \
+            --bind 'ctrl-s:toggle-sort' >"$tmpfile"
 
-  if [[ ! -s $tmpfile ]]; then
-    echo "No processes selected." >&2
-    rm -f "$tmpfile"
-    return 1
-  fi
-
-  while IFS= read -r line; do
-    pid=$(echo "$line" | awk '{print $2}')
-    if [[ -n "$pid" ]]; then
-      echo "Killing PID $pid…" >&2
-      if kill -TERM "$pid" 2>/dev/null; then
-        echo "Sent SIGTERM to $pid" >&2
-      else
-        echo "SIGTERM failed for $pid, sending SIGKILL…" >&2
-        kill -KILL "$pid" 2>/dev/null \
-          && echo "Sent SIGKILL to $pid" >&2 \
-          || echo "Failed to kill $pid" >&2
-      fi
+    if [[ ! -s $tmpfile ]]; then
+        echo "No processes selected." >&2
+        rm -f "$tmpfile"
+        return 1
     fi
-  done < "$tmpfile"
 
-  rm -f "$tmpfile"
+    while IFS= read -r line; do
+        pid=$(echo "$line" | awk '{print $2}')
+        if [[ -n "$pid" ]]; then
+            echo "Killing PID $pid…" >&2
+            if kill -TERM "$pid" 2>/dev/null; then
+                echo "Sent SIGTERM to $pid" >&2
+            else
+                echo "SIGTERM failed for $pid, sending SIGKILL…" >&2
+                kill -KILL "$pid" 2>/dev/null &&
+                    echo "Sent SIGKILL to $pid" >&2 ||
+                    echo "Failed to kill $pid" >&2
+            fi
+        fi
+    done <"$tmpfile"
+
+    rm -f "$tmpfile"
 }
 
+# Quick backup of a file or directory
+backup() {
+    local item="$1"
+    if [[ -z "$item" ]]; then
+        echo "[x] Usage: backup <file_or_directory>"
+        return 1
+    fi
+
+    local backup_name
+    backup_name="${item}.backup.$(date +%Y%m%d_%H%M%S)"
+    echo "[i] Creating backup: $backup_name"
+
+    if [[ -d "$item" ]]; then
+        cp -rv "$item" "$backup_name"
+    else
+        cp -v "$item" "$backup_name"
+    fi
+
+    echo "[✓] Backup created: $backup_name"
+}
+
+# Find and replace text in files
+freplace() {
+    if [[ $# -ne 3 ]]; then
+        echo "[x] Usage: freplace <search_text> <replace_text> <file_pattern>"
+        echo "    Example: freplace 'old_text' 'new_text' '*.txt'"
+        return 1
+    fi
+
+    local search="$1"
+    local replace="$2"
+    local pattern="$3"
+
+    echo "[i] Searching for '$search' in files matching '$pattern'"
+    echo "[i] Will replace with '$replace'"
+
+    # Show what will be changed first
+    echo "[i] Files that will be modified:"
+    # shellcheck disable=SC2086
+    grep -l "$search" $pattern 2>/dev/null || {
+        echo "[x] No files found containing '$search'"
+        return 1
+    }
+
+    read -p "Continue with replacement? (y/N): " -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        # shellcheck disable=SC2086
+        sed -i.bak "s/$search/$replace/g" $pattern
+        echo "[✓] Replacement completed. Original files backed up with .bak extension"
+    else
+        echo "[i] Operation cancelled"
+    fi
+}
+
+# Show disk usage of directories in current path
+duf() {
+    local target="${1:-.}"
+    echo "[i] Disk usage for: $target"
+    du -h "$target"/* 2>/dev/null | sort -hr | head -20
+}
+
+# Quick note taking
+note() {
+    local note_file="$HOME/.notes"
+    if [[ $# -eq 0 ]]; then
+        echo "[i] Current notes:"
+        cat "$note_file" 2>/dev/null || echo "[i] No notes found"
+    else
+        echo "$(date '+%Y-%m-%d %H:%M:%S'): $*" >>"$note_file"
+        echo "[✓] Note added"
+    fi
+}
+
+# Find large files
+findbig() {
+    local size="${1:-100M}"
+    local path="${2:-.}"
+    echo "[i] Finding files larger than $size in $path"
+    find "$path" -type f -size "+$size" -exec sh -c 'ls -lh "$@"' _ {} + 2>/dev/null | sort -k5 -hr
+}
+
+# Quick file encryption/decryption with openssl
+encrypt() {
+    local file="$1"
+    if [[ -z "$file" ]]; then
+        echo "[x] Usage: encrypt <file>"
+        return 1
+    fi
+
+    echo "[i] Encrypting $file"
+    openssl enc -aes-256-cbc -salt -in "$file" -out "${file}.enc" &&
+        echo "[✓] Encrypted to ${file}.enc"
+}
+
+decrypt() {
+    local file="$1"
+    if [[ -z "$file" ]]; then
+        echo "[x] Usage: decrypt <encrypted_file>"
+        return 1
+    fi
+
+    local output="${file%.enc}"
+    echo "[i] Decrypting $file"
+    openssl enc -d -aes-256-cbc -in "$file" -out "$output" &&
+        echo "[✓] Decrypted to $output"
+}
+
+# Calculate file checksums
+checksum() {
+    local file="$1"
+    if [[ -z "$file" ]] || [[ ! -f "$file" ]]; then
+        echo "[x] Usage: checksum <file>"
+        return 1
+    fi
+
+    echo "[i] Checksums for: $file"
+    echo "  MD5:    $(md5sum "$file" | cut -d' ' -f1)"
+    echo "  SHA1:   $(sha1sum "$file" | cut -d' ' -f1)"
+    echo "  SHA256: $(sha256sum "$file" | cut -d' ' -f1)"
+}
