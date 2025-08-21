@@ -1,4 +1,27 @@
 #!/data/data/com.termux/files/usr/bin/bash
+#
+# A simple script to create a login screen or MOTD in Termux.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+# Author     : @sabamdarif
+# License    : GPL-v3
+# Description: Creates a custom login screen/MOTD for Termux.
+# Part of    : sabamdarif/termux-desktop
+# Repository : https://github.com/sabamdarif/termux-desktop
+# Inspired by: https://github.com/Generator/termux-motd
+
 # Color codes
 NC=$'\e[0;39m'
 G=$'\e[1;32m'
@@ -176,4 +199,3 @@ while read -r _ size used _ usep mount; do
     # print bar with same indent
     printf "%*s%b\n" "$indent" "" "$bar"
 done < <(df -H -t sdcardfs -t fuse -t fuse.rclone | tail -n +2)
-

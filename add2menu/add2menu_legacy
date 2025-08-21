@@ -1,4 +1,27 @@
 #!/data/data/com.termux/files/usr/bin/bash
+#
+# Add To Menu
+# A simple script to add programs from the installed proot-distro
+# to the Termux application menu.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+# Author     : @sabamdarif
+# License    : GPL-v3
+# Description: Adds programs from a proot-distro to the Termux application menu
+# Part of    : sabamdarif/termux-desktop
+# Repository : https://github.com/sabamdarif/termux-desktop
 
 # Set distro_name from environment variable or default to "debian"
 distro_name="${distro_name:-debian}"
@@ -51,7 +74,7 @@ add2menu_f() {
         fi
 
         # Process each selected application
-        IFS=',' read -ra selected_names_array <<< "$selected_names"
+        IFS=',' read -ra selected_names_array <<<"$selected_names"
         for selected_item in "${selected_names_array[@]}"; do
             selected_name=${selected_item%%;;*}
             selected_file=${selected_item##*;;}
@@ -89,7 +112,7 @@ add2menu_f() {
         fi
 
         # Process each selected application for removal
-        IFS=',' read -ra selected_names_array <<< "$selected_names"
+        IFS=',' read -ra selected_names_array <<<"$selected_names"
         for selected_item in "${selected_names_array[@]}"; do
             selected_file=${selected_item##*;;}
             rm "$selected_file"
@@ -105,18 +128,19 @@ add2menu_f() {
 
 # Handle script arguments
 case $1 in
-    --nogpu)
-        LIBGL_ALWAYS_SOFTWARE=1 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe add2menu_f
-        ;;
-    --help|-h)
-        echo -e "
+--nogpu)
+    LIBGL_ALWAYS_SOFTWARE=1 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe add2menu_f
+    ;;
+--help | -h)
+    echo -e "
 Usage:
   add2menu_legacy             Start add2menu with GPU acceleration
   add2menu_legacy --nogpu     Start add2menu without GPU acceleration
   env distro_name=fedora ./add2menu/add2menu_legacy  Run for a specific distro
 "
-        ;;
-    *)
-        add2menu_f
-        ;;
+    ;;
+*)
+    add2menu_f
+    ;;
 esac
+
