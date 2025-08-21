@@ -14,19 +14,27 @@
 
 ## Key Features:
 
-- :books: **Easy Setup:** Easy-to-follow installation process.
-- :desktop_computer: **Desktop Styles:** Supports **XFCE**, **LXQt**, and **OPENBOX**... others with beautiful themes.
-- :mechanical_arm: **Hardware Acceleration:** It will install all the drivers in order to It will install all the drivers in order to get hardware acceleration working under termux.
+- :books: **Easy Setup:** Easy-to-follow installation process
+- :desktop_computer: **Desktop Styles:** Supports Xfce, LXQt, and Openbox... others with beautiful themes
+- :mechanical_arm: **Hardware Acceleration:** It will install all the drivers in order to get hardware acceleration working under termux
 - :paperclips: **GUI Access:**
     - Termux:X11 (Default) 
-    - VNC (vnc is optional and only available if chose it from custom install section).
+    - VNC (vnc is optional and only available via the custom install section)
 - :package: **Package Management:** 
-    - APT (Termux's default and also recommended)
-    - [PACMAN](https://youtu.be/ditNvG5Nxj0) (pacman isn't well tested, so there might be some bugs).
-- :shopping: **App Store:** A appstore to install apps from termux and suppoted proot-distro.
-- :package: **Container** Normally, you're limited to apps that are supported by Termux, but you have a option for installing apps like LibreOffice via proot-distro / chroot-distro and use them as a native app. Here the proot / chroot distro works as container
-- And a lot more
-    - I will always recommended chose the custom option during the setup and see what you can do
+    - APT (Termux's default and recommended)
+    - [PACMAN](https://youtu.be/ditNvG5Nxj0) (pacman may be buggy, not well tested)
+- :shopping: **App Store:** A appstore to install apps
+- :package: **Container** It lets you use a proot/chroot distro as a container to install more apps than Termux normally supports
+- And a lot more, just chose the custom install option during the setup and see what you can do
+
+---
+
+### Quick Navigation
+<div align="center">
+
+**:package: [Distro Containers](/readmes/proot-container.md) • :mechanical_arm: [Hardware Acceleration](/readmes/hw-acceleration.md) • :wine_glass:[Wine](/readmes/wine.md#wine_glasslearn-about-wine) • :bulb: [Others](/readmes/see-more.md)**
+
+</div>
 
 ---
 
@@ -53,20 +61,15 @@
 
 ##### 3. Currently supported Desktop Environments and Window Managers:
 
-###### **Desktop Environments**
-- **Xfce**
-- **LXQt**
-- **MATE**
-- **GNOME**
-
-###### **Window Managers**
-- **Openbox**
-- **i3**
-- **dwm**
-- **bspwm**
-- **Awesome**
-- **Fluxbox**
-- **IceWM**
+| Desktop Environments | Window Managers     |
+|----------------------|---------------------|
+| Xfce                 | Openbox             |
+| LXQt                 | i3                  |
+| MATE                 | dwm                 |
+| GNOME                | bspwm               |
+|                      | Awesome             |
+|                      | Fluxbox             |
+|                      | IceWM               |
 
 ##### 4. Hardware Acceleration and Distro Container:
    - Learn more about [hardware acceleration](/readmes/hw-acceleration.md).
@@ -241,15 +244,6 @@ Options:
 |Installed|Prompt|
 |![img](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/appstore-app-installed.png)|![img](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/appstore-prmpt.png)|
 </details>
-
----
-
-### Quick Navigation
-<div align="center">
-
-**:package: [Distro Containers](/readmes/proot-container.md) • :mechanical_arm: [Hardware Acceleration](/readmes/hw-acceleration.md) • :wine_glass:[Wine](/readmes/wine.md#wine_glasslearn-about-wine) • :bulb: [Others](/readmes/see-more.md)**
-
-</div>
 
 ---
 ## Associated Repos:

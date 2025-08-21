@@ -1,7 +1,9 @@
 ## :mechanical_arm: Hardware Acceleration in Termux
 
+> [!IMPORTANT]
+> One thing to note: hardware acceleration in Termux is still experimental, so it may or may not work on your device.
+
 ### When setting up hardware acceleration in Termux, follow these steps for optimal configuration:
-> Also one thing to note that hardware acceleration in termux isn't in great state so it might or might not work for your device
 
 ### Installation
 - Run the Installer Script and choose your preferred hardware acceleration method during the installation.
@@ -9,14 +11,15 @@
   >For Adreno GPU you don't nedd to chose, it will automatically use turnip if you use ubuntu/debian 
 - Once selected, everything will be configured automatically.
 
-> Use [CPU-Z](https://play.google.com/store/apps/details?id=com.cpuid.cpu_z&pcampaignid=web_share) to identify your GPU. Research your GPU online to determine whether `virpipe` or `zink` or `icd-wrapper`... works best; Reddit or similar forums often have useful insights.
-
+> [!TIP]
+> Use [CPU-Z](https://play.google.com/store/apps/details?id=com.cpuid.cpu_z&pcampaignid=web_share) to identify your GPU. Research your GPU online to determine whether `virpipe` or `zink` or `icd-wrapper`... works best; Reddit or similar forums often have useful insights.  
 > Although for most of the gpu icd-wrapper (vulkan) should work just fine
 
 ![CPU-Z Screenshot](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/cpu-z.png)
 
 ### Using Hardware Acceleration in Termux
-- Start Termux Desktop via Termux:x11 (recommended) or vnc and it should just work (if the hardware acceleration driver you selected that support your gpu).
+- Start Termux Desktop via Termux:x11 (recommended) or vnc (In vnc some drivers might not work) 
+- And it should just work if the hardware acceleration driver you selected that support your gpu.
 
 ### Using Hardware Acceleration in Proot Distro (Distro Container)
 
@@ -38,8 +41,10 @@
 
 ### Method 2: Termux Menu
 1. Add the desired program to the Termux menu.
-> To know more no how to add a program from proot-distro to termux, check this:- [HERE](https://github.com/sabamdarif/termux-desktop/blob/main/readmes/proot-container.md#adding-apps-to-the-termux-desktop-app-menu)
 2. Launch the program directly from the Termux menu.
+
+> [!NOTE]
+> To know more no how to add a program from proot-distro to termux, check this:- [HERE](/readmes/proot-container.md#adding-apps-to-the-termux-desktop-app-menu)
 
 ## Changing Hardware Acceleration Drivers
 
@@ -67,7 +72,7 @@
 - you need to change the `export` , `virgl_test_server --use-egl-surfaceless --use-gles &` and the `GALLIUM_DRIVER=virpipe` value
 
 - **How you will get this values:-**
-- [See this function](https://github.com/sabamdarif/termux-desktop/blob/6eb295a2d31bc8f7fff018e2b6168e24a2014f24/enable-hw-acceleration#L104)
+- [See this function](/enable-hw-acceleration#L96)
 - here the value under `set_to_export=` will replace the word after `export` in the tx11start file
 - here the value under `hw_method=` will replace the `GALLIUM_DRIVER=virpipe` text
 - here the value under `initialize_server_method=` will replace the `virgl_test_server --use-egl-surfaceless --use-gles &`
