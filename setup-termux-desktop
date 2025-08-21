@@ -47,7 +47,7 @@ function banner() {
 function check_termux() {
     if [[ -z "$PREFIX" && "$PREFIX" != *"/com.termux/"* ]]; then
         echo "${R}[${R}☓${R}]${R}${BOLD}Please run it inside termux${NC}"
-        exit 0
+        exit 1
     fi
 }
 
@@ -4038,6 +4038,8 @@ function terminal_utility_setup() {
         download_file "$PREFIX/bin/termux-ssh" "https://raw.githubusercontent.com/sabamdarif/simple-linux-scripts/main/termux-ssh" && chmod +x "$PREFIX/bin/termux-ssh"
         download_file "$PREFIX/bin/termux-fastest-repo" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/other/termux-fastest-repo"
         chmod +x "$PREFIX/bin/termux-fastest-repo"
+        download_file "$PREFIX/bin/color-switch" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/other/color-switch"
+        chmod +x "$PREFIX/bin/color-switch"
         cp "$shell_rc_file" "${shell_rc_file}-2"
         check_and_backup "$shell_rc_file"
         mv "${shell_rc_file}-2" "${shell_rc_file}"

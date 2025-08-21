@@ -43,7 +43,8 @@
   ##### For more cat $HOME/.aliases
 
 #### :jigsaw:3.Special Programs (scripts):-
-- **termux-fastest-repo** same like termux-chnage-repo but to test and then chose the fastest repo (only for apt)
+- **termux-fastest-repo**: same like termux-chnage-repo but to test and then chose the fastest repo (only for apt)
+- **color-switch**: A TUI tool to switch between color schemes with live preview.
 
 ---
 

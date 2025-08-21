@@ -1,0 +1,415 @@
+#!/data/data/com.termux/files/usr/bin/bash
+#
+# Termux Color Scheme Switcher
+# A TUI tool to switch between color schemes with live preview.
+#
+# Author     : @sabamdarif
+# License    : GPL-v3
+# Description: Simple terminal UI tool for managing Termux color schemes.
+
+COLORS_FILE="$HOME/.termux/colors.properties"
+BACKUP_FILE="$HOME/.termux/colors.properties.backup.$(date +%Y%m%d_%H%M%S)"
+
+# Create backup of current colors
+backup_colors() {
+    if [[ -f "$COLORS_FILE" ]]; then
+        cp "$COLORS_FILE" "$BACKUP_FILE"
+    fi
+}
+
+# Restore backup colors
+restore_colors() {
+    if [[ -f "$BACKUP_FILE" ]]; then
+        cp "$BACKUP_FILE" "$COLORS_FILE"
+        termux-reload-settings
+        rm "$BACKUP_FILE"
+    fi
+}
+
+# Apply color scheme
+apply_colors() {
+    local scheme_name="$1"
+
+    case "$scheme_name" in
+    "Catppuccin Macchiato")
+        cat >"$COLORS_FILE" <<'EOF'
+# Catppuccin Macchiato
+background:     #24273a
+foreground:     #cad3f5
+color0:         #494d64
+color8:         #5b6078
+color1:         #ed8796
+color9:         #ed8796
+color2:         #a6da95
+color10:        #a6da95
+color3:         #eed49f
+color11:        #eed49f
+color4:         #8aadf4
+color12:        #8aadf4
+color5:         #f5bde6
+color13:        #f5bde6
+color6:         #8bd5ca
+color14:        #8bd5ca
+color7:         #b8c0e0
+color15:        #a5adcb
+EOF
+        ;;
+    "Catppuccin Mocha")
+        cat >"$COLORS_FILE" <<'EOF'
+# Catppuccin Mocha
+background:     #1e1e2e
+foreground:     #cdd6f4
+color0:         #45475a
+color8:         #585b70
+color1:         #f38ba8
+color9:         #f38ba8
+color2:         #a6e3a1
+color10:        #a6e3a1
+color3:         #f9e2af
+color11:        #f9e2af
+color4:         #89b4fa
+color12:        #89b4fa
+color5:         #f5c2e7
+color13:        #f5c2e7
+color6:         #94e2d5
+color14:        #94e2d5
+color7:         #bac2de
+color15:        #a6adc8
+EOF
+        ;;
+    "Dracula")
+        cat >"$COLORS_FILE" <<'EOF'
+# Dracula
+background:     #282a36
+foreground:     #f8f8f2
+color0:         #000000
+color8:         #4d4d4d
+color1:         #ff5555
+color9:         #ff6e67
+color2:         #50fa7b
+color10:        #5af78e
+color3:         #f1fa8c
+color11:        #f4f99d
+color4:         #bd93f9
+color12:        #caa9fa
+color5:         #ff79c6
+color13:        #ff92d0
+color6:         #8be9fd
+color14:        #9aedfe
+color7:         #bfbfbf
+color15:        #e6e6e6
+EOF
+        ;;
+    "Gruvbox Dark")
+        cat >"$COLORS_FILE" <<'EOF'
+# Gruvbox Dark
+background:     #282828
+foreground:     #ebdbb2
+color0:         #282828
+color8:         #928374
+color1:         #cc241d
+color9:         #fb4934
+color2:         #98971a
+color10:        #b8bb26
+color3:         #d79921
+color11:        #fabd2f
+color4:         #458588
+color12:        #83a598
+color5:         #b16286
+color13:        #d3869b
+color6:         #689d6a
+color14:        #8ec07c
+color7:         #a89984
+color15:        #ebdbb2
+EOF
+        ;;
+    "Nord")
+        cat >"$COLORS_FILE" <<'EOF'
+# Nord
+background:     #2e3440
+foreground:     #d8dee9
+color0:         #3b4252
+color8:         #4c566a
+color1:         #bf616a
+color9:         #bf616a
+color2:         #a3be8c
+color10:        #a3be8c
+color3:         #ebcb8b
+color11:        #ebcb8b
+color4:         #81a1c1
+color12:        #81a1c1
+color5:         #b48ead
+color13:        #b48ead
+color6:         #88c0d0
+color14:        #8fbcbb
+color7:         #e5e9f0
+color15:        #eceff4
+EOF
+        ;;
+    "One Dark")
+        cat >"$COLORS_FILE" <<'EOF'
+# One Dark
+background:     #282c34
+foreground:     #abb2bf
+color0:         #282c34
+color8:         #545862
+color1:         #e06c75
+color9:         #e06c75
+color2:         #98c379
+color10:        #98c379
+color3:         #e5c07b
+color11:        #e5c07b
+color4:         #61afef
+color12:        #61afef
+color5:         #c678dd
+color13:        #c678dd
+color6:         #56b6c2
+color14:        #56b6c2
+color7:         #abb2bf
+color15:        #c8ccd4
+EOF
+        ;;
+    "Solarized Dark")
+        cat >"$COLORS_FILE" <<'EOF'
+# Solarized Dark
+background:     #002b36
+foreground:     #839496
+color0:         #073642
+color8:         #002b36
+color1:         #dc322f
+color9:         #cb4b16
+color2:         #859900
+color10:        #586e75
+color3:         #b58900
+color11:        #657b83
+color4:         #268bd2
+color12:        #839496
+color5:         #d33682
+color13:        #6c71c4
+color6:         #2aa198
+color14:        #93a1a1
+color7:         #eee8d5
+color15:        #fdf6e3
+EOF
+        ;;
+    "Tokyo Night")
+        cat >"$COLORS_FILE" <<'EOF'
+# Tokyo Night
+background:     #1a1b26
+foreground:     #c0caf5
+color0:         #15161e
+color8:         #414868
+color1:         #f7768e
+color9:         #f7768e
+color2:         #9ece6a
+color10:        #9ece6a
+color3:         #e0af68
+color11:        #e0af68
+color4:         #7aa2f7
+color12:        #7aa2f7
+color5:         #bb9af7
+color13:        #bb9af7
+color6:         #7dcfff
+color14:        #7dcfff
+color7:         #a9b1d6
+color15:        #c0caf5
+EOF
+        ;;
+    "Monokai")
+        cat >"$COLORS_FILE" <<'EOF'
+# Monokai
+background:     #272822
+foreground:     #f8f8f2
+color0:         #272822
+color8:         #75715e
+color1:         #f92672
+color9:         #f92672
+color2:         #a6e22e
+color10:        #a6e22e
+color3:         #f4bf75
+color11:        #f4bf75
+color4:         #66d9ef
+color12:        #66d9ef
+color5:         #ae81ff
+color13:        #ae81ff
+color6:         #a1efe4
+color14:        #a1efe4
+color7:         #f8f8f2
+color15:        #f9f8f5
+EOF
+        ;;
+    "Oceanic Next")
+        cat >"$COLORS_FILE" <<'EOF'
+# Oceanic Next
+background:     #1b2b34
+foreground:     #d8dee9
+color0:         #29414f
+color8:         #405860
+color1:         #ec5f67
+color9:         #ec5f67
+color2:         #99c794
+color10:        #99c794
+color3:         #fac863
+color11:        #fac863
+color4:         #6699cc
+color12:        #6699cc
+color5:         #c594c5
+color13:        #c594c5
+color6:         #5fb3b3
+color14:        #5fb3b3
+color7:         #d8dee9
+color15:        #d8dee9
+EOF
+        ;;
+    esac
+
+    termux-reload-settings
+}
+
+# Get all available schemes
+get_schemes() {
+    echo "Catppuccin Macchiato"
+    echo "Catppuccin Mocha"
+    echo "Dracula"
+    echo "Gruvbox Dark"
+    echo "Nord"
+    echo "One Dark"
+    echo "Solarized Dark"
+    echo "Tokyo Night"
+    echo "Monokai"
+    echo "Oceanic Next"
+}
+
+# Main TUI function
+show_menu() {
+    local search_term=""
+    local selected=0
+    local schemes=()
+
+    while IFS= read -r scheme; do
+        schemes+=("$scheme")
+    done < <(get_schemes)
+
+    while true; do
+        clear
+
+        # Filter schemes based on search term
+        local filtered_schemes=()
+        local i=0
+        for scheme in "${schemes[@]}"; do
+            if [[ -z "$search_term" ]] || [[ "${scheme,,}" == *"${search_term,,}"* ]]; then
+                filtered_schemes+=("$scheme")
+            fi
+        done
+
+        # Adjust selected index if needed
+        if ((selected >= ${#filtered_schemes[@]})); then
+            selected=$((${#filtered_schemes[@]} - 1))
+        fi
+        if ((selected < 0)); then
+            selected=0
+        fi
+
+        # Header
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        echo "          TERMUX COLOR SWITCHER  "
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        echo ""
+        echo "Use ↑↓ to navigate, type to search, ENTER to select, ESC to exit"
+        echo ""
+
+        # Show filtered schemes
+        for i in "${!filtered_schemes[@]}"; do
+            if ((i == selected)); then
+                echo "→ ${filtered_schemes[i]}"
+            else
+                echo "  ${filtered_schemes[i]}"
+            fi
+        done
+
+        # Show current preview
+        if ((${#filtered_schemes[@]} > 0)); then
+            echo ""
+            echo "Preview: ${filtered_schemes[selected]}"
+            echo ""
+            echo -n "Search: $search_term"
+            apply_colors "${filtered_schemes[selected]}"
+        fi
+
+        # Read input
+        IFS= read -rsn1 key
+        case "$key" in
+        $'\033') # ESC key - first check if it's a standalone ESC
+            # Try to read additional characters with a short timeout
+            read -rsn2 -t 0.1 key2
+            if [[ -z "$key2" ]]; then
+                # It's a standalone ESC key
+                clear
+                restore_colors
+                exit 0
+            else
+                case "$key2" in
+                '[A') # Up arrow
+                    ((selected--))
+                    if ((selected < 0)); then
+                        selected=$((${#filtered_schemes[@]} - 1))
+                    fi
+                    ;;
+                '[B') # Down arrow
+                    ((selected++))
+                    if ((selected >= ${#filtered_schemes[@]})); then
+                        selected=0
+                    fi
+                    ;;
+                esac
+            fi
+            ;;
+        '') # Enter
+            if ((${#filtered_schemes[@]} > 0)); then
+                clear
+                echo "[✓] Color scheme '${filtered_schemes[selected]}' has been applied!"
+                rm -f "$BACKUP_FILE" 2>/dev/null
+                exit 0
+            fi
+            ;;
+        $'\x7f' | $'\x08') # Backspace
+            if [[ -n "$search_term" ]]; then
+                search_term="${search_term%?}"
+                selected=0
+            fi
+            ;;
+        *)
+            if [[ -n "$key" && "$key" =~ [[:print:]] ]]; then
+                search_term+="$key"
+                selected=0
+            fi
+            ;;
+        esac
+    done
+}
+
+# Main execution
+main() {
+    # Check if running in Termux
+    if [[ -z "$PREFIX" && "$PREFIX" != *"/com.termux/"* ]]; then
+        echo "[☓] Please run it inside termux"
+        exit 0
+    fi
+
+    # Create .termux directory if it doesn't exist
+    if [[ ! -d "$HOME/.termux" ]]; then
+        mkdir -p "$HOME/.termux"
+    fi
+
+    # Backup current colors
+    backup_colors
+
+    # Set up trap to restore colors on script exit
+    trap restore_colors INT TERM
+
+    # Show the menu
+    show_menu
+}
+
+# Run the script
+main "$@"
