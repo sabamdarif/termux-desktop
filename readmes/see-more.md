@@ -45,6 +45,9 @@
 #### :jigsaw:3.Special Programs (scripts):-
 - **termux-fastest-repo**: same like termux-chnage-repo but to test and then chose the fastest repo (only for apt)
 - **termux-color**: A TUI tool to switch between color schemes with live preview.
+- **termux-nf**: A simple script to install nerd font in termux.
+    - Ex. just run `termux-nf` and chose from the menu or run `termux-nf FONT_NAME` and it will install that font.
+
 
 ---
 
