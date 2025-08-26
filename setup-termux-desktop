@@ -3578,7 +3578,7 @@ forward_display() {
 
 case $1 in
 --start | -l)
-    case \$2 in
+    case $2 in
     tx11)
         tx11start
         ;;
