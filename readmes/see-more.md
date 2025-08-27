@@ -40,6 +40,7 @@
 - **encrypt**: Encrypt files using OpenSSL AES-256-CBC encryption
 - **decrypt**: Decrypt files that were encrypted with the encrypt function
 - **checksum**: Calculate MD5, SHA1, and SHA256 checksums for files
+- **cp2clip**: Copy any text content from a file to my clipboard
   ##### For more cat $HOME/.aliases
 
 #### :jigsaw:3.Special Programs (scripts):-

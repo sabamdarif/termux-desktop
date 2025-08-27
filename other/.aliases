@@ -521,3 +521,29 @@ checksum() {
     echo "  SHA1:   $(sha1sum "$file" | cut -d' ' -f1)"
     echo "  SHA256: $(sha256sum "$file" | cut -d' ' -f1)"
 }
+
+cp2clip() {
+    if [ $# -eq 0 ]; then
+        echo "Usage: cp2clip <filename>"
+        return 1
+    fi
+    if [ ! -f "$1" ]; then
+        echo "Error: File '$1' not found"
+        return 1
+    fi
+    
+    if command -v termux-clipboard-set >/dev/null; then
+        cat "$1" | termux-clipboard-set
+    elif command -v xclip >/dev/null; then
+        cat "$1" | xclip -selection clipboard
+    elif command -v xsel >/dev/null; then
+        cat "$1" | xsel --clipboard --input
+    else
+        echo "Error: No clipboard utility found."
+        echo "Either install termux-api, with: pkg install termux-api"
+        echo "Or install either xclip or xsel (require you to start a x11 session)"
+        return 1
+    fi
+    
+    echo "Content of '$1' copied to clipboard"
+}
