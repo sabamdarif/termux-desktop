@@ -924,6 +924,8 @@ function ask_to_chose_de() {
     total_custom_mate_setup=$(count_subfolders "$owner" "$repo" "setup-files/mate" "$branch" 2>/dev/null)
     local total_custom_gnome_setup
     total_custom_gnome_setup=$(count_subfolders "$owner" "$repo" "setup-files/gnome" "$branch" 2>/dev/null)
+    local total_custom_cinnamon_setup
+    total_custom_cinnamon_setup=$(count_subfolders "$owner" "$repo" "setup-files/cinnamon" "$branch" 2>/dev/null)
     # calculate availabe styles for all the window managers
     local total_custom_openbox_setup
     total_custom_openbox_setup=$(count_subfolders "$owner" "$repo" "setup-files/openbox" "$branch" 2>/dev/null)
@@ -952,19 +954,21 @@ function ask_to_chose_de() {
     echo
     echo "${Y}5. Gnome($total_custom_gnome_setup)(WIP, so expect bugs)${NC}"
     echo
-    echo "${Y}6. I3Wm($total_custom_i3wm_setup)${NC}"
+    echo "${Y}6. Cinnamon($total_custom_cinnamon_setup)(WIP, so expect bugs)${NC}"
     echo
-    echo "${Y}7. Dwm($total_custom_dwm_setup)${NC}"
+    echo "${Y}7. I3Wm($total_custom_i3wm_setup)${NC}"
     echo
-    echo "${Y}8. Bspwm($total_custom_bspwm_setup)${NC}"
+    echo "${Y}8. Dwm($total_custom_dwm_setup)${NC}"
     echo
-    echo "${Y}9. Awesome($total_custom_awesome_setup)${NC}"
+    echo "${Y}9. Bspwm($total_custom_bspwm_setup)${NC}"
     echo
-    echo "${Y}10. Fluxbox($total_custom_fluxbox_setup)${NC}"
+    echo "${Y}10. Awesome($total_custom_awesome_setup)${NC}"
     echo
-    echo "${Y}11. IceWM($total_custom_icewm_setup)${NC}"
+    echo "${Y}11. Fluxbox($total_custom_fluxbox_setup)${NC}"
     echo
-    select_an_option 11 1 desktop_answer
+    echo "${Y}12. IceWM($total_custom_icewm_setup)${NC}"
+    echo
+    select_an_option 12 1 desktop_answer
     # set the variables based on chosen de
     sys_icons_folder="$PREFIX/share/icons"
     sys_themes_folder="$PREFIX/share/themes"
@@ -994,31 +998,36 @@ function ask_to_chose_de() {
         icons_folder="$HOME/.icons"
         de_startup="gnome-session-minimal"
     elif [[ "$desktop_answer" == "6" ]]; then
+        de_name="cinnamon"
+        themes_folder="$HOME/.themes"
+        icons_folder="$HOME/.icons"
+        de_startup="cinnamon-custom-session"
+    elif [[ "$desktop_answer" == "7" ]]; then
         de_name="i3wm"
         themes_folder="$HOME/.themes"
         icons_folder="$HOME/.icons"
         de_startup="i3"
-    elif [[ "$desktop_answer" == "7" ]]; then
+    elif [[ "$desktop_answer" == "8" ]]; then
         de_name="dwm"
         themes_folder="$HOME/.themes"
         icons_folder="$HOME/.icons"
         de_startup="dwm"
-    elif [[ "$desktop_answer" == "8" ]]; then
+    elif [[ "$desktop_answer" == "9" ]]; then
         de_name="bspwm"
         themes_folder="$HOME/.themes"
         icons_folder="$HOME/.icons"
         de_startup="bspwm"
-    elif [[ "$desktop_answer" == "9" ]]; then
+    elif [[ "$desktop_answer" == "10" ]]; then
         de_name="awesome"
         themes_folder="$HOME/.themes"
         icons_folder="$HOME/.icons"
         de_startup="awesome"
-    elif [[ "$desktop_answer" == "10" ]]; then
+    elif [[ "$desktop_answer" == "11" ]]; then
         de_name="fluxbox"
         themes_folder="$HOME/.themes"
         icons_folder="$HOME/.icons"
         de_startup="fluxbox"
-    elif [[ "$desktop_answer" == "11" ]]; then
+    elif [[ "$desktop_answer" == "12" ]]; then
         de_name="icewm"
         themes_folder="$HOME/.themes"
         icons_folder="$HOME/.icons"
@@ -2443,6 +2452,27 @@ function install_desktop() {
         fi
         cd ..
         check_and_delete "gnome_packages_files"
+        package_install_and_check "xfce4-terminal eog"
+    elif [[ "$de_name" == "cinnamon" ]]; then
+        print_msg "${BOLD}Installing Cinnamon"
+        echo
+        mkdir cinnamon_packages_files
+        cd cinnamon_packages_files || exit 1
+        if [[ "$PACKAGE_MANAGER" == "apt" ]]; then
+            download_and_extract "https://github.com/sabamdarif/termux-desktop/releases/download/cinnamon/debs-${termux_arch}.zip"
+            dpkg --configure -a
+            apt --fix-broken install -y
+            apt install ./*deb -y
+            apt install --fix-missing -y
+        elif [[ "$PACKAGE_MANAGER" == "pacman" ]]; then
+            download_and_extract "https://github.com/sabamdarif/termux-desktop/releases/download/cinnamon/pkgs-${termux_arch}.zip"
+            pacman -U --noconfirm *.pkg.tar.xz
+        else
+            print_failed "Unsupported package manger, you need APT / PACMAN"
+            exit 1
+        fi
+        cd ..
+        check_and_delete "cinnamon_packages_files"
         package_install_and_check "xfce4-terminal eog"
     fi
     if [[ "$lite_mode" != "1" && "$lite_mode" != "true" ]]; then
@@ -4399,6 +4429,9 @@ function remove_termux_desktop() {
             elif [[ "$de_name" == "gnome" ]]; then
                 package_check_and_remove "gnome*"
                 package_check_and_remove "thunar xfce4-terminal"
+            elif [[ "$de_name" == "cinnamon" ]]; then
+                package_check_and_remove "cinnamon*"
+                package_check_and_remove "thunar xfce4-terminal"
             fi
 
             package_check_and_remove "kvantum xwayland pulseaudio file-roller pavucontrol gnome-font-viewer evince galculator libwayland-protocols xorg-xrdb"
@@ -4912,22 +4945,35 @@ function some_fixes() {
             sed -i 's|/data/data/com.termux/files/usr/bin/code-oss|/data/data/com.termux/files/usr/bin/code-oss --enable-features=Vulkan|g' /data/data/com.termux/files/usr/share/applications/code-oss*
         fi
     fi
-    # some fixes for gnome-desktop
-    sed -i 's|<policy user="root">|<policy user="\$USER">|' "$PREFIX/share/dbus-1/system.d/org.freedesktop.UPower.conf"
-    cat <<EOF >"$PREFIX/share/gnome-session/sessions/minimal.session"
+    # some fixes for gnome and cinnamon desktop
+
+    if [[ "$de_name" == "gnome" ]] || [[ "$de_name" == "cinnamon" ]]; then
+        sed -i "s|<policy user=\".*\">|<policy user=\"$(whoami)\">|" "$PREFIX/share/dbus-1/system.d/org.freedesktop.UPower.conf"
+        if [[ "$de_name" == "gnome" ]]; then
+            cat <<EOF >"$PREFIX/share/gnome-session/sessions/minimal.session"
 [GNOME Session]
 Name=Minimal GNOME
 RequiredComponents=org.gnome.Shell;org.gnome.SettingsDaemon.A11ySettings;org.gnome.SettingsDaemon.Color;org.gnome.SettingsDaemon.Datetime;org.gnome.SettingsDaemon.Housekeeping;org.gnome.SettingsDaemon.Keyboard;org.gnome.SettingsDaemon.Sound;
 DefaultProvider-wm=gnome-shell
 DesktopName=GNOME
 EOF
-    cat <<EOF >"$PREFIX/bin/gnome-session-minimal"
+            cat <<EOF >"$PREFIX/bin/gnome-session-minimal"
 rm -rf /data/data/com.termux/files/usr/var/run/dbus/pid
 dbus-launch --config-file $PREFIX/share/dbus-1/system.conf
-UPOWER_CONF_FILE_NAME=$PREFIX/etc/UPower/UPower.conf $PREFIX/libexec/upowerd -d
+UPOWER_CONF_FILE_NAME=$PREFIX/etc/UPower/UPower.conf $PREFIX/libexec/upowerd -d &
 gnome-session --session=minimal \$@
 EOF
-    chmod +x "$PREFIX/bin/gnome-session-minimal"
+            chmod +x "$PREFIX/bin/gnome-session-minimal"
+        elif [[ "$de_name" == "cinnamon" ]]; then
+            cat <<EOF >"$PREFIX/bin/cinnamon-custom-session"
+rm -rf /data/data/com.termux/files/usr/var/run/dbus/pid
+dbus-launch --config-file $PREFIX/share/dbus-1/system.conf
+UPOWER_CONF_FILE_NAME=$PREFIX/etc/UPower/UPower.conf $PREFIX/libexec/upowerd -d &
+cinnamon-session \$@
+EOF
+            chmod +x "$PREFIX/bin/cinnamon-custom-session"
+        fi
+    fi
 }
 
 # add the basic details into a config file

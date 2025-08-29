@@ -61,7 +61,7 @@
 | [LXQt](/docs/lxqt_styles.md)                 | i3                  |
 | [MATE](/docs/mate_styles.md)                 | dwm                 |
 | GNOME                | bspwm               |
-|                      | Awesome             |
+| Cinnamon             | Awesome             |
 |                      | Fluxbox             |
 |                      | IceWM               |
 
