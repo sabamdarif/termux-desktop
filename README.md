@@ -32,7 +32,7 @@
 ### Quick Navigation
 <div align="center">
 
-**:package: [Distro Containers](/readmes/proot-container.md) • :mechanical_arm: [Hardware Acceleration](/readmes/hw-acceleration.md) • :wine_glass:[Wine](/readmes/wine.md#wine_glasslearn-about-wine) • :bulb: [Others](/readmes/see-more.md)**
+**:package: [Distro Containers](/docs/proot-container.md) • :mechanical_arm: [Hardware Acceleration](/docs/hw-acceleration.md) • :wine_glass:[Wine](/docs/wine.md#wine_glasslearn-about-wine) • :bulb: [Others](/docs/see-more.md)**
 
 </div>
 
@@ -53,29 +53,23 @@
    - Root: Optional (only for chroot-distro)
    - VNC Client [RealVNC](https://play.google.com/store/apps/details?id=com.realvnc.viewer.android) or [NetHunter Kex](https://store.nethunter.com/en/packages/com.offsec.nethunter.kex/) _(Optional)_
 
-##### 2. Explore Desktop Styles:
-   - **[XFCE](/readmes/xfce_styles.md)**
-   - **[LXQt](/readmes/lxqt_styles.md)**
-   - **[OPENBOX](/readmes/openbox_styles.md)**
-   - **[MATE](/readmes/mate_styles.md)**
-
-##### 3. Currently supported Desktop Environments and Window Managers:
+##### 2. Currently supported Desktop Environments and Window Managers:
 
 | Desktop Environments | Window Managers     |
 |----------------------|---------------------|
-| Xfce                 | Openbox             |
-| LXQt                 | i3                  |
-| MATE                 | dwm                 |
+| [Xfce](/docs/xfce_styles.md)                 | [Openbox](/docs/openbox_styles.md)             |
+| [LXQt](/docs/lxqt_styles.md)                 | i3                  |
+| [MATE](/docs/mate_styles.md)                 | dwm                 |
 | GNOME                | bspwm               |
 |                      | Awesome             |
 |                      | Fluxbox             |
 |                      | IceWM               |
 
-##### 4. Hardware Acceleration and Distro Container:
-   - Learn more about [hardware acceleration](/readmes/hw-acceleration.md).
-   - Check out [distro container usage](/readmes/proot-container.md).
+##### 3. Hardware Acceleration and Distro Container:
+   - Learn more about [hardware acceleration](/docs/hw-acceleration.md).
+   - Check out [distro container usage](/docs/proot-container.md).
 
-##### 5. Start Installation: 
+##### 4. Start Installation: 
 > Full Installation YouTube Video Guide:- [Here](https://youtu.be/SlR9f9hl5CQ?si=7O13ZAzdAnB_wwWw)
 
 > [!IMPORTANT]
@@ -88,7 +82,7 @@
 
 - You can also do a lite install which will not install all the optional packages to do that run the install this `LITE=true ./setup-termux-desktop` or `LITE=1  ./setup-termux-desktop` instead of just running `./setup-termux-desktop`
 
-##### 6. Usage Instructions:
+##### 5. Usage Instructions:
    - Commands for starting and stopping Termux:X11 and VNC sessions are provided below.
 
 ---
@@ -172,7 +166,7 @@ Options:
 - `gui -s / --stop` `tx11` *to stop Termux:X11*
 - `gui -k / --kill / -kill` *to kill both vncserver and Termux:x11 At Once*
 - `gui --display / gui -d` `<IP_ADDRESS>:<DISPLAY_PORT>` *To launch the current desktop environment on another x11 display server over the same network*
-    - for more click :- [Here](https://github.com/sabamdarif/termux-desktop/blob/main/readmes/see-more.md#hammer_and_wrenchhow-to-use-x11-display-forwarding-option)
+    - for more click :- [Here](https://github.com/sabamdarif/termux-desktop/blob/main/docs/see-more.md#hammer_and_wrenchhow-to-use-x11-display-forwarding-option)
 
 </details>
 
@@ -216,33 +210,6 @@ Options:
 
   - `setup-termux-desktop --debug --install` *To create a log of whole installation process*
 
-</details>
-
----
-
-## Screenshots:
-
-### Demo Looks
-
-|XFCE|LXQT|
-|--|--|
-|![img](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/xfce/look_1/desktop.png)|![img](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/lxqt/look_2/start-menu.png)|
-|**OPENBOX**|**MATE**|
-|![img](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/openbox/look_2/desktop.png)|![img](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/mate/look_1/desktop.png)|
-
-#### [See More...](https://github.com/sabamdarif/termux-desktop?tab=readme-ov-file#2-explore-desktop-styles)
-
-### App Store:
-<img src="https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/termux-app-store.png">
-
-<details>
-<summary><b>Appstore UI:</b></summary>
-
-|Loading|Installing|
-|--|--|
-|![img](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/appstore-loading.png)|![img](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/appstore-app-installing.png)|
-|Installed|Prompt|
-|![img](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/appstore-app-installed.png)|![img](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/appstore-prmpt.png)|
 </details>
 
 ---

@@ -44,7 +44,7 @@
 2. Launch the program directly from the Termux menu.
 
 > [!NOTE]
-> To know more no how to add a program from proot-distro to termux, check this:- [HERE](/readmes/proot-container.md#adding-apps-to-the-termux-desktop-app-menu)
+> To know more no how to add a program from proot-distro to termux, check this:- [HERE](/docs/proot-container.md#adding-apps-to-the-termux-desktop-app-menu)
 
 ## Changing Hardware Acceleration Drivers
 

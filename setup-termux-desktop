@@ -849,7 +849,7 @@ function questions_theme_select() {
     fi
 
     # If custom styles exist, fetch and display them
-    local styles_url="https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/readmes/${de_name}_styles.md"
+    local styles_url="https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/docs/${de_name}_styles.md"
     if curl --head --silent --fail "$styles_url" >/dev/null; then
         print_msg "Downloading list of available styles..."
         check_and_delete "${current_path}/styles.md"
@@ -868,7 +868,7 @@ function questions_theme_select() {
 
         print_msg "Check the $de_name styles preview"
         echo
-        print_msg "From Here:- ${B}https://github.com/sabamdarif/termux-desktop/blob/main/readmes/${de_name}_styles.md"
+        print_msg "From Here:- ${B}https://github.com/sabamdarif/termux-desktop/blob/main/docs/${de_name}_styles.md"
         echo
         print_msg "Number of available custom styles for $de_name is: ${C}${subfolder_count_value}"
         echo
@@ -898,7 +898,7 @@ function questions_theme_select() {
                 echo
                 print_msg "Check the $de_name styles section in GitHub"
                 echo
-                print_msg "${B}https://github.com/sabamdarif/termux-desktop/blob/main/readmes/${de_name}_styles.md"
+                print_msg "${B}https://github.com/sabamdarif/termux-desktop/blob/main/docs/${de_name}_styles.md"
                 echo
             fi
         done
@@ -1234,7 +1234,7 @@ function questions_setup_manual() {
     fi
     banner
     echo
-    print_msg "${B}Know More About Terminal Utility:- https://github.com/sabamdarif/termux-desktop/blob/main/readmes/see-more.md#hammer_and_wrenchlearn-about-terminal-utilities"
+    print_msg "${B}Know More About Terminal Utility:- https://github.com/sabamdarif/termux-desktop/blob/main/docs/see-more.md#hammer_and_wrenchlearn-about-terminal-utilities"
     echo
     confirmation_y_or_n "Do you want install some terminal utility to make better terminal exprience" terminal_utility_setup_answer
     banner
@@ -1316,7 +1316,7 @@ It will help you to install apps that aren't available in Termux.
 So it will set up a Linux distro container and add options to install those apps.
 Also, you can launch those installed apps from Termux like other apps.
 "
-    echo "Learn More:- https://github.com/sabamdarif/termux-desktop/blob/main/readmes/proot-container.md"
+    echo "Learn More:- https://github.com/sabamdarif/termux-desktop/blob/main/docs/proot-container.md"
     echo
     confirmation_y_or_n "Do you want to add a Linux container" distro_add_answer
 }
@@ -1414,7 +1414,7 @@ function distro_hw_questions() {
 function exp_vulkan_support() {
     print_msg "${BOLD}First Read This"
     echo
-    print_msg "${B}This:- https://github.com/sabamdarif/termux-desktop/blob/main/readmes/hw-acceleration.md"
+    print_msg "${B}This:- https://github.com/sabamdarif/termux-desktop/blob/main/docs/hw-acceleration.md"
     echo
     print_msg "${BOLD}Select the vulkan driver"
     echo
@@ -1495,7 +1495,7 @@ function hw_questions() {
     elif [[ "$exp_termux_vulkan_hw_answer" == "skip" ]]; then
         print_msg "${BOLD}First Read This"
         echo
-        print_msg "${B}This:- https://github.com/sabamdarif/termux-desktop/blob/main/readmes/hw-acceleration.md"
+        print_msg "${B}This:- https://github.com/sabamdarif/termux-desktop/blob/main/docs/hw-acceleration.md"
         echo
         print_msg "${BOLD}Select Hardware Acceleration API"
         echo
@@ -4348,7 +4348,7 @@ function notes() {
     if [[ "$distro_add_answer" == "y" ]]; then
         print_msg "${C}${BOLD}See how to use Linux distro container"
         echo
-        print_msg "${C}URL:- ${B}https://github.com/sabamdarif/termux-desktop/blob/main/readmes/proot-container.md"
+        print_msg "${C}URL:- ${B}https://github.com/sabamdarif/termux-desktop/blob/main/docs/proot-container.md"
     fi
 }
 
@@ -4530,7 +4530,7 @@ function change_style() {
         read_conf
         gui_check_up
         banner
-        download_file "${current_path}/styles.md" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/readmes/${de_name}_styles.md"
+        download_file "${current_path}/styles.md" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/docs/${de_name}_styles.md"
         style_name=$(grep -oP "^## $style_answer\..+?(?=(\n## \d+\.|\Z))" "${current_path}/styles.md" | sed -e "s/^## $style_answer\. //" -e "s/:$//" -e 's/^[[:space:]]*//;s/[[:space:]]*$//')
         check_and_delete "${current_path}/styles.md"
         print_msg "Your currently installed style is ${C}${BOLD}$style_name"
@@ -5136,7 +5136,7 @@ function install_termux_desktop() {
         fi
     fi
     if [[ "$1" == "--local-config" ]] || [[ "$1" == "--config" ]] || [[ "$1" == "-config" ]]; then
-        download_file "${current_path}/styles.md" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/readmes/${de_name}_styles.md"
+        download_file "${current_path}/styles.md" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/docs/${de_name}_styles.md"
         style_name=$(grep -oP "^## $style_answer\..+?(?=(\n## \d+\.|\Z))" "${current_path}/styles.md" | sed -e "s/^## $style_answer\. //" -e "s/:$//" -e 's/^[[:space:]]*//;s/[[:space:]]*$//')
         check_and_delete "${current_path}/styles.md"
     fi

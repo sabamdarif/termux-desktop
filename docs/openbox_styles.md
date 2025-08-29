@@ -13,7 +13,7 @@
 <br>
 
 ## 1. Nordic Openbox:
-### Keybord shortcuts:- [Here](https://github.com/sabamdarif/termux-desktop/blob/main/readmes/see-more.md#openbox-keybindings-cheat-sheet)
+### Keybord shortcuts:- [Here](https://github.com/sabamdarif/termux-desktop/blob/main/docs/see-more.md#openbox-keybindings-cheat-sheet)
 >Inspired from [adi1090x's termux-desktop](https://github.com/adi1090x/termux-desktop)
 
 >My modifications to his style
@@ -53,7 +53,7 @@ Icon Used:
 <br>
 
 ## 2. Dracula + material ui like:
-### Keybord shortcuts:- [Here](https://github.com/sabamdarif/termux-desktop/blob/main/readmes/see-more.md#openbox-keybindings-cheat-sheet)
+### Keybord shortcuts:- [Here](https://github.com/sabamdarif/termux-desktop/blob/main/docs/see-more.md#openbox-keybindings-cheat-sheet)
 
 <details>
 <summary><b style ="font-size: small">Style Details: </summary>
