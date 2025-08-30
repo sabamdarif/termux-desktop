@@ -1226,17 +1226,17 @@ function questions_setup_manual() {
     banner
     print_msg "${BOLD}Select Your shell${NC}"
     echo
-    echo "${Y}1. Custom Bash prompt${NC}"
+    echo "${Y}1. Zsh + zinit${NC}"
     echo
     echo "${Y}2. Custom Bash prompt + ble.sh (ble.sh kind of buggy right now)${NC}"
     echo
-    echo "${Y}3. Zsh + zinit${NC}"
+    echo "${Y}3. Custom Bash prompt${NC}"
     echo
     select_an_option 4 1 chosen_shell_answer
     case "$chosen_shell_answer" in
-    1) chosen_shell_name="bash" ;;
+    1) chosen_shell_name="zsh" ;;
     2) chosen_shell_name="bash_with_ble" ;;
-    3) chosen_shell_name="zsh" ;;
+    3) chosen_shell_name="bash" ;;
     esac
     if [[ "$chosen_shell_name" == "zsh" ]]; then
         questions_zsh_theme_select
