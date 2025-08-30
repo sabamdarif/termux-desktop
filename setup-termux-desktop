@@ -2473,7 +2473,7 @@ function install_desktop() {
         fi
         cd ..
         check_and_delete "cinnamon_packages_files"
-        package_install_and_check "xfce4-terminal eog"
+        package_install_and_check "eog"
     fi
     if [[ "$lite_mode" != "1" && "$lite_mode" != "true" ]]; then
         package_install_and_check "xwayland pulseaudio file-roller pavucontrol gnome-font-viewer evince galculator libwayland-protocols xorg-xrdb"
