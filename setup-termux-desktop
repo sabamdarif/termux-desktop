@@ -138,7 +138,7 @@ function print_msg() {
 }
 
 function wait_for_keypress() {
-    read -n1 -s -r -p "${R}[${C}-${R}]${G} Press any key to continue, CTRL+c to cancle...${NC}"
+    read -n1 -s -r -p "${R}[${C}-${R}]${G} Press any key to continue, CTRL+c to cancel...${NC}"
     echo
 }
 
