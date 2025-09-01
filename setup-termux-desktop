@@ -1455,9 +1455,9 @@ function exp_termux_gl_hw_support() {
 function hw_questions() {
     banner
     exp_vulkan_support
-    if [[ "$exp_termux_vulkan_hw_answer" == "vulkan_icd" ]]; then
+    if [[ "$exp_termux_vulkan_hw_answer" == "vulkan_icd" ]] || [[ "$exp_termux_vulkan_hw_answer" == "mesa_freedreno" ]] || [[ "$exp_termux_vulkan_hw_answer" == "mesa_zink_freedreno" ]]; then
         exp_termux_gl_hw_support
-    elif [[ "$exp_termux_vulkan_hw_answer" == "freedreno_kgsl" ]] || [[ "$exp_termux_vulkan_hw_answer" == "mesa_freedreno" ]] || [[ "$exp_termux_vulkan_hw_answer" == "mesa_zink_freedreno" ]]; then
+    elif [[ "$exp_termux_vulkan_hw_answer" == "freedreno_kgsl" ]]; then
         termux_hw_answer="${exp_termux_vulkan_hw_answer}"
         distro_hw_questions
     elif [[ "$exp_termux_vulkan_hw_answer" == "skip" ]]; then
@@ -1480,13 +1480,7 @@ function hw_questions() {
         echo
         echo "${Y}5. OpenGL ES (ZINK VIRGL)${NC}"
         echo
-        echo "${Y}6. mesa-vulkan-icd-freedreno (Turnip) (adreno only)${NC}"
-        echo
-        echo "${Y}7. mesa-zink-vulkan-icd-freedreno (Turnip) (adreno only)${NC}"
-        echo
-        echo "${Y}8. mesa-vulkan-icd-freedreno (Kgsl) (adreno only)${NC}"
-        echo
-        select_an_option 8 1 termux_hw_answer_num
+        select_an_option 5 1 termux_hw_answer_num
 
         # set gpu api name
         case "$termux_hw_answer_num" in
@@ -1495,9 +1489,6 @@ function hw_questions() {
         3) termux_hw_answer="virgl_angle" ;;
         4) termux_hw_answer="virgl_vulkan" ;;
         5) termux_hw_answer="zink_virgl" ;;
-        6) termux_hw_answer="mesa_freedreno" ;;
-        7) termux_hw_answer="mesa_zink_freedreno" ;;
-        8) termux_hw_answer="freedreno_kgsl" ;;
         esac
         distro_hw_questions
     fi
