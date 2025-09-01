@@ -1001,7 +1001,7 @@ function ask_to_chose_de() {
         de_name="cinnamon"
         themes_folder="$HOME/.themes"
         icons_folder="$HOME/.icons"
-        de_startup="cinnamon-custom-session"
+        de_startup="cinnamon-session"
     elif [[ "$desktop_answer" == "7" ]]; then
         de_name="i3wm"
         themes_folder="$HOME/.themes"
@@ -4420,7 +4420,7 @@ function remove_termux_desktop() {
                 package_check_and_remove "thunar xfce4-terminal"
             elif [[ "$de_name" == "cinnamon" ]]; then
                 package_check_and_remove "cinnamon*"
-                package_check_and_remove "thunar xfce4-terminal"
+                package_check_and_remove "thunar gnome-terminal gnome-screenshot"
             fi
 
             package_check_and_remove "kvantum xwayland pulseaudio file-roller pavucontrol gnome-font-viewer evince galculator libwayland-protocols xorg-xrdb"
@@ -4953,14 +4953,6 @@ UPOWER_CONF_FILE_NAME=$PREFIX/etc/UPower/UPower.conf $PREFIX/libexec/upowerd -d 
 gnome-session --session=minimal \$@
 EOF
             chmod +x "$PREFIX/bin/gnome-session-minimal"
-        elif [[ "$de_name" == "cinnamon" ]]; then
-            cat <<EOF >"$PREFIX/bin/cinnamon-custom-session"
-rm -rf /data/data/com.termux/files/usr/var/run/dbus/pid
-dbus-launch --config-file $PREFIX/share/dbus-1/system.conf
-UPOWER_CONF_FILE_NAME=$PREFIX/etc/UPower/UPower.conf $PREFIX/libexec/upowerd -d &
-cinnamon-session \$@
-EOF
-            chmod +x "$PREFIX/bin/cinnamon-custom-session"
         fi
     fi
 }
