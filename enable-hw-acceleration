@@ -62,6 +62,25 @@ function hw_install_required_packages() {
     "mesa_zink_freedreno")
         package_install_and_check "mesa-zink-vulkan-icd-freedreno"
         ;;
+    "freedreno_kgsl")
+        check_and_create_directory "freedreno"
+        cd freedreno || exit 1
+        if [[ "$PACKAGE_MANAGER" == "pacman" ]]; then
+            download_and_extract "https://github.com/sabamdarif/termux-desktop/releases/download/freedreno-kgsl-25.1/Freedreno-kgsl-${termux_arch}-pkgs.zip"
+            pacman -Syu --needed
+            pacman -U --noconfirm ./*.pkg.tar.xz
+            check_and_delete "vulkan-wrapper-android.pkg.tar.xz"
+
+        else
+            download_and_extract "https://github.com/sabamdarif/termux-desktop/releases/download/freedreno-kgsl-25.1/Freedreno-kgsl-${termux_arch}-debs.zip"
+            dpkg --configure -a
+            apt --fix-broken install -y
+            apt install ./*.deb -y
+            apt install --fix-missing -y
+        fi
+        cd ..
+        check_and_delete "freedreno"
+        ;;
     esac
     print_to_config "exp_termux_vulkan_hw_answer"
 
@@ -78,13 +97,8 @@ function hw_install_required_packages() {
     "virgl_vulkan")
         package_install_and_check "mesa virglrenderer vulkan-loader-generic angle-android virglrenderer-android"
         ;;
-    "freedreno")
-        if [[ "$exp_termux_vulkan_hw_answer" != "mesa_zink_freedreno" ]]; then
-            package_install_and_check "mesa-vulkan-icd-freedreno-dri3"
-        fi
-        ;;
     *)
-        package_install_and_check "mesa-zink virglrenderer-mesa-zink vulkan-loader-generic angle-android virglrenderer-android"
+        print_msg "No extra driver packages needed..."
         ;;
     esac
 
@@ -158,7 +172,19 @@ function setup_hw_environment_variables() {
         initialize_server_method=" "
         pd_hw_method="${hw_method}"
         ;;
-    "freedreno")
+    "mesa_freedreno")
+        set_to_export="MESA_NO_ERROR=1 vblank_mode=0"
+        initialize_server_method=" "
+        hw_method="MESA_LOADER_DRIVER_OVERRIDE=zink"
+        pd_hw_method="${hw_method}"
+        ;;
+    "mesa_zink_freedreno")
+        set_to_export="MESA_NO_ERROR=1 vblank_mode=0"
+        initialize_server_method=" "
+        hw_method="MESA_LOADER_DRIVER_OVERRIDE=zink"
+        pd_hw_method="${hw_method}"
+        ;;
+    "freedreno_kgsl")
         set_to_export="MESA_NO_ERROR=1 vblank_mode=0"
         initialize_server_method=" "
         hw_method="MESA_LOADER_DRIVER_OVERRIDE=kgsl MESA_GL_VERSION_OVERRIDE=3.3"
@@ -175,11 +201,11 @@ function setup_hw_environment_variables() {
         pd_hw_method="GALLIUM_DRIVER=virpipe MESA_GL_VERSION_OVERRIDE=4.0"
         ;;
     "turnip")
-        pd_hw_method="MESA_LOADER_DRIVER_OVERRIDE=zink TU_DEBUG=noconform"
+        pd_hw_method="VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/freedreno_icd.aarch64.json MESA_LOADER_DRIVER_OVERRIDE=zink TU_DEBUG=noconform"
         ;;
-    "freedreno")
-        pd_hw_method="MESA_LOADER_DRIVER_OVERRIDE=kgsl MESA_GL_VERSION_OVERRIDE=3.3"
-        ;;
+    # "freedreno_kgsl")
+    #     pd_hw_method="MESA_LOADER_DRIVER_OVERRIDE=kgsl MESA_GL_VERSION_OVERRIDE=3.3"
+    #     ;;
     *)
         print_msg "Uses The Previous Selection For Distro"
         echo
@@ -211,24 +237,28 @@ function setup_gpu_specific_environment_variables() {
 
 function setup_turnip_proot() {
     banner
-    print_msg "${BOLD}Setting up Turnip for $selected_distro ..."
+    print_msg "${BOLD}Installing required packages for turnip..."
     echo
     if [[ "$selected_distro" == "debian" ]] || [[ "$selected_distro" == "ubuntu" ]]; then
-        if [[ "$selected_distro_type" == "chroot" ]]; then
-            chroot-distro command "${selected_distro}" "apt install xdg-desktop-portal libgl1 libgl1-mesa-dri libvulkan1 mesa-vulkan-drivers -y"
-        else
-            proot-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:"$display_number" apt install xdg-desktop-portal libgl1 libgl1-mesa-dri libvulkan1 mesa-vulkan-drivers -y
-        fi
-        download_file "$HOME/mesa-vulkan-kgsl_arm64.deb" "https://github.com/sabamdarif/termux-desktop/releases/download/mesa-vulkan/mesa-vulkan-kgsl_24.1.0-devel-20240120_arm64.deb"
-        if [[ "$selected_distro_type" == "chroot" ]]; then
-            chroot-distro command "${selected_distro}" "dpkg -i $HOME/mesa-vulkan-kgsl_arm64.deb"
-            chroot-distro command "${selected_distro}" "apt-mark hold mesa-vulkan-drivers libgl1-mesa-dri mesa-libgallium"
-        else
-            proot-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:"$display_number" dpkg -i "$HOME/mesa-vulkan-kgsl_arm64.deb"
-            proot-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:"$display_number" apt-mark hold mesa-vulkan-drivers libgl1-mesa-dri mesa-libgallium
-        fi
-        check_and_delete "$HOME/mesa-vulkan-kgsl_arm64.deb"
+        turnip_related_packs="xdg-desktop-portal libgl1 libgl1-mesa-dri libvulkan1 mesa-vulkan-drivers libvulkan1"
+    elif [[ "$selected_distro" == "fedora" ]]; then
+        turnip_related_packs="xdg-desktop-portal mesa-libGL mesa-dri-drivers vulkan-loader mesa-vulkan-drivers"
+    elif [[ "$selected_distro" == "archlinux" ]]; then
+        turnip_related_packs="xdg-desktop-portal mesa vulkan-icd-loader vulkan-mesa-layers"
     fi
+
+    install_turnip_related_packs=$(
+        cat <<EOF
+pd_package_install_and_check "$turnip_related_packs"
+check_and_delete "install_turnip_related_packs.sh"
+EOF
+    )
+    create_shell_script "$save_path/install_turnip_related_packs.sh" "$install_turnip_related_packs"
+    "${selected_distro_type}"-distro login "$selected_distro" -- /bin/bash -c 'bash install_turnip_related_packs.sh'
+
+    download_file "$HOME/turnip.zip" "https://github.com/sabamdarif/termux-desktop/releases/download/turnip-25.0/turnip-25.0.7-2-aarch64.zip"
+    "${selected_distro_type}"-distro login "$selected_distro" -- /bin/bash -c "unzip $HOME/turnip.zip -d /usr"
+    check_and_delete "$HOME/turnip.zip"
 }
 
 check_termux
@@ -240,7 +270,7 @@ else
     hw_install_required_packages
     setup_hw_environment_variables
     setup_gpu_specific_environment_variables
-    if [[ "$pd_hw_answer" == "turnip" ]] || [[ "$device_gpu_model_name" == "adreno" && "$pd_hw_answer" == "turnip" ]]; then
+    if [[ "$pd_hw_answer" == "turnip" ]]; then
         setup_turnip_proot
     fi
 fi
