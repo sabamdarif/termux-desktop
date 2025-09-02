@@ -2133,13 +2133,19 @@ function chose_mirror() {
 
 function update_sys() {
     banner
-    print_msg "${BOLD}Updating System...."
-    echo
-
     if [[ "$PACKAGE_MANAGER" == "pacman" ]]; then
+        print_msg "${BOLD}Updating System...."
         pacman -Syu --noconfirm
     else
-        chose_mirror
+        print_msg "Do you want to run a speed test to find the fastest repo for you?"
+        echo -e "The speed test will check all mirrors in all
+        mirror groups, or only the group you selected.
+        This process may take some time."
+        confirmation_y_or_n "Do you want to continue" confirmation_speedtest
+        if [[ "$confirmation_speedtest" == "y" ]]; then
+            chose_mirror
+        fi
+        print_msg "${BOLD}Updating System...."
         apt update -y -o Dpkg::Options::="--force-confnew"
         apt upgrade -y -o Dpkg::Options::="--force-confnew"
     fi
