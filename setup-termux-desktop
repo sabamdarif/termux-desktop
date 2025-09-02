@@ -954,7 +954,7 @@ function ask_to_chose_de() {
     echo
     echo "${Y}5. Gnome($total_custom_gnome_setup)(WIP, so expect bugs)${NC}"
     echo
-    echo "${Y}6. Cinnamon($total_custom_cinnamon_setup)(WIP, so expect bugs)${NC}"
+    echo "${Y}6. Cinnamon($total_custom_cinnamon_setup)${NC}"
     echo
     echo "${Y}7. I3Wm($total_custom_i3wm_setup)${NC}"
     echo
@@ -2454,27 +2454,10 @@ function install_desktop() {
     elif [[ "$de_name" == "cinnamon" ]]; then
         print_msg "${BOLD}Installing Cinnamon"
         echo
-        mkdir cinnamon_packages_files
-        cd cinnamon_packages_files || exit 1
-        if [[ "$PACKAGE_MANAGER" == "apt" ]]; then
-            download_and_extract "https://github.com/sabamdarif/termux-desktop/releases/download/cinnamon/debs-${termux_arch}.zip"
-            dpkg --configure -a
-            apt --fix-broken install -y
-            apt install ./*deb -y
-            apt install --fix-missing -y
-        elif [[ "$PACKAGE_MANAGER" == "pacman" ]]; then
-            download_and_extract "https://github.com/sabamdarif/termux-desktop/releases/download/cinnamon/pkgs-${termux_arch}.zip"
-            pacman -U --noconfirm *.pkg.tar.xz
-        else
-            print_failed "Unsupported package manger, you need APT / PACMAN"
-            exit 1
-        fi
-        cd ..
-        check_and_delete "cinnamon_packages_files"
-        package_install_and_check "eog"
+        package_install_and_check "cinnamon nemo gnome-terminal gnome-screenshot eog"
     fi
     if [[ "$lite_mode" != "1" && "$lite_mode" != "true" ]]; then
-        package_install_and_check "xwayland pulseaudio file-roller pavucontrol gnome-font-viewer evince galculator libwayland-protocols xorg-xrdb"
+        package_install_and_check "file-roller pavucontrol gnome-font-viewer evince galculator xorg-xrdb"
     fi
     # Uncomment if additional package installation is needed
     # if [[ "$distro_add_answer" == "y" ]]; then
@@ -4425,8 +4408,7 @@ function remove_termux_desktop() {
                 package_check_and_remove "gnome*"
                 package_check_and_remove "thunar xfce4-terminal"
             elif [[ "$de_name" == "cinnamon" ]]; then
-                package_check_and_remove "cinnamon*"
-                package_check_and_remove "thunar gnome-terminal gnome-screenshot"
+                package_check_and_remove "cinnamon nemo gnome-terminal gnome-screenshot eog"
             fi
 
             package_check_and_remove "kvantum xwayland pulseaudio file-roller pavucontrol gnome-font-viewer evince galculator libwayland-protocols xorg-xrdb"
