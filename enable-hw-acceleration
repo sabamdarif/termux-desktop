@@ -63,23 +63,22 @@ function hw_install_required_packages() {
         package_install_and_check "mesa-zink-vulkan-icd-freedreno"
         ;;
     "freedreno_kgsl")
-        check_and_create_directory "freedreno"
-        cd freedreno || exit 1
-        if [[ "$PACKAGE_MANAGER" == "pacman" ]]; then
-            download_and_extract "https://github.com/sabamdarif/termux-desktop/releases/download/freedreno-kgsl-25.1/Freedreno-kgsl-${termux_arch}-pkgs.zip"
-            pacman -Syu --needed
-            pacman -U --noconfirm ./*.pkg.tar.xz
-            check_and_delete "vulkan-wrapper-android.pkg.tar.xz"
-
-        else
-            download_and_extract "https://github.com/sabamdarif/termux-desktop/releases/download/freedreno-kgsl-25.1/Freedreno-kgsl-${termux_arch}-debs.zip"
-            dpkg --configure -a
-            apt --fix-broken install -y
-            apt install ./*.deb -y
-            apt install --fix-missing -y
+        if [[ "$termux_arch" == "aarch64" || "$termux_arch" == "arm" ]]; then
+            print_msg "${BOLD}Installing freedreno kgsl..."
+            if [[ "$PACKAGE_MANAGER" == "pacman" ]]; then
+                download_file "mesa-vulkan-icd-freedreno.pkg.tar.xz" "https://github.com/sabamdarif/termux-desktop/releases/download/freedreno-kgsl-25.1/mesa-vulkan-icd-freedreno_25.1.1-2_${termux_arch}.pkg.tar.xz"
+                pacman -Syu --needed
+                pacman -U --noconfirm mesa-vulkan-icd-freedreno.pkg.tar.xz
+                check_and_delete "mesa-vulkan-icd-freedreno.pkg.tar.xz"
+            else
+                download_file "mesa-vulkan-icd-freedreno.deb" "https://github.com/sabamdarif/termux-desktop/releases/download/freedreno-kgsl-25.1/mesa-vulkan-icd-freedreno_25.1.1-2_${termux_arch}.deb"
+                dpkg --configure -a
+                apt --fix-broken install -y
+                apt install ./mesa-vulkan-icd-freedreno.deb -y
+                apt install --fix-missing -y
+                check_and_delete "mesa-vulkan-icd-freedreno.deb"
+            fi
         fi
-        cd ..
-        check_and_delete "freedreno"
         ;;
     esac
     print_to_config "exp_termux_vulkan_hw_answer"
@@ -257,7 +256,7 @@ EOF
     "${selected_distro_type}"-distro login "$selected_distro" -- /bin/bash -c 'bash install_turnip_related_packs.sh'
 
     download_file "$HOME/turnip.zip" "https://github.com/sabamdarif/termux-desktop/releases/download/turnip-25.0/turnip-25.0.7-2-aarch64.zip"
-    "${selected_distro_type}"-distro login "$selected_distro" -- /bin/bash -c "unzip $HOME/turnip.zip -d /usr"
+    "${selected_distro_type}"-distro login "$selected_distro" -- /bin/bash -c "unzip -o $HOME/turnip.zip -d /usr"
     check_and_delete "$HOME/turnip.zip"
 }
 
