@@ -190,6 +190,7 @@ Options:
 - `setup-termux-desktop --change pd` *To Change Installed Proot-Distro*
 - `setup-termux-desktop --change autostart` *To change autostart behaviour*
 - `setup-termux-desktop --change display` *To change termux:x11 display port*
+- `setup-termux-desktop --change de`      *To switch between diffreent desktop environment or window manager*
 <br>
 
 - `setup-termux-desktop --reinstall icons / themes /config` *To Reinstall Icons / Themes / Config*

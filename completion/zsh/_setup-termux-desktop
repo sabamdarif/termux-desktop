@@ -31,6 +31,7 @@ _setup_termux_desktop() {
         "hw:Change hardware acceleration method"
         "hwa:Change hardware acceleration method"
         "autostart:Modify autostart behavior"
+        "de:Change the wm or deskop environment"
         "display:Modify Termux:X11 display port"
         "help:Show help for --change"
         "h:Show help for --change"
