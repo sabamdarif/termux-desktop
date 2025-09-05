@@ -4807,7 +4807,15 @@ function change_de() {
         update_sys
         install_required_packages
         install_desktop
-        setup_config
+        if [[ "$style_answer" == "0" ]]; then
+            banner
+            print_msg "${BOLD}Configuring Stock $de_name Style..."
+            echo
+            print_to_config "style_answer"
+            ext_setup_for_stock
+        else
+            setup_config
+        fi
         gui_launcher
         print_msg "Removeing old $old_de_name environment"
         de_name="$old_de_name"
