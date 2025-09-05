@@ -1246,8 +1246,10 @@ function questions_setup_manual() {
     print_msg "${B}Know More About Terminal Utility:- https://github.com/sabamdarif/termux-desktop/blob/main/docs/see-more.md#hammer_and_wrenchlearn-about-terminal-utilities"
     echo
     confirmation_y_or_n "Do you want install some terminal utility to make better terminal exprience" terminal_utility_setup_answer
-    banner
-    questions_nerd_font_select
+    if [[ "$terminal_utility_setup_answer" == "y" ]]; then
+        banner
+        questions_nerd_font_select
+    fi
     banner
     echo -e "${R}[${C}-${R}]${B} File Manager Tools Enhancement${NC}
 
