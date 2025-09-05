@@ -2417,7 +2417,7 @@ function install_desktop() {
         package_install_and_check "dwm"
     elif [[ "$de_name" == "bspwm" ]]; then
         print_msg "${BOLD}Installing BSPWM"
-        package_install_and_check "bspwm"
+        package_install_and_check "bspwm lxappearance xorg-xsetroot rofi feh"
     elif [[ "$de_name" == "awesome" ]]; then
         print_msg "${BOLD}Installing AWESOME WM"
         package_install_and_check "awesome"
