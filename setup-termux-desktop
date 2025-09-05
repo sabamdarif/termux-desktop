@@ -2573,7 +2573,16 @@ function theme_installer() {
     check_and_create_directory "$themes_folder"
     download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/setup-files/setup-files/${de_name}/look_${style_answer}/theme.tar.gz" "$themes_folder"
 
-    print_msg "Making Additional Configuration..."
+    if [[ -d "$HOME/.config" ]] || [[ -d "$HOME/.local" ]]; then
+        print_msg "Creating backup of old config..."
+        must_back_folders=("$HOME/.config")
+        if [[ -d "$HOME/.local" ]]; then
+            must_back_folders+=("$HOME/.local")
+        fi
+        tar -cJf "$HOME/old-config-$(date +%Y%m%d-%H%M%S).tar.xz" "${must_back_folders[@]}"
+    fi
+
+    print_msg "Applying Custom Configuration..."
     echo
     check_and_create_directory "$HOME/.config"
     set_config_dir
