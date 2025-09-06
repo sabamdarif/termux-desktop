@@ -2,7 +2,7 @@
 
 # Termux Desktop
 
-#### Easily Install Termux GUI Desktop
+#### Easily Install Termux Native GUI Desktop
 </div>
 <div align="center">
 
@@ -42,16 +42,18 @@
 
 ##### 1. Ensure Requirements Are Met:
 > [!NOTE]
-> This Only Works On Termux From Github Or Fdroid. Avoid using Termux from Google Play that doesn't work due to API limitations.
+> **This Only Works On Termux From Github Or Fdroid.**  
+> **Avoid using Termux from Google Play that doesn't work due to API limitations.**
+
    - Android 8+ device
    - **[Termux](https://termux.dev/en/)** (download from [GitHub](https://github.com/termux/termux-app/releases) or [F-Droid](https://f-droid.org/en/packages/com.termux/))
    - **[Termux:X11](https://github.com/termux/termux-x11/releases)**
    - **[Termux-API](https://github.com/termux/termux-api/releases)**
-   - Minimum 2GB of RAM (3GB recommended)
+   - Minimum 2GB of RAM _(3GB recommended)_
    - 1.5-2GB of Internet data
    - 3-4GB of free storage
-   - Root: Optional (only for chroot-distro)
-   - VNC Client [RealVNC](https://play.google.com/store/apps/details?id=com.realvnc.viewer.android) or [NetHunter Kex](https://store.nethunter.com/en/packages/com.offsec.nethunter.kex/) _(Optional)_
+   - Root: Optional _(only for chroot-distro)_
+   - VNC Client _(Optional)_. Use:- [RealVNC](https://play.google.com/store/apps/details?id=com.realvnc.viewer.android) / [NetHunter Kex](https://store.nethunter.com/en/packages/com.offsec.nethunter.kex/)
 
 ##### 2. Currently supported Desktop Environments and Window Managers:
 
@@ -65,11 +67,7 @@
 |                      | Fluxbox             |
 |                      | IceWM               |
 
-##### 3. Hardware Acceleration and Distro Container:
-   - Learn more about [hardware acceleration](/docs/hw-acceleration.md).
-   - Check out [distro container usage](/docs/proot-container.md).
-
-##### 4. Start Installation: 
+##### 3. Start Installation:
 > Full Installation YouTube Video Guide:- [Here](https://youtu.be/SlR9f9hl5CQ?si=7O13ZAzdAnB_wwWw)
 
 > [!IMPORTANT]
@@ -79,10 +77,11 @@
    ```bash
    curl -Lf https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop -o setup-termux-desktop && chmod +x setup-termux-desktop && ./setup-termux-desktop
    ```
+> [!TIP]
+> You can also do a lite install which will not install all the optional packages.  
+> To do that run the installer like this `LITE=true ./setup-termux-desktop` / `LITE=1  ./setup-termux-desktop`.
 
-- You can also do a lite install which will not install all the optional packages to do that run the install this `LITE=true ./setup-termux-desktop` or `LITE=1  ./setup-termux-desktop` instead of just running `./setup-termux-desktop`
-
-##### 5. Usage Instructions:
+##### 4. Usage Instructions:
    - Commands for starting and stopping Termux:X11 and VNC sessions are provided below.
 
 ---
@@ -96,7 +95,7 @@ tx11start [options]
 Options:
 - `--nogpu`: Disable GPU acceleration.
 - `--legacy`: Enable legacy drawing.
-- `--nodbus`: Disable DBus.
+- `--nodbus`: Without using dbus-launch.
 - Combine options for specific configurations (e.g., `tx11start --nogpu --legacy`).
 - `--help`: To show help.
 
@@ -106,7 +105,7 @@ Options:
 - `tx11start` *to star Termux:11 with gpu acceleration*
 - `tx11start --nogpu` *to star Termux:11 without gpu acceleration*
 - `tx11start --nogpu --legacy` *to star Termux:11 without gpu acceleration and _-legacy-drawing_*
-- `tx11start --nodbus` *to star Termux:11 without dbus*
+- `tx11start --nodbus` *to star Termux:11 without dbus-launch*
 - `tx11start --nodbus --nogpu` *to star Termux:11 without gpu acceleration and dbus*
 - `tx11start --nodbus --nogpu --legacy` *to star Termux:11 without gpu acceleration and dbus and with _-legacy-drawing_*
 - `tx11start --nodbus --legacy` *to star Termux:11 without dbus and use _-legacy-drawing_ (nodbus and gpu)*
