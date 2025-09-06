@@ -239,6 +239,7 @@ Special thanks to:
 - [ar37-rs/virgl-angle](https://github.com/ar37-rs/virgl-angle)
 - [mayTermux/myTermux](https://github.com/mayTermux/myTermux)
 - [catppuccin](https://github.com/catppuccin)
+- [MastaG/mesa-turnip-ppa](https://github.com/MastaG/mesa-turnip-ppa)
 ---
 
 **If you enjoy this project, consider giving it a star!** :star2:

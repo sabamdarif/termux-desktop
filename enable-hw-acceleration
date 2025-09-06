@@ -200,7 +200,7 @@ function setup_hw_environment_variables() {
         pd_hw_method="GALLIUM_DRIVER=virpipe MESA_GL_VERSION_OVERRIDE=4.0"
         ;;
     "turnip")
-        pd_hw_method="VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/freedreno_icd.aarch64.json MESA_LOADER_DRIVER_OVERRIDE=zink TU_DEBUG=noconform"
+        pd_hw_method="VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/freedreno_icd.${termux_arch}.json MESA_LOADER_DRIVER_OVERRIDE=zink TU_DEBUG=noconform"
         ;;
     # "freedreno_kgsl")
     #     pd_hw_method="MESA_LOADER_DRIVER_OVERRIDE=kgsl MESA_GL_VERSION_OVERRIDE=3.3"
@@ -246,6 +246,8 @@ function setup_turnip_proot() {
         turnip_related_packs="xdg-desktop-portal mesa vulkan-icd-loader vulkan-mesa-layers"
     fi
 
+    TURNIP_MESA_VERSION="25.1.5"
+
     install_turnip_related_packs=$(
         cat <<EOF
 pd_package_install_and_check "$turnip_related_packs"
@@ -255,7 +257,7 @@ EOF
     create_shell_script "$save_path/install_turnip_related_packs.sh" "$install_turnip_related_packs"
     "${selected_distro_type}"-distro login "$selected_distro" -- /bin/bash -c 'bash install_turnip_related_packs.sh'
 
-    download_file "$HOME/turnip.zip" "https://github.com/sabamdarif/termux-desktop/releases/download/turnip-25.0/turnip-25.0.7-2-aarch64.zip"
+    download_file "$HOME/turnip.zip" "https://github.com/sabamdarif/termux-desktop/releases/download/turnip-${TURNIP_MESA_VERSION}/turnip-${TURNIP_MESA_VERSION}-${termux_arch}.zip"
     "${selected_distro_type}"-distro login "$selected_distro" -- /bin/bash -c "unzip -o $HOME/turnip.zip -d /usr"
     check_and_delete "$HOME/turnip.zip"
 }

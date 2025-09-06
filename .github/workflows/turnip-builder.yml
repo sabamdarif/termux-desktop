@@ -1,0 +1,245 @@
+name: Build Turnip
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+    inputs:
+      mesa_version:
+        description: "Mesa version to build (REQUIRED - no default)"
+        required: true
+        type: string
+
+env:
+  MESA_VERSION: ${{ github.event.inputs.mesa_version}}
+
+jobs:
+  check-commit-message:
+    runs-on: ubuntu-latest
+    outputs:
+      should_build: ${{ steps.check.outputs.should_build }}
+      mesa_version: ${{ steps.check.outputs.mesa_version }}
+    steps:
+      - name: Check commit message and extract version
+        id: check
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "should_build=true" >> $GITHUB_OUTPUT
+            echo "mesa_version=${{ env.MESA_VERSION }}" >> $GITHUB_OUTPUT
+            echo "Manual trigger detected, using provided Mesa version: ${{ env.MESA_VERSION }}"
+          else
+            COMMIT_MSG="${{ github.event.head_commit.message }}"
+            echo "Commit message: $COMMIT_MSG"
+
+            if echo "$COMMIT_MSG" | grep -qE "^bump\(turnip\):\s+[0-9]+\.[0-9]+(\.[0-9]+)?"; then
+              VERSION=$(echo "$COMMIT_MSG" | sed -n 's/^bump(turnip):\s*\([0-9]\+\.[0-9]\+\(\.[0-9]\+\)\?\).*/\1/p')
+              echo "should_build=true" >> $GITHUB_OUTPUT
+              echo "mesa_version=$VERSION" >> $GITHUB_OUTPUT
+              echo "Build triggered by commit message, Mesa version: $VERSION"
+            else
+              echo "should_build=false" >> $GITHUB_OUTPUT
+              echo "mesa_version=" >> $GITHUB_OUTPUT
+              echo "Commit message does not match bump(turnip): pattern, skipping build"
+            fi
+          fi
+
+  validate-inputs:
+    needs: check-commit-message
+    runs-on: ubuntu-latest
+    if: needs.check-commit-message.outputs.should_build == 'true'
+    outputs:
+      mesa_version: ${{ steps.validate.outputs.mesa_version }}
+    steps:
+      - name: Validate Mesa version
+        id: validate
+        run: |
+          MESA_VERSION="${{ needs.check-commit-message.outputs.mesa_version }}"
+          if [ -z "$MESA_VERSION" ]; then
+            echo "ERROR: MESA_VERSION is required but not provided"
+            echo "Please specify a Mesa version when triggering this workflow manually"
+            echo "Or use commit message format: bump(turnip): X.Y.Z"
+            exit 1
+          fi
+          echo "mesa_version=$MESA_VERSION" >> $GITHUB_OUTPUT
+          echo "Using Mesa version: $MESA_VERSION"
+
+  process-aarch64:
+    needs: validate-inputs
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Update repos
+        run: sudo apt update -y
+
+      - name: Enable source repositories
+        run: |
+          sudo sed -i 's/^Types: deb$/Types: deb deb-src/' /etc/apt/sources.list.d/ubuntu.sources
+          sudo apt update -y
+
+      - name: Free additional disk space
+        run: |
+          sudo apt purge -yq $(
+            dpkg -l |
+              grep '^ii' |
+              awk '{ print $2 }' |
+              grep -P '(mecab|linux-azure-tools-|aspnetcore|liblldb-|netstandard-|clang-tidy|clang-format|gfortran-|mysql-|google-cloud-cli|postgresql-|cabal-|dotnet-|ghc-|mongodb-|libmono|llvm-16|llvm-17)'
+          ) || true
+          sudo apt purge -yq \
+            snapd kubectl podman ruby3.2-doc mercurial-common git-lfs \
+            skopeo buildah vim python3-botocore azure-cli powershell \
+            shellcheck firefox google-chrome-stable microsoft-edge-stable || true
+          sudo apt autoremove -yq
+          sudo apt clean
+
+      - name: Install required packages
+        run: |
+          sudo apt install -y \
+            clang clang-tools llvm llvm-dev spirv-tools spirv-headers \
+            libosmesa6-dev mesa-common-dev libgl1-mesa-dev libegl1-mesa-dev \
+            libvulkan-dev libva-dev libvdpau-dev mesa-utils \
+            libx11-dev libx11-xcb-dev libxau-dev libxcb1-dev \
+            libxshmfence-dev libxxf86vm-dev libxt-dev libxmu-dev libxpm-dev \
+            libmotif-dev libwayland-dev libarchive-dev libelf-dev libexpat1-dev \
+            libpciaccess-dev libedit-dev libffi-dev libzstd-dev libncurses-dev \
+            xz-utils valgrind libglvnd-dev \
+            meson ninja-build patchelf unzip curl python3-pip flex bison \
+            zip git cmake ccache python3-mako glslang-tools
+          sudo apt build-dep mesa -y
+
+      - name: Build Turnip for aarch64
+        env:
+          MESA_VERSION: ${{ needs.validate-inputs.outputs.mesa_version }}
+        run: |
+          chmod +x .github/scripts/turnip.sh
+          MESA_VERSION="${MESA_VERSION}" ./.github/scripts/turnip.sh aarch64
+
+      - name: Upload aarch64 artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: turnip-${{ needs.validate-inputs.outputs.mesa_version }}-aarch64
+          path: turnip_workdir/turnip-${{ needs.validate-inputs.outputs.mesa_version }}-aarch64.zip
+          retention-days: 30
+
+      - name: Cleanup build directory
+        run: rm -rf turnip_workdir
+
+  process-arm:
+    needs: validate-inputs
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Update repos
+        run: sudo apt update -y
+
+      - name: Enable source repositories
+        run: |
+          sudo sed -i 's/^Types: deb$/Types: deb deb-src/' /etc/apt/sources.list.d/ubuntu.sources
+          sudo apt update -y
+
+      - name: Free additional disk space
+        run: |
+          sudo apt purge -yq $(
+            dpkg -l |
+              grep '^ii' |
+              awk '{ print $2 }' |
+              grep -P '(mecab|linux-azure-tools-|aspnetcore|liblldb-|netstandard-|clang-tidy|clang-format|gfortran-|mysql-|google-cloud-cli|postgresql-|cabal-|dotnet-|ghc-|mongodb-|libmono|llvm-16|llvm-17)'
+          ) || true
+          sudo apt purge -yq \
+            snapd kubectl podman ruby3.2-doc mercurial-common git-lfs \
+            skopeo buildah vim python3-botocore azure-cli powershell \
+            shellcheck firefox google-chrome-stable microsoft-edge-stable || true
+          sudo apt autoremove -yq
+          sudo apt clean
+
+      - name: Install required packages
+        run: |
+          sudo apt install -y \
+            clang clang-tools llvm llvm-dev spirv-tools spirv-headers \
+            libosmesa6-dev mesa-common-dev libgl1-mesa-dev libegl1-mesa-dev \
+            libvulkan-dev libva-dev libvdpau-dev mesa-utils \
+            libx11-dev libx11-xcb-dev libxau-dev libxcb1-dev \
+            libxshmfence-dev libxxf86vm-dev libxt-dev libxmu-dev libxpm-dev \
+            libmotif-dev libwayland-dev libarchive-dev libelf-dev libexpat1-dev \
+            libpciaccess-dev libedit-dev libffi-dev libzstd-dev libncurses-dev \
+            xz-utils valgrind libglvnd-dev \
+            meson ninja-build patchelf unzip curl python3-pip flex bison \
+            zip git cmake ccache python3-mako glslang-tools
+          sudo apt build-dep mesa -y
+
+      - name: Build Turnip for arm
+        env:
+          MESA_VERSION: ${{ needs.validate-inputs.outputs.mesa_version }}
+        run: |
+          chmod +x .github/scripts/turnip.sh
+          MESA_VERSION="${MESA_VERSION}" ./.github/scripts/turnip.sh arm
+
+      - name: Upload arm artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: turnip-${{ needs.validate-inputs.outputs.mesa_version }}-arm
+          path: turnip_workdir/turnip-${{ needs.validate-inputs.outputs.mesa_version }}-arm.zip
+          retention-days: 30
+
+      - name: Cleanup build directory
+        run: rm -rf turnip_workdir
+
+  create-release:
+    needs: [validate-inputs, process-aarch64, process-arm]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./artifacts
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: turnip-${{ needs.validate-inputs.outputs.mesa_version }}
+          release_name: Turnip ${{ needs.validate-inputs.outputs.mesa_version }}
+          body: |
+            Turnip Mesa ${{ needs.validate-inputs.outputs.mesa_version }} drivers built for Android
+
+            **Architectures:**
+            - ARM64 (aarch64)
+            - ARM (32-bit)
+
+          draft: false
+          prerelease: false
+
+      - name: Upload aarch64 Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./artifacts/turnip-${{ needs.validate-inputs.outputs.mesa_version }}-aarch64/turnip-${{ needs.validate-inputs.outputs.mesa_version }}-aarch64.zip
+          asset_name: turnip-${{ needs.validate-inputs.outputs.mesa_version }}-aarch64.zip
+          asset_content_type: application/zip
+
+      - name: Upload arm Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./artifacts/turnip-${{ needs.validate-inputs.outputs.mesa_version }}-arm/turnip-${{ needs.validate-inputs.outputs.mesa_version }}-arm.zip
+          asset_name: turnip-${{ needs.validate-inputs.outputs.mesa_version }}-arm.zip
+          asset_content_type: application/zip
