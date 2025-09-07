@@ -1,9 +1,5 @@
 name: Build Turnip
 on:
-  push:
-    branches:
-      - main
-      - master
   workflow_dispatch:
     inputs:
       mesa_version:
@@ -15,50 +11,18 @@ env:
   MESA_VERSION: ${{ github.event.inputs.mesa_version}}
 
 jobs:
-  check-commit-message:
-    runs-on: ubuntu-latest
-    outputs:
-      should_build: ${{ steps.check.outputs.should_build }}
-      mesa_version: ${{ steps.check.outputs.mesa_version }}
-    steps:
-      - name: Check commit message and extract version
-        id: check
-        run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "should_build=true" >> $GITHUB_OUTPUT
-            echo "mesa_version=${{ env.MESA_VERSION }}" >> $GITHUB_OUTPUT
-            echo "Manual trigger detected, using provided Mesa version: ${{ env.MESA_VERSION }}"
-          else
-            COMMIT_MSG="${{ github.event.head_commit.message }}"
-            echo "Commit message: $COMMIT_MSG"
-
-            if echo "$COMMIT_MSG" | grep -qE "^bump\(turnip\):\s+[0-9]+\.[0-9]+(\.[0-9]+)?"; then
-              VERSION=$(echo "$COMMIT_MSG" | sed -n 's/^bump(turnip):\s*\([0-9]\+\.[0-9]\+\(\.[0-9]\+\)\?\).*/\1/p')
-              echo "should_build=true" >> $GITHUB_OUTPUT
-              echo "mesa_version=$VERSION" >> $GITHUB_OUTPUT
-              echo "Build triggered by commit message, Mesa version: $VERSION"
-            else
-              echo "should_build=false" >> $GITHUB_OUTPUT
-              echo "mesa_version=" >> $GITHUB_OUTPUT
-              echo "Commit message does not match bump(turnip): pattern, skipping build"
-            fi
-          fi
-
   validate-inputs:
-    needs: check-commit-message
     runs-on: ubuntu-latest
-    if: needs.check-commit-message.outputs.should_build == 'true'
     outputs:
       mesa_version: ${{ steps.validate.outputs.mesa_version }}
     steps:
       - name: Validate Mesa version
         id: validate
         run: |
-          MESA_VERSION="${{ needs.check-commit-message.outputs.mesa_version }}"
+          MESA_VERSION="${{ env.MESA_VERSION }}"
           if [ -z "$MESA_VERSION" ]; then
             echo "ERROR: MESA_VERSION is required but not provided"
             echo "Please specify a Mesa version when triggering this workflow manually"
-            echo "Or use commit message format: bump(turnip): X.Y.Z"
             exit 1
           fi
           echo "mesa_version=$MESA_VERSION" >> $GITHUB_OUTPUT
@@ -207,39 +171,33 @@ jobs:
           path: ./artifacts
 
       - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: turnip-${{ needs.validate-inputs.outputs.mesa_version }}
-          release_name: Turnip ${{ needs.validate-inputs.outputs.mesa_version }}
+          name: Turnip ${{ needs.validate-inputs.outputs.mesa_version }}
           body: |
             Turnip Mesa ${{ needs.validate-inputs.outputs.mesa_version }} drivers built for Android
 
-            **Architectures:**
-            - ARM64 (aarch64)
-            - ARM (32-bit)
-
           draft: false
           prerelease: false
+          make_latest: true
+          files: |
+            ./artifacts/turnip-${{ needs.validate-inputs.outputs.mesa_version }}-aarch64/turnip-${{ needs.validate-inputs.outputs.mesa_version }}-aarch64.zip
+            ./artifacts/turnip-${{ needs.validate-inputs.outputs.mesa_version }}-arm/turnip-${{ needs.validate-inputs.outputs.mesa_version }}-arm.zip
 
-      - name: Upload aarch64 Release Asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./artifacts/turnip-${{ needs.validate-inputs.outputs.mesa_version }}-aarch64/turnip-${{ needs.validate-inputs.outputs.mesa_version }}-aarch64.zip
-          asset_name: turnip-${{ needs.validate-inputs.outputs.mesa_version }}-aarch64.zip
-          asset_content_type: application/zip
+      - name: Update Mesa version in enable-hw-acceleration file
+        run: |
+          # Update the TURNIP_MESA_VERSION in the enable-hw-acceleration file
+          sed -i 's/TURNIP_MESA_VERSION="[^"]*"/TURNIP_MESA_VERSION="${{ needs.validate-inputs.outputs.mesa_version }}"/g' enable-hw-acceleration
 
-      - name: Upload arm Release Asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./artifacts/turnip-${{ needs.validate-inputs.outputs.mesa_version }}-arm/turnip-${{ needs.validate-inputs.outputs.mesa_version }}-arm.zip
-          asset_name: turnip-${{ needs.validate-inputs.outputs.mesa_version }}-arm.zip
-          asset_content_type: application/zip
+          # Show the change for verification
+          echo "Updated TURNIP_MESA_VERSION to: ${{ needs.validate-inputs.outputs.mesa_version }}"
+          grep "TURNIP_MESA_VERSION" enable-hw-acceleration
+
+      - name: Commit and push version update
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "GitHub Action"
+          git add enable-hw-acceleration
+          git commit -m "bump(turnip): ${{ needs.validate-inputs.outputs.mesa_version }}" || exit 0
+          git push

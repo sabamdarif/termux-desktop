@@ -1,0 +1,82 @@
+name: Check for turnip update
+on:
+  schedule:
+    - cron: "0 0 * * 0"
+  workflow_dispatch:
+
+jobs:
+  check_for_update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Get old version
+        id: get_old_version
+        run: |
+          # Get all releases from the repo and filter for turnip tags
+          old_version=$(gh api repos/${{ github.repository }}/releases \
+            --jq '.[] | select(.tag_name | startswith("turnip-")) | .tag_name' | \
+            sed 's/turnip-//' | \
+            sort -V | \
+            tail -1)
+
+          if [ -z "$old_version" ]; then
+            echo "No previous turnip releases found"
+            old_version="0.0.0"
+          fi
+
+          echo "old_version=$old_version" >> $GITHUB_OUTPUT
+          echo "Previous turnip version: $old_version"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Get new version
+        id: get_new_version
+        run: |
+          latest_version=$(curl -fsSL "https://archive.mesa3d.org/" | \
+            sed -rn 's/.*mesa-([0-9]+(\.[0-9]+)*).*/\1/p' | \
+            sort -Vr | \
+            head -1)
+
+          echo "latest_version=$latest_version" >> $GITHUB_OUTPUT
+          echo "Latest Mesa version: $latest_version"
+
+      - name: Compare versions
+        id: compare_versions
+        run: |
+          old_version="${{ steps.get_old_version.outputs.old_version }}"
+          latest_version="${{ steps.get_new_version.outputs.latest_version }}"
+
+          echo "Comparing versions: $old_version vs $latest_version"
+
+          # Use sort -V to compare versions properly
+          if printf '%s\n%s\n' "$old_version" "$latest_version" | sort -V -C; then
+            if [ "$old_version" = "$latest_version" ]; then
+              echo "need_update=false" >> $GITHUB_OUTPUT
+              echo "Versions are the same, no update needed"
+            else
+              echo "need_update=false" >> $GITHUB_OUTPUT
+              echo "Current version is newer than latest, no update needed"
+            fi
+          else
+            echo "need_update=true" >> $GITHUB_OUTPUT
+            echo "Update needed: $old_version -> $latest_version"
+          fi
+
+      - name: Trigger turnip build
+        if: steps.compare_versions.outputs.need_update == 'true'
+        run: |
+          echo "Triggering turnip build workflow with Mesa version: ${{ steps.get_new_version.outputs.latest_version }}"
+          gh workflow run turnip-builder.yml \
+            --field mesa_version="${{ steps.get_new_version.outputs.latest_version }}"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: No update needed
+        if: steps.compare_versions.outputs.need_update == 'false'
+        run: |
+          echo "No update needed. Current version ${{ steps.get_old_version.outputs.old_version }} is up to date with latest Mesa version ${{ steps.get_new_version.outputs.latest_version }}"
