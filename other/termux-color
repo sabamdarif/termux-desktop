@@ -48,7 +48,7 @@ apply_colors() {
     case "$scheme_name" in
     "Catppuccin Macchiato")
         cat >"$COLORS_FILE" <<'EOF'
-# Catppuccin Macchiato
+# https://github.com/catppuccin/termux/blob/main/themes/catppuccin-macchiato.properties
 background:     #24273a
 foreground:     #cad3f5
 color0:         #494d64
@@ -71,48 +71,95 @@ EOF
         ;;
     "Catppuccin Mocha")
         cat >"$COLORS_FILE" <<'EOF'
-# Catppuccin Mocha
-background:     #1e1e2e
-foreground:     #cdd6f4
-color0:         #45475a
-color8:         #585b70
-color1:         #f38ba8
-color9:         #f38ba8
-color2:         #a6e3a1
-color10:        #a6e3a1
-color3:         #f9e2af
-color11:        #f9e2af
-color4:         #89b4fa
-color12:        #89b4fa
-color5:         #f5c2e7
-color13:        #f5c2e7
-color6:         #94e2d5
-color14:        #94e2d5
-color7:         #bac2de
-color15:        #a6adc8
+# https://github.com/catppuccin/termux/blob/main/themes/catppuccin-mocha.properties
+background:     #24273a
+foreground:     #cad3f5
+color0:         #494d64
+color8:         #5b6078
+color1:         #ed8796
+color9:         #ed8796
+color2:         #a6da95
+color10:        #a6da95
+color3:         #eed49f
+color11:        #eed49f
+color4:         #8aadf4
+color12:        #8aadf4
+color5:         #f5bde6
+color13:        #f5bde6
+color6:         #8bd5ca
+color14:        #8bd5ca
+color7:         #b8c0e0
+color15:        #a5adcb
 EOF
         ;;
+    "Catppuccin Latte")
+        cat >"$COLORS_FILE" <<'EOF'
+# https://github.com/catppuccin/termux/blob/main/themes/catppuccin-latte.properties
+background:     #eff1f5
+foreground:     #4c4f69
+color0:         #5c5f77
+color8:         #acb0be
+color1:         #d20f39
+color9:         #d20f39
+color2:         #40a02b
+color10:        #40a02b
+color3:         #df8e1d
+color11:        #df8e1d
+color4:         #1e66f5
+color12:        #1e66f5
+color5:         #ea76cb
+color13:        #ea76cb
+color6:         #179299
+color14:        #179299
+color7:         #acb0be
+color15:        #bcc0cc
+EOF
+        ;;
+    "Catppuccin Frappe")
+        cat >"$COLORS_FILE" <<'EOF'
+# https://github.com/catppuccin/termux/blob/main/themes/catppuccin-frappe..properties
+background:     #303446
+foreground:     #c6d0f5
+color0:         #51576d
+color8:         #626880
+color1:         #e78284
+color9:         #e78284
+color2:         #a6d189
+color10:        #a6d189
+color3:         #e5c890
+color11:        #e5c890
+color4:         #8caaee
+color12:        #8caaee
+color5:         #f4b8e4
+color13:        #f4b8e4
+color6:         #81c8be
+color14:        #81c8be
+color7:         #b5bfe2
+color15:        #a5adce
+EOF
+        ;;
+
     "Dracula")
         cat >"$COLORS_FILE" <<'EOF'
-# Dracula
-background:     #282a36
-foreground:     #f8f8f2
+# https://github.com/dracula/termux/blob/master/colors.properties
+background:     #282A36
+foreground:     #F8F8F2
 color0:         #000000
-color8:         #4d4d4d
-color1:         #ff5555
-color9:         #ff6e67
-color2:         #50fa7b
-color10:        #5af78e
-color3:         #f1fa8c
-color11:        #f4f99d
-color4:         #bd93f9
-color12:        #caa9fa
-color5:         #ff79c6
-color13:        #ff92d0
-color6:         #8be9fd
-color14:        #9aedfe
-color7:         #bfbfbf
-color15:        #e6e6e6
+color8:         #4D4D4D
+color1:         #FF5555
+color9:         #FF6E67
+color2:         #50FA7B
+color10:        #5AF78E
+color3:         #F1FA8C
+color11:        #F4F99D
+color4:         #BD93F9
+color12:        #CAA9FA
+color5:         #FF79C6
+color13:        #FF92D0
+color6:         #8BE9FD
+color14:        #9AEDFE
+color7:         #BFBFBF
+color15:        #E6E6E6
 EOF
         ;;
     "Gruvbox Dark")
@@ -276,6 +323,82 @@ color7:         #d8dee9
 color15:        #d8dee9
 EOF
         ;;
+    "Ubuntu")
+        cat >"$COLORS_FILE" <<'EOF'
+# https://github.com/Mayccoll/Gogh/blob/master/themes/clone-of-ubuntu.sh
+background=#300a24
+foreground=#ffffff
+cursor=#ffffff
+color0=#2E3436
+color1=#CC0000
+color2=#4E9A06
+color3=#C4A000
+color4=#3465A4
+color5=#75507B
+color6=#06989A
+color7=#D3D7CF
+color8=#555753
+color9=#EF2929
+color10=#8AE234
+color11=#FCE94F
+color12=#729FCF
+color13=#AD7FA8
+color14=#34E2E2
+color15=#EEEEEC
+EOF
+        ;;
+    "E-link Color")
+        cat >"$COLORS_FILE" <<'EOF'
+# https://github.com/termux/termux-styling/blob/master/app/src/main/assets/colors/e-ink-color.properties
+background=#ffffff
+foreground=#000000
+cursor=#c0c0c0
+
+color0=#000000
+color1=#800000
+color2=#008000
+color3=#808000
+color4=#000080
+color5=#800080
+color6=#008080
+color7=#c0c0c0
+
+color8=#808080
+color9=#ff0000
+color10=#00ff00
+color11=#ffff00
+color12=#0000ff
+color13=#ff00ff
+color14=#00ffff
+color15=#ffffff
+EOF
+        ;;
+    "E-link")
+        cat >"$COLORS_FILE" <<'EOF'
+# https://github.com/termux/termux-styling/blob/master/app/src/main/assets/colors/e-ink.properties
+background: #FFFFFF
+foreground: #000000
+cursor=#c0c0c0
+
+color0=#101010
+color1=#7c7c7c
+color2=#8e8e8e
+color3=#a0a0a0
+color4=#686868
+color5=#747474
+color6=#868686
+color7=#b9b9b9
+color8=#525252
+color9=#7c7c7c
+color10=#8e8e8e
+color11=#a0a0a0
+color12=#686868
+color13=#747474
+color14=#868686
+color15=#f7f7f7
+EOF
+        ;;
+
     esac
 
     termux-reload-settings
@@ -285,6 +408,8 @@ EOF
 get_schemes() {
     echo "Catppuccin Macchiato"
     echo "Catppuccin Mocha"
+    echo "Catppuccin Latte"
+    echo "Catppuccin Frappe"
     echo "Dracula"
     echo "Gruvbox Dark"
     echo "Nord"
@@ -293,6 +418,9 @@ get_schemes() {
     echo "Tokyo Night"
     echo "Monokai"
     echo "Oceanic Next"
+    echo "Ubuntu"
+    echo "E-link Color"
+    echo "E-link"
 }
 
 # Main TUI function
