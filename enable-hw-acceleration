@@ -38,9 +38,9 @@ function hw_install_required_packages() {
     package_check_and_remove "mesa-vulkan-icd-wrapper vulkan-loader-generic virglrenderer virglrenderer-android angle-android vulkan-icd mesa-vulkan-icd-freedreno mesa-zink-vulkan-icd-freedreno mesa-vulkan-icd-freedreno-dri3"
 
     case "$exp_termux_vulkan_hw_answer" in
-    "vulkan_icd")
+    "vulkan_wrapper_android")
         if [[ "$termux_arch" == "aarch64" || "$termux_arch" == "arm" ]]; then
-            print_msg "${BOLD}Installing mesa-vulkan-icd-wrapper Driver..."
+            print_msg "${BOLD}Installing vulkan-wrapper-android Driver..."
             if [[ "$PACKAGE_MANAGER" == "pacman" ]]; then
                 download_file "vulkan-wrapper-android.pkg.tar.xz" "https://github.com/sabamdarif/termux-desktop/releases/download/vulkan-wrapper-android_25.0.0-2/vulkan-wrapper-android-25.0.0-2-${termux_arch}.pkg.tar.xz"
                 pacman -Syu --needed
@@ -54,6 +54,19 @@ function hw_install_required_packages() {
                 apt install --fix-missing -y
                 check_and_delete "vulkan-wrapper-android.deb"
             fi
+        else
+            print_failed "vulkan-wrapper-android Driver isn't supported on your device"
+        fi
+        ;;
+    "vulkan_wrapper_android_leegaos_fork")
+        if [[ "$termux_arch" == "aarch64" ]]; then
+            print_msg "${BOLD}Installing vulkan-wrapper-android (leegao's fork) Driver..."
+            package_install_and_check "libandroid-shmem libc++ libdrm libx11 libxcb libxshmfence libwayland vulkan-loader-generic zlib zstd"
+            download_file "bionic-vulkan-wrapper.zip" "https://github.com/sabamdarif/termux-desktop/releases/download/bionic-vulkan-wrapper-0.0.5r5/vulkan-wrapper-android-leegaos-fork-${termux_arch}.zip"
+            unzip -o bionic-vulkan-wrapper.zip -d "$PREFIX/"
+            check_and_delete "bionic-vulkan-wrapper.zip"
+        else
+            print_failed "vulkan-wrapper-android Driver isn't supported on your device"
         fi
         ;;
     "mesa_freedreno")
@@ -215,15 +228,21 @@ function setup_hw_environment_variables() {
 }
 
 function setup_gpu_specific_environment_variables() {
-    if [[ "$exp_termux_vulkan_hw_answer" == "vulkan_icd" ]]; then
+    if [[ "$exp_termux_vulkan_hw_answer" == "vulkan_wrapper_android" ]] || [[ "$exp_termux_vulkan_hw_answer" == "vulkan_wrapper_android_leegaos_fork" ]]; then
+        local icd_cpu_arch
+        if [[ "$termux_arch" == "aarch64" ]]; then
+            icd_cpu_arch="aarch64"
+        elif [[ "$termux_arch" == "arm" ]]; then
+            icd_cpu_arch="armv7"
+        fi
         if [[ "$device_gpu_model_name" == "adreno" ]]; then
-            gpu_environment_variable="VK_ICD_FILENAMES=$PREFIX/share/vulkan/icd.d/wrapper_icd.aarch64.json MESA_SHADER_CACHE=512MB MESA_SHADER_CACHE_DISABLE=false vblank_mode=0"
+            gpu_environment_variable="VK_ICD_FILENAMES=$PREFIX/share/vulkan/icd.d/wrapper_icd.${icd_cpu_arch}.json MESA_SHADER_CACHE=512MB MESA_SHADER_CACHE_DISABLE=false vblank_mode=0"
         elif [[ "$device_gpu_model_name" == "mali" ]]; then
-            gpu_environment_variable="VK_ICD_FILENAMES=$PREFIX/share/vulkan/icd.d/wrapper_icd.aarch64.json MESA_VK_WSI_PRESENT_MODE=mailbox MESA_VK_WSI_DEBUG=blit MESA_SHADER_CACHE=512MB MESA_SHADER_CACHE_DISABLE=false vblank_mode=0"
+            gpu_environment_variable="VK_ICD_FILENAMES=$PREFIX/share/vulkan/icd.d/wrapper_icd.${icd_cpu_arch}.json MESA_VK_WSI_PRESENT_MODE=mailbox MESA_VK_WSI_DEBUG=blit MESA_SHADER_CACHE=512MB MESA_SHADER_CACHE_DISABLE=false vblank_mode=0"
         elif [[ "$device_gpu_model_name" == "xclipse" ]]; then
-            gpu_environment_variable="VK_ICD_FILENAMES=$PREFIX/share/vulkan/icd.d/wrapper_icd.aarch64.json vblank_mode=0"
+            gpu_environment_variable="VK_ICD_FILENAMES=$PREFIX/share/vulkan/icd.d/wrapper_icd.${icd_cpu_arch}.json vblank_mode=0"
         else
-            gpu_environment_variable="VK_ICD_FILENAMES=$PREFIX/share/vulkan/icd.d/wrapper_icd.aarch64.json MESA_SHADER_CACHE=512MB MESA_SHADER_CACHE_DISABLE=false vblank_mode=0"
+            gpu_environment_variable="VK_ICD_FILENAMES=$PREFIX/share/vulkan/icd.d/wrapper_icd.${icd_cpu_arch}.json MESA_SHADER_CACHE=512MB MESA_SHADER_CACHE_DISABLE=false vblank_mode=0"
         fi
     fi
 }
