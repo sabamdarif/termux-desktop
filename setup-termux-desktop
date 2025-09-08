@@ -1377,9 +1377,9 @@ function distro_hw_questions() {
             if [[ "$device_gpu_model_name" == "adreno" ]]; then
                 banner
                 print_msg "${BOLD}Select Hardware Acceleration Driver For Linux Container"
-                echo "${Y}1. OpenGL (VIRGL ANGLE)${NC}"
+                echo "${Y}1. VirGL + ANGLE (GPU Passthrough via virpipe)${NC}"
                 echo
-                echo "${Y}2. Turnip (Adreno GPU Only)${NC}"
+                echo "${Y}2. Turnip (Native Adreno Vulkan Driver)${NC}"
                 echo
                 select_an_option 2 1 pd_hw_answer_num
                 case "$pd_hw_answer_num" in
@@ -1400,11 +1400,11 @@ function distro_hw_questions() {
             echo
             print_msg "If You Skip It, It Will Use The Previous Selection"
             echo
-            echo "${Y}1. Vulkan (ZINK)${NC}"
+            echo "${Y}1. Mesa Zink (Vulkan-to-OpenGL Translation)${NC}"
             echo
-            echo "${Y}2. OpenGL (VIRGL)${NC}"
+            echo "${Y}2. VirGL (GPU Passthrough via virpipe)${NC}"
             echo
-            echo "${Y}3. Turnip (Adreno GPU Only)${NC}"
+            echo "${Y}3. Turnip (Native Adreno Vulkan Driver)${NC}"
             echo
             select_an_option 3 1 pd_hw_answer_num
 
@@ -1480,19 +1480,19 @@ function exp_termux_gl_hw_support() {
     echo
     print_msg "${BOLD}It will be used to enable opengl support"
     echo
-    echo "${Y}1. Vulkan (ZINK)${NC}"
+    echo "${Y}1. Mesa Zink (Vulkan-to-OpenGL) + VirGL Server${NC}"
     echo
-    echo "${Y}2. OpenGL (VIRGL)${NC}"
+    echo "${Y}2. VirGL (GPU Passthrough via virpipe)${NC}"
     echo
-    echo "${Y}3. OpenGL (VIRGL ANGLE)${NC}"
+    echo "${Y}3. VirGL + ANGLE OpenGL Backend${NC}"
     echo
-    echo "${Y}4. Vulkan (VIRGL ANGLE)${NC}"
+    echo "${Y}4. VirGL + ANGLE Vulkan Backend${NC}"
     echo
-    echo "${Y}5. OpenGL ES (ZINK VIRGL)${NC}"
+    echo "${Y}5. Mesa Zink + VirGL (Vulkan-to-OpenGL via VirGL)${NC}"
     echo
-    echo "${Y}6. The vulkan-wrapper-android Driver With Mesa${NC}"
+    echo "${Y}6. Mesa Zink Direct (Native Vulkan-to-OpenGL)${NC}"
     echo
-    echo "${Y}7. The vulkan-wrapper-android Driver With Mesa-Zink${NC}"
+    echo "${Y}7. Mesa Zink Direct (Native Vulkan-to-OpenGL)${NC}"
     echo
     select_an_option 7 1 exp_termux_gl_hw_answer_num
 
@@ -1529,15 +1529,15 @@ function hw_questions() {
         echo
         print_msg "${BOLD}Select Hardware Acceleration API"
         echo
-        echo "${Y}1. Vulkan (ZINK)${NC}"
+        echo "${Y}1. Mesa Zink (Vulkan-to-OpenGL) + VirGL Server${NC}"
         echo
-        echo "${Y}2. OpenGL (VIRGL)${NC}"
+        echo "${Y}2. VirGL (GPU Passthrough via virpipe)${NC}"
         echo
-        echo "${Y}3. OpenGL (VIRGL ANGLE)${NC}"
+        echo "${Y}3. VirGL + ANGLE OpenGL Backend${NC}"
         echo
-        echo "${Y}4. Vulkan (VIRGL ANGLE)${NC}"
+        echo "${Y}4. VirGL + ANGLE Vulkan Backend${NC}"
         echo
-        echo "${Y}5. OpenGL ES (ZINK VIRGL)${NC}"
+        echo "${Y}5. Mesa Zink + VirGL (Vulkan-to-OpenGL via VirGL)${NC}"
         echo
         select_an_option 5 1 termux_hw_answer_num
 
