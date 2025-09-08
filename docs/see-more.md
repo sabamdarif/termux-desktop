@@ -9,7 +9,7 @@
 
 #### :nerd_face:How to use them ?
 - ***cd*** is replaced with ***zoxide*** (*use the cd command it will use zoxide*)
-- use ***pkg*** or ***apt*** command it will use ***nala*** (for APT only)
+- use ***apt*** command it will use ***nala*** (for APT only)
 - use ***ls*** command it will use ***eza***
 - use ***neofetch*** command it will use ***fastfetch***
 - use ***cat*** command it will use ***bat***

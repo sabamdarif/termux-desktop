@@ -4088,6 +4088,9 @@ function terminal_utility_setup() {
         print_msg "${C}${BOLD}Configuring Terminal Utility For Termux..."
         echo
         package_install_and_check "bat eza zoxide fastfetch openssh fzf"
+        if [[ "$PACKAGE_MANAGER" == "apt" ]]; then
+            package_install_and_check "nala"
+        fi
         check_and_backup "$PREFIX/etc/motd"
         check_and_backup "$PREFIX/etc/motd-playstore"
         check_and_backup "$PREFIX/etc/motd.sh"
@@ -4142,6 +4145,66 @@ EOF
         cat <<EOF >>"$HOME/.shell_rc_content"
 # open the folder where all the apps added by proot-distro are located
 alias 'pdapps'='cd /data/data/com.termux/files/usr/share/applications/pd_added && ls'
+EOF
+    fi
+
+    if [[ "$PACKAGE_MANAGER" == "apt" ]]; then
+        cat <<'EOF' >>"$HOME/.shell_rc_content"
+apt_wrapper() {
+    # First check if nala is actually installed. If not fall back to the apt
+    if ! command -v nala >/dev/null 2>&1; then
+        echo "nala not found, falling back to apt."
+        command apt "$@"
+        return $?
+    fi
+
+    # If no argument given then run nala to print help menu
+    if [ -z "$1" ]; then
+        command nala
+        return
+    fi
+
+    local cmd="$1"
+    shift
+
+    case "$cmd" in
+    install | in | add)
+        command nala install "$@"
+        ;;
+    se* | sr | find)
+        command nala search "$@"
+        ;;
+    up | update)
+        command nala update "$@"
+        ;;
+    upg*)
+        command nala upgrade "$@"
+        ;;
+    show | info)
+        command nala show "$@"
+        ;;
+    cl*)
+        command nala clean "$@"
+        ;;
+    ap | autopurge)
+        command nala autopurge "$@"
+        ;;
+    un* | rem* | rm | del* | r)
+        command nala remove "$@"
+        ;;
+    list-up*)
+        command nala list --upgradable
+        ;;
+    *)
+        # pass the command ($cmd) along with the rest of the arguments
+        # although i don't think we need to pass $@
+        # but i still did it just to be in the safe side
+        command nala "$cmd" "$@"
+        ;;
+    esac
+}
+
+alias apt='apt_wrapper'
 EOF
     fi
 
