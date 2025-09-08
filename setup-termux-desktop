@@ -1514,7 +1514,7 @@ function exp_termux_gl_hw_support() {
 function hw_questions() {
     banner
     exp_vulkan_support
-    if [[ "$exp_termux_vulkan_hw_answer" == "vulkan_wrapper_android" ]] || [[ "$exp_termux_vulkan_hw_answer" == "mesa_freedreno" ]] || [[ "$exp_termux_vulkan_hw_answer" == "mesa_zink_freedreno" ]]; then
+    if [[ "$exp_termux_vulkan_hw_answer" == "vulkan_wrapper_android" ]] || [[ "$exp_termux_vulkan_hw_answer" == "vulkan_wrapper_android_leegaos_fork" ]] || [[ "$exp_termux_vulkan_hw_answer" == "mesa_freedreno" ]] || [[ "$exp_termux_vulkan_hw_answer" == "mesa_zink_freedreno" ]]; then
         exp_termux_gl_hw_support
     elif [[ "$exp_termux_vulkan_hw_answer" == "freedreno_kgsl" ]]; then
         termux_hw_answer="${exp_termux_vulkan_hw_answer}"
@@ -1845,7 +1845,9 @@ function define_value_name() {
     fi
     # Vulkan Driver
     if [[ "$exp_termux_vulkan_hw_answer" == "vulkan_wrapper_android" ]]; then
-        vulkan_driver_name="Vulkan ICD Wrapper"
+        vulkan_driver_name="Vulkak Wrapper Android"
+    elif [[ "$exp_termux_vulkan_hw_answer" == "vulkan_wrapper_android_leegaos_fork" ]]; then
+        vulkan_driver_name="Vulkan Wrapper Android (leegao's fork)"
     elif [[ "$exp_termux_vulkan_hw_answer" == "mesa_freedreno" ]]; then
         vulkan_driver_name="Mesa ICD Freedreno"
     elif [[ "$exp_termux_vulkan_hw_answer" == "mesa_zink_freedreno" ]]; then
