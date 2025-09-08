@@ -2179,6 +2179,15 @@ function update_sys() {
     fi
 }
 
+function get_termux_arch() {
+    app_arch=$(uname -m)
+    supported_arch="$(getprop ro.product.cpu.abilist)"
+    case "$app_arch" in
+    aarch64) termux_arch="aarch64" ;;
+    armv7* | arm | armv8*) termux_arch="arm" ;;
+    esac
+}
+
 function check_system_requirements() {
     while true; do
         local errors=0
@@ -2244,13 +2253,6 @@ function check_system_requirements() {
         fi
         sleep 0.2
         # Check architecture
-        app_arch=$(uname -m)
-        supported_arch="$(getprop ro.product.cpu.abilist)"
-        case "$app_arch" in
-        aarch64) termux_arch="aarch64" ;;
-        armv7* | arm | armv8*) termux_arch="arm" ;;
-        esac
-
         if [[ "$termux_arch" == "aarch64" ]] || [[ "$termux_arch" == "arm" ]]; then
             print_success "App architecture: ${NC}$app_arch"
         else
@@ -5211,6 +5213,7 @@ if [[ -z "$1" ]] || [[ "$1" == "--install" ]] || [[ "$1" == "-i" ]]; then
     check_installer_status "$1"
 fi
 current_path=$(pwd)
+get_termux_arch
 function install_termux_desktop() {
     banner
     update_sys
