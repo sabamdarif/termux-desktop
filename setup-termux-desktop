@@ -3855,13 +3855,15 @@ function check_desktop_process() {
             fi
         fi
     fi
-    print_msg "Adding custom Termux:x11 preferences..."
-    echo
     print_msg "Backing up current Termux:x11 preferences..."
     echo
+    termux-x11 &
     termux-x11-preference list >"$HOME/old-termx-x11-preferences"
     download_file "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/other/termx-x11-preferences"
+    print_msg "Adding custom Termux:x11 preferences..."
+    echo
     termux-x11-preference <termx-x11-preferences
+    pkill -f com.termux.x11 >/dev/null 2>&1
     check_and_delete "termx-x11-preferences"
 }
 
