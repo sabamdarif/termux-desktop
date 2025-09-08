@@ -61,7 +61,7 @@
 |----------------------|---------------------|
 | [Xfce](/docs/xfce_styles.md)                 | [Openbox](/docs/openbox_styles.md)             |
 | [LXQt](/docs/lxqt_styles.md)                 | i3                  |
-| [MATE](/docs/mate_styles.md)                 | dwm                 |
+| MATE                 | dwm                 |
 | GNOME                | bspwm               |
 | Cinnamon             | Awesome             |
 |                      | Fluxbox             |
