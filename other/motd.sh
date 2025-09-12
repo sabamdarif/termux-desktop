@@ -149,15 +149,15 @@ clear
 printf "%25s %b\n" "" "${G}${LOGO}${NC}"
 
 echo -e "${NC}${BOLD}System Info:
-${C} System          : ${G} ${NC}${DISTRO}
-${C} Host            : ${G}󰍹 ${NC}${MODEL}
-${C} Kernel          : ${G} ${NC}$(uname -r | grep -o '^[0-9]*\.[0-9]*\.[0-9]*')
-${C} CPU             : ${G}󰍛 ${NC}${soc_details} (${G}${PROCESSOR_COUNT}${NC} vCPU)
-${C} Architectures   : ${G}${cpu_arch_icon} ${NC}${cpu_arch^^}
-${C} Termux Version  : ${G} ${NC}${TERMUX_VERSION}-${termux_build}${NC}
-${C} Battery Level   : ${BAT_ICON}${NC}${BATTERY}%${NC} ${CHARGE_ICON}${NC}
-${C} Memory          : ${G}󰘚 ${USED}${NC} used, ${TOTAL}${NC} total
-${C} Temperature     : ${TEMP_ICON} ${TEMP}°C${NC}
+${C} System          : ${G}  ${NC}${DISTRO}
+${C} Host            : ${G}󰍹  ${NC}${MODEL}
+${C} Kernel          : ${G}  ${NC}$(uname -r | grep -o '^[0-9]*\.[0-9]*\.[0-9]*')
+${C} CPU             : ${G}󰍛  ${NC}${soc_details} (${G}${PROCESSOR_COUNT}${NC} vCPU)
+${C} Architectures   : ${G}${cpu_arch_icon}  ${NC}${cpu_arch^^}
+${C} Termux Version  : ${G}  ${NC}${TERMUX_VERSION}-${termux_build}${NC}
+${C} Battery Level   : ${BAT_ICON} ${NC}${BATTERY}%${NC} ${CHARGE_ICON}${NC}
+${C} Memory          : ${G}󰘚  ${USED}${NC} used, ${TOTAL}${NC} total
+${C} Temperature     : ${TEMP_ICON}  ${TEMP}°C${NC}
 "
 
 # Disk usage bars
