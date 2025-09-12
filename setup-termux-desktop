@@ -4909,14 +4909,17 @@ function change_de() {
         else
             setup_config
         fi
+        if [[ "$enable_hw_acc" == "y" ]]; then
+            hw_config
+        fi
         gui_launcher
         print_msg "Removeing old $old_de_name environment"
         de_name="$old_de_name"
         remove_desktop_environments
         unset de_name
+        read_conf
         check_desktop_process
         add_to_autostart
-        read_conf
         echo " "
         print_msg "Your current environment is $de_name"
     fi
@@ -5423,7 +5426,7 @@ case $1 in
     display)
         change_display
         ;;
-    de | wm)
+    de | wm | desktop | winm | wim)
         change_de
         ;;
     h | help | -h | --help)
