@@ -2166,9 +2166,9 @@ function update_sys() {
         pacman -Syu --noconfirm
     else
         print_msg "Do you want to run a speed test to find the fastest repo for you?"
-        echo -e "The speed test will check all mirrors in all
-        mirror groups, or only the group you selected.
-        This process may take some time."
+        echo "The speed test will check all mirrors in all"
+        echo "mirror groups, or only the group you selected."
+        echo "This process may take some time."
         confirmation_y_or_n "Do you want to continue" confirmation_speedtest
         if [[ "$confirmation_speedtest" == "y" ]]; then
             chose_mirror
@@ -2186,6 +2186,21 @@ function get_termux_arch() {
     aarch64) termux_arch="aarch64" ;;
     armv7* | arm | armv8*) termux_arch="arm" ;;
     esac
+}
+
+function try_to_autodetect_gpu() {
+    gpu_egl=$(getprop ro.hardware.egl)
+    gpu_vulkan=$(getprop ro.hardware.vulkan)
+    detected_gpu="$(echo -e "$gpu_egl\n$gpu_vulkan" | sort -u | tr '\n' ' ' | sed 's/ $//')"
+    if echo "$detected_gpu" | grep -iq "adreno"; then
+        gpu_name="adreno"
+    elif echo "$detected_gpu" | grep -iqE "mali|meow"; then
+        gpu_name="mali"
+    elif echo "$detected_gpu" | grep -iqE "xclipse|samsung"; then
+        gpu_name="xclipse"
+    else
+        gpu_name="unknown"
+    fi
 }
 
 function check_system_requirements() {
@@ -2233,19 +2248,7 @@ function check_system_requirements() {
         fi
         sleep 0.2
         # Check GPU
-        gpu_egl=$(getprop ro.hardware.egl)
-        gpu_vulkan=$(getprop ro.hardware.vulkan)
-        detected_gpu="$(echo -e "$gpu_egl\n$gpu_vulkan" | sort -u | tr '\n' ' ' | sed 's/ $//')"
-        if echo "$detected_gpu" | grep -iq "adreno"; then
-            gpu_name="adreno"
-        elif echo "$detected_gpu" | grep -iq "mali"; then
-            gpu_name="mali"
-        elif echo "$detected_gpu" | grep -iqE "xclipse|samsung"; then
-            gpu_name="xclipse"
-        else
-            gpu_name="unknown"
-        fi
-
+        try_to_autodetect_gpu
         if [[ "$gpu_name" == "adreno" ]] || [[ "$gpu_name" == "mali" ]] || [[ "$gpu_name" == "xclipse" ]]; then
             print_success "GPU: ${NC}$gpu_name"
         else
@@ -4670,6 +4673,25 @@ function change_style() {
 #
 #########################################################################
 
+function do_hw_changes() {
+    try_to_autodetect_gpu
+    setup_device_gpu_model
+    hw_questions
+    update_sys
+    hw_config
+    if [[ "$gui_mode" == "termux_x11" ]]; then
+        setup_tx11start_cmd
+        some_fixes
+    elif [[ "$gui_mode" == "both" ]]; then
+        setup_tx11start_cmd
+        setup_vncstart_cmd
+        some_fixes
+    fi
+    if [[ "$distro_add_answer" == "y" ]]; then
+        sed -i "s|selected_pd_hw_method=\"[^\"]*\"|selected_pd_hw_method=\"$pd_hw_method\"|" "$PREFIX/bin/pdrun"
+    fi
+}
+
 function change_hw() {
     # Check if the configuration file exists
     if [[ ! -e "$config_file" ]]; then
@@ -4677,32 +4699,45 @@ function change_hw() {
         exit 1
     else
         read_conf
+        local old_hw_option
+        old_hw_option="${termux_hw_answer}"
         if [[ "$enable_hw_acc" == "y" ]]; then
             banner
             print_msg "Your current hardware acceleration api for Termux is: ${C}${BOLD}${termux_hw_answer}"
             if [[ "$distro_add_answer" == "y" ]]; then
                 print_msg "Your current hardware acceleration api for $selected_distro is: ${C}${BOLD}${pd_hw_answer}"
             fi
-            confirmation_y_or_n "Do you want to change hardware acceleration api" confirmation_chnage_hardware_acceleration
-            if [[ "$confirmation_chnage_hardware_acceleration" == "y" ]]; then
-                hw_questions
-                hw_config
-                if [[ "$gui_mode" == "termux_x11" ]]; then
-                    setup_tx11start_cmd
-                    some_fixes
-                elif [[ "$gui_mode" == "both" ]]; then
-                    setup_tx11start_cmd
-                    setup_vncstart_cmd
-                    some_fixes
+            confirmation_y_or_n "Do you want to change hardware acceleration api" confirmation_change_hardware_acceleration
+            if [[ "$confirmation_change_hardware_acceleration" == "y" ]]; then
+                do_hw_changes
+                read_conf
+                if [[ "$old_hw_option" != "$termux_hw_answer" ]]; then
+                    print_success "${BOLD}Hardware acceleration method successfully changed to ${termux_hw_answer}"
+                    exit 0
+                elif [[ "$old_hw_option" == "$termux_hw_answer" ]]; then
+                    print_success "${BOLD}Hardware acceleration method is still on ${termux_hw_answer}"
+                    exit 0
+                else
+                    print_failed "Something went wrong during the hardware acceleration process..."
+                    exit 1
                 fi
-                if [[ "$distro_add_answer" == "y" ]]; then
-                    sed -i "s|selected_pd_hw_method=\"[^\"]*\"|selected_pd_hw_method=\"$pd_hw_method\"|" "$PREFIX/bin/pdrun"
-                fi
-                clear
-                print_success "${BOLD}Hardware acceleration method changed successfully"
             fi
         elif [[ "$enable_hw_acc" == "n" ]]; then
             print_msg "This option can only be used if have Hardware Acceleration enabled"
+            confirmation_y_or_n "Do you want to enable Hardware Acceleration" confirmation_want_to_enable_hw
+            if [[ "$confirmation_want_to_enable_hw" == "y" ]]; then
+                enable_hw_acc="y"
+                do_hw_changes
+                read_conf
+                if [[ "$enable_hw_acc" == "y" ]]; then
+                    print_success "${BOLD}Successfully enable hardware acceleration"
+                else
+                    print_failed "Some issue occurred during the hardware acceleration change process..."
+                fi
+            elif [[ "$confirmation_want_to_enable_hw" == "n" ]]; then
+                print_msg "Keeping Hardware Acceleration disabled"
+                exit 0
+            fi
         fi
     fi
 }

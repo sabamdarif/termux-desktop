@@ -223,7 +223,10 @@ function setup_hw_environment_variables() {
         echo
         ;;
     esac
-    print_to_config "pd_hw_answer"
+
+    if [[ "$distro_add_answer" == "y" ]]; then
+        print_to_config "pd_hw_answer"
+    fi
 
 }
 
