@@ -1,4 +1,4 @@
-#!/usr/bin/env zsh
+#!/data/data/com.termux/files/usr/bin/env zsh
 # =============================================================================
 # ZSH Configuration File (.zshrc)
 # Based on:- https://github.com/zdharma-continuum/zinit-configs/tree/master/vladdoster
@@ -6,6 +6,10 @@
 # -----------------------------------------------------------------------------
 # ENVIRONMENT VARIABLES & PATH
 # -----------------------------------------------------------------------------
+# Essential PATH exports
+export PATH="$HOME/.local/bin:$PATH"
+export PATH="$HOME/.npm-global/bin:$PATH"
+export PATH="$HOME/.local/share/zinit/polaris/bin:$PATH"
 
 # Editor preferences
 export EDITOR="nvim"
@@ -17,15 +21,38 @@ setopt AUTO_CD
 setopt nonomatch
 
 # -----------------------------------------------------------------------------
-# HELPER FUNCTIONS (moved after instant prompt to avoid console output)
+# ZINIT PLUGIN MANAGER INSTALLATION
 # -----------------------------------------------------------------------------
-function error() {
-    print -P "%F{red}[ERROR]%f: %F{yellow}$1%f" && return 1
-}
+# Auto-install Zinit if not present
+if [[ ! -f $HOME/.local/share/zinit/zinit.git/zinit.zsh ]]; then
+    # Only show output if not using instant prompt
+    if [[ -z "$P9K_INSTANT_PROMPT" ]]; then
+        print -P "%F{33}Installing %F{220}ZDHARMA-CONTINUUM%F{220} Initiative Plugin Manager...%f"
 
-function info() {
-    print -P "%F{blue}[INFO]%f: %F{cyan}$1%f"
-}
+        # Create directory structure
+        if command mkdir -p "$HOME/.local/share/zinit" && command chmod g-rwX "$HOME/.local/share/zinit"; then
+            # Try to clone the repository
+            if command git clone https://github.com/zdharma-continuum/zinit "$HOME/.local/share/zinit/zinit.git"; then
+                print -P "%F{33}Installation successful.%f"
+            else
+                print -P "%F{160}Git clone failed. Please check your internet connection and try again.%f"
+                return 1
+            fi
+        else
+            print -P "%F{160}Failed to create zinit directory.%f"
+            return 1
+        fi
+    else
+        # Silent installation during instant prompt
+        command mkdir -p "$HOME/.local/share/zinit" && command chmod g-rwX "$HOME/.local/share/zinit"
+        command git clone https://github.com/zdharma-continuum/zinit "$HOME/.local/share/zinit/zinit.git" >/dev/null 2>&1
+    fi
+fi
+
+# Load Zinit
+source "$HOME/.local/share/zinit/zinit.git/zinit.zsh"
+autoload -Uz _zinit
+(( ${+_comps} )) && _comps[zinit]=_zinit
 
 # -----------------------------------------------------------------------------
 # ZINIT CONFIGURATION
@@ -41,43 +68,26 @@ ZINIT[PLUGINS_DIR]="$ZINIT[HOME_DIR]/plugins"
 ZINIT[OPTIMIZE_OUT_DISK_ACCESSES]=1
 
 # Zinit variables
-ZPFX="$ZINIT[HOME_DIR]/polaris"
-ZI_FORK='vladdoster'
 ZI_REPO='zdharma-continuum'
-GH_RAW_URL='https://raw.githubusercontent.com'
 
 # -----------------------------------------------------------------------------
 # OH-MY-ZSH & PREZTO PLUGINS
 # -----------------------------------------------------------------------------
 # Load useful Oh My Zsh library functions and plugins
 zi for is-snippet \
-    OMZL::{clipboard,compfix,completion,git,grep,key-bindings}.zsh \
-    OMZP::brew \
-    PZT::modules/{history,rsync}
+    OMZL::{compfix,completion,git,key-bindings}.zsh \
+    PZT::modules/{history}
 
 # Load completions for specific tools
 zi as'completion' for \
-    OMZP::{golang/_golang,pip/_pip,terraform/_terraform}
-
-# -----------------------------------------------------------------------------
-# CUSTOM COMPLETIONS
-# -----------------------------------------------------------------------------
-# Helper function to install completions from GitHub
-install_completion() {
-    zinit for as'completion' nocompile id-as"$1" is-snippet "$GH_RAW_URL/$2"
-}
+    OMZP::{pip/_pip,terraform/_terraform}
 
 # -----------------------------------------------------------------------------
 # ZINIT ANNEXES
 # -----------------------------------------------------------------------------
 # Load useful Zinit extensions
 zi light-mode for \
-    "$ZI_REPO"/zinit-annex-{bin-gem-node,binary-symlink,patch-dl,submods}
-
-# Install additional command-line tools
-zi as'command' light-mode for \
-    pick'revolver' @molovo/revolver \
-    pick'zunit' atclone'./build.zsh' @zunit-zsh/zunit
+    "$ZI_REPO"/zinit-annex-{binary-symlink,patch-dl,submods}
 
 # -----------------------------------------------------------------------------
 # PYTHON CONFIGURATION
@@ -90,7 +100,7 @@ function _pip_completion() {
     reply=(
         $(
             COMP_WORDS="$words[*]"
-            COMP_CWORD=$((cword - 1))
+            COMP_CWORD=$(( cword-1 ))
             PIP_AUTO_COMPLETE=1 $words 2>/dev/null
         )
     )
@@ -102,26 +112,23 @@ compctl -K _pip_completion pip3
 # -----------------------------------------------------------------------------
 
 # Enhanced completions - Additional completion definitions
-zi light-mode for zsh-users/zsh-completions
+zi ice zsh-users/zsh-completions
 
 # Auto-suggestions - Suggests commands as you type based on history
 zi ice atload'_zsh_autosuggest_start' \
-    atinit'
+       atinit'
            ZSH_AUTOSUGGEST_BUFFER_MAX_SIZE=50
            bindkey "^_" autosuggest-execute
            bindkey "^ " autosuggest-accept'
 zi light zsh-users/zsh-autosuggestions
 
 # Fast syntax highlighting - Real-time command syntax validation
-zi ice atclone'(){local f;cd -q →*;for f (*~*.zwc){zcompile -Uz -- ${f}};}' \
-    atload'FAST_HIGHLIGHT[chroma-man]=' \
-    atpull'%atclone' \
-    compile'.*fast*~*.zwc' \
-    nocompletions
-zi light "$ZI_REPO"/fast-syntax-highlighting
+zi light-mode for \
+      $ZI_REPO/fast-syntax-highlighting
+
 
 # FZF history search - Fuzzy search through command history
-zi light joshskidmore/zsh-fzf-history-search
+zi ice joshskidmore/zsh-fzf-history-search
 
 # Zsh autocomplete - Real-time type-ahead autocompletion
 zi ice atload'
@@ -133,9 +140,18 @@ zi light marlonrichert/zsh-autocomplete
 # FINALIZATION
 # -----------------------------------------------------------------------------
 # Initialize completions and replay cached completions
-zi for atload'
-    zicompinit; zicdreplay
-    _zsh_highlight_bind_widgets
-    _zsh_autosuggest_bind_widgets' \
-    as'null' id-as'zinit/cleanup' lucid nocd wait \
-    "$ZI_REPO"/null
+# at the end of a Zinit configuration to ensure that after all plugins are loaded,
+# the completion system is properly initialized and
+# syntax highlighting/autosuggestion widgets are correctly bound
+#
+# Uncomment it if you have issue with highlighting/autosuggestion
+#
+# zi for atload'
+#       zicompinit; zicdreplay
+#       _zsh_highlight_bind_widgets
+#       _zsh_autosuggest_bind_widgets' \
+#     as'null' id-as'zinit/cleanup' lucid nocd wait \
+#   $ZI_REPO/null
+#
+
+unset ZI_REPO ZI_REPO

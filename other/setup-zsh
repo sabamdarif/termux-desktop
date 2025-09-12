@@ -103,11 +103,6 @@ function check_parameter() {
     final_user_name="${user_name}"
 }
 
-function install_zinit() {
-    print_msg "Installing zinit..."
-    NO_INPUT=1 bash -c "$(curl --fail --show-error --silent --location https://raw.githubusercontent.com/zdharma-continuum/zinit/HEAD/scripts/install.sh)" && chsh -s zsh
-}
-
 function set_theme() {
     print_msg "Installing zsh theme..."
     if [[ "$selected_zsh_theme_name" == "td_zsh" ]]; then
@@ -146,6 +141,5 @@ write_zshrc() {
 
 check_and_backup "$HOME/.zshrc"
 check_and_delete "$HOME/.zshrc"
-install_zinit
 write_zshrc
 set_theme
