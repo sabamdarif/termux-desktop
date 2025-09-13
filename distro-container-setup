@@ -1931,5 +1931,12 @@ function disro_container_install_check() {
 }
 
 check_termux
-install_distro_container
-disro_container_install_check
+
+# why this seperate main function ?
+# -> in somepart part of the main setup script
+# you just want to source all the functions
+# but don't want to run the entire setup process
+function run_distro_container_setup_main() {
+    install_distro_container
+    disro_container_install_check
+}

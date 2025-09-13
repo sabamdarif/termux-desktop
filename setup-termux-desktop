@@ -1605,6 +1605,8 @@ function setup_user_name_only() {
         print_msg "Default Password Will Be Set, Because Sometimes It Might Ask You For Password"
         echo
         print_msg "Password:-${C}root"
+        # set password to root
+        pass=root
         echo
         while true; do
             read -r -p "${R}[${C}-${R}]${G} Input username [Lowercase]: ${NC}" user_name
@@ -2766,46 +2768,61 @@ function setup_necessary_permissions() {
 #########################################################################
 
 # setup hardware acceleration, check if the enable-hw-acceleration already exist, if then first check if it different from github , then ask user if they want to replace it with the latest or not, if not then continue with the local enable-hw-acceleration file
+function get_hw_acceleration_source() {
+    local script_path="${current_path}/enable-hw-acceleration"
+    local remote_url="https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/enable-hw-acceleration"
+
+    if [[ -f "$script_path" ]]; then
+        local current_script_hash
+        current_script_hash=$(curl -sL "$remote_url" | sha256sum | cut -d ' ' -f 1)
+
+        # Add error checking for remote fetch
+        if [[ -z "$current_script_hash" ]]; then
+            print_msg "Failed to fetch remote script for comparison. Using local version."
+            chmod +x "$script_path"
+            return
+        fi
+
+        local local_script_hash
+        local_script_hash=$(sha256sum "$script_path" | cut -d ' ' -f 1)
+
+        if [[ "$local_script_hash" != "$current_script_hash" ]]; then
+            print_msg "A different version of the hardware acceleration installer is detected."
+            echo
+            confirmation_y_or_n "Do you want to replace it with the latest version?" change_old_hw_installer
+            if [[ "$change_old_hw_installer" == "y" ]]; then
+                check_and_backup "$script_path"
+                download_file "$script_path" "$remote_url"
+            else
+                print_msg "Using the local hardware acceleration setup file."
+            fi
+            print_to_config "change_old_hw_installer"
+        else
+            print_msg "Using the local hardware acceleration setup file."
+        fi
+    else
+        download_file "$script_path" "$remote_url"
+    fi
+
+    chmod +x "$script_path"
+}
+
 function hw_config() {
     banner
     print_msg "${BOLD}Configuring Hardware Acceleration"
     echo
     print_to_config "enable_hw_acc"
-    if [[ -f ${current_path}/enable-hw-acceleration ]]; then
-        local current_script_hash
-        current_script_hash=$(curl -sL https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/enable-hw-acceleration | sha256sum | cut -d ' ' -f 1)
-        local local_script_hash
-        local_script_hash=$(sha256sum "${current_path}/enable-hw-acceleration" | cut -d ' ' -f 1)
 
-        if [[ "$local_script_hash" != "$current_script_hash" ]]; then
-            print_msg "A different version of the hardware acceleration installer is detected."
-            echo
+    # Get the hardware acceleration source
+    get_hw_acceleration_source
 
-            confirmation_y_or_n "Do you want to replace it with the latest version?" change_old_hw_installer
+    # Source the script
+    source "${current_path}/enable-hw-acceleration"
 
-            if [[ "$change_old_hw_installer" == "y" ]]; then
-                check_and_backup "${current_path}/enable-hw-acceleration"
-                download_file "${current_path}/enable-hw-acceleration" https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/enable-hw-acceleration
-                chmod +x "${current_path}/enable-hw-acceleration"
-                source "${current_path}"/enable-hw-acceleration
-            else
-                print_msg "Using the local hardware acceleration setup file."
-                chmod +x "${current_path}/enable-hw-acceleration"
-                source "${current_path}/enable-hw-acceleration"
-            fi
+    # Call the main hardware acceleration setup function
+    run_hw_acceleration_setup_main
 
-            print_to_config "change_old_hw_installer"
-        else
-            print_msg "Using the local hardware acceleration setup file."
-            chmod +x "${current_path}/enable-hw-acceleration"
-            source "${current_path}/enable-hw-acceleration"
-        fi
-    else
-        download_file "${current_path}/enable-hw-acceleration" https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/enable-hw-acceleration
-        chmod +x "${current_path}/enable-hw-acceleration"
-        source "${current_path}/enable-hw-acceleration"
-    fi
-
+    # Clean up
     check_and_delete "${current_path}/enable-hw-acceleration"
     log_debug "$current_path $current_script_hash $local_script_hash"
 }
@@ -2817,6 +2834,37 @@ function hw_config() {
 #########################################################################
 
 # same as the hardware acceleration setup but for distro-container-setup file
+function get_distro_container_source() {
+    local script_path="${current_path}/distro-container-setup"
+    local remote_url="https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/distro-container-setup"
+
+    if [[ -f "$script_path" ]]; then
+        local current_script_hash
+        current_script_hash=$(curl -sL "$remote_url" | sha256sum | cut -d ' ' -f 1)
+        local local_script_hash
+        local_script_hash=$(sha256sum "$script_path" | cut -d ' ' -f 1)
+
+        if [[ "$local_script_hash" != "$current_script_hash" ]]; then
+            print_msg "It looks like you already have a different distro-container setup script in your current directory"
+            echo
+            confirmation_y_or_n "Do you want to change it with the latest installer" change_old_distro_installer
+            if [[ "$change_old_distro_installer" == "y" ]]; then
+                check_and_backup "$script_path"
+                download_file "$script_path" "$remote_url"
+            else
+                print_msg "Using the local distro-container setup file"
+            fi
+            print_to_config "change_old_distro_installer"
+        else
+            print_msg "Using the local distro-container setup file"
+        fi
+    else
+        download_file "$script_path" "$remote_url"
+    fi
+
+    chmod +x "$script_path"
+}
+
 function distro_container_setup() {
     print_to_config "distro_add_answer"
     if [[ "$distro_add_answer" == "n" ]]; then
@@ -2833,46 +2881,16 @@ function distro_container_setup() {
         print_msg "${BOLD}Configuring Linux Distro Container"
         echo
 
-        if [[ -f "${current_path}/distro-container-setup" ]]; then
-            local current_script_hash
-            current_script_hash=$(curl -sL https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/distro-container-setup | sha256sum | cut -d ' ' -f 1)
-            local local_script_hash
-            local_script_hash=$(basename "$(sha256sum "${current_path}/distro-container-setup" | cut -d ' ' -f 1)")
+        # Get the distro container source
+        get_distro_container_source
 
-            if [[ "$local_script_hash" != "$current_script_hash" ]]; then
-                print_msg "It looks like you already have a different distro-container setup script in your current directory"
-                echo
-                confirmation_y_or_n "Do you want to change it with the latest installer" change_old_distro_installer
+        # Source the script
+        source "${current_path}/distro-container-setup"
 
-                if [[ "$change_old_distro_installer" == "y" ]]; then
-                    check_and_backup "${current_path}/distro-container-setup"
-                    download_file "${current_path}/distro-container-setup" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/distro-container-setup"
+        # Call the main distro container setup function
+        run_distro_container_setup_main
 
-                    chmod +x "${current_path}/distro-container-setup"
-                    source "${current_path}/distro-container-setup"
-                else
-                    print_msg "Using the local distro-container setup file"
-                    chmod +x "${current_path}/distro-container-setup"
-                    source "${current_path}/distro-container-setup"
-                fi
-
-                print_to_config "change_old_distro_installer"
-            else
-                print_msg "Using the local distro-container setup file"
-                chmod +x "${current_path}/distro-container-setup"
-                source "${current_path}/distro-container-setup"
-            fi
-        else
-            download_file "${current_path}/distro-container-setup" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/distro-container-setup"
-
-            # it should only execute if user run --change distro / pd
-            if [[ "$call_from_change_distro" == true ]]; then
-                sed -i 's/\(call_from_change_d="\)[^"]*/\1y/' "${current_path}/distro-container-setup"
-            fi
-
-            chmod +x "${current_path}/distro-container-setup"
-            source "${current_path}/distro-container-setup"
-        fi
+        # Clean up
         check_and_delete "${current_path}/distro-container-setup"
     fi
     log_debug "$current_path $distro_add_answer $local_script_hash"
@@ -4688,7 +4706,10 @@ function do_hw_changes() {
         some_fixes
     fi
     if [[ "$distro_add_answer" == "y" ]]; then
-        sed -i "s|selected_pd_hw_method=\"[^\"]*\"|selected_pd_hw_method=\"$pd_hw_method\"|" "$PREFIX/bin/pdrun"
+        get_distro_container_source
+        source "${current_path}/distro-container-setup"
+        distro_app_launch_setup
+        check_and_delete "${current_path}/distro-container-setup"
     fi
 }
 
@@ -4759,7 +4780,15 @@ function add_distro_again() {
     if [[ "$distro_add_answer" == "y" ]]; then
         print_to_config "distro_add_answer"
         distro_questions
-        distro_hw_questions
+        if [[ "$enable_hw_acc" == "y" ]]; then
+            distro_hw_questions
+            # call setup_hw_environment_variables from hw-acceleration setup script
+            # this is needed for pdrun command
+            get_hw_acceleration_source
+            source "${current_path}/enable-hw-acceleration"
+            setup_hw_environment_variables
+            check_and_delete "${current_path}/enable-hw-acceleration"
+        fi
         distro_container_setup
     fi
 }
@@ -4809,7 +4838,10 @@ function change_distro() {
                 check_and_delete "/data/data/com.termux/files/usr/share/bash-completion/completions/${old_distro}"
                 check_and_delete "/data/data/com.termux/files/usr/share/zsh/site-functions/_${old_distro}"
                 check_and_delete "$PREFIX/bin/$selected_distro"
-                pd_hw_method=$(grep 'selected_pd_hw_method=' "$PREFIX/bin/pdrun" | sed -e 's/.*selected_pd_hw_method="\([^"]*\)".*/\1/')
+                get_hw_acceleration_source
+                source "${current_path}/enable-hw-acceleration"
+                setup_hw_environment_variables
+                check_and_delete "${current_path}/enable-hw-acceleration"
                 if [[ "$pd_audio_config_answer" == "y" ]]; then
                     rm "$HOME/.${selected_distro}-sound-access"
                 fi
@@ -4903,7 +4935,7 @@ function change_display() {
                     print_warn "${R}Please enter a valid number between 0-9"
                 fi
             done
-            call_from_change_display=y
+            call_from_change_display=true
             hw_config
             setup_tx11start_cmd
             print_to_config "display_number"
