@@ -1,9 +1,8 @@
 name: Check for turnip update
 on:
   schedule:
-    - cron: "0 0 * * 0"
+    - cron: "0 0 * * 0" # runs weekly on Sunday at midnight UTC
   workflow_dispatch:
-
 jobs:
   check_for_update:
     runs-on: ubuntu-latest
@@ -13,24 +12,69 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
-
       - name: Get old version
         id: get_old_version
         run: |
-          # Get all releases from the repo and filter for turnip tags
-          old_version=$(gh api repos/${{ github.repository }}/releases \
-            --jq '.[] | select(.tag_name | startswith("turnip-")) | .tag_name' | \
-            sed 's/turnip-//' | \
-            sort -V | \
-            tail -1)
+          old_version=""
 
+          # Method 1: Try to read from enable-hw-acceleration file
+          if [ -f "enable-hw-acceleration" ]; then
+            echo "Found enable-hw-acceleration file, attempting to read TURNIP_MESA_VERSION..."
+            
+            # Method 1a:
+            old_version=$(grep -E '^\s*TURNIP_MESA_VERSION=' enable-hw-acceleration | cut -d'"' -f2 | head -1)
+            
+            # Method 1b:
+            if [ -z "$old_version" ]; then
+              old_version=$(sed -n 's/^\s*TURNIP_MESA_VERSION="\([^"]*\)".*/\1/p' enable-hw-acceleration | head -1)
+            fi
+            
+            # Method 1c:
+            if [ -z "$old_version" ]; then
+              old_version=$(awk -F'"' '/TURNIP_MESA_VERSION=/ {print $2; exit}' enable-hw-acceleration)
+            fi
+            
+            # Method 1d:
+            if [ -z "$old_version" ]; then
+              old_version=$(grep "TURNIP_MESA_VERSION" enable-hw-acceleration | grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+' | head -1)
+            fi
+            
+            if [ -n "$old_version" ]; then
+              echo "Successfully read version from file: $old_version"
+            else
+              echo "Failed to extract TURNIP_MESA_VERSION from enable-hw-acceleration file"
+              echo "Debug: Here's what we found in the file:"
+              grep -n "TURNIP_MESA_VERSION" enable-hw-acceleration || echo "No TURNIP_MESA_VERSION found in file"
+            fi
+          else
+            echo "enable-hw-acceleration file not found"
+          fi
+
+          # Method 2: Fallback to GitHub releases if file method failed
           if [ -z "$old_version" ]; then
-            echo "No previous turnip releases found"
-            old_version="0.0.0"
+            echo "Falling back to GitHub releases method..."
+            old_version=$(gh api repos/${{ github.repository }}/releases \
+              --jq '.[] | select(.tag_name | startswith("turnip-")) | .tag_name' | \
+              sed 's/turnip-//' | \
+              sort -V | \
+              tail -1)
+            if [ -n "$old_version" ]; then
+              echo "Successfully read version from GitHub releases: $old_version"
+            else
+              echo "Failed to get version from GitHub releases"
+            fi
+          fi
+
+          # Exit with error if both methods failed
+          if [ -z "$old_version" ]; then
+            echo "ERROR: Unable to determine current turnip version using any method"
+            echo "- enable-hw-acceleration file not found or doesn't contain TURNIP_MESA_VERSION"
+            echo "- No turnip releases found in GitHub repository"
+            exit 1
           fi
 
           echo "old_version=$old_version" >> $GITHUB_OUTPUT
-          echo "Previous turnip version: $old_version"
+          echo "Current turnip version: $old_version"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -53,18 +97,20 @@ jobs:
 
           echo "Comparing versions: $old_version vs $latest_version"
 
-          # Use sort -V to compare versions properly
-          if printf '%s\n%s\n' "$old_version" "$latest_version" | sort -V -C; then
-            if [ "$old_version" = "$latest_version" ]; then
-              echo "need_update=false" >> $GITHUB_OUTPUT
-              echo "Versions are the same, no update needed"
-            else
-              echo "need_update=false" >> $GITHUB_OUTPUT
-              echo "Current version is newer than latest, no update needed"
-            fi
-          else
+          # Compare versions using sort -V
+          if [ "$old_version" = "$latest_version" ]; then
+            echo "need_update=false" >> $GITHUB_OUTPUT
+            echo "Versions are the same, no update needed"
+          elif printf '%s\n%s\n' "$old_version" "$latest_version" | sort -V -C; then
+            # If sort -V -C succeeds, it means old_version comes before or equals latest_version
+            # Since we already checked equality above, old_version < latest_version
             echo "need_update=true" >> $GITHUB_OUTPUT
             echo "Update needed: $old_version -> $latest_version"
+          else
+            # If sort -V -C fails, it means the input is not in ascending order
+            # So old_version > latest_version
+            echo "need_update=false" >> $GITHUB_OUTPUT
+            echo "Current version ($old_version) is newer than latest ($latest_version), no update needed"
           fi
 
       - name: Trigger turnip build
