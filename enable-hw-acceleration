@@ -268,7 +268,7 @@ function setup_turnip_proot() {
         turnip_related_packs="xdg-desktop-portal mesa vulkan-icd-loader vulkan-mesa-layers"
     fi
 
-    TURNIP_MESA_VERSION="25.1.5"
+    TURNIP_MESA_VERSION="25.2.2"
 
     install_turnip_related_packs=$(
         cat <<EOF
