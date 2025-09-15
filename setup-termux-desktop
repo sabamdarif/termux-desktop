@@ -163,6 +163,7 @@ function check_and_delete() {
 # first check then backup
 function check_and_backup() {
     log_debug "Starting backup for: $*"
+    # shellcheck disable=SC2206
     local files_folders_list=($@)
     local files_folders
     local date_str
@@ -242,6 +243,7 @@ function download_file() {
 # find a backup file which end with a number pattern and restore it
 function check_and_restore() {
     log_debug "Starting restore for: $*"
+    # shellcheck disable=SC2206
     local files_folders_list=($@)
     local files_folders
 
@@ -265,6 +267,7 @@ function check_and_restore() {
 }
 
 function detact_package_manager() {
+    # shellcheck disable=SC1091
     source "/data/data/com.termux/files/usr/bin/termux-setup-package-manager"
     if [[ "$TERMUX_APP_PACKAGE_MANAGER" == "apt" ]]; then
         PACKAGE_MANAGER="apt"
@@ -279,6 +282,7 @@ function detact_package_manager() {
 # will check if the package is already installed or not, if it installed then reinstall and print success/failed message
 function package_install_and_check {
     log_debug "Starting package installation for: $*"
+    # shellcheck disable=SC2206
     packs_list=($@)
     # pacman part
     if [[ "$PACKAGE_MANAGER" == "pacman" ]]; then
@@ -376,13 +380,16 @@ function package_install_and_check {
 # will check the package is installed or not then remove it
 function package_check_and_remove() {
     log_debug "Starting package removal for: $*"
-    local packs_list=($@)
+    local packs_list
+    # shellcheck disable=SC2206
+    packs_list=($@)
 
     if [[ "$PACKAGE_MANAGER" == "pacman" ]]; then
         for package_name in "${packs_list[@]}"; do
             if [[ "$package_name" == *"*"* ]]; then
                 log_debug "Processing wildcard pattern: $package_name"
-                local packages=$(pacman -Qsq | grep -E "^${package_name//\*/.*}$")
+                local packages
+                packages=$(pacman -Qsq | grep -E "^${package_name//\*/.*}$")
                 if [[ -z "$packages" ]]; then
                     print_success "No installed packages found matching: ${C}$package_name"
                     continue
@@ -431,7 +438,8 @@ function package_check_and_remove() {
         for package_name in "${packs_list[@]}"; do
             if [[ "$package_name" == *"*"* ]]; then
                 log_debug "Processing wildcard pattern: $package_name"
-                local packages=$(dpkg-query -W -f='${binary:Package}\n' "${package_name}" 2>/dev/null | grep -v ' ')
+                local packages
+                packages=$(dpkg-query -W -f='${binary:Package}\n' "${package_name}" 2>/dev/null | grep -v ' ')
 
                 if [[ -z "$packages" ]]; then
                     print_success "No installed packages found matching: ${C}$package_name"
@@ -707,7 +715,7 @@ function read_conf() {
         print_failed " Configuration file $config_file not found"
         exit 0
     fi
-
+    # shellcheck disable=SC1090
     source "$config_file"
     print_success "Configuration variables loaded"
     validate_required_vars
@@ -2057,32 +2065,38 @@ ${NC}"
         setup_device_gpu_model
         # download configuration
         download_file "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/configuration/generic/generic.conf"
+        # shellcheck disable=SC1091
         source generic.conf
         check_and_delete "generic.conf"
         local device_brand_name
         device_brand_name=$(getprop ro.product.brand | cut -d ' ' -f 1)
         if [[ "$device_gpu_model_name" == "adreno" ]]; then
             download_file "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/configuration/generic/hwa/adreno/generic-adreno.conf"
+            # shellcheck disable=SC1091
             source generic-adreno.conf
             check_and_delete "generic-adreno.conf"
         elif [[ "$device_gpu_model_name" == "mali" ]]; then
             if [[ $device_brand_name == samsung* ]]; then
                 download_file "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/configuration/generic/hwa/mali/samsung/generic-samsung-mali.conf"
+                # shellcheck disable=SC1091
                 source generic-samsung-mali.conf
                 check_and_delete "generic-samsung-mali.conf"
             else
                 download_file "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/configuration/generic/hwa/mali/generic-mali.conf"
+                # shellcheck disable=SC1091
                 source generic-mali.conf
                 check_and_delete "generic-mali.conf"
             fi
         else
             download_file "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/configuration/generic/hwa/generic-others.conf"
+            # shellcheck disable=SC1091
             source generic-others.conf
             check_and_delete "generic-others.conf"
         fi
         # setup extra config if it's lite mode install
         if [[ "$lite_mode" == "1" || "$lite_mode" == "true" ]]; then
             download_file "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/configuration/generic/generic-lite.conf"
+            # shellcheck disable=SC1091
             source generic-lite.conf
             check_and_delete "generic-lite.conf"
         fi
@@ -2098,13 +2112,16 @@ ${NC}"
         ask_to_chose_de
         # download configuration
         download_file "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/configuration/generic/generic.conf"
+        # shellcheck disable=SC1091
         source generic.conf
         download_file "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/configuration/generic/nohwa/generic-nohwa.conf"
+        # shellcheck disable=SC1091
         source generic-nohwa.conf
         check_and_delete "generic-nohwa.conf"
         # setup extra config if it's lite mode install
         if [[ "$lite_mode" == "1" || "$lite_mode" == "true" ]]; then
             download_file "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/configuration/generic/generic-lite.conf"
+            # shellcheck disable=SC1091
             source generic-lite.conf
             check_and_delete "generic-lite.conf"
         fi
@@ -2137,6 +2154,7 @@ function load_local_config() {
         exit 1
     fi
     print_success "Using the local configuration file..."
+    # shellcheck disable=SC1090
     source "$config_path"
     sleep 3
     validate_required_vars
@@ -2478,7 +2496,7 @@ function install_desktop() {
         elif [[ "$PACKAGE_MANAGER" == "pacman" ]]; then
             download_and_extract "https://github.com/sabamdarif/termux-desktop/releases/download/gnome-shell/pkgs-${termux_arch}.zip"
             download_file "https://github.com/sabamdarif/Termux-AppStore/releases/download/files/refine_0.5.10_${termux_arch}.pkg.tar.xz"
-            pacman -U --noconfirm *.pkg.tar.xz
+            pacman -U --noconfirm ./*.pkg.tar.xz
         else
             print_failed "Unsupported package manger, you need APT / PACMAN"
             exit 1
@@ -2510,7 +2528,7 @@ function ext_setup_for_stock() {
         print_msg "Genarating a simple menu for icewm..."
         check_and_backup "$HOME/.icewm"
         check_and_create_directory "$HOME/.icewm"
-        xdg_menu --format icewm --fullmenu --root-menu $PREFIX/etc/xdg/menus/termux-applications.menu >~/.icewm/programs
+        xdg_menu --format icewm --fullmenu --root-menu "$PREFIX/etc/xdg/menus/termux-applications.menu" >~/.icewm/programs
     fi
 }
 
@@ -2521,14 +2539,10 @@ function ext_setup_for_stock() {
 #########################################################################
 function set_config_dir() {
     if [[ "$de_name" == "xfce" ]]; then
-        config_dirs=(autostart cairo-dock eww picom dconf gtk-3.0 Mousepad pulse Thunar menu ristretto rofi xfce4)
-    elif [[ "$de_name" == "lxqt" ]]; then
-        config_dirs=(fontconfig gtk-3.0 lxqt pcmanfm-qt QtProject.conf glib-2.0 Kvantum openbox qterminal.org)
-    elif [[ "$de_name" == "openbox" ]]; then
+    elif ]]; then
         config_dirs=(dconf gedit Kvantum openbox pulse rofi xfce4 enchant gtk-3.0 mimeapps.list polybar QtProject.conf Thunar)
     elif [[ "$de_name" == "mate" ]]; then
         config_dirs=(caja dconf galculator gtk-3.0 Kvantum lximage-qt menus Mousepad pavucontrol.ini xfce4)
-    fi
 }
 
 function ext_wall_setup() {
@@ -2548,7 +2562,7 @@ function ext_wall_setup() {
             cd Wallpaper-Bank/wallpapers/ || exit 1
             mv Dynamic-Wallpapers/* "$PREFIX/share/backgrounds/"
             check_and_delete "Dynamic-Wallpapers"
-            mv * "$PREFIX/share/backgrounds/"
+            mv ./* "$PREFIX/share/backgrounds/"
             cd "${HOME}" || exit 1
             check_and_delete "Wallpaper-Bank"
         fi
@@ -2630,12 +2644,6 @@ function theme_installer() {
         download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/setup-files/setup-files/${de_name}/look_${style_answer}/config.tar.gz" "$HOME"
     else
         download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/setup-files/setup-files/${de_name}/look_${style_answer}/config.tar.gz" "$HOME/.config/"
-    fi
-
-    if [ $? -ne 0 ]; then
-        log_error "Theme installation failed" "Theme: $style_name"
-    else
-        log_debug "Theme installation completed successfully"
     fi
 }
 
@@ -2817,6 +2825,7 @@ function hw_config() {
     get_hw_acceleration_source
 
     # Source the script
+    # shellcheck disable=SC1091
     source "${current_path}/enable-hw-acceleration"
 
     # Call the main hardware acceleration setup function
@@ -2885,6 +2894,7 @@ function distro_container_setup() {
         get_distro_container_source
 
         # Source the script
+        # shellcheck disable=SC1091
         source "${current_path}/distro-container-setup"
 
         # Call the main distro container setup function
@@ -3756,9 +3766,9 @@ function check_desktop_process() {
     if [[ -f "${PREFIX}/bin/tx11start" ]]; then
         print_success "Found tx11start file."
         print_msg "Starting Termux:X11 for checkup..."
-        termux-x11 :${display_number} -xstartup xfce4-session >/dev/null 2>&1 &
+        termux-x11 :"${display_number}" -xstartup xfce4-session >/dev/null 2>&1 &
         sleep 10
-        log_debug "$(cat $PREFIX/bin/tx11start)"
+        log_debug "$(cat "$PREFIX/bin/tx11start")"
         termux-reload-settings
         local termux_x11_pid
         termux_x11_pid=$(pgrep -f "app_process -Xnoimage-dex2oat / com.termux.x11.Loader :${display_number}")
@@ -3863,7 +3873,7 @@ function check_desktop_process() {
         # check tx11stop file and run it to check if there any termux x11 process exist or not
         if [[ -f "${PREFIX}/bin/tx11stop" ]]; then
             print_success "Found tx11stop file."
-            log_debug "$(cat $PREFIX/bin/tx11stop)"
+            log_debug "$(cat "$PREFIX/bin/tx11stop")"
             tx11stop -f
             # Wait a bit for the process to stop
             sleep 2
@@ -4065,6 +4075,7 @@ function setup_zsh() {
     package_install_and_check "zsh git"
     download_file "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/other/setup-zsh"
     chmod +x setup-zsh
+    # shellcheck disable=SC1091
     source setup-zsh
     check_and_delete "setup-zsh"
     if [[ -f "$HOME/.zshrc" ]]; then
@@ -4081,6 +4092,7 @@ function setup_bash() {
     package_install_and_check "git"
     download_file "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/other/setup-bash"
     chmod +x setup-bash
+    # shellcheck disable=SC1091
     source setup-bash
     check_and_delete "setup-bash"
     if [[ -f "$HOME/.bashrc" ]]; then
@@ -4311,7 +4323,7 @@ function run_wine_shortcut_script() {
     print_success "Adding wine desktop shortcuts..."
     download_file "add-wine-shortcut" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/other/add-wine-shortcut"
     chmod +x "add-wine-shortcut"
-    . add-wine-shortcut
+    source add-wine-shortcut
     check_and_delete "add-wine-shortcut"
 }
 
@@ -4627,11 +4639,14 @@ function remove_termux_desktop() {
             elif [[ "$gui_mode" == "both" ]]; then
                 package_check_and_remove "termux-x11-nightly tigervnc xorg-xhost"
                 check_and_delete "$PREFIX/bin/tx11start $PREFIX/bin/tx11stop $HOME/.vnc/xstartup $PREFIX/bin/vncstart $PREFIX/bin/vncstop $PREFIX/bin/gui $PREFIX/bin/tx11start $PREFIX/bin/tx11stop"
-                cd /data/data/com.termux/files/usr/share/zsh/site-functions
+                # shellcheck disable=SC2164
+                cd "$PREFIX/share/zsh/site-functions"
                 check_and_delete "_add2menu _distro _setup-termux-desktop _tx11start _tx11stop _vncstart _vncstop"
-                cd /data/data/com.termux/files/usr/share/bash-completion/completions
+                # shellcheck disable=SC2164
+                cd "$PREFIX/share/bash-completion/completions"
                 check_and_delete "add2menu distro setup-termux-desktop tx11start tx11stop vncstart vncstop"
-                cd ~
+                # shellcheck disable=SC2164
+                cd "$HOME"
                 # remove appstore
                 package_check_and_remove "aria2 python python3 cloneit"
                 check_and_delete "${PREFIX}/opt/appstore"
@@ -4707,6 +4722,7 @@ function do_hw_changes() {
     fi
     if [[ "$distro_add_answer" == "y" ]]; then
         get_distro_container_source
+        # shellcheck disable=SC1091
         source "${current_path}/distro-container-setup"
         distro_app_launch_setup
         check_and_delete "${current_path}/distro-container-setup"
@@ -4785,6 +4801,7 @@ function add_distro_again() {
             # call setup_hw_environment_variables from hw-acceleration setup script
             # this is needed for pdrun command
             get_hw_acceleration_source
+            # shellcheck disable=SC1091
             source "${current_path}/enable-hw-acceleration"
             setup_hw_environment_variables
             check_and_delete "${current_path}/enable-hw-acceleration"
@@ -4839,6 +4856,7 @@ function change_distro() {
                 check_and_delete "/data/data/com.termux/files/usr/share/zsh/site-functions/_${old_distro}"
                 check_and_delete "$PREFIX/bin/$selected_distro"
                 get_hw_acceleration_source
+                # shellcheck disable=SC1091
                 source "${current_path}/enable-hw-acceleration"
                 setup_hw_environment_variables
                 check_and_delete "${current_path}/enable-hw-acceleration"
@@ -4935,6 +4953,7 @@ function change_display() {
                     print_warn "${R}Please enter a valid number between 0-9"
                 fi
             done
+            # shellcheck disable=SC2034
             call_from_change_display=true
             hw_config
             setup_tx11start_cmd
@@ -5076,6 +5095,7 @@ function add_auto_completion() {
     banner
     print_msg "Adding auto completions..."
     check_and_create_directory "/data/data/com.termux/files/usr/share/zsh/site-functions"
+    # shellcheck disable=SC2164
     cd /data/data/com.termux/files/usr/share/zsh/site-functions
     download_file "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/completion/zsh/_setup-termux-desktop"
     if [[ "$gui_mode" == "both" ]]; then
@@ -5090,6 +5110,7 @@ function add_auto_completion() {
         download_file "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/completion/zsh/_add2menu"
     fi
     check_and_create_directory "/data/data/com.termux/files/usr/share/bash-completion/completions"
+    # shellcheck disable=SC2164
     cd /data/data/com.termux/files/usr/share/bash-completion/completions
     download_file "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/completion/bash/setup-termux-desktop"
     if [[ "$gui_mode" == "both" ]]; then
@@ -5103,7 +5124,7 @@ function add_auto_completion() {
         sed -i "s/distro/${selected_distro}/g" "${selected_distro}"
         download_file "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/completion/bash/add2menu"
     fi
-    cd $HOME
+    cd "$HOME" || return 1
 }
 
 function disable_vblank_mode() {
@@ -5294,7 +5315,7 @@ function reset_changes() {
         banner
         print_msg "Removing $de_name Config..."
         set_config_dir
-        check_and_delete "${config_dirs}"
+        check_and_delete "${config_dirs[@]}"
         get_shellrc_path
 
         if [[ "$terminal_utility_setup_answer" == "y" ]]; then
@@ -5306,11 +5327,14 @@ function reset_changes() {
             check_and_restore "$PREFIX/etc/motd.sh"
             termux-reload-settings
             check_and_restore "$HOME/.termux/colors.properties"
+            # shellcheck disable=SC2164
             cd /data/data/com.termux/files/usr/share/zsh/site-functions
             check_and_delete "_add2menu _distro _setup-termux-desktop _tx11start _tx11stop _vncstart _vncstop"
+            # shellcheck disable=SC2164
             cd /data/data/com.termux/files/usr/share/bash-completion/completions
             check_and_delete "add2menu distro setup-termux-desktop tx11start tx11stop vncstart vncstop"
-            cd ~
+            # shellcheck disable=SC2164
+            cd "$HOME"
             if grep -q "motd.sh$" "$PREFIX/etc/termux-login.sh"; then
                 sed -i "s|.*motd\.sh$|# |" "$PREFIX/etc/termux-login.sh"
                 termux-reload-settings
@@ -5477,10 +5501,12 @@ case $1 in
 --change | -c)
     case $2 in
     style)
+        # shellcheck disable=SC2034
         call_from_change_style=true
         change_style
         ;;
     distro | pd)
+        # shellcheck disable=SC2034
         call_from_change_distro=true
         change_distro
         ;;

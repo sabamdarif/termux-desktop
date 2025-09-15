@@ -219,9 +219,11 @@ function pd_package_install_and_check() {
         shift
     fi
 
+    # shellcheck disable=SC2206
     packs_list=($@)
 
     # Get distro id
+    # shellcheck disable=SC1091
     if [ -f /etc/os-release ]; then
         . /etc/os-release
     fi
@@ -229,28 +231,43 @@ function pd_package_install_and_check() {
     # Install package
     for package_name in "${packs_list[@]}"; do
         print_msg "${BOLD}Installing package: ${C}$package_name"
+
+        # Install package and handle errors
+        install_failed=false
         if [[ "$ID" == "debian" ]] || [[ "$ID" == "ubuntu" ]]; then
             if $use_sudo; then
-                sudo apt install "$package_name" -y
+                if ! sudo apt install "$package_name" -y; then
+                    install_failed=true
+                fi
             else
-                apt install "$package_name" -y
+                if ! apt install "$package_name" -y; then
+                    install_failed=true
+                fi
             fi
         elif [[ "$ID" == arch* ]]; then
             if $use_sudo; then
-                sudo pacman -Sy --noconfirm "$package_name"
+                if ! sudo pacman -Sy --noconfirm "$package_name"; then
+                    install_failed=true
+                fi
             else
-                pacman -Sy --noconfirm "$package_name"
+                if ! pacman -Sy --noconfirm "$package_name"; then
+                    install_failed=true
+                fi
             fi
         elif [[ "$ID" == "fedora" ]]; then
             if $use_sudo; then
-                sudo dnf install "$package_name" -y
+                if ! sudo dnf install "$package_name" -y; then
+                    install_failed=true
+                fi
             else
-                dnf install "$package_name" -y
+                if ! dnf install "$package_name" -y; then
+                    install_failed=true
+                fi
             fi
         fi
 
         # Handle error in installation
-        if [[ $? -ne 0 ]]; then
+        if $install_failed; then
             print_failed "${BOLD} Error detected during installation of: ${C}$package_name${NC}"
             if [[ "$ID" == "debian" ]] || [[ "$ID" == "ubuntu" ]]; then
                 if $use_sudo; then

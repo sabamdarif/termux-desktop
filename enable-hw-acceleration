@@ -197,12 +197,15 @@ function setup_hw_environment_variables() {
         pd_hw_method="${hw_method}"
         ;;
     "freedreno_kgsl")
+        # shellcheck disable=SC2034
         set_to_export="MESA_NO_ERROR=1 vblank_mode=0"
+        # shellcheck disable=SC2034
         initialize_server_method=" "
         hw_method="MESA_LOADER_DRIVER_OVERRIDE=kgsl MESA_GL_VERSION_OVERRIDE=3.3"
         pd_hw_method="${hw_method}"
         ;;
     esac
+
     print_to_config "termux_hw_answer"
 
     case "$pd_hw_answer" in
@@ -213,6 +216,7 @@ function setup_hw_environment_variables() {
         pd_hw_method="GALLIUM_DRIVER=virpipe MESA_GL_VERSION_OVERRIDE=4.0"
         ;;
     "turnip")
+        # shellcheck disable=SC2034
         pd_hw_method="VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/freedreno_icd.${termux_arch}.json MESA_LOADER_DRIVER_OVERRIDE=zink TU_DEBUG=noconform"
         ;;
     # "freedreno_kgsl")
@@ -245,6 +249,7 @@ function setup_gpu_specific_environment_variables() {
         elif [[ "$device_gpu_model_name" == "xclipse" ]]; then
             gpu_environment_variable="VK_ICD_FILENAMES=$PREFIX/share/vulkan/icd.d/wrapper_icd.${icd_cpu_arch}.json vblank_mode=0"
         else
+            # shellcheck disable=SC2034
             gpu_environment_variable="VK_ICD_FILENAMES=$PREFIX/share/vulkan/icd.d/wrapper_icd.${icd_cpu_arch}.json MESA_SHADER_CACHE=512MB MESA_SHADER_CACHE_DISABLE=false vblank_mode=0"
         fi
     fi
