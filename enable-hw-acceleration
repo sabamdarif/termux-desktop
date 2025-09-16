@@ -242,11 +242,11 @@ function setup_gpu_specific_environment_variables() {
         elif [[ "$termux_arch" == "arm" ]]; then
             icd_cpu_arch="armv7"
         fi
-        if [[ "$device_gpu_model_name" == "adreno" ]]; then
+        if [[ "$GPU_NAME" == "adreno" ]]; then
             gpu_environment_variable="VK_ICD_FILENAMES=$PREFIX/share/vulkan/icd.d/wrapper_icd.${icd_cpu_arch}.json MESA_SHADER_CACHE=512MB MESA_SHADER_CACHE_DISABLE=false vblank_mode=0"
-        elif [[ "$device_gpu_model_name" == "mali" ]]; then
+        elif [[ "$GPU_NAME" == "mali" ]]; then
             gpu_environment_variable="VK_ICD_FILENAMES=$PREFIX/share/vulkan/icd.d/wrapper_icd.${icd_cpu_arch}.json MESA_VK_WSI_PRESENT_MODE=mailbox MESA_VK_WSI_DEBUG=blit MESA_SHADER_CACHE=512MB MESA_SHADER_CACHE_DISABLE=false vblank_mode=0"
-        elif [[ "$device_gpu_model_name" == "xclipse" ]]; then
+        elif [[ "$GPU_NAME" == "xclipse" ]]; then
             gpu_environment_variable="VK_ICD_FILENAMES=$PREFIX/share/vulkan/icd.d/wrapper_icd.${icd_cpu_arch}.json vblank_mode=0"
         else
             # shellcheck disable=SC2034
