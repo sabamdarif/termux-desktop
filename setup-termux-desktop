@@ -2539,11 +2539,14 @@ function ext_setup_for_stock() {
 #########################################################################
 function set_config_dir() {
     if [[ "$de_name" == "xfce" ]]; then
-    elif ]]; then
-        config_dirs=(dconf gedit Kvantum openbox pulse rofi xfce4 enchant gtk-3.0 mimeapps.list polybar QtProject.conf Thunar)
+        :
     elif [[ "$de_name" == "mate" ]]; then
         config_dirs=(caja dconf galculator gtk-3.0 Kvantum lximage-qt menus Mousepad pavucontrol.ini xfce4)
+    else
+        config_dirs=(dconf gedit Kvantum openbox pulse rofi xfce4 enchant gtk-3.0 mimeapps.list polybar QtProject.conf Thunar)
+    fi
 }
+
 
 function ext_wall_setup() {
     banner
