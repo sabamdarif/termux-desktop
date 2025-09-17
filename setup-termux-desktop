@@ -2632,7 +2632,7 @@ function theme_installer() {
         if [[ -d "$HOME/.local" ]]; then
             must_back_folders+=("$HOME/.local")
         fi
-        tar -cJf "$HOME/old-config-$(date +%Y%m%d-%H%M%S).tar.xz" "${must_back_folders[@]}"
+        tar -cJvf "$HOME/old-config-$(date +%Y%m%d-%H%M%S).tar.xz" --warning=no-file-removed "${must_back_folders[@]}"
     fi
 
     print_msg "Applying Custom Configuration..."
