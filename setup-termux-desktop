@@ -1354,7 +1354,7 @@ function setup_device_gpu_model() {
             echo
             echo "${Y}4. Others (Unstable)${NC}"
             echo
-            read -p "${Y}Enter your choice (1-4): ${NC}" device_gpu_model
+            read -r -p "${Y} Enter your choise [1-4]: ${NC}" device_gpu_model
 
             if [[ "$device_gpu_model" =~ ^[1-4]$ ]]; then
                 print_success "Continuing with answer: $device_gpu_model"
