@@ -2441,6 +2441,35 @@ function install_required_packages() {
     fi
 }
 
+function recheck_basic_packages() {
+    print_msg "${BOLD}Checking required packages..."
+    local max_retries=3
+    local retry_count=0
+    local basic_packages=("wget" "git" "jq" "curl" "tar" "tar" "gzip" "termux-am" "termux-api-start")
+    local pack
+
+    while [[ "$retry_count" -le "$max_retries" ]]; do
+        local missing_packages=()
+        for pack in "${basic_packages[@]}"; do
+            print_msg "Checking command $pack"
+            if ! command -v "$pack" >/dev/null 2>&1; then
+                missing_packages+=("$pack")
+            fi
+        done
+
+        [[ ${#missing_packages[@]} -eq 0 ]] && return 0
+
+        ((retry_count++))
+        print_msg "Attempt $retry_count: Installing missing packages..."
+        print_msg "Missing packages: ${missing_packages[*]}"
+        install_required_packages
+    done
+
+    print_failed "Error: Failed to install packages after 3 attempts"
+    print_failed "Missing packages: ${missing_packages[*]}"
+    exit 1
+}
+
 function install_desktop() {
     log_debug "Starting desktop installation" "Desktop: $de_name"
     banner
@@ -5383,6 +5412,7 @@ function install_termux_desktop() {
     cleanup_cache
     termux-wake-lock
     install_required_packages
+    recheck_basic_packages
     if [[ "$1" != "--local-config" && "$1" != "--config" && "$1" != "-config" ]]; then
         print_recomended_msg
     fi
