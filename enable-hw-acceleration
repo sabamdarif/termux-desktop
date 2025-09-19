@@ -293,7 +293,7 @@ check_termux
 
 # same reason as distro-container-setup script
 function run_hw_acceleration_setup_main() {
-    print_to_config "device_gpu_model_name"
+    print_to_config "GPU_NAME"
     if [[ "$call_from_change_display" == "true" ]]; then
         setup_hw_environment_variables
         setup_gpu_specific_environment_variables
