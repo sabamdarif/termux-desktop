@@ -170,20 +170,33 @@ jobs:
         with:
           path: ./artifacts
 
-      - name: Create Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: turnip-${{ needs.validate-inputs.outputs.mesa_version }}
-          name: Turnip ${{ needs.validate-inputs.outputs.mesa_version }}
-          body: |
-            Turnip Mesa ${{ needs.validate-inputs.outputs.mesa_version }} drivers built for Android
+      - name: Validate artifacts exist
+        run: |
+          MESA_VERSION="${{ needs.validate-inputs.outputs.mesa_version }}"
+          AARCH64_ARTIFACT="./artifacts/turnip-${MESA_VERSION}-aarch64/turnip-${MESA_VERSION}-aarch64.zip"
+          ARM_ARTIFACT="./artifacts/turnip-${MESA_VERSION}-arm/turnip-${MESA_VERSION}-arm.zip"
 
-          draft: false
-          prerelease: false
-          make_latest: true
-          files: |
-            ./artifacts/turnip-${{ needs.validate-inputs.outputs.mesa_version }}-aarch64/turnip-${{ needs.validate-inputs.outputs.mesa_version }}-aarch64.zip
-            ./artifacts/turnip-${{ needs.validate-inputs.outputs.mesa_version }}-arm/turnip-${{ needs.validate-inputs.outputs.mesa_version }}-arm.zip
+          echo "Checking for required artifacts..."
+          echo "Expected aarch64 artifact: $AARCH64_ARTIFACT"
+          echo "Expected arm artifact: $ARM_ARTIFACT"
+
+          if [ ! -f "$AARCH64_ARTIFACT" ]; then
+            echo "ERROR: aarch64 artifact not found: $AARCH64_ARTIFACT"
+            echo "Available files in ./artifacts/:"
+            find ./artifacts/ -type f || true
+            exit 1
+          fi
+
+          if [ ! -f "$ARM_ARTIFACT" ]; then
+            echo "ERROR: arm artifact not found: $ARM_ARTIFACT"
+            echo "Available files in ./artifacts/:"
+            find ./artifacts/ -type f || true
+            exit 1
+          fi
+
+          echo "✅ Both artifacts found successfully"
+          echo "aarch64 artifact size: $(ls -lh "$AARCH64_ARTIFACT" | awk '{print $5}')"
+          echo "arm artifact size: $(ls -lh "$ARM_ARTIFACT" | awk '{print $5}')"
 
       - name: Update Mesa version in enable-hw-acceleration file
         run: |
@@ -201,3 +214,18 @@ jobs:
           git add enable-hw-acceleration
           git commit -m "bump(turnip): ${{ needs.validate-inputs.outputs.mesa_version }}" || exit 0
           git push
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: turnip-${{ needs.validate-inputs.outputs.mesa_version }}
+          name: Turnip ${{ needs.validate-inputs.outputs.mesa_version }}
+          body: |
+            Turnip Mesa ${{ needs.validate-inputs.outputs.mesa_version }} drivers built for Android
+
+          draft: false
+          prerelease: false
+          make_latest: true
+          files: |
+            ./artifacts/turnip-${{ needs.validate-inputs.outputs.mesa_version }}-aarch64/turnip-${{ needs.validate-inputs.outputs.mesa_version }}-aarch64.zip
+            ./artifacts/turnip-${{ needs.validate-inputs.outputs.mesa_version }}-arm/turnip-${{ needs.validate-inputs.outputs.mesa_version }}-arm.zip
