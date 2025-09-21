@@ -10,6 +10,25 @@ WORKDIR="$(pwd)/turnip_workdir"
 NDKVER="android-ndk-r28c"
 SDKVER="26"
 
+log_info() {
+    echo -e "${BLUE}[INFO]${NC} $1"
+}
+
+log_success() {
+    echo -e "${GREEN}[SUCCESS]${NC} $1"
+}
+
+log_warning() {
+    echo -e "${YELLOW}[WARNING]${NC} $1"
+}
+
+log_error() {
+    echo -e "${RED}[ERROR]${NC} $1"
+}
+
+SCRIPT_DIR="$(dirname "$(realpath "$0")")"
+PATCHES_DIR="$SCRIPT_DIR/patches"
+
 if [ -z "${MESA_VERSION}" ]; then
     log_error "MESA_VERSION environment variable is required but not provided"
     log_error "Please set MESA_VERSION before running this script"
@@ -27,22 +46,6 @@ declare -A ARCH_CONFIG
 ARCH_CONFIG[aarch64]="aarch64-linux-android${SDKVER}-clang llvm-strip aarch64-linux-gnu armv8"
 ARCH_CONFIG[arm]="armv7a-linux-androideabi${SDKVER}-clang llvm-strip arm-linux-gnueabihf armv7"
 
-log_info() {
-    echo -e "${BLUE}[INFO]${NC} $1"
-}
-
-log_success() {
-    echo -e "${GREEN}[SUCCESS]${NC} $1"
-}
-
-log_warning() {
-    echo -e "${YELLOW}[WARNING]${NC} $1"
-}
-
-log_error() {
-    echo -e "${RED}[ERROR]${NC} $1"
-}
-
 show_usage() {
     echo "Usage: MESA_VERSION=x.x.x $0 [architecture]"
     echo ""
@@ -58,6 +61,11 @@ show_usage() {
     echo "  MESA_VERSION=25.1.5 $0              # Build for both architectures"
     echo "  MESA_VERSION=25.1.5 $0 aarch64      # Build only for ARM64"
     echo "  MESA_VERSION=25.2.0 $0 arm          # Build only for ARM 32-bit"
+    echo ""
+    echo "Patches:"
+    echo "  The script will automatically apply patches from the 'patches' directory"
+    echo "  located in the same directory as this script. Patches are applied in"
+    echo "  numerical order (0001, 0002, 0003, etc.)"
     exit 1
 }
 
@@ -159,6 +167,62 @@ prepare_mesa() {
     cd mesa
 
     log_success "Mesa $MESA_VERSION prepared"
+}
+
+apply_patches() {
+    log_info "Checking for patches in: $PATCHES_DIR"
+
+    if [ ! -d "$PATCHES_DIR" ]; then
+        log_info "No patches directory found, skipping patch application"
+        return 0
+    fi
+
+    cd "$WORKDIR/mesa"
+
+    # Find all .patch files and sort them numerically
+    local patch_files=($(find "$PATCHES_DIR" -name "*.patch" -type f | sort))
+
+    if [ ${#patch_files[@]} -eq 0 ]; then
+        log_info "No patch files found in patches directory, skipping patch application"
+        return 0
+    fi
+
+    log_info "Found ${#patch_files[@]} patch file(s) to apply"
+
+    for patch_file in "${patch_files[@]}"; do
+        local patch_name=$(basename "$patch_file")
+        log_info "Applying patch: $patch_name"
+
+        # Apply patch with git apply for better compatibility
+        if git apply --check "$patch_file" >/dev/null 2>&1; then
+            if git apply "$patch_file"; then
+                log_success "Successfully applied patch: $patch_name"
+            else
+                log_error "Failed to apply patch: $patch_name"
+                log_error "Patch application failed, exiting"
+                exit 1
+            fi
+        else
+            # Fallback to regular patch command if git apply fails
+            log_warning "Git apply check failed for $patch_name, trying patch command"
+            if patch -p1 --dry-run <"$patch_file" >/dev/null 2>&1; then
+                if patch -p1 <"$patch_file"; then
+                    log_success "Successfully applied patch: $patch_name"
+                else
+                    log_error "Failed to apply patch: $patch_name"
+                    log_error "Patch application failed, exiting"
+                    exit 1
+                fi
+            else
+                log_error "Patch $patch_name cannot be applied (dry-run failed)"
+                log_error "This may indicate the patch is incompatible with Mesa version $MESA_VERSION"
+                log_error "Patch application failed, exiting"
+                exit 1
+            fi
+        fi
+    done
+
+    log_success "All patches applied successfully"
 }
 
 create_cross_files() {
@@ -391,6 +455,7 @@ main() {
 
     setup_ndk
     prepare_mesa
+    apply_patches
 
     local successful_builds=()
     local failed_builds=()

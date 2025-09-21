@@ -79,18 +79,21 @@ jobs:
         env:
           MESA_VERSION: ${{ needs.validate-inputs.outputs.mesa_version }}
         run: |
-          chmod +x .github/scripts/turnip.sh
-          MESA_VERSION="${MESA_VERSION}" ./.github/scripts/turnip.sh aarch64
+          cd .github/scripts
+
+          chmod +x turnip.sh
+
+          MESA_VERSION="${MESA_VERSION}" ./turnip.sh aarch64
 
       - name: Upload aarch64 artifacts
         uses: actions/upload-artifact@v4
         with:
           name: turnip-${{ needs.validate-inputs.outputs.mesa_version }}-aarch64
-          path: turnip_workdir/turnip-${{ needs.validate-inputs.outputs.mesa_version }}-aarch64.zip
+          path: .github/scripts/turnip_workdir/turnip-${{ needs.validate-inputs.outputs.mesa_version }}-aarch64.zip
           retention-days: 30
 
       - name: Cleanup build directory
-        run: rm -rf turnip_workdir
+        run: rm -rf .github/scripts/turnip_workdir
 
   process-arm:
     needs: validate-inputs
@@ -143,18 +146,21 @@ jobs:
         env:
           MESA_VERSION: ${{ needs.validate-inputs.outputs.mesa_version }}
         run: |
-          chmod +x .github/scripts/turnip.sh
-          MESA_VERSION="${MESA_VERSION}" ./.github/scripts/turnip.sh arm
+          cd .github/scripts
+
+          chmod +x turnip.sh
+
+          MESA_VERSION="${MESA_VERSION}" ./turnip.sh arm
 
       - name: Upload arm artifacts
         uses: actions/upload-artifact@v4
         with:
           name: turnip-${{ needs.validate-inputs.outputs.mesa_version }}-arm
-          path: turnip_workdir/turnip-${{ needs.validate-inputs.outputs.mesa_version }}-arm.zip
+          path: .github/scripts/turnip_workdir/turnip-${{ needs.validate-inputs.outputs.mesa_version }}-arm.zip
           retention-days: 30
 
       - name: Cleanup build directory
-        run: rm -rf turnip_workdir
+        run: rm -rf .github/scripts/turnip_workdir
 
   create-release:
     needs: [validate-inputs, process-aarch64, process-arm]
