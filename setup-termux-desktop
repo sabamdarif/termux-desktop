@@ -1498,7 +1498,7 @@ function exp_termux_gl_hw_support() {
     echo
     echo "${Y}6. Mesa Zink Direct (Native Vulkan-to-OpenGL)${NC}"
     echo
-    echo "${Y}7. Mesa Zink Direct (Native Vulkan-to-OpenGL)${NC}"
+    echo "${Y}7. Mesa Zink Direct with Mesa-zink (Native Vulkan-to-OpenGL)${NC}"
     echo
     select_an_option 7 1 exp_termux_gl_hw_answer_num
 
