@@ -3198,10 +3198,10 @@ tx11start --debug    - Show debug log
       --help)
         show_tx11start_help
         ;;
-      --nogpu)
+      --nogpu | --no-gpu)
         use_nogpu=true
         ;;
-      --nodbus)
+      --nodbus | --no-dbus)
         use_nodbus=true
         ;;
       --legacy)
@@ -3350,7 +3350,7 @@ tx11start --debug    - Show debug log
       --help)
         show_tx11start_help
         ;;
-      --nodbus)
+      --nodbus | --no-dbus)
         use_nodbus=true
         ;;
       --legacy)
