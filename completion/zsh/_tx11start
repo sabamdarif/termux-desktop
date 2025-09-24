@@ -7,6 +7,7 @@ _tx11start() {
     # Define available options
     opts=(
         '--help[Show help information]'
+        '--xstartup[Start the user specified xstartup]'
         '--nogpu[Start without GPU acceleration]'
         '--nodbus[Start without dbus]'
         '--legacy[Start with -legacy-drawing]'

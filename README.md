@@ -93,6 +93,7 @@
 tx11start [options]
 ```
 Options:
+- `--xstartup`: Start the user specified xstartup.
 - `--nogpu`: Disable GPU acceleration.
 - `--legacy`: Enable legacy drawing.
 - `--nodbus`: Without using dbus-launch.
@@ -103,6 +104,7 @@ Options:
 <summary>Full Example:</summary>
 
 - `tx11start` *to star Termux:11 with gpu acceleration*
+- `tx11start --xstartup cinnamon-session` *to start cinnamon even if you setup with xfce or anything else*
 - `tx11start --nogpu` *to star Termux:11 without gpu acceleration*
 - `tx11start --nogpu --legacy` *to star Termux:11 without gpu acceleration and _-legacy-drawing_*
 - `tx11start --nodbus` *to star Termux:11 without dbus-launch*

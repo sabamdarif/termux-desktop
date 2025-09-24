@@ -2988,7 +2988,7 @@ if [[ "\$1" != "--help" && "\$1" != "-h" ]]; then
       if \$use_debug; then
           rm -rf ~/.config/pulse/*-runtime/pid
       else
-          rm -rf ~/.config/pulse/*-runtime/pid >/dev/null 2>&1 
+          rm -rf ~/.config/pulse/*-runtime/pid >/dev/null 2>&1
       fi
     pulseaudio --start --exit-idle-time=-1
     pactl load-module module-sles-source > /dev/null 2>&1
@@ -3055,7 +3055,7 @@ if [[ "\$1" != "--help" && "\$1" != "-h" ]]; then
       if \$use_debug; then
           rm -rf ~/.config/pulse/*-runtime/pid
       else
-          rm -rf ~/.config/pulse/*-runtime/pid >/dev/null 2>&1 
+          rm -rf ~/.config/pulse/*-runtime/pid >/dev/null 2>&1
       fi
     pulseaudio --start --exit-idle-time=-1
     pactl load-module module-sles-source > /dev/null 2>&1
@@ -3179,15 +3179,17 @@ unset TRACER_PID
     use_nodbus=false
     use_legacy=false
     use_debug=false
+    de_startup="$de_startup"
 
     # Function to show help
     function show_tx11start_help() {
       echo -e "
-tx11start            - Start Termux:X11 with GPU acceleration
-tx11start --nogpu    - Start without GPU acceleration
-tx11start --nodbus   - Start without dbus
-tx11start --legacy   - Start with -legacy-drawing
-tx11start --debug    - Show debug log
+tx11start                               - Start Termux:X11 with GPU acceleration
+tx11start --nogpu                       - Start without GPU acceleration
+tx11start --nodbus                      - Start without dbus
+tx11start --legacy                      - Start with -legacy-drawing
+tx11start --debug                       - Show debug log
+tx11start --xstartup "xstartup-name"    - Launch another desktop environment
 "
       exit 0
     }
@@ -3198,6 +3200,11 @@ tx11start --debug    - Show debug log
       --help)
         show_tx11start_help
         ;;
+      --xstartup | -xstartup)
+          shift
+          de_startup="\$1"
+          echo "\$de_startup" > "$HOME/.xstartup"
+          ;;
       --nogpu | --no-gpu)
         use_nogpu=true
         ;;
@@ -3220,7 +3227,7 @@ tx11start --debug    - Show debug log
 
     # Kill existing Termux X11 processes
     pkill -f com.termux.x11 >/dev/null 2>&1
-    pkill -9 "$de_startup" >/dev/null 2>&1
+    pkill -9 "\$de_startup" >/dev/null 2>&1
 
     # Ensure XDG_RUNTIME_DIR exists
     export XDG_RUNTIME_DIR=/data/data/com.termux/files/usr/tmp
@@ -3231,11 +3238,11 @@ tx11start --debug    - Show debug log
 
     # Start pulseaudio unless --help was given
     if [[ "\$1" != "--help" ]]; then
-      termux-wake-lock 
+      termux-wake-lock
       if \$use_debug; then
           rm -rf ~/.config/pulse/*-runtime/pid
       else
-          rm -rf ~/.config/pulse/*-runtime/pid >/dev/null 2>&1 
+          rm -rf ~/.config/pulse/*-runtime/pid >/dev/null 2>&1
       fi
       # pulseaudio --start --load="module-aaudio-sink" --exit-idle-time=-1
       pulseaudio --start --exit-idle-time=-1
@@ -3255,9 +3262,9 @@ tx11start --debug    - Show debug log
       else
         ${initialize_server_method} >/dev/null 2>&1 &
       fi
-      export ${gpu_environment_variable} ${hw_method}   
+      export ${gpu_environment_variable} ${hw_method}
   else
-        export LIBGL_ALWAYS_SOFTWARE=1 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe      
+        export LIBGL_ALWAYS_SOFTWARE=1 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe
     fi
 
     sleep 1
@@ -3267,7 +3274,7 @@ tx11start --debug    - Show debug log
      if \$use_nogpu; then
          x11_cmd="LIBGL_ALWAYS_SOFTWARE=1 termux-x11 :0"
      else
-         x11_cmd="termux-x11 :0" 
+         x11_cmd="termux-x11 :0"
      fi
 
     if \$use_legacy; then
@@ -3293,15 +3300,15 @@ tx11start --debug    - Show debug log
     # Start the desktop environment
     if \$use_nodbus; then
       if \$use_debug; then
-        env DISPLAY=:${display_number} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg $de_startup &
+        env DISPLAY=:${display_number} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg \$de_startup &
       else
-        env DISPLAY=:${display_number} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg $de_startup >/dev/null 2>&1 &
+        env DISPLAY=:${display_number} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg \$de_startup >/dev/null 2>&1 &
       fi
     else
       if \$use_debug; then
-        env DISPLAY=:${display_number} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg dbus-launch --exit-with-session $de_startup &
+        env DISPLAY=:${display_number} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg dbus-launch --exit-with-session \$de_startup &
       else
-        env DISPLAY=:${display_number} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg dbus-launch --exit-with-session $de_startup >/dev/null 2>&1 &
+        env DISPLAY=:${display_number} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg dbus-launch --exit-with-session \$de_startup >/dev/null 2>&1 &
       fi
     fi
 
@@ -3332,14 +3339,16 @@ unset TRACER_PID
     use_nodbus=false
     use_legacy=false
     use_debug=false
+    de_startup="$de_startup"
 
     # Function to show help
     function show_tx11start_help() {
       echo -e "
-tx11start            - Start Termux:X11
-tx11start --nodbus   - Start without dbus
-tx11start --legacy   - Start with -legacy-drawing
-tx11start --debug    - Show debug log
+tx11start                               - Start Termux:X11
+tx11start --nodbus                      - Start without dbus
+tx11start --legacy                      - Start with -legacy-drawing
+tx11start --debug                       - Show debug log
+tx11start --xstartup "xstartup-name"    - Launch another desktop environment
 "
       exit 0
     }
@@ -3350,6 +3359,11 @@ tx11start --debug    - Show debug log
       --help)
         show_tx11start_help
         ;;
+      --xstartup | -xstartup)
+          shift
+          de_startup="\$1"
+          echo "\$de_startup" > "$HOME/.xstartup"
+          ;;
       --nodbus | --no-dbus)
         use_nodbus=true
         ;;
@@ -3369,7 +3383,7 @@ tx11start --debug    - Show debug log
 
     # Kill existing Termux X11 processes
     pkill -f com.termux.x11 >/dev/null 2>&1
-    pkill -9 "$de_startup" >/dev/null 2>&1
+    pkill -9 "\$de_startup" >/dev/null 2>&1
 
     # Ensure XDG_RUNTIME_DIR exists
     export XDG_RUNTIME_DIR=/data/data/com.termux/files/usr/tmp
@@ -3384,7 +3398,7 @@ tx11start --debug    - Show debug log
       if \$use_debug; then
           rm -rf ~/.config/pulse/*-runtime/pid
       else
-          rm -rf ~/.config/pulse/*-runtime/pid >/dev/null 2>&1 
+          rm -rf ~/.config/pulse/*-runtime/pid >/dev/null 2>&1
       fi
       # pulseaudio --start --load="module-aaudio-sink" --exit-idle-time=-1
       pulseaudio --start --exit-idle-time=-1
@@ -3423,15 +3437,15 @@ tx11start --debug    - Show debug log
     # Start the desktop environment
     if \$use_nodbus; then
       if \$use_debug; then
-        env DISPLAY=:${display_number} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg $de_startup &
+        env DISPLAY=:${display_number} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg \$de_startup &
       else
-        env DISPLAY=:${display_number} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg $de_startup >/dev/null 2>&1 &
+        env DISPLAY=:${display_number} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg \$de_startup >/dev/null 2>&1 &
       fi
     else
       if \$use_debug; then
-        env DISPLAY=:${display_number} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg dbus-launch --exit-with-session $de_startup &
+        env DISPLAY=:${display_number} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg dbus-launch --exit-with-session \$de_startup &
       else
-        env DISPLAY=:${display_number} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg dbus-launch --exit-with-session $de_startup >/dev/null 2>&1 &
+        env DISPLAY=:${display_number} XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg dbus-launch --exit-with-session \$de_startup >/dev/null 2>&1 &
       fi
     fi
 
@@ -3480,8 +3494,14 @@ unset TRACER_PID
 
 termux-wake-unlock
 
+if [[ -f "$HOME/.xstartup" ]]; then
+    de_startup=\$(cat "$HOME/.xstartup")
+else
+    de_startup="$de_startup"
+fi
+
 termux_x11_pid=\$(pgrep -f "/system/bin/app_process / com.termux.x11.Loader :${display_number}")
-de_pid=\$(pgrep -f $de_startup)
+de_pid=\$(pgrep -f \$de_startup)
 if [[ -n "\$termux_x11_pid" ]] || [[ -n "\$de_pid" ]]; then
 kill -9 "\$termux_x11_pid" > /dev/null 2>&1
 pkill -9 pulseaudio > /dev/null 2>&1
@@ -3492,6 +3512,7 @@ pkill -f com.termux.x11 > /dev/null 2>&1
 sleep 1
 	if [[ ! -n "\$termux_x11_pid" ]] || [[ ! -n "\$de_pid" ]]; then
 	echo -e "${G}Termux:X11 Stopped Successfully ${NC}"
+    [[ -f "$HOME/.xstartup" ]] && rm -rf "$HOME/.xstartup"
 	fi
 elif [[ "\$1" == "-f" ]] || [[ "\$1" == "--force" ]]; then
 pkill -f com.termux.x11 > /dev/null 2>&1
@@ -3500,6 +3521,7 @@ killall virgl_test_server > /dev/null 2>&1
 pkill -9 pulseaudio > /dev/null 2>&1
 pkill -9 dbus-* > /dev/null 2>&1
 echo -e "${G}Termux:X11 Successfully Force Stopped ${NC}"
+[[ -f "$HOME/.xstartup" ]] && rm -rf "$HOME/.xstartup"
 elif [[ "\$1" == "-h" ]]; then
 echo -e "tx11stop       to stop termux:x11"
 echo -e "tx11stop -f    to kill termux:x11"
@@ -3529,8 +3551,14 @@ unset TRACER_PID
 
 termux-wake-unlock
 
+if [[ -f "$HOME/.xstartup" ]]; then
+    de_startup=\$(cat "$HOME/.xstartup")
+else
+    de_startup="$de_startup"
+fi
+
 termux_x11_pid=\$(pgrep -f "/system/bin/app_process / com.termux.x11.Loader :${display_number}")
-de_pid=\$(pgrep -f $de_startup)
+de_pid=\$(pgrep -f \$de_startup)
 if [[ -n "\$termux_x11_pid" ]] || [[ -n "\$de_pid" ]]; then
 kill -9 "\$termux_x11_pid" > /dev/null 2>&1
 pkill -9 pulseaudio > /dev/null 2>&1
@@ -3540,6 +3568,7 @@ pkill -9 dbus-* > /dev/null 2>&1
 pkill -f com.termux.x11 > /dev/null 2>&1
 	if [[ ! -n "\$termux_x11_pid" ]] || [[ ! -n "\$de_pid" ]]; then
 	echo -e "${G}Termux:X11 Stopped Successfully ${NC}"
+    [[ -f "$HOME/.xstartup" ]] && rm -rf "$HOME/.xstartup"
 	fi
 elif [[ "\$1" == "-f" ]] || [[ "\$1" == "--force" ]]; then
 pkill -f com.termux.x11 > /dev/null 2>&1
@@ -3548,6 +3577,7 @@ killall virgl_test_server > /dev/null 2>&1
 pkill -9 pulseaudio > /dev/null 2>&1
 pkill -9 dbus-* > /dev/null 2>&1
 echo -e "${G}Termux:X11 Successfully Force Stopped ${NC}"
+[[ -f "$HOME/.xstartup" ]] && rm -rf "$HOME/.xstartup"
 elif [[ "\$1" == "-h" ]]; then
 echo -e "tx11stop       to stop termux:x11"
 echo -e "tx11stop -f    to kill termux:x11"
