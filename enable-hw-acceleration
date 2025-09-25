@@ -253,6 +253,10 @@ function setup_gpu_specific_environment_variables() {
             gpu_environment_variable="VK_ICD_FILENAMES=$PREFIX/share/vulkan/icd.d/wrapper_icd.${icd_cpu_arch}.json MESA_SHADER_CACHE=512MB MESA_SHADER_CACHE_DISABLE=false vblank_mode=0"
         fi
     fi
+
+    if [[ "$exp_termux_vulkan_hw_answer" == "vulkan_wrapper_android_leegaos_fork" ]]; then
+        gpu_environment_variable+=" WRAPPER_LOG_LEVEL=none WRAPPER_CMD_LOG_LEVEL=none"
+    fi
 }
 
 #########################################################################
