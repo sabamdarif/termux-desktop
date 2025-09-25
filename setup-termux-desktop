@@ -4787,6 +4787,15 @@ function do_hw_changes() {
         get_distro_container_source
         # shellcheck disable=SC1091
         source "${current_path}/distro-container-setup"
+
+        # set the required variables for pdrun
+        if [[ "$selected_distro_type" == "chroot" ]]; then
+            termux_home_link=" "
+        else
+            termux_home_link="--termux-home"
+        fi
+        final_user_name="$user_name"
+
         distro_app_launch_setup
         check_and_delete "${current_path}/distro-container-setup"
     fi
