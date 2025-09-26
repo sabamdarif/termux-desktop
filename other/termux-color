@@ -398,6 +398,493 @@ color14=#868686
 color15=#f7f7f7
 EOF
         ;;
+    "Ayu Dark")
+        cat >"$COLORS_FILE" <<'EOF'
+# https://github.com/mayTermux/myTermux/blob/main/.colorscheme/ayu-dark.colors
+background=#090D13
+foreground=#FEFEFE
+cursor=#E96B72
+color0=#00050D
+color1=#E96B72
+color2=#90B261
+color3=#F8AE4E
+color4=#52BCF9
+color5=#F9E893
+color6=#8FE0C5
+color7=#C6C6C6
+color8=#676767
+color9=#EF7077
+color10=#C1D84B
+color11=#FEB353
+color12=#58C1FE
+color13=#FEED98
+color14=#94E5CA
+color15=#FEFEFE
+EOF
+        ;;
+
+    "Ayu Light")
+        cat >"$COLORS_FILE" <<'EOF'
+# https://github.com/mayTermux/myTermux/blob/main/.colorscheme/ayu-light.colors
+
+background=#FEFEFE
+foreground=#090D13
+cursor=#E96B72
+color0=#00050D
+color1=#E96B72
+color2=#90B261
+color3=#F8AE4E
+color4=#52BCF9
+color5=#F9E893
+color6=#8FE0C5
+color7=#C6C6C6
+color8=#676767
+color9=#EF7077
+color10=#C1D84B
+color11=#FEB353
+color12=#58C1FE
+color13=#FEED98
+color14=#94E5CA
+color15=#FEFEFE
+EOF
+        ;;
+    "Ayu Mirage")
+        cat >"$COLORS_FILE" <<'EOF'
+# https://github.com/mayTermux/myTermux/blob/main/.colorscheme/ayu-mirage.colors
+
+background=#1F2430
+foreground=#E5E0CE
+cursor=#E96B72
+color0=#00050D
+color1=#E96B72
+color2=#90B261
+color3=#F8AE4E
+color4=#52BCF9
+color5=#F9E893
+color6=#8FE0C5
+color7=#C6C6C6
+color8=#676767
+color9=#EF7077
+color10=#C1D84B
+color11=#FEB353
+color12=#58C1FE
+color13=#FEED98
+color14=#94E5CA
+color15=#FEFEFE
+EOF
+        ;;
+    "Elementary")
+        cat >"$COLORS_FILE" <<'EOF'
+# https://github.com/mayTermux/myTermux/blob/main/.colorscheme/elementary.colors
+
+# elementary.colors
+# Color scheme from https://github.com/Mayccoll/Gogh
+color0=#303030
+color1=#e1321a
+color2=#6ab017
+color3=#ffc005
+color4=#004f9e
+color5=#ec0048
+color6=#2aa7e7
+color7=#f2f2f2
+color8=#5d5d5d
+color9=#ff361e
+color10=#7bc91f
+color11=#ffd00a
+color12=#0071ff
+color13=#ff1d62
+color14=#4bb8fd
+color15=#a020f0
+background=#101010
+foreground=#f2f2f2
+cursor=#f2f2f2
+EOF
+        ;;
+    "Everblush")
+        cat >"$COLORS_FILE" <<'EOF'
+# https://github.com/mayTermux/myTermux/blob/main/.colorscheme/everblush.colors
+
+foreground=#dadada
+background=#141b1e
+cursor=#3b4244
+
+# normal colors
+color0=#232a2d
+color1=#e57474
+color2=#8ccf7e
+color3=#e5c76b
+color4=#67b0e8
+color5=#c47fd5
+color6=#6cbfbf
+color7=#b3b9b8
+
+# bright colors
+color8=#2d3437
+color9=#ef7e7e
+color10=#96d988
+color11=#f4d67a
+color12=#71baf2
+color13=#ce89df
+color14=#67cbe7
+color15=#bdc3c2
+EOF
+        ;;
+    "Flat")
+        cat >"$COLORS_FILE" <<'EOF'
+# https://github.com/mayTermux/myTermux/blob/main/.colorscheme/flat.colors
+
+# flat.colors
+# Color scheme from https://github.com/Mayccoll/Gogh
+color0=#2c3e50
+color1=#c0392b
+color2=#27ae60
+color3=#f39c12
+color4=#2980b9
+color5=#8e44ad
+color6=#16a085
+color7=#bdc3c7
+color8=#34495e
+color9=#e74c3c
+color10=#2ecc71
+color11=#f1c40f
+color12=#3498db
+color13=#9b59b6
+color14=#2AA198
+color15=#ecf0f1
+background=#1F2D3A
+foreground=#1abc9c
+cursor=#1abc9c
+EOF
+        ;;
+    "Material Ocean")
+        cat >"$COLORS_FILE" <<'EOF'
+# https://github.com/mayTermux/myTermux/blob/main/.colorscheme/material-ocean.colors
+
+# material.ocean.colors
+# Color scheme from https://github.com/Material-Ocean
+color0  = #3b4252
+color1  = #bf616a
+color2  = #a3be8c
+color3  = #ebcb8b
+color4  = #81a1c1
+color5  = #b48ead
+color6  = #88c0d0
+color7  = #e5e9f0
+color8  = #4c566a
+color9  = #bf616a
+color10 = #a3be8c
+color11 = #ebcb8b
+color12 = #81a1c1
+color13 = #b48ead
+color14 = #8fbcbb
+color15 = #eceff4
+background=#0f111a
+foreground=#d8dee9
+cursor=#d8dee9
+EOF
+        ;;
+    "Material")
+        cat >"$COLORS_FILE" <<'EOF'
+# https://github.com/mayTermux/myTermux/blob/main/.colorscheme/material.colors
+
+# material.colors
+# Color scheme from https://github.com/Mayccoll/Gogh
+color0=#073641
+color1=#EB606B
+color2=#C3E88D
+color3=#F7EB95
+color4=#80CBC3
+color5=#FF2490
+color6=#AEDDFF
+color7=#FFFFFF
+color8=#002B36
+color9=#EB606B
+color10=#C3E88D
+color11=#F7EB95
+color12=#7DC6BF
+color13=#6C71C3
+color14=#34434D
+color15=#FFFFFF
+background=#1E282C
+foreground=#C3C7D1
+cursor=#657B83
+EOF
+        ;;
+    "Monokai Dark")
+        cat >"$COLORS_FILE" <<'EOF'
+# https://github.com/mayTermux/myTermux/blob/main/.colorscheme/monokai-dark.colors
+
+# monokai.dark.colors
+# Color scheme from https://github.com/Mayccoll/Gogh
+color0=#75715e
+color1=#f92672
+color2=#a6e22e
+color3=#f4bf75
+color4=#66d9ef
+color5=#ae81ff
+color6=#2AA198
+color7=#f9f8f5
+color8=#272822
+color9=#f92672
+color10=#a6e22e
+color11=#f4bf75
+color12=#66d9ef
+color13=#ae81ff
+color14=#2AA198
+color15=#f8f8f2
+background=#272822
+foreground=#f8f8f2
+cursor=#f8f8f2
+EOF
+        ;;
+    "Nekonako Djancoeg")
+        cat >"$COLORS_FILE" <<'EOF'
+# https://github.com/mayTermux/myTermux/blob/main/.colorscheme/nekonako-djancoeg.colors
+
+color0=#2f343f
+color1=#fd6b85
+color2=#63e0be
+color3=#fed270
+color4=#67d4f2
+color5=#ff8167
+color6=#63e0be
+color7=#eeeeee
+color8=#4f4f5b
+color9=#fd6b85
+color10=#63e0be
+color11=#fed270
+color12=#67d4f2
+color13=#ff8167
+color14=#63e0be
+color15=#eeeeee
+background=#2a2c3a
+#background=#090d13
+foreground=#eeeeee
+cursor=#fd6b85
+EOF
+        ;;
+    "Nekonako Hue")
+        cat >"$COLORS_FILE" <<'EOF'
+#  https://github.com/mayTermux/myTermux/blob/main/.colorscheme/nekonako-hue.colors
+
+color0=#291e4e
+color1=#fb749f
+color2=#86d387
+color3=#fbdd74
+color4=#8e96fd
+color5=#d685ff
+color6=#9bcfcf
+color7=#ffffff
+color8=#291e4e
+color9=#fb749f
+color10=#86d387
+color11=#fbdd74
+color12=#8e96fd
+color13=#d685ff
+color14=#9bcfcf
+color15=#ffffff
+background=#291e4e
+foreground=#ffffff
+cursor=#fb749f
+EOF
+        ;;
+    "Nekonako Om Mar")
+        cat >"$COLORS_FILE" <<'EOF'
+# https://github.com/mayTermux/myTermux/blob/main/.colorscheme/nekonako-om-mar.colors
+
+! Color scheme by fikri omar
+
+background=#2F343F
+foreground=#EFF0EB
+
+color0=#2F343F
+color8=#444A57
+
+color1=#de8990
+color9=#d0a8ab
+
+color2=#94daa9
+color10=#bae8d2
+
+! yellow
+color3=#dee7aa
+color11=#d7c96b
+
+! blue
+color4=#9cdbdf
+color12=#6cb4dd
+
+! magenta
+color5=#cca8c9
+color13=#db79bf
+
+! cyan
+color6=#9ad4c8
+color14=#59b0b2
+
+! white
+color7=#e1e1e1
+color15=#f0f0f0
+EOF
+        ;;
+    "Owl4ce Dark")
+        cat >"$COLORS_FILE" <<'EOF'
+#  https://github.com/mayTermux/myTermux/blob/main/.colorscheme/owl4ce-dark.colors
+
+color0=#434C5E
+color1=#FA5AA4
+color2=#2BE491
+color3=#FA946E
+color4=#63C5EA
+color5=#CF8EF4
+color6=#89CCF7
+color7=#F7F7F7
+color8=#4C566A
+color9=#FA74B2
+color10=#44EB9F
+color11=#FAA687
+color12=#7ACBEA
+color13=#D8A6F4
+color14=#A1D5F7
+color15=#F4F4F4
+background=#373E4D
+foreground=#F9F9F9
+cursor=#FA5AA4
+EOF
+        ;;
+    "Siduck Onedark")
+        cat >"$COLORS_FILE" <<'EOF'
+# https://github.com/mayTermux/myTermux/blob/main/.colorscheme/siduck-onedark.colors
+
+foreground=#c8ccd4
+background=#1e222a
+cursor=#e06c75
+color0=#1e222a
+color1=#e06c75
+color2=#98c379
+color3=#e5c07b
+color4=#61afef
+color5=#c678dd
+color6=#56b6c2
+#color7=#abb2bf
+color7=#D8DEE9
+color8=#545862
+color9=#e06c75
+color10=#98c379
+color11=#e5c07b
+color12=#61afef
+color13=#c678dd
+color14=#56b6c2
+color15=#c8ccd4
+EOF
+        ;;
+    "Snazzy")
+        cat >"$COLORS_FILE" <<'EOF'
+# https://github.com/mayTermux/myTermux/blob/main/.colorscheme/snazzy.colors
+
+# snazzy.colors
+# Color theme from Color scheme from https://github.com/Mayccoll/Gogh
+color0=#0C0D13
+color1=#FF5C57
+color2=#5AF78E
+color3=#F3F99D
+color4=#57C7FF
+color5=#FF6AC1
+color6=#9AEDFE
+color7=#EFF0EB
+color8=#686868
+color9=#FF5C57
+color10=#5AF78E
+color11=#F3F99D
+color12=#57C7FF
+color13=#FF6AC1
+color14=#9AEDFE
+color15=#EFF0EB
+background=#282A36
+foreground=#EFF0EB
+cursor=#EFF0EB
+EOF
+        ;;
+    "Tomorrow Night")
+        cat >"$COLORS_FILE" <<'EOF'
+# https://github.com/mayTermux/myTermux/blob/main/.colorscheme/tomorrow-night.colors
+
+# tomorrow.night.colors
+# Color scheme from https://github.com/Mayccoll/Gogh
+color0=#000000
+color1=#CC6666
+color2=#B5BD68
+color3=#F0C674
+color4=#81A2BE
+color5=#B293BB
+color6=#8ABEB7
+color7=#FFFEFE
+color8=#000000
+color9=#CC6666
+color10=#B5BD68
+color11=#F0C574
+color12=#80A1BD
+color13=#B294BA
+color14=#8ABDB6
+color15=#FFFEFE
+background=#1D1F21
+foreground=#C5C8C6
+cursor=#C4C8C5
+EOF
+        ;;
+    "Tomorrow Night Eighties")
+        cat >"$COLORS_FILE" <<'EOF'
+# https://github.com/mayTermux/myTermux/blob/main/.colorscheme/tomorrow-night.eighties.colors
+
+# tomorrow.night.eighties.colors
+# Color scheme from https://github.com/Mayccoll/Gogh
+color0=#000000
+color1=#F27779
+color2=#99CC99
+color3=#FFCC66
+color4=#6699CC
+color5=#CC99CC
+color6=#66CCCC
+color7=#FFFEFE
+color8=#000000
+color9=#F17779
+color10=#99CC99
+color11=#FFCC66
+color12=#6699CC
+color13=#CC99CC
+color14=#66CCCC
+color15=#FFFEFE
+background=#2C2C2C
+foreground=#CCCCCC
+cursor=#CCCCCC
+EOF
+        ;;
+    "Xshin")
+        cat >"$COLORS_FILE" <<'EOF'
+# https://github.com/mayTermux/myTermux/blob/main/.colorscheme/xshin.colors
+
+# custom.colors
+color0=#44475a
+color1=#ff0000
+color2=#00ff00
+color3=#ff8e1e
+color4=#0071ff
+color5=#ffc500
+color6=#808080
+color7=#ffffff
+color8=#000000
+color9=#ff0000
+color10=#50fa7b
+color11=#ff8e1e
+color12=#0071ff
+color13=#ffc500
+color14=#808080
+color15=#ffffff
+background=#282a36
+foreground=#ffffff
+cursor=#94A3A5
+EOF
+        ;;
 
     esac
 
@@ -421,6 +908,24 @@ get_schemes() {
     echo "Ubuntu"
     echo "E-link Color"
     echo "E-link"
+    echo "Ayu Dark"
+    echo "Ayu Light"
+    echo "Ayu Mirage"
+    echo "Elementary"
+    echo "Everblush"
+    echo "Flat"
+    echo "Material Ocean"
+    echo "Material"
+    echo "Monokai Dark"
+    echo "Nekonako Djancoeg"
+    echo "Nekonako Hue"
+    echo "Nekonako Om Mar"
+    echo "Owl4ce Dark"
+    echo "Siduck Onedark"
+    echo "Snazzy"
+    echo "Tomorrow Night"
+    echo "Tomorrow Night Eighties"
+    echo "Xshin"
 }
 
 # Main TUI function
