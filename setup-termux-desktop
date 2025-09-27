@@ -4891,6 +4891,12 @@ function do_hw_changes() {
     setup_device_gpu_model
     hw_questions
     update_sys
+    # it's needed because the turnip setup uses a function that is
+    # created in the distro-container-setup script
+    get_distro_container_source
+    # Source the script
+    # shellcheck disable=SC1091
+    source "${current_path}/distro-container-setup"
     hw_config
     if [[ "$gui_mode" == "termux_x11" ]]; then
         setup_tx11start_cmd
