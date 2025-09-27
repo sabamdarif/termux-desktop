@@ -3104,7 +3104,7 @@ if [ "$TRACER_PID" != 0 ]; then
 	TRACER_NAME=$(grep Name "/proc/${TRACER_PID}/status" | cut -d $'\t' -f 2)
 	if [ "$TRACER_NAME" = "proot" ]; then
 		msg
-		print_failed "vncstop command should not be executed under PRoot.\${W}"
+		print_failed "vncstop command should not be executed under PRoot."
 		msg
 		exit 1
 	fi
@@ -3114,24 +3114,141 @@ unset TRACER_PID
 
 termux-wake-unlock
 
+# Function to clean up VNC files
+cleanup_vnc_files() {
+    # Clean up .vnc log files
+    if [ -d "$HOME/.vnc" ]; then
+        rm -f "$HOME/.vnc/localhost:"*.log > /dev/null 2>&1
+        rm -f "$HOME/.vnc/"*.log > /dev/null 2>&1
+    fi
+    
+    # Clean up X lock files (X1-lock, X2-lock, etc.)
+    if [ -d "$PREFIX/tmp" ]; then
+        rm -f "$PREFIX/tmp/.X"*"-lock" > /dev/null 2>&1
+    fi
+    
+    # Clean up X11 socket files (X1, X2, etc.)
+    if [ -d "$PREFIX/tmp/.X11-unix" ]; then
+        rm -f "$PREFIX/tmp/.X11-unix/X"* > /dev/null 2>&1
+    fi
+}
+
+# Function to force kill all VNC processes
+force_kill_vnc() {
+    print_msg "Force terminating all VNC processes..."
+    print_msg "Killing processes..."
+    
+    # Kill Xtigervnc processes
+    pkill -9 Xtigervnc > /dev/null 2>&1
+    pkill -9 vncserver > /dev/null 2>&1
+    pkill -9 vnc > /dev/null 2>&1
+    pkill -9 "X[0-9]*" > /dev/null 2>&1
+    
+    sleep 0.5
+    print_msg "Cleaning up files..."
+    cleanup_vnc_files
+    sleep 0.5
+    print_success "All VNC processes terminated and cleaned up"
+}
+
+# Function to gracefully stop VNC servers
+graceful_stop() {
+    # Try to get display numbers from vncserver -list
+    display_numbers=$(vncserver -list 2>/dev/null | grep -oE ':[0-9]+' | sort -u)
+    
+    if [ -n "$display_numbers" ]; then
+        # Convert to array and format nicely
+        display_array=($display_numbers)
+        display_count=${#display_array[@]}
+        # Remove colons and create comma-separated list
+        display_list=""
+        for i in "${!display_array[@]}"; do
+            num=${display_array[i]#:}
+            if [ $i -eq 0 ]; then
+                display_list="$num"
+            else
+                display_list="$display_list, $num"
+            fi
+        done
+        
+        print_msg "Found active VNC displays: $display_list"
+        
+        local count=0
+        for display in $display_numbers; do
+            count=$((count + 1))
+            display_num=${display#:}
+            print_msg "Stopping VNC server on display $display_num ($count/$display_count)..."
+            vncserver -kill "$display" 2>/dev/null
+            sleep 0.2
+            print_success "Stopped VNC server on display $display_num ($count/$display_count)"
+            sleep 0.3
+        done
+    else
+        # Check for stale lock files
+        if [ -d "$PREFIX/tmp" ]; then
+            lock_files=$(find "$PREFIX/tmp" -name ".X*-lock" -type f 2>/dev/null | sed 's/.*\.X\([0-9]*\)-.*/:\1/' | sort -u)
+            if [ -n "$lock_files" ]; then
+                lock_array=($lock_files)
+                lock_count=${#lock_array[@]}
+                # Remove colons and create comma-separated list
+                lock_list=""
+                for i in "${!lock_array[@]}"; do
+                    num=${lock_array[i]#:}
+                    if [ $i -eq 0 ]; then
+                        lock_list="$num"
+                    else
+                        lock_list="$lock_list, $num"
+                    fi
+                done
+                
+                print_msg "Found stale displays: $lock_list"
+                
+                local count=0
+                for display in $lock_files; do
+                    count=$((count + 1))
+                    display_num=${display#:}
+                    print_msg "Cleaning stale display $display_num ($count/$lock_count)..."
+                    vncserver -kill "$display" 2>/dev/null || true
+                    sleep 0.2
+                    print_success "Cleaned stale display $display_num ($count/$lock_count)"
+                    sleep 0.3
+                done
+            else
+                print_msg "No VNC displays found"
+                return
+            fi
+        fi
+    fi
+    
+    # Handle any remaining stubborn processes
+    if pgrep -x "Xtigervnc" > /dev/null 2>&1; then
+        print_msg "Terminating remaining processes..."
+        pkill Xtigervnc > /dev/null 2>&1
+        sleep 1
+        if pgrep -x "Xtigervnc" > /dev/null 2>&1; then
+            pkill -9 Xtigervnc > /dev/null 2>&1
+        fi
+        sleep 0.5
+    fi
+    
+    cleanup_vnc_files
+    print_success "VNC cleanup completed"
+}
+
+# Main script logic
 if [[ "$1" == "-f" ]] || [[ "$1" == "--force" ]]; then
-pkill -9 Xtigervnc > /dev/null 2>&1
+    force_kill_vnc
 elif [[ "$1" == "-h" ]] || [[ "$1" == "--help" ]]; then
-echo -e "
-vncstop     	  to stop vncserver
-vncstop --force	  to force stop vncserver
-vncstop --help    to show the helps
+    print_msg "
+VNC Server Manager
+
+vncstop           gracefully stop all VNC servers
+vncstop --force   force terminate all VNC servers  
+vncstop --help    show this help
 "
 else
-display_numbers=$(vncserver -list | awk '/^:[0-9]+/ {print $1}')
-
-for display in $display_numbers; do
-    vncserver -kill "$display"
-done
+    graceful_stop
 fi
-rm $HOME/.vnc/localhost:*.log > /dev/null 2>&1
-rm $PREFIX/tmp/.X1-lock > /dev/null 2>&1
-rm $PREFIX/tmp/.X11-unix/X1 > /dev/null 2>&1
 EOF
     chmod +x "$PREFIX/bin/vncstop"
 }
