@@ -1520,11 +1520,17 @@ function exp_termux_gl_hw_support() {
 function hw_questions() {
     banner
     exp_vulkan_support
-    if [[ "$exp_termux_vulkan_hw_answer" == "vulkan_wrapper_android" ]] || [[ "$exp_termux_vulkan_hw_answer" == "vulkan_wrapper_android_leegaos_fork" ]] || [[ "$exp_termux_vulkan_hw_answer" == "mesa_freedreno" ]] || [[ "$exp_termux_vulkan_hw_answer" == "mesa_zink_freedreno" ]]; then
+    # this part is for those need some hack or some other driver alongside it
+    # to get the opengl access
+    if [[ "$exp_termux_vulkan_hw_answer" == "vulkan_wrapper_android" ]] || [[ "$exp_termux_vulkan_hw_answer" == "vulkan_wrapper_android_leegaos_fork" ]]; then
         exp_termux_gl_hw_support
-    elif [[ "$exp_termux_vulkan_hw_answer" == "freedreno_kgsl" ]]; then
+    # this part is for those can give us opengl access either through zink
+    # or have a native opengl driver inside it
+    elif [[ "$exp_termux_vulkan_hw_answer" == "freedreno_kgsl" ]] || [[ "$exp_termux_vulkan_hw_answer" == "mesa_freedreno" ]] || [[ "$exp_termux_vulkan_hw_answer" == "mesa_zink_freedreno" ]]; then
         termux_hw_answer="${exp_termux_vulkan_hw_answer}"
         distro_hw_questions
+    # this will run if you select skip and don't want to use those
+    # android-vulkan-wrapper / bionic-vulkan-wrapper / turnip / kgsl
     elif [[ "$exp_termux_vulkan_hw_answer" == "skip" ]]; then
         print_msg "${BOLD}First Read This"
         echo

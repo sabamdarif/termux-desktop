@@ -187,13 +187,13 @@ function setup_hw_environment_variables() {
     "mesa_freedreno")
         set_to_export="MESA_NO_ERROR=1 vblank_mode=0"
         initialize_server_method=" "
-        hw_method="MESA_LOADER_DRIVER_OVERRIDE=zink"
+        hw_method="GALLIUM_DRIVER=zink"
         pd_hw_method="${hw_method}"
         ;;
     "mesa_zink_freedreno")
         set_to_export="MESA_NO_ERROR=1 vblank_mode=0"
         initialize_server_method=" "
-        hw_method="MESA_LOADER_DRIVER_OVERRIDE=zink"
+        hw_method="GALLIUM_DRIVER=zink"
         pd_hw_method="${hw_method}"
         ;;
     "freedreno_kgsl")
