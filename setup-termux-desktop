@@ -5155,9 +5155,14 @@ function change_display() {
                     print_warn "${R}Please enter a valid number between 0-9"
                 fi
             done
-            # shellcheck disable=SC2034
-            call_from_change_display=true
-            hw_config
+            # Get the hardware acceleration source
+            get_hw_acceleration_source
+
+            # Source the script
+            # shellcheck disable=SC1091
+            source "${current_path}/enable-hw-acceleration"
+            setup_hw_environment_variables
+            setup_gpu_specific_environment_variables
             setup_tx11start_cmd
             print_to_config "display_number"
             sed -i "s|DISPLAY=:[0-9]*|DISPLAY=:$display_number|" "${PREFIX}/bin/$selected_distro"
