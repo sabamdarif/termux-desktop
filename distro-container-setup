@@ -38,7 +38,6 @@ function setup_proot_distro() {
     echo
     print_to_config "selected_distro"
     pd install "$selected_distro"
-    distro_path="$PREFIX/var/lib/proot-distro/installed-rootfs/$selected_distro"
 }
 
 function check_su_access() {
@@ -186,8 +185,23 @@ su -c "/system/bin/chroot-distro $args"
 EOF
     chmod +x "$PREFIX/bin/chroot-distro"
     chroot-distro install "$selected_distro"
-    distro_path="/data/local/chroot-distro/installed-rootfs/$selected_distro"
     print_to_config "selected_distro"
+}
+
+function set_distro_paths {
+    banner
+    print_msg "Setiing up distro related paths"
+    if [[ "$selected_distro_type" == "proot" ]]; then
+        distro_path="$PREFIX/var/lib/proot-distro/installed-rootfs/$selected_distro"
+    elif [[ "$selected_distro_type" == "chroot" ]]; then
+        distro_path="/data/local/chroot-distro/installed-rootfs/$selected_distro"
+    else
+        print_failed "Unable to determine what distro type to use"
+        print_msg "Fallback to:- proot-distro"
+        selected_distro_type=proot
+        distro_path="$PREFIX/var/lib/proot-distro/installed-rootfs/$selected_distro"
+    fi
+    save_path="$distro_path/root"
 }
 
 function setup_distro() {
@@ -196,11 +210,6 @@ function setup_distro() {
         setup_proot_distro
     elif [[ "$selected_distro_type" == "chroot" ]]; then
         setup_chroot_distro
-    else
-        print_failed "Unable to determine what distro type to use"
-        print_msg "Fallback to:- proot-distro"
-        selected_distro_type=proot
-        setup_proot_distro
     fi
     print_to_config "selected_distro_type"
 }
@@ -1858,8 +1867,8 @@ EOF
 }
 
 function install_distro_container() {
+    set_distro_paths
     setup_distro
-    save_path="$distro_path/root"
     if [[ "$selected_distro_type" == "chroot" ]]; then
         termux_home_link=" "
     else

@@ -4897,6 +4897,7 @@ function do_hw_changes() {
     # Source the script
     # shellcheck disable=SC1091
     source "${current_path}/distro-container-setup"
+    set_distro_paths
     hw_config
     if [[ "$gui_mode" == "termux_x11" ]]; then
         setup_tx11start_cmd
