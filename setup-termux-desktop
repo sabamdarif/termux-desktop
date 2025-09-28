@@ -5198,6 +5198,16 @@ function change_de() {
             setup_config
         fi
         if [[ "$enable_hw_acc" == "y" ]]; then
+            # it's needed because the turnip setup uses a function that is
+            # created in the distro-container-setup script
+            get_distro_container_source
+            # Source the script
+            # shellcheck disable=SC1091
+            source "${current_path}/distro-container-setup"
+            set_distro_paths
+            # executing the hw_config here because while removeing the installed
+            # desktop environment if somehow any driver get removed
+            # then it will setup them again
             hw_config
         fi
         gui_launcher
