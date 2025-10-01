@@ -247,44 +247,13 @@ cpp = ['ccache', '$ndk_bin/${clang/clang/clang++}', '--start-no-unused-arguments
 c_ld = '$ndk_bin/ld.lld'
 cpp_ld = '$ndk_bin/ld.lld'
 strip = '$ndk_bin/$strip_tool'
-pkg-config = ['env', 'PKG_CONFIG_LIBDIR=NDKDIR/pkg-config', '/usr/bin/pkg-config']
+pkg-config = ['env', 'PKG_CONFIG_LIBDIR=$ndk_bin/pkg-config', '/usr/bin/pkg-config']
 [host_machine]
 system = 'android'
 cpu_family = '$arch'
 cpu = '$cpu'
 endian = 'little'
 EOF
-
-    # Detect native system architecture
-    local native_arch=$(uname -m)
-    local native_cpu_family
-    local native_cpu
-
-    case "$native_arch" in
-    x86_64)
-        native_cpu_family="x86_64"
-        native_cpu="x86_64"
-        ;;
-    aarch64 | arm64)
-        native_cpu_family="aarch64"
-        native_cpu="armv8"
-        ;;
-    armv7l | armv7)
-        native_cpu_family="arm"
-        native_cpu="armv7"
-        ;;
-    i386 | i686)
-        native_cpu_family="x86"
-        native_cpu="i686"
-        ;;
-    *)
-        log_warning "Unknown native architecture: $native_arch, defaulting to x86_64"
-        native_cpu_family="x86_64"
-        native_cpu="x86_64"
-        ;;
-    esac
-
-    log_info "Detected native architecture: $native_arch (cpu_family: $native_cpu_family, cpu: $native_cpu)"
 
     # Create native file
     cat <<EOF >"native.txt"
@@ -296,8 +265,8 @@ strip = 'llvm-strip'
 c_ld = 'ld.lld'
 cpp_ld = 'ld.lld'
 system = 'linux'
-cpu_family = '$native_cpu_family'
-cpu = '$native_cpu'
+cpu_family = 'x86_64'
+cpu = 'x86_64'
 endian = 'little'
 EOF
 }
@@ -385,10 +354,11 @@ create_icd_file() {
     cat >"$icd_file" <<EOF
 {
     "ICD": {
-        "api_version": "1.4.303",
+        "api_version": "1.4.318",
+        "library_arch": "64",
         "library_path": "/usr/lib/${lib_arch}/libvulkan_freedreno.so"
     },
-    "file_format_version": "2.0.0"
+    "file_format_version": "1.0.1"
 }
 EOF
 
