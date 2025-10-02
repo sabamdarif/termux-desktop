@@ -6,9 +6,10 @@
 ### When setting up hardware acceleration in Termux, follow these steps for optimal configuration:
 
 ### Installation
+
 - Run the Installer Script and choose your preferred hardware acceleration method during the installation.
 - If you opt for a distro container, select the hardware acceleration method for the distro as well.
-  >For Adreno GPU you don't nedd to chose, it will automatically use turnip if you use ubuntu/debian 
+  > For Adreno GPU you don't nedd to chose, it will automatically use turnip if you use ubuntu/debian
 - Once selected, everything will be configured automatically.
 
 > [!TIP]
@@ -18,12 +19,14 @@
 ![CPU-Z Screenshot](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/cpu-z.png)
 
 ### Using Hardware Acceleration in Termux
-- Start Termux Desktop via Termux:x11 (recommended) or vnc (In vnc some drivers might not work) 
+
+- Start Termux Desktop via Termux:x11 (recommended) or vnc (In vnc some drivers might not work)
 - And it should just work if the hardware acceleration driver you selected that support your gpu.
 
 ### Using Hardware Acceleration in Proot Distro (Distro Container)
 
 #### Method 1: Terminal Commands (pdrun)
+
 > Remember you should always run pdrun from termux's shell, never run it from inside a proot-distro
 
 1. Launch Termux Desktop.
@@ -31,15 +34,18 @@
    ```bash
    pdrun program
    ```
+
    - By default pdrun runs programs with GPU acceleration.
    ```bash
    pdrun --nogpu program
    ```
+
    - To run program without GPU acceleration.
 
 ![GLMark2 Results](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/pdrun-glmark2.png)
 
 ### Method 2: Termux Menu
+
 1. Add the desired program to the Termux menu.
 2. Launch the program directly from the Termux menu.
 
@@ -49,23 +55,24 @@
 ## Changing Hardware Acceleration Drivers
 
 ### Manual Configuration
+
 1. **Install Required Packages.**
-`pkg install mesa virglrenderer vulkan-loader-generic angle-android virglrenderer-android`
+   `pkg install mesa virglrenderer vulkan-loader-generic angle-android virglrenderer-android`
 2. Navigate to `$PREFIX/bin` and edit the following files using `nano` or `vim`:
    - `vncstart`
    - `tx11start`
    - `pdrun`
 3. Look for the line at the bottom of tx11start:
-   there will be some lines like this 
+   there will be some lines like this
 
    ```bash
-   export MESA_NO_ERROR=1 MESA_GL_VERSION_OVERRIDE=4.1COMPAT MESA_GLES_VERSION_OVERRIDE=3.2 MESA_GLSL_VERSION_OVERRIDE=410 LIBGL_DRI3_DISABLE=1 EPOXY_USE_ANGLE=1 LD_LIBRARY_PATH=/data/data/com.termux/files/usr/opt/angle-android/vulkan               
+   export MESA_NO_ERROR=1 MESA_GL_VERSION_OVERRIDE=4.1COMPAT MESA_GLES_VERSION_OVERRIDE=3.2 MESA_GLSL_VERSION_OVERRIDE=410 LIBGL_DRI3_DISABLE=1 EPOXY_USE_ANGLE=1 LD_LIBRARY_PATH=/data/data/com.termux/files/usr/opt/angle-android/vulkan
    virgl_test_server --use-egl-surfaceless --use-gles &
-   sleep 1                                   
-   XDG_RUNTIME_DIR=${TMPDIR} termux-x11 :0 &         
-   sleep 1                                           
-   am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1 &                  
-   sleep 1                                    
+   sleep 1
+   XDG_RUNTIME_DIR=${TMPDIR} termux-x11 :0 &
+   sleep 1
+   am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1 &
+   sleep 1
    env DISPLAY=:0 XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg VK_ICD_FILENAMES=/data/data/com.termux/files/usr/share/vulkan/icd.d/wrapper_icd.aarch64.json MESA_VK_WSI_PRESENT_MODE=mailbox MESA_VK_WSI_DEBUG=blit MESA_SHADER_CACHE=512MB MESA_SHADER_CACHE_DISABLE=false vblank_mode=0 GALLIUM_DRIVER=virpipe dbus-launch --exit-with-session xfce4-session > /dev/null 2>&1 &
    ```
 
@@ -85,10 +92,13 @@
 - then save and exit
 
 ### Automatic Configuration
+
 Run the following command to change drivers:
+
 ```bash
 setup-termux-desktop --change hw
 ```
+
 ---
 
 # :chart_with_upwards_trend: Performance Results
@@ -96,12 +106,15 @@ setup-termux-desktop --change hw
 ## Experimental Driver Performance
 
 ### Adreno with `mesa-vulkan-icd-wrapper` and Turnip
+
 ![Adreno Experimental Performance](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/exp-hwa-adreno.png)
 
 ### Mali with `mesa-vulkan-icd-wrapper`
+
 ![Mali Experimental Performance](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/exp-hwa-mali.png)
 
 ### Test Environment
+
 > These tests and results were conducted by [LinuxDroidMaster](https://github.com/LinuxDroidMaster).
 
 - **Device:** Lenovo Legion Y700 (Snapdragon 870, Adreno 650)
@@ -110,30 +123,30 @@ setup-termux-desktop --change hw
 
 ### GLMark2 Scores: Proot Distro
 
-| Run | LLVMPIPE | VIRGL | VIRGL ZINK | TURNIP | ZINK |
-|-----|----------|-------|------------|--------|------|
-| 1   | 93       | 70    | 66         | 198    | Error|
-| 2   | 93       | 77    | 66         | 198    | Error|
-| 3   | 72       | 70    | 71         | 198    | Error|
-| 4   | 94       | 76    | 66         | 197    | Error|
-| 5   | 93       | 75    | 67         | 198    | Error|
+| Run | LLVMPIPE | VIRGL | VIRGL ZINK | TURNIP | ZINK  |
+| --- | -------- | ----- | ---------- | ------ | ----- |
+| 1   | 93       | 70    | 66         | 198    | Error |
+| 2   | 93       | 77    | 66         | 198    | Error |
+| 3   | 72       | 70    | 71         | 198    | Error |
+| 4   | 94       | 76    | 66         | 197    | Error |
+| 5   | 93       | 75    | 67         | 198    | Error |
 
 #### Commands Used:
 
-| Driver        | Command                                      |
-|---------------|----------------------------------------------|
-| LLVMPIPE      | `glmark2`                                   |
-| VIRGL         | `GALLIUM_DRIVER=virpipe MESA_GL_VERSION_OVERRIDE=4.0 glmark2` |
-| VIRGL ZINK    | `GALLIUM_DRIVER=virpipe MESA_GL_VERSION_OVERRIDE=4.0 glmark2` |
-| TURNIP        | `MESA_LOADER_DRIVER_OVERRIDE=zink TU_DEBUG=noconform glmark2` |
-| ZINK          | `GALLIUM_DRIVER=zink MESA_GL_VERSION_OVERRIDE=4.0 glmark2`   |
+| Driver     | Command                                                       |
+| ---------- | ------------------------------------------------------------- |
+| LLVMPIPE   | `glmark2`                                                     |
+| VIRGL      | `GALLIUM_DRIVER=virpipe MESA_GL_VERSION_OVERRIDE=4.0 glmark2` |
+| VIRGL ZINK | `GALLIUM_DRIVER=virpipe MESA_GL_VERSION_OVERRIDE=4.0 glmark2` |
+| TURNIP     | `MESA_LOADER_DRIVER_OVERRIDE=zink TU_DEBUG=noconform glmark2` |
+| ZINK       | `GALLIUM_DRIVER=zink MESA_GL_VERSION_OVERRIDE=4.0 glmark2`    |
 
 ---
 
 ### GLMark2 Scores: Termux (No Proot)
 
 | Run | LLVMPIPE | VIRGL | VIRGL ZINK | ZINK | TURNIP |
-|-----|----------|-------|------------|------|--------|
+| --- | -------- | ----- | ---------- | ---- | ------ |
 | 1   | 69       | Error | 92         | 121  | N/A    |
 | 2   | 70       | Error | 92         | 122  | N/A    |
 | 3   | 69       | Error | 93         | 121  | N/A    |
@@ -145,13 +158,15 @@ setup-termux-desktop --change hw
 ### Firefox Aquarium WebGL Benchmark
 
 #### Proot Distro Results (Firefox-ESR WebGL Aquarium FPS)
-| LLVMPIPE | VIRGL | VIRGL ZINK | TURNIP        |
-|----------|-------|------------|---------------|
-| 4        | 20    | 17         | Web page crash|
+
+| LLVMPIPE | VIRGL | VIRGL ZINK | TURNIP         |
+| -------- | ----- | ---------- | -------------- |
+| 4        | 20    | 17         | Web page crash |
 
 #### Termux Results (Firefox-ESR WebGL Aquarium FPS)
+
 | LLVMPIPE | VIRGL | VIRGL ZINK | ZINK | TURNIP |
-|----------|-------|------------|------|--------|
+| -------- | ----- | ---------- | ---- | ------ |
 | 2        | Error | 24         | 40   | N/A    |
 
 ![WebGL Aquarium on Firefox](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/webglaquarium.png)
@@ -159,6 +174,7 @@ setup-termux-desktop --change hw
 ---
 
 ### Additional Testing
+
 - **SuperTuxKart:** Benchmarked over 30 seconds.
 
 ![SuperTuxKart Comparison](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/supertuxkart_comparison.png)

@@ -1,4 +1,3 @@
-
 ## 0. Stock:
 
 <center><img src="https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/xfce/look_0/desktop.png"></center>
@@ -6,9 +5,9 @@
 <details style ="font-size: larger">
 <summary><b style ="font-size: larger">Screenshots: </b></summary>
 
-|Apps|App Menu|
-|--|--|
-|![img](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/xfce/look_0/apps.png)|![img](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/xfce/look_0/app-menu.png)|
+| Apps                                                                                                        | App Menu                                                                                                        |
+| ----------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| ![img](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/xfce/look_0/apps.png) | ![img](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/xfce/look_0/app-menu.png) |
 
 </details>
 <br>
@@ -38,9 +37,9 @@ Icon Used:
 <details style ="font-size: larger">
 <summary><b style ="font-size: larger">Screenshots: </b></summary>
 
-|Start Menu|Appps|
-|--|--|
-|![img](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/xfce/look_1/start-menu.png)|![img](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/xfce/look_1/apps.png)|
+| Start Menu                                                                                                        | Appps                                                                                                       |
+| ----------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| ![img](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/xfce/look_1/start-menu.png) | ![img](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/xfce/look_1/apps.png) |
 
 </details>
 
@@ -61,7 +60,8 @@ Icon Used:
 
 - [Tela circle](https://www.gnome-look.org/p/1359276)
 
-Cursor Theme: 
+Cursor Theme:
+
 - [Bibata Modern Ice](https://www.pling.com/p/1197198/)
 
 </b>
@@ -73,9 +73,9 @@ Cursor Theme:
 <details style ="font-size: larger">
 <summary><b style ="font-size: larger">Screenshots: </b></summary>
 
-|Apps|Panel|App Search|
-|--|--|--|
-|![img](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/xfce/look_2/apps.png)|![img](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/xfce/look_2/extra.png)|![img](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/xfce/look_2/app-search.png)|
+| Apps                                                                                                        | Panel                                                                                                        | App Search                                                                                                        |
+| ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------- |
+| ![img](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/xfce/look_2/apps.png) | ![img](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/xfce/look_2/extra.png) | ![img](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/xfce/look_2/app-search.png) |
 
 </details>
 <br>
@@ -87,7 +87,7 @@ Cursor Theme:
 Theme Used, Icon Used, Cursor Theme:-
 
 - [kali-undercover](https://gitlab.com/kalilinux/packages/kali-undercover)
-Kvantum:-
+  Kvantum:-
 - [Win10OS-kde](https://github.com/yeyushengfan258/Win10OS-kde/tree/master/Kvantum)
 </details>
 <br>
@@ -97,9 +97,9 @@ Kvantum:-
 <details style ="font-size: larger">
 <summary><b style ="font-size: larger">Screenshots: </b></summary>
 
-|Apps|Start Menu|Buttons|
-|--|--|--|
-|![img](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/xfce/look_3/basic-apps.png)|![img](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/xfce/look_3/menu.png)|![img](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/xfce/look_3/win-like-close.png)|
+| Apps                                                                                                              | Start Menu                                                                                                  | Buttons                                                                                                               |
+| ----------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| ![img](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/xfce/look_3/basic-apps.png) | ![img](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/xfce/look_3/menu.png) | ![img](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/xfce/look_3/win-like-close.png) |
 
 </details>
 <br>
@@ -131,9 +131,9 @@ Cursor Theme:
 <details style ="font-size: larger">
 <summary><b style ="font-size: larger">Screenshots: </b></summary>
 
-|Start Menu|Apps|
-|--|--|
-|![img](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/xfce/look_4/start-menu.png)|![img](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/xfce/look_4/basic-apps.png)|
+| Start Menu                                                                                                        | Apps                                                                                                              |
+| ----------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| ![img](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/xfce/look_4/start-menu.png) | ![img](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/xfce/look_4/basic-apps.png) |
 
 </details>
 <br>
@@ -152,7 +152,8 @@ Icon Used:
 
 - [Colloid-icon-theme](https://www.gnome-look.org/p/1661983/)
 
-Cursor Theme: 
+Cursor Theme:
+
 - [Fluent cursors](https://www.gnome-look.org/p/1499852/)
 
 </b>
@@ -164,14 +165,14 @@ Cursor Theme:
 <details style ="font-size: larger">
 <summary><b style ="font-size: larger">Screenshots: </b></summary>
 
-|Start Menu|Apps|
-|--|--|
-|![img](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/xfce/look_5/app-menu.png)|![img](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/xfce/look_5/apps.png)|
+| Start Menu                                                                                                      | Apps                                                                                                        |
+| --------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| ![img](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/xfce/look_5/app-menu.png) | ![img](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/xfce/look_5/apps.png) |
 
 </details>
 <br>
 
-## 6.  Minimalist Setup 2:
+## 6. Minimalist Setup 2:
 
 <details>
 <summary><b style ="font-size: small">Style Details: </summary>
@@ -186,10 +187,12 @@ Icon Used:
 - [Deepin2022](https://www.gnome-look.org/s/Gnome/p/1678986)
 
 Cursor Theme:
+
 - [Layan-cursors](https://www.pling.com/p/1365214/)
 - [oreo purple cursors](https://www.pling.com/p/1360254/)
 
 Kvantum Theme:
+
 - [Dracula-purple-solid](https://www.gnome-look.org/p/2052404/)
 - [kPurple](https://www.pling.com/p/1625856/)
 
@@ -202,12 +205,11 @@ Kvantum Theme:
 <details style ="font-size: larger">
 <summary><b style ="font-size: larger">Screenshots: </b></summary>
 
-|App Launcher|Apps|
-|--|--|
-|![img](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/xfce/look_6/app-launcher.png)|![img](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/xfce/look_6/apps.png)|
+| App Launcher                                                                                                        | Apps                                                                                                        |
+| ------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| ![img](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/xfce/look_6/app-launcher.png) | ![img](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/xfce/look_6/apps.png) |
 
 </details>
 <br>
-
 
 # More Coming soon...

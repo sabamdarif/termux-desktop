@@ -5,18 +5,20 @@
 <details style ="font-size: larger">
 <summary><b style ="font-size: larger">Screenshots: </b></summary>
 
-|Menu|
-|--|
-|![img](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/openbox/look_0/menu.png)|
+| Menu                                                                                                           |
+| -------------------------------------------------------------------------------------------------------------- |
+| ![img](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/openbox/look_0/menu.png) |
 
 </details>
 <br>
 
 ## 1. Nordic Openbox:
-### Keybord shortcuts:- [Here](https://github.com/sabamdarif/termux-desktop/blob/main/docs/see-more.md#openbox-keybindings-cheat-sheet)
->Inspired from [adi1090x's termux-desktop](https://github.com/adi1090x/termux-desktop)
 
->My modifications to his style
+### Keybord shortcuts:- [Here](https://github.com/sabamdarif/termux-desktop/blob/main/docs/see-more.md#openbox-keybindings-cheat-sheet)
+
+> Inspired from [adi1090x's termux-desktop](https://github.com/adi1090x/termux-desktop)
+
+> My modifications to his style
 
 <details>
 <summary><b style ="font-size: small">Style Details: </summary>
@@ -42,17 +44,18 @@ Icon Used:
 <details style ="font-size: larger">
 <summary><b style ="font-size: larger">Screenshots: </b></summary>
 
-| Apps | Dashboard |
-|:--:|:--:|
-| ![Apps](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/openbox/look_1/apps.png) | ![Dashboard](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/openbox/look_1/dashbord.png) |
-| **Launcher** | **Powermenu**  |
-| ![Launcher](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/openbox/look_1/launcher.png) | ![Powermenu](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/openbox/look_1/powermenu.png) 
+|                                                          Apps                                                           |                                                         Dashboard                                                         |
+| :---------------------------------------------------------------------------------------------------------------------: | :-----------------------------------------------------------------------------------------------------------------------: |
+|     ![Apps](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/openbox/look_1/apps.png)     | ![Dashboard](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/openbox/look_1/dashbord.png)  |
+|                                                      **Launcher**                                                       |                                                       **Powermenu**                                                       |
+| ![Launcher](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/openbox/look_1/launcher.png) | ![Powermenu](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/openbox/look_1/powermenu.png) |
 
 </details>
 
 <br>
 
 ## 2. Dracula + material ui like:
+
 ### Keybord shortcuts:- [Here](https://github.com/sabamdarif/termux-desktop/blob/main/docs/see-more.md#openbox-keybindings-cheat-sheet)
 
 <details>
@@ -63,7 +66,7 @@ Icon Used:
 > [roficlip](https://github.com/seamus-45/roficlip)
 > [rofimoji](https://github.com/fdw/rofimoji)
 
-Theme Used: 
+Theme Used:
 <br>
 
 - GTK Theme:- [Dracula](https://github.com/dracula/gtk)
@@ -85,21 +88,20 @@ Icon Used:
 <details style ="font-size: larger">
 <summary><b style ="font-size: larger">Screenshots: </b></summary>
 
-| Apps | App Launcher |
-|:--:|:--:|
-| ![Apps](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/openbox/look_2/apps.png) | ![Launcher](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/openbox/look_2/app-launcher.png) |
-| **clipboard manage** | **emoji picker**  |
+|                                                              Apps                                                               |                                                         App Launcher                                                         |
+| :-----------------------------------------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------------------------------------: |
+|         ![Apps](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/openbox/look_2/apps.png)         | ![Launcher](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/openbox/look_2/app-launcher.png)  |
+|                                                      **clipboard manage**                                                       |                                                       **emoji picker**                                                       |
 | ![Launcher](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/openbox/look_2/clipboard-manage.png) | ![Powermenu](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/openbox/look_2/emoji-picker.png) |
 
-| **Wallpaper Picker** | **Menu**  |
-|:--:|:--:|
-| ![Launcher](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/openbox/look_2/wallpaper-picker.png) | ![Powermenu](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/openbox/look_2/menu.png) |
-| **Wallpaper based color demo** | **Wallpaper based color demo**  |
-| ![Launcher](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/openbox/look_2/demo-1.png) | ![Powermenu](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/openbox/look_2/demo-2.png) |
+|                                                      **Wallpaper Picker**                                                       |                                                        **Menu**                                                        |
+| :-----------------------------------------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------------------------------: |
+| ![Launcher](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/openbox/look_2/wallpaper-picker.png) |  ![Powermenu](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/openbox/look_2/menu.png)  |
+|                                                 **Wallpaper based color demo**                                                  |                                             **Wallpaper based color demo**                                             |
+|      ![Launcher](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/openbox/look_2/demo-1.png)      | ![Powermenu](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/openbox/look_2/demo-2.png) |
 
 </details>
 
 <br>
-
 
 # More Coming soon...
