@@ -5216,6 +5216,7 @@ function change_de() {
             hw_config
         fi
         gui_launcher
+        some_fixes
         print_msg "Removeing old $old_de_name environment"
         de_name="$old_de_name"
         remove_desktop_environments
