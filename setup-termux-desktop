@@ -3973,6 +3973,12 @@ function check_desktop_process() {
         lxqt)
             de_pid="$(pgrep -f "lxqt-session|lxqt-panel")"
             ;;
+        gnome)
+            de_pid="$(pgrep -f "gnome-session-minimal|gnome-session")"
+            ;;
+        cinnamon)
+            de_pid="$(pgrep -f "cinnamon-session")"
+            ;;
         openbox)
             de_pid="$(pgrep -f "openbox|openbox-session")"
             ;;
@@ -3993,6 +3999,9 @@ function check_desktop_process() {
             ;;
         fluxbox)
             de_pid="$(pgrep -f fluxbox)"
+            ;;
+        icewm)
+            de_pid="$(pgrep -f icewm-session)"
             ;;
         *)
             print_failed "Unknown desktop environment: $de_name"
