@@ -5578,7 +5578,6 @@ function reset_changes() {
         check_and_delete "$HOME/Videos"
 
         if [[ "$shell_name" == "zsh" ]]; then
-            chsh -s bash
             check_and_delete "$HOME/.oh-my-zsh"
         fi
 

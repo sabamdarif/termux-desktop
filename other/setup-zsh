@@ -143,3 +143,4 @@ check_and_backup "$HOME/.zshrc"
 check_and_delete "$HOME/.zshrc"
 write_zshrc
 set_theme
+chsh -s zsh

@@ -98,3 +98,4 @@ if [[ "$chosen_shell_name" == "bash_with_ble" ]]; then
     # Delete all other occurrences of ble/util/notify-broken-locale
     sed -i 's/ble\/util\/notify-broken-locale//g' "$HOME/.local/share/blesh/ble.sh"
 fi
+chsh -s bash
