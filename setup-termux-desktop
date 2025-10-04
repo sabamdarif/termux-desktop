@@ -132,7 +132,7 @@ function print_warn() {
 function print_msg() {
     local msg
     msg="$1"
-    echo "${R}[${C}-${R}]${G} $msg ${NC}"
+    echo "${R}[${C}-${R}]${B} $msg ${NC}"
     log_debug "$msg"
 
 }
