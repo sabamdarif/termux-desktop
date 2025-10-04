@@ -617,7 +617,7 @@ count_subfolders() {
 function confirmation_y_or_n() {
     while true; do
         # prompt
-        read -r -p "${R}[${C}-${R}]${Y}${BOLD} $1 ${Y}(y/n) ${NC}" response
+        read -r -p "${R}[${C}-${R}]${Y} $1 ${Y}(y/n) ${NC}" response
         # apply default
         response="${response:-y}"
         # lowercase
@@ -2348,11 +2348,11 @@ function check_system_requirements() {
             latest_termux_x11_tag=$(get_latest_release "termux" "termux-x11")
             print_failed "Termux-x11: ${NC}Not Installed"
             if [[ $(getprop ro.product.cpu.abi) == "arm64-v8a" ]]; then
-                print_msg "${BOLD}Install Termux-x11:- ${NC}https://github.com/termux/termux-x11/releases/download/${latest_termux_x11_tag}/app-arm64-v8a-debug.apk"
+                print_msg "Install Termux-x11:- ${NC}https://github.com/termux/termux-x11/releases/download/${latest_termux_x11_tag}/app-arm64-v8a-debug.apk"
             elif [[ $(getprop ro.product.cpu.abi) == "armeabi-v7a" ]]; then
-                print_msg "${BOLD}Install Termux-x11:- ${NC}https://github.com/termux/termux-x11/releases/download/${latest_termux_x11_tag}/app-armeabi-v7a-debug.apk"
+                print_msg "Install Termux-x11:- ${NC}https://github.com/termux/termux-x11/releases/download/${latest_termux_x11_tag}/app-armeabi-v7a-debug.apk"
             else
-                print_msg "${BOLD}Install Termux-x11:- ${NC}https://github.com/termux/termux-x11/releases/download/${latest_termux_x11_tag}/app-universal-debug.apk"
+                print_msg "Install Termux-x11:- ${NC}https://github.com/termux/termux-x11/releases/download/${latest_termux_x11_tag}/app-universal-debug.apk"
             fi
             ((errors++))
         fi
@@ -2364,7 +2364,7 @@ function check_system_requirements() {
             local latest_termux_api_tag
             latest_termux_api_tag=$(get_latest_release "termux" "termux-api")
             print_failed "Termux-API: ${NC}Not Installed"
-            print_msg "${BOLD}Install Termux-API:- ${NC}https://github.com/termux/termux-api/releases/download/${latest_termux_api_tag}/termux-api-app_${latest_termux_api_tag}+github-debug.apk"
+            print_msg "Install Termux-API:- ${NC}https://github.com/termux/termux-api/releases/download/${latest_termux_api_tag}/termux-api-app_${latest_termux_api_tag}+github-debug.apk"
             ((errors++))
         fi
         echo " "
@@ -2377,7 +2377,7 @@ function check_system_requirements() {
                 print_failed "Found $errors error(s). System requirements not met."
                 sleep 0.2
                 print_msg "Type 'a' to check again"
-                read -r -p "${R}[${C}-${R}]${Y}${BOLD} Do you want to continue anyway (Not Recomended) ${Y}(y/n/a) ${NC}" sys_requirements_check
+                read -r -p "${R}[${C}-${R}]${Y} Do you want to continue anyway (Not Recomended) ${Y}(y/n/a) ${NC}" sys_requirements_check
                 case $sys_requirements_check in
                 [yY]*)
                     echo
