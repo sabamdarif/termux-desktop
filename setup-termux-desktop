@@ -48,7 +48,7 @@ fi
 
 cd "$HOME" || exit 1
 ############### Define basic initial values ######################
-TERMUX_DESKTOP_PATH="/data/data/com.termux/files/usr/etc/termux-desktop"
+TERMUX_DESKTOP_PATH="$PREFIX/etc/termux-desktop"
 CONFIG_FILE="$TERMUX_DESKTOP_PATH/configuration.conf"
 LOG_FILE="/data/data/com.termux/files/home/termux-desktop.log"
 CALL_FROM_CHANGE_DISTRO=false
@@ -92,30 +92,30 @@ function check_termux() {
 function print_log() {
     local timestamp
     timestamp="$(date '+%Y-%m-%d %H:%M:%S')"
-    local log_level="${2:-INFO}" # Default log level is INFO if not specified
+    local log_level="${2:-INFO}"
     local message="$1"
-    echo "[${timestamp}] ${log_level}: ${message}" >>"$LOG_FILE"
+    echo "[${timestamp}] ${log_level}: ${message}" >>"$LOG_FILE" 2>/dev/null || true
 }
 
 function log_warn() {
     local timestamp
     timestamp=$(date '+%Y-%m-%d %H:%M:%S')
     local message="$1"
-    echo "[${timestamp}] WARN: ${message}" >>"$LOG_FILE"
+    echo "[${timestamp}] WARN: ${message}" >>"$LOG_FILE" 2>/dev/null || true
 }
 
 function log_error() {
     local timestamp
     timestamp=$(date '+%Y-%m-%d %H:%M:%S')
     local message="$1"
-    echo "[${timestamp}] ERROR: ${message}" >>"$LOG_FILE"
+    echo "[${timestamp}] ERROR: ${message}" >>"$LOG_FILE" 2>/dev/null || true
 }
 
 function log_debug() {
     local timestamp
     timestamp=$(date '+%Y-%m-%d %H:%M:%S')
     local message="$1"
-    echo "[${timestamp}] DEBUG: ${message}" >>"$LOG_FILE"
+    echo "[${timestamp}] DEBUG: ${message}" >>"$LOG_FILE" 2>/dev/null || true
 }
 
 function print_success() {
@@ -154,8 +154,11 @@ function wait_for_keypress() {
 
 function check_and_create_directory() {
     if [[ -n "$1" && ! -d "$1" ]]; then
-        mkdir -p "$1"
-        log_debug "$1"
+        mkdir -p "$1" 2>/dev/null || {
+            log_error "Failed to create directory: $1"
+            return 1
+        }
+        log_debug "Created directory: $1"
     fi
 }
 
@@ -164,8 +167,11 @@ function check_and_delete() {
     local files_folders
     for files_folders in "$@"; do
         if [[ -e "$files_folders" ]]; then
-            rm -rf "$files_folders" >/dev/null 2>&1
-            log_debug "$files_folders"
+            rm -rf "$files_folders" >/dev/null 2>&1 || {
+                log_error "Failed to delete: $files_folders"
+                continue
+            }
+            log_debug "Deleted: $files_folders"
         fi
     done
 }
@@ -192,6 +198,32 @@ function check_and_backup() {
             fi
         else
             print_msg "Path $files_folders does not exist"
+        fi
+    done
+}
+
+# find a backup file which end with a number pattern and restore it
+function check_and_restore() {
+    log_debug "Starting restore for: $*"
+    # shellcheck disable=SC2206
+    local files_folders_list=($@)
+    local files_folders
+
+    for files_folders in "${files_folders_list[@]}"; do
+        local latest_backup
+        latest_backup=$(find "$(dirname "$files_folders")" -maxdepth 1 -name "$(basename "$files_folders")-[0-9][0-9]-[0-9][0-9]-[0-9][0-9][0-9][0-9].bak" 2>/dev/null | sort | tail -n 1)
+
+        if [[ -z "$latest_backup" ]]; then
+            print_msg "No backup found for $files_folders"
+            continue
+        fi
+
+        if [[ -e "$files_folders" ]]; then
+            print_msg "File $files_folders already exists"
+        else
+            print_msg "Restoring $files_folders"
+            mv "$latest_backup" "$files_folders"
+            log_debug "$latest_backup $files_folders"
         fi
     done
 }
@@ -223,9 +255,9 @@ function download_file() {
         fi
 
         if command -v wget &>/dev/null; then
-            wget --tries=5 --timeout=15 --retry-connrefused -O "$dest" "$url"
+            wget --tries=5 --timeout=15 --retry-connrefused -O "$dest" "$url" 2>/dev/null
         else
-            curl -# -L "$url" -o "$dest"
+            curl -# -L "$url" -o "$dest" 2>/dev/null
         fi
 
         if [[ -f "$dest" && -s "$dest" ]]; then
@@ -250,66 +282,47 @@ function download_file() {
     return 1
 }
 
-# find a backup file which end with a number pattern and restore it
-function check_and_restore() {
-    log_debug "Starting restore for: $*"
-    # shellcheck disable=SC2206
-    local files_folders_list=($@)
-    local files_folders
-
-    for files_folders in "${files_folders_list[@]}"; do
-        local latest_backup
-        latest_backup=$(find "$(dirname "$files_folders")" -maxdepth 1 -name "$(basename "$files_folders")-[0-9][0-9]-[0-9][0-9]-[0-9][0-9][0-9][0-9].bak" 2>/dev/null | sort | tail -n 1)
-
-        if [[ -z "$latest_backup" ]]; then
-            print_msg "No backup found for $files_folders"
-            continue
-        fi
-
-        if [[ -e "$files_folders" ]]; then
-            print_msg "File $files_folders already exists"
-        else
-            print_msg "Restoring $files_folders"
-            mv "$latest_backup" "$files_folders"
-            log_debug "$latest_backup $files_folders"
-        fi
-    done
-}
-
 function detact_package_manager() {
     # shellcheck disable=SC1091
-    source "/data/data/com.termux/files/usr/bin/termux-setup-package-manager"
+    if [[ -f "/data/data/com.termux/files/usr/bin/termux-setup-package-manager" ]]; then
+        source "/data/data/com.termux/files/usr/bin/termux-setup-package-manager"
+    fi
+
     if [[ "$TERMUX_APP_PACKAGE_MANAGER" == "apt" ]]; then
         PACKAGE_MANAGER="apt"
     elif [[ "$TERMUX_APP_PACKAGE_MANAGER" == "pacman" ]]; then
         PACKAGE_MANAGER="pacman"
     else
-        print_failed "${C} Could not detact your package manager, Switching To ${C}pkg ${NC}"
+        PACKAGE_MANAGER="pkg"
+        print_failed "${C} Could not detect your package manager, Switching To ${C}pkg ${NC}"
     fi
-    log_debug "$PACKAGE_MANAGER"
+    log_debug "Package manager: $PACKAGE_MANAGER"
 }
 
 # will check if the package is already installed or not, if it installed then reinstall and print success/failed message
 function package_install_and_check {
     log_debug "Starting package installation for: $*"
-    # shellcheck disable=SC2206
-    packs_list=($@)
+    local packs_list
+    # Properly splits on spaces
+    IFS=' ' read -r -a packs_list <<<"$*"
+
     # pacman part
     if [[ "$PACKAGE_MANAGER" == "pacman" ]]; then
         for package_name in "${packs_list[@]}"; do
             if [[ "$package_name" == *"*"* ]]; then
                 log_debug "Processing wildcard pattern: $package_name"
-                packages=$(pacman -Ssq | grep -E "^${package_name//\*/.*}$")
+                local packages
+                packages=$(pacman -Ssq 2>/dev/null | grep -E "^${package_name//\*/.*}$")
                 log_debug "matched packages: ${C}$packages"
                 for package in $packages; do
-                    retry_count=0
-                    max_retries=5
-                    install_success=false
+                    local retry_count=0
+                    local max_retries=5
+                    local install_success=false
                     while [[ "$retry_count" -lt "$max_retries" && "$install_success" == false ]]; do
                         retry_count=$((retry_count + 1))
                         check_and_delete "$PREFIX/var/lib/pacman/db.lck"
                         print_msg "Installing Package : ${C}$package"
-                        pacman -S --noconfirm "$package"
+                        pacman -S --noconfirm "$package" 2>/dev/null
                         if pacman -Qi "$package" >/dev/null 2>&1; then
                             print_success "Successfully install package: ${C}$package"
                             install_success=true
@@ -319,14 +332,14 @@ function package_install_and_check {
                     done
                 done
             else
-                retry_count=0
-                max_retries=5
-                install_success=false
+                local retry_count=0
+                local max_retries=5
+                local install_success=false
                 while [[ "$retry_count" -lt "$max_retries" && "$install_success" == false ]]; do
                     retry_count=$((retry_count + 1))
                     check_and_delete "$PREFIX/var/lib/pacman/db.lck"
                     print_msg "Installing Package : ${C}$package_name"
-                    pacman -S --noconfirm "$package_name"
+                    pacman -S --noconfirm "$package_name" 2>/dev/null
                     if pacman -Qi "$package_name" >/dev/null 2>&1; then
                         print_success "Successfully install package: ${C}$package_name"
                         install_success=true
@@ -341,45 +354,46 @@ function package_install_and_check {
         for package_name in "${packs_list[@]}"; do
             if [[ "$package_name" == *"*"* ]]; then
                 log_debug "Processing wildcard pattern: $package_name"
-                packages=$(apt-cache pkgnames | grep -E "^${package_name//\*/.*}$" | sort -u)
+                local packages
+                packages=$(apt-cache pkgnames 2>/dev/null | grep -E "^${package_name//\*/.*}$" | sort -u)
                 log_debug "matched packages: $packages"
                 for package in $packages; do
-                    retry_count=0
-                    max_retries=5
-                    install_success=false
+                    local retry_count=0
+                    local max_retries=5
+                    local install_success=false
                     while [[ "$retry_count" -lt "$max_retries" && "$install_success" == false ]]; do
                         retry_count=$((retry_count + 1))
                         print_msg "Installing package: ${C}$package"
-                        apt install "$package" -y
+                        apt install "$package" -y 2>/dev/null
                         if dpkg -s "$package" >/dev/null 2>&1; then
                             print_success "Successfully install package: ${C}$package"
                             install_success=true
                         else
                             print_warn "Failed to install package: ${C}${package}. ${Y}Trying again... ($retry_count)"
                             # Only run recovery commands on failure
-                            dpkg --configure -a
-                            apt --fix-broken install -y
-                            apt install --fix-missing -y
+                            dpkg --configure -a 2>/dev/null
+                            apt --fix-broken install -y 2>/dev/null
+                            apt install --fix-missing -y 2>/dev/null
                         fi
                     done
                 done
             else
-                retry_count=0
-                max_retries=5
-                install_success=false
+                local retry_count=0
+                local max_retries=5
+                local install_success=false
                 while [[ "$retry_count" -lt "$max_retries" && "$install_success" == false ]]; do
                     retry_count=$((retry_count + 1))
                     print_msg "Installing package: ${C}$package_name"
-                    apt install "$package_name" -y
+                    apt install "$package_name" -y 2>/dev/null
                     if dpkg -s "$package_name" >/dev/null 2>&1; then
                         print_success "Successfully install package: ${C}$package_name"
                         install_success=true
                     else
                         print_warn "Failed to install package: ${C}${package_name}. ${Y}Trying again... ($retry_count)"
                         # Only run recovery commands on failure
-                        dpkg --configure -a
-                        apt --fix-broken install -y
-                        apt install --fix-missing -y
+                        dpkg --configure -a 2>/dev/null
+                        apt --fix-broken install -y 2>/dev/null
+                        apt install --fix-missing -y 2>/dev/null
                     fi
                 done
             fi
@@ -391,15 +405,15 @@ function package_install_and_check {
 function package_check_and_remove() {
     log_debug "Starting package removal for: $*"
     local packs_list
-    # shellcheck disable=SC2206
-    packs_list=($@)
+    # Properly splits on spaces
+    IFS=' ' read -r -a packs_list <<<"$*"
 
     if [[ "$PACKAGE_MANAGER" == "pacman" ]]; then
         for package_name in "${packs_list[@]}"; do
             if [[ "$package_name" == *"*"* ]]; then
                 log_debug "Processing wildcard pattern: $package_name"
                 local packages
-                packages=$(pacman -Qsq | grep -E "^${package_name//\*/.*}$")
+                packages=$(pacman -Qsq 2>/dev/null | grep -E "^${package_name//\*/.*}$")
                 if [[ -z "$packages" ]]; then
                     print_success "No installed packages found matching: ${C}$package_name"
                     continue
@@ -413,7 +427,7 @@ function package_check_and_remove() {
                         retry_count=$((retry_count + 1))
                         check_and_delete "$PREFIX/var/lib/pacman/db.lck"
                         print_msg "Removing Package : ${C}$package"
-                        pacman -Rnds --noconfirm "$package"
+                        pacman -Rnds --noconfirm "$package" 2>/dev/null
                         if ! pacman -Qi "$package" >/dev/null 2>&1; then
                             print_success "Successfully removed package: ${C}$package"
                             remove_success=true
@@ -431,7 +445,7 @@ function package_check_and_remove() {
                         retry_count=$((retry_count + 1))
                         check_and_delete "$PREFIX/var/lib/pacman/db.lck"
                         print_msg "Removing Package : ${C}$package_name"
-                        pacman -Rnds --noconfirm "$package_name"
+                        pacman -Rnds --noconfirm "$package_name" 2>/dev/null
                         if ! pacman -Qi "$package_name" >/dev/null 2>&1; then
                             print_success "Successfully removed package: ${C}$package_name"
                             remove_success=true
@@ -464,8 +478,8 @@ function package_check_and_remove() {
                     while [[ "$retry_count" -lt "$max_retries" && "$remove_success" == false ]]; do
                         retry_count=$((retry_count + 1))
                         print_msg "Removing package: ${C}$package"
-                        dpkg --configure -a >/dev/null
-                        apt autoremove "$package" -y
+                        dpkg --configure -a >/dev/null 2>&1
+                        apt autoremove "$package" -y 2>/dev/null
                         if ! dpkg -s "$package" >/dev/null 2>&1; then
                             print_success "Successfully removed package: ${C}$package"
                             remove_success=true
@@ -482,8 +496,8 @@ function package_check_and_remove() {
                     while [[ "$retry_count" -lt "$max_retries" && "$remove_success" == false ]]; do
                         retry_count=$((retry_count + 1))
                         print_msg "Removing package: ${C}$package_name"
-                        dpkg --configure -a >/dev/null
-                        apt autoremove "$package_name" -y
+                        dpkg --configure -a >/dev/null 2>&1
+                        apt autoremove "$package_name" -y 2>/dev/null
                         if ! dpkg -s "$package_name" >/dev/null 2>&1; then
                             print_success "Successfully removed package: ${C}$package_name"
                             remove_success=true
@@ -500,78 +514,82 @@ function package_check_and_remove() {
 }
 
 function get_file_name_number() {
+    local current_file
     current_file=$(basename "$0")
-    folder_name="${current_file%.sh}"
+    local folder_name="${current_file%.sh}"
+    local theme_number
     theme_number=$(echo "$folder_name" | grep -oE '[1-9][0-9]*')
-    log_debug "$theme_number"
+    log_debug "Theme number: $theme_number"
+    echo "$theme_number"
 }
 
 function extract_archive() {
     local archive="$1"
     if [[ ! -f "$archive" ]]; then
         print_failed "$archive doesn't exist"
+        return 1
     fi
 
     case "$archive" in
     *.tar.gz | *.tgz)
         print_success "Extracting ${C}$archive"
-        tar xzvf "$archive" || {
+        tar xzvf "$archive" 2>/dev/null || {
             print_failed "Failed to extract ${C}$archive"
             return 1
         }
         ;;
     *.tar.xz)
         print_success "Extracting ${C}$archive"
-        tar xJvf "$archive" || {
+        tar xJvf "$archive" 2>/dev/null || {
             print_failed "Failed to extract ${C}$archive"
             return 1
         }
         ;;
     *.tar.bz2 | *.tbz2)
         print_success "Extracting ${C}$archive"
-        tar xjvf "$archive" || {
+        tar xjvf "$archive" 2>/dev/null || {
             print_failed "Failed to extract ${C}$archive"
             return 1
         }
         ;;
     *.tar)
         print_success "Extracting ${C}$archive"
-        tar xvf "$archive" || {
+        tar xvf "$archive" 2>/dev/null || {
             print_failed "Failed to extract ${C}$archive"
             return 1
         }
         ;;
     *.bz2)
         print_success "Extracting ${C}$archive"
-        bunzip2 -v "$archive" || {
+        bunzip2 -v "$archive" 2>/dev/null || {
             print_failed "Failed to extract ${C}$archive"
             return 1
         }
         ;;
     *.gz)
         print_success "Extracting ${C}$archive${NC}"
-        gunzip -v "$archive" || {
+        gunzip -v "$archive" 2>/dev/null || {
             print_failed "Failed to extract ${C}$archive"
             return 1
         }
         ;;
     *.7z)
         print_success "Extracting ${C}$archive"
-        7z x "$archive" -y || {
+        7z x "$archive" -y 2>/dev/null || {
             print_failed "Failed to extract ${C}$archive"
             return 1
         }
         ;;
     *.zip)
         print_success "Extracting ${C}$archive"
-        unzip "${archive}" || {
+        unzip "${archive}" 2>/dev/null || {
             print_failed "Failed to extract ${C}$archive"
             return 1
         }
         ;;
     *.rar)
         print_success "Extracting ${C}$archive"
-        unrar x "$archive" || {
+        unrar x "$archive" 2>/dev/null || {
             print_failed "Failed to extract ${C}$archive"
             return 1
         }
@@ -582,7 +600,7 @@ function extract_archive() {
         ;;
     esac
     print_success "Successfully extracted ${C}$archive"
-    log_debug "$archive"
+    log_debug "Extracted: $archive"
 }
 
 # download a archive file and extract it in a folder
@@ -606,7 +624,7 @@ function download_and_extract() {
         print_failed "Failed to download ${C}${filename}"
         print_msg "${C}Please check your internet connection"
     fi
-    log_debug "$url $target_dir $filename"
+    log_debug "Downloaded and extracted: $url to $target_dir"
 }
 
 count_subfolders() {
@@ -615,12 +633,12 @@ count_subfolders() {
     local path="$3"
     local branch="$4"
     local response
-    response=$(curl -s "https://api.github.com/repos/$owner/$repo/contents/$path?ref=$branch")
+    response=$(curl -s "https://api.github.com/repos/$owner/$repo/contents/$path?ref=$branch" 2>/dev/null)
     # Use jq to extract directories and count them; if none found then set to 0
     local subfolder_count
-    subfolder_count=$(echo "$response" | jq -r '[.[] | select(.type == "dir")] | length')
+    subfolder_count=$(echo "$response" | jq -r '[.[] | select(.type == "dir")] | length' 2>/dev/null)
     echo "${subfolder_count:-0}"
-    log_debug "$subfolder_count"
+    log_debug "Subfolder count: ${subfolder_count:-0}"
 }
 
 # create a yes / no confirmation prompt
@@ -653,7 +671,7 @@ function confirmation_y_or_n() {
             continue
         fi
 
-        # store in the caller’s variable
+        # store in the caller's variable
         eval "$2='$response'"
 
         # handle it
@@ -674,7 +692,7 @@ function confirmation_y_or_n() {
             ;;
         esac
     done
-    log_debug "$1 $response"
+    log_debug "Confirmation: $1 - response: $response"
 }
 
 # get the latest version from a github releases
@@ -682,7 +700,7 @@ function confirmation_y_or_n() {
 function get_latest_release() {
     local repo_owner="$1"
     local repo_name="$2"
-    curl -s "https://api.github.com/repos/$repo_owner/$repo_name/releases/latest" |
+    curl -s "https://api.github.com/repos/$repo_owner/$repo_name/releases/latest" 2>/dev/null |
         grep '"tag_name":' |
         sed -E 's/.*"([^"]+)".*/\1/'
 }
@@ -692,7 +710,7 @@ function install_font_for_style() {
     print_msg "Installing Fonts..."
     check_and_create_directory "$HOME/.fonts"
     download_and_extract "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/setup-files/setup-files/$de_name/look_${style_number}/font.tar.gz" "$HOME/.fonts"
-    fc-cache -f
+    fc-cache -f 2>/dev/null
     cd "$HOME" || return 1
 }
 
@@ -731,17 +749,29 @@ function read_conf() {
     validate_required_vars
 }
 
+# Use atomic write pattern to prevent background execution issues
 function print_to_config() {
     local var_name="$1"
     local var_value="${2:-${!var_name}}"
     local IFS=$' \t\n'
+    local temp_file="${CONFIG_FILE}.tmp.$$"
+
+    # Ensure config file exists
+    if [[ ! -f "$CONFIG_FILE" ]]; then
+        touch "$CONFIG_FILE" 2>/dev/null || {
+            log_error "Cannot access $CONFIG_FILE"
+            return 1
+        }
+    fi
 
     if grep -q "^${var_name}=" "$CONFIG_FILE" 2>/dev/null; then
-        sed -i "s|^${var_name}=.*|${var_name}=${var_value}|" "$CONFIG_FILE"
+        # Atomic write: write to temp file then move
+        sed "s|^${var_name}=.*|${var_name}=${var_value}|" "$CONFIG_FILE" >"$temp_file" && mv "$temp_file" "$CONFIG_FILE"
     else
         echo "${var_name}=${var_value}" >>"$CONFIG_FILE"
     fi
-    log_debug "$var_name $var_value"
+
+    log_debug "$var_name = $var_value"
 }
 
 function validate_required_vars() {
@@ -2458,6 +2488,7 @@ function install_required_packages() {
 }
 
 function recheck_basic_packages() {
+    banner
     print_msg "${BOLD}Checking required packages..."
     local max_retries=3
     local retry_count=0
@@ -2467,9 +2498,11 @@ function recheck_basic_packages() {
     while [[ "$retry_count" -le "$max_retries" ]]; do
         local missing_packages=()
         for pack in "${basic_packages[@]}"; do
-            print_msg "Checking command $pack"
+            print_msg "Checking command:- $pack"
             if ! command -v "$pack" >/dev/null 2>&1; then
                 missing_packages+=("$pack")
+            else
+                print_success "$pack command exists"
             fi
         done
 
