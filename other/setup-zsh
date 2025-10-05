@@ -103,6 +103,11 @@ function check_parameter() {
     final_user_name="${user_name}"
 }
 
+function clone_zinit() {
+    print_msg "Installing zinit..."
+    git clone https://github.com/zdharma-continuum/zinit "$HOME/.local/share/zinit/zinit.git"
+}
+
 function set_theme() {
     print_msg "Installing zsh theme..."
     if [[ "$selected_zsh_theme_name" == "td_zsh" ]]; then
@@ -137,10 +142,12 @@ write_zshrc() {
     download_file "$HOME/.zshrc2" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/other/.zshrc"
     cat "$HOME/.zshrc2" >>"$HOME/.zshrc"
     check_and_delete "$HOME/.zshrc2"
+    zsh -i -c "source $HOME/.zshrc; exit"
 }
 
 check_and_backup "$HOME/.zshrc"
 check_and_delete "$HOME/.zshrc"
+clone_zinit
 write_zshrc
 set_theme
 chsh -s zsh
