@@ -2384,28 +2384,38 @@ function check_system_requirements() {
         if cmd package list packages --user 0 -e -f | sed 's/package://; s/\.apk=/\.apk /' | grep -q "com.termux.x11"; then
             print_success "Termux-x11: ${NC}Installed"
         else
-            local latest_termux_x11_tag
-            latest_termux_x11_tag=$(get_latest_release "termux" "termux-x11")
-            print_failed "Termux-x11: ${NC}Not Installed"
-            if [[ $(getprop ro.product.cpu.abi) == "arm64-v8a" ]]; then
-                print_msg "Install Termux-x11:- ${NC}https://github.com/termux/termux-x11/releases/download/${latest_termux_x11_tag}/app-arm64-v8a-debug.apk"
-            elif [[ $(getprop ro.product.cpu.abi) == "armeabi-v7a" ]]; then
-                print_msg "Install Termux-x11:- ${NC}https://github.com/termux/termux-x11/releases/download/${latest_termux_x11_tag}/app-armeabi-v7a-debug.apk"
+            if pm list packages -e | sed 's/package://' | grep -q "termux.x11"; then
+                print_success "Termux-x11: ${NC}Installed"
             else
-                print_msg "Install Termux-x11:- ${NC}https://github.com/termux/termux-x11/releases/download/${latest_termux_x11_tag}/app-universal-debug.apk"
+                local latest_termux_x11_tag
+                latest_termux_x11_tag=$(get_latest_release "termux" "termux-x11")
+                print_failed "Termux-x11: ${NC}Not Installed"
+                if [[ $(getprop ro.product.cpu.abi) == "arm64-v8a" ]]; then
+                    print_msg "Install Termux-x11:- ${NC}https://github.com/termux/termux-x11/releases/download/${latest_termux_x11_tag}/app-arm64-v8a-debug.apk"
+                elif [[ $(getprop ro.product.cpu.abi) == "armeabi-v7a" ]]; then
+                    print_msg "Install Termux-x11:- ${NC}https://github.com/termux/termux-x11/releases/download/${latest_termux_x11_tag}/app-armeabi-v7a-debug.apk"
+                else
+                    print_msg "Install Termux-x11:- ${NC}https://github.com/termux/termux-x11/releases/download/${latest_termux_x11_tag}/app-universal-debug.apk"
+                fi
+                ((errors++))
             fi
-            ((errors++))
         fi
         # Check termux API
         if cmd package list packages --user 0 -e -f | sed 's/package://; s/\.apk=/\.apk /' | grep -q "com.termux.api"; then
             IS_TERMUX_API_INSTALLED=true
             print_success "Termux-API: ${NC}Installed"
         else
-            local latest_termux_api_tag
-            latest_termux_api_tag=$(get_latest_release "termux" "termux-api")
-            print_failed "Termux-API: ${NC}Not Installed"
-            print_msg "Install Termux-API:- ${NC}https://github.com/termux/termux-api/releases/download/${latest_termux_api_tag}/termux-api-app_${latest_termux_api_tag}+github-debug.apk"
-            ((errors++))
+            # Fallback check using pm
+            if pm list packages -e | sed 's/package://' | grep -q "termux.api"; then
+                IS_TERMUX_API_INSTALLED=true
+                print_success "Termux-API: ${NC}Installed"
+            else
+                local latest_termux_api_tag
+                latest_termux_api_tag=$(get_latest_release "termux" "termux-api")
+                print_failed "Termux-API: ${NC}Not Installed"
+                print_msg "Install Termux-API:- ${NC}https://github.com/termux/termux-api/releases/download/${latest_termux_api_tag}/termux-api-app_${latest_termux_api_tag}+github-debug.apk"
+                ((errors++))
+            fi
         fi
         echo " "
         if [[ $errors -eq 0 ]]; then
