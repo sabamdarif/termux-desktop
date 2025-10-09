@@ -247,8 +247,6 @@ Options:
 
 - [Termux-AppStore](https://github.com/sabamdarif/Termux-AppStore)  
   License: GPL
-- [sabamdarif/nautilus-scripts](https://github.com/sabamdarif/nautilus-scripts/tree/termux)  
-  License: MIT
 
 - [chroot-distro](https://github.com/sabamdarif/chroot-distro)  
   License: GPL

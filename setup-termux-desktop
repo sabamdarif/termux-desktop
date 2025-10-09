@@ -4509,11 +4509,13 @@ function install_fm_tools() {
         print_msg "${BOLD}Installing File Manager Tools..."
         check_and_backup "$HOME/.local/share/nautilus/scripts"
         check_and_create_directory "$HOME/.local/share/nautilus/scripts"
-        cd "$HOME" || exit 1
-        git clone -b termux https://github.com/sabamdarif/nautilus-scripts
-        cd nautilus-scripts || exit 1
-        bash setup-termux.sh
-        cd "$HOME" || exit 1
+        package_install_and_check "axel bzip2 cabextract cpio cups curl ffmpeg file-roller filelight go-findimagedupes ghex git gnupg gzip id3v2 imagemagick inkscape inetutils libarchive exiftool liblzma sox lrzip lz4 lzip lzop mediainfo mp3gain nmap openssl optipng p7zip pandoc perl poppler qpdf rdfind rhash squashfs-tools-ng tar tesseract texlive-bin unar unrar unzip xclip xorriso xz-utils zip zpaq zstd"
+        git clone https://github.com/cfgnunes/nautilus-scripts.git
+        check_and_delete "nautilus-scripts/Security\ and\ recovery/File\ carving\ (via Foremost)"
+        check_and_delete "nautilus-scripts/Security\ and\ recovery/File\ carving\ (via PhotoRec)"
+        cd nautilus-scripts || return 1
+        bash install.sh -n
+        cd .. || return 1
         check_and_delete "nautilus-scripts"
     fi
     print_to_config "fm_tools"
