@@ -612,7 +612,7 @@ function distro_terminal_utility_setup() {
         if [[ "$selected_distro" == "debian" ]] || [[ "$selected_distro" == "ubuntu" ]]; then
             terminal_utility_content=$(
                 cat <<'EOF'
-pd_package_install_and_check "zoxide bat wget gpg fzf eza fastfetch"
+pd_package_install_and_check "zoxide bat wget gpg fzf eza fastfetch nala"
 check_and_delete "pd_setup.sh"
 EOF
             )
@@ -688,22 +688,22 @@ for arg in "\$@"; do
     # Skip options (starting with -)
     if [[ "\$arg" != -* ]]; then
         package_name="\$arg"
-        
+
         # Find desktop files for this package
         echo "\${R}[\${C}-\${R}]\${G} Searchling for .desktop file… \${W}"
-        echo 
+        echo
         desktop_files=\$(dpkg-query -W -f='\${binary:Package}\n' | grep "^\$package_name\(-.*\)\?\$" | xargs dpkg-query -L | grep "^/usr/share/applications/.*\.desktop\$")
         # If not found
-        if [ -z "\$desktop_files" ]; then 
-            if ! apt-file list "\$package_name" >/dev/null 2>&1; then 
+        if [ -z "\$desktop_files" ]; then
+            if ! apt-file list "\$package_name" >/dev/null 2>&1; then
                 echo "\${R}[\${C}-\${R}]\${G} Updating apt-file cache… \${W}"
-                apt-file update 
+                apt-file update
             fi
 
             if command -v apt-file >/dev/null; then
                 desktop_files=\$(apt-file list "\$package_name" | awk -F': ' -v pkg="\$package_name" '\$1 == pkg && \$2 ~ /\.desktop\$/ { print \$2 }')
             fi
-            if [ -z "\$desktop_files" ]; then 
+            if [ -z "\$desktop_files" ]; then
                 print_failed "No .desktop files found for package \${C} \$package_name \${R}/usr/share/applications."
             fi
         else
@@ -768,19 +768,19 @@ for arg in "\$@"; do
 
     # Remove the package
     echo "\${R}[\${C}-\${R}]\${G} Removing packages...\${W}"
-    echo 
+    echo
     apt "\$removal_command" "\$package_name"
 
     # Handle desktop files
-    if [[ -z "\$desktop_files" ]]; then 
+    if [[ -z "\$desktop_files" ]]; then
         print_failed "No .desktop files found for package \${C}\$package_name\${R} /usr/share/applications"
     else
-        for desktop_files_name in \$desktop_files; do 
+        for desktop_files_name in \$desktop_files; do
             desktop_files_with_ext=\$(basename "\$desktop_files_name")
             desktop_files_without_ext="\${desktop_files_with_ext%.desktop}"
 
             # Check if package is really uninstalled
-            if ! dpkg -s "\$package_name" >/dev/null 2>&1; then 
+            if ! dpkg -s "\$package_name" >/dev/null 2>&1; then
                 print_success "Removing \${C}\${desktop_files_without_ext} \${G}From Termux Menu"
                 check_and_delete "/data/data/com.termux/files/usr/share/applications/pd_added/\${desktop_files_with_ext}"
             else
@@ -838,22 +838,22 @@ for arg in "\$@"; do
     # Skip options (starting with -)
     if [[ "\$arg" != -* ]]; then
         package_name="\$arg"
-        
+
         # Find desktop files for this package
         echo "\${R}[\${C}-\${R}]\${G} Searchling for .desktop file… \${W}"
-        echo 
+        echo
         desktop_files=\$(dpkg-query -W -f='\${binary:Package}\n' | grep "^\$package_name\(-.*\)\?\$" | xargs dpkg-query -L | grep "^/usr/share/applications/.*\.desktop\$")
         # If not found
-        if [ -z "\$desktop_files" ]; then 
-            if ! apt-file list "\$package_name" >/dev/null 2>&1; then 
+        if [ -z "\$desktop_files" ]; then
+            if ! apt-file list "\$package_name" >/dev/null 2>&1; then
                 echo "\${R}[\${C}-\${R}]\${G} Updating apt-file cache… \${W}"
-                apt-file update 
+                apt-file update
             fi
 
             if command -v apt-file >/dev/null; then
                 desktop_files=\$(apt-file list "\$package_name" | awk -F': ' -v pkg="\$package_name" '\$1 == pkg && \$2 ~ /\.desktop\$/ { print \$2 }')
             fi
-            if [ -z "\$desktop_files" ]; then 
+            if [ -z "\$desktop_files" ]; then
                 print_failed "No .desktop files found for package \${C} \$package_name \${R}/usr/share/applications."
             fi
         else
@@ -919,19 +919,19 @@ for arg in "\$@"; do
 
     # Remove the package
     echo "\${R}[\${C}-\${R}]\${G} Removing packages...\${W}"
-    echo 
+    echo
     apt "\$removal_command" "\$package_name"
 
     # Handle desktop files
-    if [[ -z "\$desktop_files" ]]; then 
+    if [[ -z "\$desktop_files" ]]; then
         print_failed "No .desktop files found for package \${C}\$package_name\${R} /usr/share/applications"
     else
-        for desktop_files_name in \$desktop_files; do 
+        for desktop_files_name in \$desktop_files; do
             desktop_files_with_ext=\$(basename "\$desktop_files_name")
             desktop_files_without_ext="\${desktop_files_with_ext%.desktop}"
 
             # Check if package is really uninstalled
-            if ! dpkg -s "\$package_name" >/dev/null 2>&1; then 
+            if ! dpkg -s "\$package_name" >/dev/null 2>&1; then
                 print_success "Removing \${C}\${desktop_files_without_ext} \${G}From Termux Menu"
                 check_and_delete "/data/data/com.termux/files/usr/share/applications/pd_added/\${desktop_files_with_ext}"
             else
@@ -959,7 +959,7 @@ update_distro() {
     chroot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp -- env DISPLAY=:"$display_number" sudo apt update
     chroot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp -- env DISPLAY=:"$display_number" sudo apt-file update
 
-}  
+}
 TOP_EOF
 
 }
@@ -1337,15 +1337,15 @@ for arg in "\$@"; do
     sudo dnf remove "\$package_name"
 
     # Handle desktop files
-    if [[ -z "\$desktop_files" ]]; then 
+    if [[ -z "\$desktop_files" ]]; then
         print_failed "No .desktop files found for package \${C}\$package_name\${R} /usr/share/applications"
     else
-        for desktop_files_name in \$desktop_files; do 
+        for desktop_files_name in \$desktop_files; do
             desktop_files_with_ext=\$(basename "\$desktop_files_name")
             desktop_files_without_ext="\${desktop_files_with_ext%.desktop}"
 
             # Check if package is really uninstalled
-            if ! rpm -q "\$package_name" >/dev/null 2>&1; then 
+            if ! rpm -q "\$package_name" >/dev/null 2>&1; then
                 print_success "Removing \${C}\${desktop_files_without_ext} \${G}From Termux Menu"
                 check_and_delete "/data/data/com.termux/files/usr/share/applications/pd_added/\${desktop_files_with_ext}"
             else
@@ -1483,15 +1483,15 @@ for arg in "\$@"; do
     sudo dnf remove "\$package_name"
 
     # Handle desktop files
-    if [[ -z "\$desktop_files" ]]; then 
+    if [[ -z "\$desktop_files" ]]; then
         print_failed "No .desktop files found for package \${C}\$package_name\${R} /usr/share/applications"
     else
-        for desktop_files_name in \$desktop_files; do 
+        for desktop_files_name in \$desktop_files; do
             desktop_files_with_ext=\$(basename "\$desktop_files_name")
             desktop_files_without_ext="\${desktop_files_with_ext%.desktop}"
 
             # Check if package is really uninstalled
-            if ! rpm -q "\$package_name" >/dev/null 2>&1; then 
+            if ! rpm -q "\$package_name" >/dev/null 2>&1; then
                 print_success "Removing \${C}\${desktop_files_without_ext} \${G}From Termux Menu"
                 check_and_delete "/data/data/com.termux/files/usr/share/applications/pd_added/\${desktop_files_with_ext}"
             else
@@ -1542,7 +1542,7 @@ remove_distro_container() {
         [yY]* )
             print_success "Continuing with answer: \$ans_remove_distro"
             sleep 0.2
-            if ! su -c "ls '$distro_path'" >/dev/null 2>&1; then 
+            if ! su -c "ls '$distro_path'" >/dev/null 2>&1; then
                 chroot-distro uninstall "$selected_distro"
                 distro_file_list=(
                     "$PREFIX/bin/pdrun"
