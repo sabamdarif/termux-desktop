@@ -1115,7 +1115,7 @@ function questions_nerd_font_select() {
 
     mapfile -t ASSET_NAMES < <(
         jq -r '
-        .assets // [] 
+        .assets // []
         | map(select(.name | endswith(".tar.xz")))
         | .[].name
       ' <<<"$release_json"
@@ -3180,12 +3180,12 @@ cleanup_vnc_files() {
         rm -f "$HOME/.vnc/localhost:"*.log > /dev/null 2>&1
         rm -f "$HOME/.vnc/"*.log > /dev/null 2>&1
     fi
-    
+
     # Clean up X lock files (X1-lock, X2-lock, etc.)
     if [ -d "$PREFIX/tmp" ]; then
         rm -f "$PREFIX/tmp/.X"*"-lock" > /dev/null 2>&1
     fi
-    
+
     # Clean up X11 socket files (X1, X2, etc.)
     if [ -d "$PREFIX/tmp/.X11-unix" ]; then
         rm -f "$PREFIX/tmp/.X11-unix/X"* > /dev/null 2>&1
@@ -3196,13 +3196,13 @@ cleanup_vnc_files() {
 force_kill_vnc() {
     print_msg "Force terminating all VNC processes..."
     print_msg "Killing processes..."
-    
+
     # Kill Xtigervnc processes
     pkill -9 Xtigervnc > /dev/null 2>&1
     pkill -9 vncserver > /dev/null 2>&1
     pkill -9 vnc > /dev/null 2>&1
     pkill -9 "X[0-9]*" > /dev/null 2>&1
-    
+
     sleep 0.5
     print_msg "Cleaning up files..."
     cleanup_vnc_files
@@ -3214,7 +3214,7 @@ force_kill_vnc() {
 graceful_stop() {
     # Try to get display numbers from vncserver -list
     display_numbers=$(vncserver -list 2>/dev/null | grep -oE ':[0-9]+' | sort -u)
-    
+
     if [ -n "$display_numbers" ]; then
         # Convert to array and format nicely
         display_array=($display_numbers)
@@ -3229,9 +3229,9 @@ graceful_stop() {
                 display_list="$display_list, $num"
             fi
         done
-        
+
         print_msg "Found active VNC displays: $display_list"
-        
+
         local count=0
         for display in $display_numbers; do
             count=$((count + 1))
@@ -3259,9 +3259,9 @@ graceful_stop() {
                         lock_list="$lock_list, $num"
                     fi
                 done
-                
+
                 print_msg "Found stale displays: $lock_list"
-                
+
                 local count=0
                 for display in $lock_files; do
                     count=$((count + 1))
@@ -3278,7 +3278,7 @@ graceful_stop() {
             fi
         fi
     fi
-    
+
     # Handle any remaining stubborn processes
     if pgrep -x "Xtigervnc" > /dev/null 2>&1; then
         print_msg "Terminating remaining processes..."
@@ -3289,7 +3289,7 @@ graceful_stop() {
         fi
         sleep 0.5
     fi
-    
+
     cleanup_vnc_files
     print_success "VNC cleanup completed"
 }
@@ -3302,7 +3302,7 @@ elif [[ "$1" == "-h" ]] || [[ "$1" == "--help" ]]; then
 VNC Server Manager
 
 vncstop           gracefully stop all VNC servers
-vncstop --force   force terminate all VNC servers  
+vncstop --force   force terminate all VNC servers
 vncstop --help    show this help
 "
 else
@@ -3846,7 +3846,7 @@ case $1 in
 --kill | -k | -kill)
     tx11stop -f
     print_success "gui services killed successfully"
-    ;; 
+    ;;
 --help | -h)
     echo -e "gui --start / gui -l to start termux:x11"
     echo -e "gui --display / gui -d to forward display to IP address"
@@ -4251,12 +4251,6 @@ function media_player_installer() {
 
 function setup_gimp_plugins() {
     package_install_and_check "gimp-resynthesizer"
-    ### un-comment this if you want the bleeding edge version of resynthesizer
-    # download_file "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/other/install-resynthesizer-termux"
-    # if [[ -f "install-resynthesizer-termux" ]]; then
-    #     chmod +x install-resynthesizer-termux
-    #     source install-resynthesizer-termux
-    # fi
 }
 
 function photo_editor_installer() {

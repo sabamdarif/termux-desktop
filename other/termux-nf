@@ -265,7 +265,7 @@ function create_font_select_menu() {
 
     mapfile -t ASSET_NAMES < <(
         jq -r '
-        .assets // [] 
+        .assets // []
         | map(select(.name | endswith(".tar.xz")))
         | .[].name
       ' <<<"$release_json"
