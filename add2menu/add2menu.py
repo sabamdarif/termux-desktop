@@ -828,56 +828,107 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
                         print(f"Error processing added file {filepath}: {str(e)}")
         return added_apps
 
+    def get_all_desktop_paths(self):
+        """Get all possible .desktop file search paths"""
+
+        # System-level paths (inside the distro)
+        system_paths = [
+            os.path.join(self.DISTRO_PATH, "usr/share/applications"),
+            os.path.join(self.DISTRO_PATH, "usr/local/share/applications"),
+        ]
+
+        # Root user's local applications
+        home = os.path.join(self.DISTRO_PATH, "root")
+        user_paths = [
+            os.path.join(home, ".local/share/applications"),
+        ]
+
+        # Non-root user's local applications
+        user_name = os.getenv("USER_NAME", "")
+        if user_name and user_name != "root":
+            distro_user_apps = os.path.join(self.DISTRO_PATH, "home", user_name, ".local/share/applications")
+            user_paths.append(distro_user_apps)
+
+        # Combine all paths
+        all_paths = system_paths + user_paths
+
+        # Filter out paths that don't exist
+        existing_paths = [p for p in all_paths if os.path.exists(p)]
+
+        # Debug output
+        print(f"Desktop paths found: {len(existing_paths)} out of {len(all_paths)}")
+        for path in existing_paths:
+            print(f"  - {path}")
+
+        return existing_paths
+
     def load_apps(self):
         """Background task to load applications"""
         if self.add_radio.get_active():
-            # In add mode, show apps from the distro's application directory
-            path = os.path.join(self.DISTRO_PATH, "usr/share/applications")
+            # In add mode, search ALL desktop file locations
+            search_paths = self.get_all_desktop_paths()
+
             action_label = "Add Selected"
 
-            # Get list of already added applications using the helper method
+            # Get list of already added applications
             added_apps = self.get_added_applications()
         else:
             # In remove mode, show ONLY apps from the pd_added directory
-            path = self.ADDED_DIR
+            search_paths = [self.ADDED_DIR]
             action_label = "Remove Selected"
-            added_apps = {}  # Not needed in remove mode
+            added_apps = {}
 
-        # Get apps from directory
-        apps = self.list_desktop_files(path)
+        # Collect apps from all paths
+        all_apps = []
+        seen_files = set()  # Track duplicates by filename
+
+        for path in search_paths:
+            if not os.path.exists(path):
+                continue
+
+            apps = self.list_desktop_files(path)
+
+            # Add apps, avoiding duplicates
+            for app in apps:
+                name, filepath, icon, exec_cmd, description = app
+                filename = os.path.basename(filepath)
+
+                # Skip duplicates
+                if filename in seen_files:
+                    continue
+
+                seen_files.add(filename)
+                all_apps.append(app)
 
         # Filter out already added apps if in Add mode and show_added_apps is False
-        show_added_apps = self.app.show_added_apps  # Get the setting from the application
+        show_added_apps = self.app.show_added_apps
 
         if self.add_radio.get_active() and added_apps and not show_added_apps:
             filtered_apps = []
             skipped_count = 0
-            for app in apps:
+            for app in all_apps:
                 name, filepath, icon, exec_cmd, description = app
                 filename = os.path.basename(filepath)
-                # Check if this file is already in pd_added directory
+
                 if filename in added_apps:
-                    # Also compare app names (case insensitive)
                     if name.lower() == added_apps[filename]:
-                        # Skip this app as it's already added
                         skipped_count += 1
                         continue
-                # If not found or names don't match, include the app
+
                 filtered_apps.append(app)
 
-            # Log how many apps were filtered out
             if skipped_count > 0:
                 print(f"Filtered out {skipped_count} applications that are already added")
 
-            apps = filtered_apps
+            all_apps = filtered_apps
 
         # Sort the apps for initial display
-        sorted_apps = sorted(apps, key=lambda x: x[0].lower())
+        sorted_apps = sorted(all_apps, key=lambda x: x[0].lower())
 
         # Update UI in the main thread
         GLib.idle_add(self._update_app_list, sorted_apps, action_label)
 
-        return len(apps)
+        return len(all_apps)
 
     def _update_app_list(self, apps, action_label):
         """Update the UI with the loaded apps (called in main thread)"""
@@ -996,6 +1047,31 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
         }
 
         try:
+            # First, resolve symlinks using readlink with sudo
+            original_filepath = filepath
+            if self.is_symlink_with_sudo(filepath):
+                link_target = self.readlink_with_sudo(filepath)
+
+                if link_target:
+                    # If it's a relative path, resolve it relative to the directory containing the symlink
+                    if not os.path.isabs(link_target):
+                        filepath = os.path.join(os.path.dirname(filepath), link_target)
+                    else:
+                        # Just ensure they start from the distro root
+                        if link_target.startswith('/usr/') or link_target.startswith('/opt/') or link_target.startswith('/'):
+                            # The path is already within the chroot, so it's correct
+                            filepath = link_target
+
+                    # Normalize the path to remove any .. or . components
+                    filepath = os.path.normpath(filepath)
+
+                    print(f"Resolved symlink: {original_filepath} -> {filepath}")
+
+            # Check if the resolved file exists using sudo
+            if not self.file_exists_with_sudo(filepath):
+                print(f"Resolved symlink path does not exist (checked with sudo): {filepath}")
+                return None
+
             # Use sudo to read the file
             cmd_result = subprocess.run(['sudo', 'cat', filepath],
                                       capture_output=True, text=True, timeout=10)
@@ -1021,13 +1097,37 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
                         break
             else:
                 print(f"Error reading desktop file with sudo: {cmd_result.stderr}")
+                return None
 
         except subprocess.TimeoutExpired:
             print(f"Timeout while reading desktop file with sudo: {filepath}")
+            return None
         except Exception as e:
             print(f"Error parsing desktop file with sudo {filepath}: {e}")
+            return None
 
         return result
+
+    def is_symlink_with_sudo(self, filepath):
+        """Check if a file is a symlink using sudo for chroot environments"""
+        try:
+            result = subprocess.run(['sudo', 'test', '-L', filepath],
+                                  capture_output=True, timeout=5)
+            return result.returncode == 0
+        except (subprocess.TimeoutExpired, Exception):
+            return False
+
+    def readlink_with_sudo(self, filepath):
+        """Read a symlink target using sudo for chroot environments"""
+        try:
+            result = subprocess.run(['sudo', 'readlink', filepath],
+                                  capture_output=True, text=True, timeout=5)
+            if result.returncode == 0:
+                return result.stdout.strip()
+            return None
+        except (subprocess.TimeoutExpired, Exception) as e:
+            print(f"Error reading symlink with sudo: {e}")
+            return None
 
     def parse_desktop_file(self, filepath):
         """Parse a desktop file and return a dict of key attributes"""
@@ -1040,6 +1140,29 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
         }
 
         try:
+            # Resolve symlinks to get the actual file path
+            if os.path.islink(filepath):
+                # Get the symlink target
+                link_target = os.readlink(filepath)
+
+                # If it's a relative path, resolve it relative to the directory containing the symlink
+                if not os.path.isabs(link_target):
+                    filepath = os.path.join(os.path.dirname(filepath), link_target)
+                else:
+                    # For absolute paths in the distro, prepend the distro path
+                    if link_target.startswith('/usr/') or link_target.startswith('/opt/'):
+                        filepath = os.path.join(self.DISTRO_PATH, link_target.lstrip('/'))
+                    else:
+                        filepath = link_target
+
+                # Normalize the path to remove any .. or . components
+                filepath = os.path.normpath(filepath)
+
+            # Check if the resolved file exists
+            if not os.path.exists(filepath):
+                print(f"Resolved symlink path does not exist: {filepath}")
+                return None
+
             with open(filepath, "r", encoding="utf-8") as f:
                 for line in f:
                     line = line.strip()
@@ -1913,23 +2036,22 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
 
     def filter_apps(self, query):
         """Filter the application list based on the search query"""
-        # Store the currently selected items for preservation during filtering
+        # Store the currently selected items
         selected_items = {}
         for i, row in enumerate(self.liststore):
-            if row[0]:  # If checked
-                selected_items[row[1]] = True  # Use app name as key
+            if row[0]:
+                selected_items[row[1]] = True
 
         # Get the current mode
         is_add_mode = self.add_radio.get_active()
 
-        # Remember the current spinner state and start it if not already running
+        # Remember the current spinner state
         was_loading = self.is_loading
         spinner_active = self.spinner.get_property("active")
         if not spinner_active:
             self.spinner.start()
 
         if not query:
-            # If search query is empty, reload the full list
             if not was_loading:
                 self.is_loading = False
                 self._force_refresh()
@@ -1940,54 +2062,67 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
 
         # Create a new list to store filtered results
         filtered_apps = []
-        skipped_count = 0  # Count of apps skipped due to already being added
+        skipped_count = 0
+        seen_files = set()  # Track duplicates
 
-        # Get the appropriate directory based on mode
+        # Get the appropriate directories based on mode
         if is_add_mode:
-            apps_dir = os.path.join(self.DISTRO_PATH, "usr/share/applications")
-            # Get added applications using the helper method
+            # Search ALL desktop file locations using the same logic as load_apps
+            search_paths = self.get_all_desktop_paths()
+
+            # Get added applications
             added_apps = self.get_added_applications()
         else:
-            apps_dir = self.ADDED_DIR
-            added_apps = {}  # Empty dict for remove mode
+            # Remove mode: only from ADDED_DIR
+            search_paths = [self.ADDED_DIR]
+            added_apps = {}
 
         # Get the show_added_apps setting
         show_added_apps = self.app.show_added_apps
 
-        # Perform the search
-        for root, _, files in os.walk(apps_dir):
-            for file in files:
-                if file.endswith(".desktop"):
-                    filepath = os.path.join(root, file)
-                    try:
-                        desktop_entry = self.parse_desktop_file(filepath)
-                        if desktop_entry and not desktop_entry.get('no_display', False):
-                            app_name = desktop_entry.get('name') or os.path.splitext(file)[0]
-                            app_name = app_name.replace("_", " ").strip()
+        # Perform the search across all paths
+        for apps_dir in search_paths:
+            if not os.path.exists(apps_dir):
+                continue
 
-                            # Check if the app matches the search query
-                            # Also search in the description
-                            description = desktop_entry.get('comment') or ""
-                            if (query.lower() in app_name.lower() or
-                                query.lower() in file.lower() or
-                                query.lower() in description.lower()):
+            for root, _, files in os.walk(apps_dir):
+                for file in files:
+                    if file.endswith(".desktop"):
+                        # Skip duplicates
+                        if file in seen_files:
+                            continue
 
-                                # Skip if app is already added (in Add mode) and show_added_apps is False
-                                if is_add_mode and added_apps and not show_added_apps:
-                                    filename = os.path.basename(filepath)
-                                    if filename in added_apps and app_name.lower() == added_apps[filename]:
-                                        skipped_count += 1
-                                        continue
+                        filepath = os.path.join(root, file)
+                        try:
+                            desktop_entry = self.parse_desktop_file(filepath)
+                            if desktop_entry and not desktop_entry.get('no_display', False):
+                                app_name = desktop_entry.get('name') or os.path.splitext(file)[0]
+                                app_name = app_name.replace("_", " ").strip()
 
-                                icon = desktop_entry.get('icon') or "application-x-executable"
-                                exec_cmd = desktop_entry.get('exec') or ""
+                                # Check if the app matches the search query
+                                description = desktop_entry.get('comment') or ""
+                                if (query.lower() in app_name.lower() or
+                                    query.lower() in file.lower() or
+                                    query.lower() in description.lower()):
 
-                                # Check if the item was previously selected
-                                is_selected = app_name in selected_items
+                                    # Skip if app is already added (in Add mode) and show_added_apps is False
+                                    if is_add_mode and added_apps and not show_added_apps:
+                                        filename = os.path.basename(filepath)
+                                        if filename in added_apps and app_name.lower() == added_apps[filename]:
+                                            skipped_count += 1
+                                            seen_files.add(file)
+                                            continue
 
-                                filtered_apps.append((is_selected, app_name, filepath, icon, exec_cmd, description))
-                    except Exception as e:
-                        print(f"Error processing {filepath}: {str(e)}")
+                                    icon = desktop_entry.get('icon') or "application-x-executable"
+                                    exec_cmd = desktop_entry.get('exec') or ""
+
+                                    # Check if the item was previously selected
+                                    is_selected = app_name in selected_items
+
+                                    filtered_apps.append((is_selected, app_name, filepath, icon, exec_cmd, description))
+                                    seen_files.add(file)
+                        except Exception as e:
+                            print(f"Error processing {filepath}: {str(e)}")
 
         # Log how many apps were filtered out
         if is_add_mode and skipped_count > 0:
@@ -2236,7 +2371,7 @@ class Add2MenuApplication(Gtk.Application):
 
         about_dialog = Gtk.AboutDialog(transient_for=self.window, modal=True)
         about_dialog.set_program_name("Add To Menu")
-        about_dialog.set_version("2.3.1")
+        about_dialog.set_version("2.3.2")
         about_dialog.set_comments("A utility to add Linux applications to Termux desktop")
         about_dialog.set_copyright(f"© {current_year} Termux-desktop (sabamdarif)")
         about_dialog.set_license_type(Gtk.License.GPL_3_0)
