@@ -700,9 +700,12 @@ function confirmation_y_or_n() {
 function get_latest_release() {
     local repo_owner="$1"
     local repo_name="$2"
-    curl -s "https://api.github.com/repos/$repo_owner/$repo_name/releases/latest" 2>/dev/null |
-        grep '"tag_name":' |
-        sed -E 's/.*"([^"]+)".*/\1/'
+    curl --silent \
+        --location \
+        --retry 5 \
+        --retry-delay 1 \
+        -H "Accept: application/vnd.github.v3+json" \
+        "https://api.github.com/repos/${repo_owner}/${repo_name}/releases/latest" | jq -r '.tag_name'
 }
 
 function install_font_for_style() {
@@ -1126,10 +1129,12 @@ function questions_nerd_font_select() {
         FONT_DISPLAY+=("${asset%.tar.xz}")
     done
 
-    ((${#ASSET_NAMES[@]} == 0)) && {
+    if ((${#ASSET_NAMES[@]} == 0)); then
         print_failed "No .tar.xz fonts found for ${latest_nf_version}." >&2
-        exit 1
-    }
+        print_msg "Fallback to 0xProto..."
+        sel_base_name="0xProto"
+        return 1
+    fi
 
     term_width=$(tput cols 2>/dev/null || echo 80)
     (
@@ -1141,9 +1146,7 @@ function questions_nerd_font_select() {
     echo
     select_an_option "${#ASSET_NAMES[@]}" 1 nerd_choice
 
-    sel_asset_name="${ASSET_NAMES[$((nerd_choice - 1))]}"
     sel_base_name="${FONT_DISPLAY[$((nerd_choice - 1))]}"
-
 }
 
 function questions_setup_manual() {
@@ -4534,7 +4537,7 @@ function setup_fonts() {
         latest_nf_version=$(get_latest_release "ryanoasis" "nerd-fonts")
     fi
 
-    if [[ -z "$sel_asset_name" ]]; then
+    if [[ -z "$sel_base_name" ]]; then
         sel_base_name="0xProto"
     fi
     print_to_config "sel_base_name"
