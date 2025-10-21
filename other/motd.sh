@@ -148,10 +148,31 @@ fi
 echo -e "${C} Temperature     : ${TEMP_ICON}   ${TEMP}°C${NC}"
 
 #==============================================
-# Wait for Battery Info and Display
+# Wait for Battery Info with 400ms Timeout
 #==============================================
+timeout_duration=0.40
+timeout_reached=false
+sleep_interval=0.01
+max_iterations=$(awk "BEGIN {print int($timeout_duration / $sleep_interval)}")
+
+for ((i = 0; i < max_iterations; i++)); do
+    if ! kill -0 $battery_pid 2>/dev/null; then
+        # Process finished
+        break
+    fi
+    sleep $sleep_interval
+done
+
+# Check if process is still running after timeout
+if kill -0 $battery_pid 2>/dev/null; then
+    # Timeout reached, kill the process
+    kill -9 $battery_pid 2>/dev/null
+    timeout_reached=true
+fi
+
 wait $battery_pid 2>/dev/null
-if [[ -f ${TMPDIR}/battery_info.tmp ]]; then
+
+if [[ "$timeout_reached" == false && -f ${TMPDIR}/battery_info.tmp ]]; then
     IFS=':' read -r _ BATTERY BATTERY_STATUS <"${TMPDIR}/battery_info.tmp"
     rm -rf "${TMPDIR}/battery_info.tmp"
 
@@ -169,6 +190,9 @@ if [[ -f ${TMPDIR}/battery_info.tmp ]]; then
     [[ $BATTERY_STATUS == "CHARGING" ]] && CHARGE_ICON="${BOLD}${G}" || CHARGE_ICON=""
 
     echo -e "${C} Battery Level   : ${BAT_ICON}  ${NC}${BATTERY}%${NC} ${CHARGE_ICON}${NC}"
+else
+    # Timeout reached or file not found - skip battery info
+    rm -rf "${TMPDIR}/battery_info.tmp" 2>/dev/null
 fi
 
 #==============================================
