@@ -25,7 +25,7 @@ else
     distro_id="unknown"
 fi
 
-case "\$distro_id" in 
+case "\$distro_id" in
   kali) DISTRO_ICON="" ;;   # Kali Linux
   arch*) DISTRO_ICON="" ;;   # Arch Linux
   ubuntu) DISTRO_ICON="" ;; # Ubuntu
@@ -86,17 +86,17 @@ function check_parameter() {
             print_success "Continuing with answer: $choice"
             sleep 0.2
             case $choice in
-            [yY]*)
-                print_success "Continuing with username ${C}$user_name"
-                break
-                ;;
-            [nN]*)
-                print_msg "Please provide username again."
-                echo
-                ;;
-            *)
-                print_failed "Invalid input, Please enter y or n"
-                ;;
+                [yY]*)
+                    print_success "Continuing with username ${C}$user_name"
+                    break
+                    ;;
+                [nN]*)
+                    print_msg "Please provide username again."
+                    echo
+                    ;;
+                *)
+                    print_failed "Invalid input, Please enter y or n"
+                    ;;
             esac
         done
     fi
@@ -110,6 +110,7 @@ function clone_zinit() {
 
 function set_theme() {
     print_msg "Installing zsh theme..."
+    # shellcheck disable=SC2154
     if [[ "$selected_zsh_theme_name" == "td_zsh" ]]; then
         check_parameter
         setup_td_zsh_theme
@@ -138,7 +139,10 @@ EOF
     fi
 }
 
-write_zshrc() {
+write_zsh_config() {
+    download_file "$HOME/.zshenv2" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/other/.zshenv"
+    cat "$HOME/.zshenv2" >> "$HOME/.zshenv"
+    check_and_delete "$HOME/.zshenv2"
     download_file "$HOME/.zshrc2" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/other/.zshrc"
     cat "$HOME/.zshrc2" >>"$HOME/.zshrc"
     check_and_delete "$HOME/.zshrc2"
@@ -148,6 +152,6 @@ write_zshrc() {
 check_and_backup "$HOME/.zshrc"
 check_and_delete "$HOME/.zshrc"
 clone_zinit
-write_zshrc
+write_zsh_config
 set_theme
 chsh -s zsh

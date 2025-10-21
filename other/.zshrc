@@ -3,17 +3,6 @@
 # ZSH Configuration File (.zshrc)
 # Based on:- https://github.com/zdharma-continuum/zinit-configs/tree/master/vladdoster
 # =============================================================================
-# -----------------------------------------------------------------------------
-# ENVIRONMENT VARIABLES & PATH
-# -----------------------------------------------------------------------------
-# Essential PATH exports
-export PATH="$HOME/.local/bin:$PATH"
-export PATH="$HOME/.npm-global/bin:$PATH"
-export PATH="$HOME/.local/share/zinit/polaris/bin:$PATH"
-
-# Editor preferences
-export EDITOR="nvim"
-export VISUAL="nvim"
 
 # Enable auto-cd
 setopt AUTO_CD
@@ -116,15 +105,15 @@ zi ice zsh-users/zsh-completions
 
 # Auto-suggestions - Suggests commands as you type based on history
 zi ice atload'_zsh_autosuggest_start' \
-       atinit'
-           ZSH_AUTOSUGGEST_BUFFER_MAX_SIZE=50
-           bindkey "^_" autosuggest-execute
-           bindkey "^ " autosuggest-accept'
+    atinit'
+ZSH_AUTOSUGGEST_BUFFER_MAX_SIZE=50
+bindkey "^_" autosuggest-execute
+bindkey "^ " autosuggest-accept'
 zi light zsh-users/zsh-autosuggestions
 
 # Fast syntax highlighting - Real-time command syntax validation
 zi light-mode for \
-      $ZI_REPO/fast-syntax-highlighting
+    $ZI_REPO/fast-syntax-highlighting
 
 
 # FZF history search - Fuzzy search through command history
@@ -132,8 +121,8 @@ zi ice joshskidmore/zsh-fzf-history-search
 
 # Zsh autocomplete - Real-time type-ahead autocompletion
 zi ice atload'
-        bindkey              "^I" menu-select
-        bindkey -M menuselect "$terminfo[kcbt]" reverse-menu-complete'
+bindkey              "^I" menu-select
+bindkey -M menuselect "$terminfo[kcbt]" reverse-menu-complete'
 zi light marlonrichert/zsh-autocomplete
 
 # -----------------------------------------------------------------------------
@@ -150,8 +139,8 @@ zi light marlonrichert/zsh-autocomplete
 #       zicompinit; zicdreplay
 #       _zsh_highlight_bind_widgets
 #       _zsh_autosuggest_bind_widgets' \
-#     as'null' id-as'zinit/cleanup' lucid nocd wait \
-#   $ZI_REPO/null
+    #     as'null' id-as'zinit/cleanup' lucid nocd wait \
+    #   $ZI_REPO/null
 #
 
 unset ZI_REPO ZI_REPO
