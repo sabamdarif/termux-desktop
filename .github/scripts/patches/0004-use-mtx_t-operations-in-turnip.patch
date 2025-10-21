@@ -1,22 +1,22 @@
-From:- https://github.com/robertkirkman/termux-packages/blob/4426a71d0ccfc2efca017e638fbc9320cc181321/packages/mesa/0007-use-mtx_t-operations-in-turnip.patch
+From:- https://github.com/termux/termux-packages/blob/master/packages/mesa/0007-use-mtx_t-operations-in-turnip.patch
 
 --- a/src/freedreno/vulkan/tu_shader.cc
 +++ b/src/freedreno/vulkan/tu_shader.cc
-@@ -2393,10 +2393,10 @@ tu_upload_shader(struct tu_device *dev,
+@@ -1980,10 +1980,10 @@
        size += vpc_size;
     }
- 
+
 -   pthread_mutex_lock(&dev->pipeline_mutex);
 +   mtx_lock(&dev->pipeline_mutex);
     VkResult result = tu_suballoc_bo_alloc(&shader->bo, &dev->pipeline_suballoc,
                                            size * 4, 128);
 -   pthread_mutex_unlock(&dev->pipeline_mutex);
 +   mtx_unlock(&dev->pipeline_mutex);
- 
+
     if (result != VK_SUCCESS)
        return result;
-@@ -2426,9 +2426,9 @@ tu_upload_shader(struct tu_device *dev,
- 
+@@ -2013,9 +2013,9 @@
+
     result = tu_setup_pvtmem(dev, shader, &pvtmem_config, pvtmem_size, per_wave);
     if (result != VK_SUCCESS) {
 -      pthread_mutex_lock(&dev->pipeline_mutex);
@@ -26,48 +26,46 @@ From:- https://github.com/robertkirkman/termux-packages/blob/4426a71d0ccfc2efca0
 +      mtx_unlock(&dev->pipeline_mutex);
        return result;
     }
- 
-@@ -3250,10 +3250,10 @@ tu_empty_shader_create(struct tu_device *dev,
+
+@@ -2419,10 +2419,10 @@
     if (!shader)
        return VK_ERROR_OUT_OF_HOST_MEMORY;
- 
+
 -   pthread_mutex_lock(&dev->pipeline_mutex);
 +   mtx_lock(&dev->pipeline_mutex);
     VkResult result = tu_suballoc_bo_alloc(&shader->bo, &dev->pipeline_suballoc,
                                            32 * 4, 128);
 -   pthread_mutex_unlock(&dev->pipeline_mutex);
 +   mtx_unlock(&dev->pipeline_mutex);
- 
+
     if (result != VK_SUCCESS) {
        vk_free(&dev->vk.alloc, shader);
-@@ -3365,9 +3365,9 @@ tu_shader_destroy(struct tu_device *dev,
+@@ -2528,9 +2528,9 @@
+ {
     tu_cs_finish(&shader->cs);
-    TU_RMV(resource_destroy, dev, &shader->bo);
- 
+
 -   pthread_mutex_lock(&dev->pipeline_mutex);
 +   mtx_lock(&dev->pipeline_mutex);
     tu_suballoc_bo_free(&dev->pipeline_suballoc, &shader->bo);
 -   pthread_mutex_unlock(&dev->pipeline_mutex);
 +   mtx_unlock(&dev->pipeline_mutex);
- 
+
     if (shader->pvtmem_bo)
        tu_bo_finish(dev, shader->pvtmem_bo);
-diff --git a/src/vulkan/wsi/wsi_common_wayland.c b/src/vulkan/wsi/wsi_common_wayland.c
-index dd15d03..69c4dfe 100644
 --- a/src/vulkan/wsi/wsi_common_wayland.c
 +++ b/src/vulkan/wsi/wsi_common_wayland.c
 @@ -2648,12 +2648,12 @@ wsi_wl_swapchain_wait_for_present2(struct wsi_swapchain *wsi_chain,
        return result;
- 
+
     while (1) {
 -      err = pthread_mutex_lock(&chain->present_ids.lock);
 +      err = mtx_lock(&chain->present_ids.lock);
        if (err != 0)
           return VK_ERROR_OUT_OF_DATE_KHR;
- 
+
        bool completed = chain->present_ids.max_completed >= present_id;
 -      pthread_mutex_unlock(&chain->present_ids.lock);
 +      mtx_unlock(&chain->present_ids.lock);
- 
+
        if (completed)
           return VK_SUCCESS;

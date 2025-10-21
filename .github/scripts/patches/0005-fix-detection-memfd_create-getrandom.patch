@@ -1,4 +1,4 @@
-From:- https://github.com/termux/termux-packages/pull/26528/files#diff-4cdcdaf8c6acb58aa888282db4ae4790aa68576138d7a83771435e86edf2f878
+https://github.com/termux/termux-packages/blob/master/packages/mesa/0015-fix-detection-memfd_create-getrandom.patch
 
 From 42a78a1aae19f855b049462d7714cd1f07ca12e4 Mon Sep 17 00:00:00 2001
 From: Fafa Kitten <tacokoneko@gmail.com>
@@ -50,13 +50,12 @@ index 4d0cf1714f234..dab44ad805786 100644
    'secure_getenv': '',
 @@ -1412,7 +1412,7 @@ functions_to_detect = {
  }
- 
+
  foreach f, prefix: functions_to_detect
 -  if cc.has_function(f, prefix: prefix)
 +  if cc.has_function(f, args: pre_args, prefix: prefix)
      pre_args += '-DHAVE_@0@'.format(f.to_upper())
    endif
  endforeach
--- 
+--
 GitLab
-
