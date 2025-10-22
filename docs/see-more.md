@@ -44,14 +44,14 @@
 - **decrypt**: Decrypt files that were encrypted with the encrypt function
 - **checksum**: Calculate MD5, SHA1, and SHA256 checksums for files
 - **cp2clip**: Copy any text content from a file to my clipboard
-  ##### For more cat $HOME/.aliases
+    ##### For more cat $HOME/.aliases
 
 #### :jigsaw:3.Special Programs (scripts):-
 
 - **termux-fastest-repo**: same like termux-chnage-repo but to test and then chose the fastest repo (only for apt)
 - **termux-color**: A TUI tool to switch between color schemes with live preview.
 - **termux-nf**: A simple script to install nerd font in termux.
-  - Ex. just run `termux-nf` and chose from the menu or run `termux-nf FONT_NAME` and it will install that font.
+    - Ex. just run `termux-nf` and chose from the menu or run `termux-nf FONT_NAME` and it will install that font.
 
 ---
 
@@ -127,6 +127,152 @@ This document provides a list of keybindings used in Openbox for quick reference
 
 ---
 
+## :hammer_and_wrench: i3 Keybindings Cheat Sheet
+
+# i3 Window Manager - Keybindings Reference
+
+**Modifier Key:** <kbd>Alt</kbd>
+
+---
+
+## 🚀 Launch Applications
+
+| Keybinding                         | Action                           |
+| ---------------------------------- | -------------------------------- |
+| <kbd>Alt</kbd> + <kbd>Return</kbd> | Open terminal (xfce4-terminal)   |
+| <kbd>Alt</kbd> + <kbd>Space</kbd>  | Launch Rofi application launcher |
+| <kbd>Alt</kbd> + <kbd>E</kbd>      | Open file manager (Thunar)       |
+| <kbd>Alt</kbd> + <kbd>Q</kbd>      | Kill focused window              |
+
+---
+
+## 🎵 Music Player Controls
+
+| Keybinding                                       | Action                          |
+| ------------------------------------------------ | ------------------------------- |
+| <kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>P</kbd> | Toggle play/pause               |
+| <kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>N</kbd> | Next track                      |
+| <kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>B</kbd> | Previous track                  |
+| <kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>S</kbd> | Stop playback                   |
+| <kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>I</kbd> | Show "Now Playing" notification |
+| <kbd>Alt</kbd> + <kbd>C</kbd>                    | Open MPV control menu (Rofi)    |
+| <kbd>Alt</kbd> + <kbd>X</kbd>                    | Open MPV music menu (Rofi)      |
+
+---
+
+## 🪟 Window Navigation
+
+| Keybinding                    | Action                 |
+| ----------------------------- | ---------------------- |
+| <kbd>Alt</kbd> + <kbd>J</kbd> | Focus left window      |
+| <kbd>Alt</kbd> + <kbd>K</kbd> | Focus down window      |
+| <kbd>Alt</kbd> + <kbd>L</kbd> | Focus up window        |
+| <kbd>Alt</kbd> + <kbd>;</kbd> | Focus right window     |
+| <kbd>Alt</kbd> + <kbd>←</kbd> | Focus left window      |
+| <kbd>Alt</kbd> + <kbd>↓</kbd> | Focus down window      |
+| <kbd>Alt</kbd> + <kbd>↑</kbd> | Focus up window        |
+| <kbd>Alt</kbd> + <kbd>→</kbd> | Focus right window     |
+| <kbd>Alt</kbd> + <kbd>A</kbd> | Focus parent container |
+
+---
+
+## 📦 Move Windows
+
+| Keybinding                                       | Action            |
+| ------------------------------------------------ | ----------------- |
+| <kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>J</kbd> | Move window left  |
+| <kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>K</kbd> | Move window down  |
+| <kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>L</kbd> | Move window up    |
+| <kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>;</kbd> | Move window right |
+| <kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>←</kbd> | Move window left  |
+| <kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>↓</kbd> | Move window down  |
+| <kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>↑</kbd> | Move window up    |
+| <kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>→</kbd> | Move window right |
+
+---
+
+## 🔲 Window Layouts
+
+| Keybinding                                           | Action                              |
+| ---------------------------------------------------- | ----------------------------------- |
+| <kbd>Alt</kbd> + <kbd>H</kbd>                        | Split horizontally                  |
+| <kbd>Alt</kbd> + <kbd>V</kbd>                        | Split vertically                    |
+| <kbd>Alt</kbd> + <kbd>F</kbd>                        | Toggle fullscreen                   |
+| <kbd>Alt</kbd> + <kbd>W</kbd>                        | Tabbed layout                       |
+| <kbd>Alt</kbd> + <kbd>S</kbd>                        | Toggle split layout                 |
+| <kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>Space</kbd> | Toggle floating window              |
+| <kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>T</kbd>     | Toggle focus mode (tiling/floating) |
+
+---
+
+## 🔢 Workspace Management
+
+### Switch to Workspace
+
+| Keybinding                    | Workspace    |
+| ----------------------------- | ------------ |
+| <kbd>Alt</kbd> + <kbd>1</kbd> | Workspace 1  |
+| <kbd>Alt</kbd> + <kbd>2</kbd> | Workspace 2  |
+| <kbd>Alt</kbd> + <kbd>3</kbd> | Workspace 3  |
+| <kbd>Alt</kbd> + <kbd>4</kbd> | Workspace 4  |
+| <kbd>Alt</kbd> + <kbd>5</kbd> | Workspace 5  |
+| <kbd>Alt</kbd> + <kbd>6</kbd> | Workspace 6  |
+| <kbd>Alt</kbd> + <kbd>7</kbd> | Workspace 7  |
+| <kbd>Alt</kbd> + <kbd>8</kbd> | Workspace 8  |
+| <kbd>Alt</kbd> + <kbd>9</kbd> | Workspace 9  |
+| <kbd>Alt</kbd> + <kbd>0</kbd> | Workspace 10 |
+
+### Move Window to Workspace
+
+| Keybinding                                       | Action               |
+| ------------------------------------------------ | -------------------- |
+| <kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>1</kbd> | Move to workspace 1  |
+| <kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>2</kbd> | Move to workspace 2  |
+| <kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>3</kbd> | Move to workspace 3  |
+| <kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>4</kbd> | Move to workspace 4  |
+| <kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>5</kbd> | Move to workspace 5  |
+| <kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>6</kbd> | Move to workspace 6  |
+| <kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>7</kbd> | Move to workspace 7  |
+| <kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>8</kbd> | Move to workspace 8  |
+| <kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>9</kbd> | Move to workspace 9  |
+| <kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>0</kbd> | Move to workspace 10 |
+
+---
+
+## 🔧 System Controls
+
+| Keybinding                                       | Action                     |
+| ------------------------------------------------ | -------------------------- |
+| <kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>Z</kbd> | Reload i3 configuration    |
+| <kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>R</kbd> | Restart i3 (keeps session) |
+| <kbd>Alt</kbd> + <kbd>R</kbd>                    | Enter resize mode          |
+
+---
+
+## 📏 Resize Mode
+
+**Enter resize mode with <kbd>Alt</kbd> + <kbd>R</kbd>, then use:**
+
+| Keybinding                             | Action           |
+| -------------------------------------- | ---------------- |
+| <kbd>J</kbd> or <kbd>←</kbd>           | Shrink width     |
+| <kbd>K</kbd> or <kbd>↓</kbd>           | Grow height      |
+| <kbd>L</kbd> or <kbd>↑</kbd>           | Shrink height    |
+| <kbd>;</kbd> or <kbd>→</kbd>           | Grow width       |
+| <kbd>Return</kbd> or <kbd>Escape</kbd> | Exit resize mode |
+| <kbd>Alt</kbd> + <kbd>R</kbd>          | Exit resize mode |
+
+---
+
+## 🖱️ Mouse Controls
+
+| Action                           | Description                     |
+| -------------------------------- | ------------------------------- |
+| <kbd>Alt</kbd> + **Left Click**  | Drag to move floating windows   |
+| <kbd>Alt</kbd> + **Right Click** | Drag to resize floating windows |
+
+---
+
 ## :hammer_and_wrench:How the update the icon pack or theme:
 
 - Stop the desktop
@@ -136,22 +282,22 @@ This document provides a list of keybindings used in Openbox for quick reference
 - Click on the links
 - Download the latest archive file
 - move them to termux `$HOME` folder
-  > Ex. `mv path/to/archive_file_name $HOME`
+    > Ex. `mv path/to/archive_file_name $HOME`
 - Now to move the right archive to the right folder
-  - <b>For XFCE</b>
-    - Themes folder :- `$HOME/.themes`
-    - Icons folder :- `$HOME/.icons`
-  - <b>For LXQT And OPENBOX</b>
-    - Themes folder :- `$PREFIX/share/themes`
-    - Icons folder :- `$PREFIX/share/icons`
+    - <b>For XFCE</b>
+        - Themes folder :- `$HOME/.themes`
+        - Icons folder :- `$HOME/.icons`
+    - <b>For LXQT And OPENBOX</b>
+        - Themes folder :- `$PREFIX/share/themes`
+        - Icons folder :- `$PREFIX/share/icons`
 - Backup the old themes/icons folders
-  > Ex. `tar -czvf icons_backup.tar.gz folder1 folder2 .... && mv icons_backup.tar.gz $HOME/icons_backup.tar.gz`
+    > Ex. `tar -czvf icons_backup.tar.gz folder1 folder2 .... && mv icons_backup.tar.gz $HOME/icons_backup.tar.gz`
 - Remove old folders
-  > Ex. `rm -rf folder1 folder2 ....`
+    > Ex. `rm -rf folder1 folder2 ....`
 - Extract the new archive
-  > Ex. `tar -xzvf new_archive.tar.gz`
+    > Ex. `tar -xzvf new_archive.tar.gz`
 - Remove the archive
-  > Ex. `rm new_archive.tar.gz`
+    > Ex. `rm new_archive.tar.gz`
 
 ##### or, run `setup-termux-desktop --update icon/theme /path/to/archive_file_name` (will be added soon...)
 
@@ -187,9 +333,9 @@ Ethernet adapter Ethernet 8:
 
 - Install:- `VcXsrc`
 - Launch VcXsrc then set
-  1. Open window without titlebar
-  2. Start no client
-  3. Disable access control
+    1. Open window without titlebar
+    2. Start no client
+    3. Disable access control
 
 #### On Linux:-
 
@@ -207,16 +353,16 @@ Ethernet adapter Ethernet 8:
 - Install `xserver-xephyr` (package name might be different on other Linux distro)
 - Then run:-
 
-  ```bash
-  xhost +
-  ```
+    ```bash
+    xhost +
+    ```
 
-  ```bash
-  Xephyr :1 -ac -screen 1920x1080 -listen tcp -nolisten unix -fullscreen
-  ```
+    ```bash
+    Xephyr :1 -ac -screen 1920x1080 -listen tcp -nolisten unix -fullscreen
+    ```
 
-  `here:- :1 will set the display port so make sure you use the right display port on gui --display command`
+    `here:- :1 will set the display port so make sure you use the right display port on gui --display command`
 
 - On termux:-
 
-  `gui --display 192.168.127.228:0` or just `192.168.127.228`(then it will use the default port 0)
+    `gui --display 192.168.127.228:0` or just `192.168.127.228`(then it will use the default port 0)

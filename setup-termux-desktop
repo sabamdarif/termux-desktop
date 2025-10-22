@@ -2553,7 +2553,7 @@ function install_desktop() {
         package_install_and_check "marco mousepad xfce4-taskmanager eog kvantum"
     elif [[ "$de_name" == "i3wm" ]]; then
         print_msg "${BOLD}Installing i3WM"
-        package_install_and_check "i3"
+        package_install_and_check "i3 rofi mpv polybar xcompmgr nitrogen"
     elif [[ "$de_name" == "dwm" ]]; then
         print_msg "${BOLD}Installing DWM"
         package_install_and_check "dwm"
@@ -2786,6 +2786,10 @@ function additional_required_steps() {
             pip install docopt
             print_msg "${BOLD}Installing package: ${C}rofimoji"
             pip install rofimoji
+        fi
+    elif [[ "$de_name" == "i3wm" ]]; then
+        if [[ "$style_answer" == "1" ]]; then
+            install_font_for_style "1"
         fi
 
     fi
@@ -4761,7 +4765,7 @@ function remove_desktop_environments() {
         package_check_and_remove "mate*"
         package_check_and_remove "marco mousepad xfce4-taskmanager lximage-qt"
     elif [[ "$de_name" == "i3wm" ]]; then
-        package_check_and_remove "i3"
+        package_check_and_remove "i3 rofi mpv polybar xcompmgr nitrogen"
     elif [[ "$de_name" == "dwm" ]]; then
         package_check_and_remove "dwm"
     elif [[ "$de_name" == "bspwm" ]]; then

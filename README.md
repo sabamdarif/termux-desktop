@@ -69,7 +69,7 @@
 | Desktop Environments         | Window Managers                    |
 | ---------------------------- | ---------------------------------- |
 | [Xfce](/docs/xfce_styles.md) | [Openbox](/docs/openbox_styles.md) |
-| [LXQt](/docs/lxqt_styles.md) | i3                                 |
+| [LXQt](/docs/lxqt_styles.md) | [i3](/docs/i3_styles.md)           |
 | MATE                         | dwm                                |
 | GNOME                        | bspwm                              |
 | Cinnamon                     | Awesome                            |
