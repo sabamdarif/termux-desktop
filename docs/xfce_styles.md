@@ -16,7 +16,7 @@
 
 <details>
 <summary><b style ="font-size: small">Style Details: </summary>
-Theme Used: 
+Theme Used:
 <br>
 
 - [Nordic-darker](https://www.gnome-look.org/p/1267246)
@@ -49,7 +49,7 @@ Icon Used:
 
 <details>
 <summary><b style ="font-size: small">Style Details: </summary>
-Theme Used: 
+Theme Used:
 <br>
 
 - [Materia Manjaro gtk](https://www.pling.com/p/1300363/)
@@ -89,8 +89,8 @@ Theme Used, Icon Used, Cursor Theme:-
 - [kali-undercover](https://gitlab.com/kalilinux/packages/kali-undercover)
   Kvantum:-
 - [Win10OS-kde](https://github.com/yeyushengfan258/Win10OS-kde/tree/master/Kvantum)
-</details>
-<br>
+  </details>
+  <br>
 
 <center><img src="https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/xfce/look_3/desktop.png"></center>
 
@@ -108,7 +108,7 @@ Theme Used, Icon Used, Cursor Theme:-
 
 <details>
 <summary><b style ="font-size: small">Style Details: </summary>
-Theme Used: 
+Theme Used:
 <br>
 
 - [Chicago95](https://github.com/grassmunk/Chicago95)
@@ -142,7 +142,7 @@ Cursor Theme:
 
 <details>
 <summary><b style ="font-size: small">Style Details: </summary>
-Theme Used: 
+Theme Used:
 <br>
 
 - [WhiteSur-Nord-Theme](https://www.gnome-look.org/s/Gnome/p/1704248)
@@ -176,7 +176,7 @@ Cursor Theme:
 
 <details>
 <summary><b style ="font-size: small">Style Details: </summary>
-Theme Used: 
+Theme Used:
 <br>
 
 - [Otis](https://www.pling.com/s/Gnome/p/1619506)

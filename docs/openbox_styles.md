@@ -22,7 +22,7 @@
 
 <details>
 <summary><b style ="font-size: small">Style Details: </summary>
-Theme Used: 
+Theme Used:
 <br>
 
 - GTK Theme:- [Nordic-darker](https://www.gnome-look.org/p/1267246)
@@ -60,7 +60,7 @@ Icon Used:
 
 <details>
 <summary><b style ="font-size: small">Style Details: </summary>
- 
+
 > Thanks To:-
 > [adi1090x's termux-desktop](https://github.com/adi1090x/termux-desktop)
 > [roficlip](https://github.com/seamus-45/roficlip)

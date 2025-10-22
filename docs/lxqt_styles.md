@@ -16,7 +16,7 @@
 
 <details>
 <summary><b style ="font-size: small">Style Details: </summary>
-Theme Used: 
+Theme Used:
 <br>
 
 - GTK Theme:- [Nordic-darker](https://www.gnome-look.org/p/1267246)
@@ -50,7 +50,7 @@ Icon Used:
 
 <details>
 <summary><b style ="font-size: small">Style Details: </summary>
-Theme Used: 
+Theme Used:
 <br>
 
 - GTK Theme:- [Redstone](https://www.gnome-look.org/p/1013482)

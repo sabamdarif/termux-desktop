@@ -22,11 +22,11 @@
 - :desktop_computer: **Desktop Styles:** Supports Xfce, LXQt, and Openbox... others with beautiful themes
 - :mechanical_arm: **Hardware Acceleration:** It will install all the drivers in order to get hardware acceleration working under termux
 - :paperclips: **GUI Access:**
-  - Termux:X11 (Default)
-  - VNC (vnc is optional and only available via the custom install section)
+    - Termux:X11 (Default)
+    - VNC (vnc is optional and only available via the custom install section)
 - :package: **Package Management:**
-  - APT (Termux's default and recommended)
-  - [PACMAN](https://youtu.be/ditNvG5Nxj0) (pacman may be buggy, not well tested)
+    - APT (Termux's default and recommended)
+    - [PACMAN](https://youtu.be/ditNvG5Nxj0) (pacman may be buggy, not well tested)
 - :shopping: **App Store:** A appstore to install apps
 - :package: **Container** It lets you use a proot/chroot distro as a container to install more apps than Termux normally supports
 - And a lot more, just chose the custom install option during the setup and see what you can do
@@ -48,7 +48,7 @@
 ##### 1. Ensure Requirements Are Met:
 
 > [!NOTE]
-> **This Only Works On Termux From Github Or Fdroid.**  
+> **This Only Works On Termux From Github Or Fdroid.**
 > **Avoid using Termux from Google Play that doesn't work due to API limitations.**
 
 - Android 8+ device
@@ -81,7 +81,7 @@
 > Full Installation YouTube Video Guide:- [Here](https://youtu.be/SlR9f9hl5CQ?si=7O13ZAzdAnB_wwWw)
 
 > [!IMPORTANT]
-> **Fresh installations are recommended for best results.**  
+> **Fresh installations are recommended for best results.**
 > **If you are in android 12 or higher then first disable Phantom Process Killer Guide:-** [Here](https://github.com/atamshkai/Phantom-Process-Killer)
 
 ```bash
@@ -89,7 +89,7 @@ curl -Lf https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-
 ```
 
 > [!TIP]
-> You can also do a lite install which will not install all the optional packages.  
+> You can also do a lite install which will not install all the optional packages.
 > To do that run the installer like this `LITE=true ./setup-termux-desktop` / `LITE=1  ./setup-termux-desktop`.
 
 ##### 4. Usage Instructions:
@@ -128,7 +128,7 @@ Options:
 - `tx11start --nodbus --legacy` _to star Termux:11 without dbus and use *-legacy-drawing* (nodbus and gpu)_
 - `tx11start --legacy` _to star Termux:11 with *-legacy-drawing* (with dbus and gpu)_
 - `tx11start --debug --OTHER-PARAMETERS` _To see log of that commmand_
-  > tx11start --debug --nogpu _To See tx11start --nogpu's log_
+    > tx11start --debug --nogpu _To See tx11start --nogpu's log_
 
 </details>
 
@@ -196,7 +196,7 @@ Options:
 - `gui -s / --stop` `tx11` _to stop Termux:X11_
 - `gui -k / --kill / -kill` _to kill both vncserver and Termux:x11 At Once_
 - `gui --display / gui -d` `<IP_ADDRESS>:<DISPLAY_PORT>` _To launch the current desktop environment on another x11 display server over the same network_
-  - for more click :- [Here](https://github.com/sabamdarif/termux-desktop/blob/main/docs/see-more.md#hammer_and_wrenchhow-to-use-x11-display-forwarding-option)
+    - for more click :- [Here](https://github.com/sabamdarif/termux-desktop/blob/main/docs/see-more.md#hammer_and_wrenchhow-to-use-x11-display-forwarding-option)
 
 </details>
 
@@ -240,7 +240,7 @@ Options:
   <br>
 
 - `setup-termux-desktop --debug` **(At The Start)** _To generate a log file for any of the above command_
-  - `setup-termux-desktop --debug --install` _To create a log of whole installation process_
+    - `setup-termux-desktop --debug --install` _To create a log of whole installation process_
 
 </details>
 
@@ -248,10 +248,10 @@ Options:
 
 ## Associated Repos:
 
-- [Termux-AppStore](https://github.com/sabamdarif/Termux-AppStore)  
+- [Termux-AppStore](https://github.com/sabamdarif/Termux-AppStore)
   License: GPL
 
-- [chroot-distro](https://github.com/sabamdarif/chroot-distro)  
+- [chroot-distro](https://github.com/sabamdarif/chroot-distro)
   License: GPL
 
 ---
