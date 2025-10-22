@@ -11,6 +11,9 @@
 
 </div>
 
+> [!IMPORTANT]
+> You don't need to fork my repo in order to install it
+
 ---
 
 ## Key Features:
