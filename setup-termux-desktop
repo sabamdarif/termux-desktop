@@ -2559,7 +2559,7 @@ function install_desktop() {
         package_install_and_check "dwm"
     elif [[ "$de_name" == "bspwm" ]]; then
         print_msg "${BOLD}Installing BSPWM"
-        package_install_and_check "bspwm lxappearance xorg-xsetroot rofi feh"
+        package_install_and_check "bspwm lxappearance xorg-xsetroot rofi feh st nemo"
     elif [[ "$de_name" == "awesome" ]]; then
         print_msg "${BOLD}Installing AWESOME WM"
         package_install_and_check "awesome"
@@ -4769,7 +4769,7 @@ function remove_desktop_environments() {
     elif [[ "$de_name" == "dwm" ]]; then
         package_check_and_remove "dwm"
     elif [[ "$de_name" == "bspwm" ]]; then
-        package_check_and_remove "bspwm"
+        package_check_and_remove "bspwm lxappearance xorg-xsetroot rofi feh nemo st"
     elif [[ "$de_name" == "awesome" ]]; then
         package_check_and_remove "awesome"
     elif [[ "$de_name" == "fluxbox" ]]; then
