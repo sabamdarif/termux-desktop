@@ -2,7 +2,7 @@ root = true
 
 [*]
 # Indentation
-indent_style = space
+indent_style = tab
 indent_size = 4
 tab_width = 4
 
@@ -16,3 +16,19 @@ trim_trailing_whitespace = true
 
 # Max line length
 max_line_length = off
+
+[*.md]
+trim_trailing_whitespace = false
+indent_style = space
+indent_size = 4
+
+[*.{patch,.diff,.patch.*}]
+trim_trailing_whitespace = false
+
+[*.py]
+indent_style = space
+indent_size = 4
+
+[*.{yml,yaml}]
+indent_style = space
+indent_size = 4
