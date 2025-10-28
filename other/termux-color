@@ -28,25 +28,25 @@ BACKUP_FILE="$HOME/.termux/colors.properties.backup.$(date +%Y%m%d_%H%M%S)"
 
 # Create backup of current colors
 backup_colors() {
-    [[ -f "$COLORS_FILE" ]] && cp "$COLORS_FILE" "$BACKUP_FILE"
+	[[ -f "$COLORS_FILE" ]] && cp "$COLORS_FILE" "$BACKUP_FILE"
 }
 
 # Restore backup colors
 restore_colors() {
-    if [[ -f "$BACKUP_FILE" ]]; then
-        cp "$BACKUP_FILE" "$COLORS_FILE"
-        termux-reload-settings
-        rm -f "$BACKUP_FILE"
-    fi
+	if [[ -f "$BACKUP_FILE" ]]; then
+		cp "$BACKUP_FILE" "$COLORS_FILE"
+		termux-reload-settings
+		rm -f "$BACKUP_FILE"
+	fi
 }
 
 # Apply color scheme
 apply_colors() {
-    local scheme_name="$1"
+	local scheme_name="$1"
 
-    case "$scheme_name" in
-    "3024 Day")
-        cat >"$COLORS_FILE" <<'EOF'
+	case "$scheme_name" in
+	"3024 Day")
+		cat >"$COLORS_FILE" <<'EOF'
 # 3024 Day color scheme
 background:     #F7F7F7
 foreground:     #4A4543
@@ -68,10 +68,10 @@ color13:         #D6D5D4
 color14:         #CDAB53
 color15:         #F7F7F7
 EOF
-        ;;
+		;;
 
-    "3024 Night")
-        cat >"$COLORS_FILE" <<'EOF'
+	"3024 Night")
+		cat >"$COLORS_FILE" <<'EOF'
 # 3024 Night color scheme
 background:     #090300
 foreground:     #A5A2A2
@@ -93,10 +93,10 @@ color13:         #D6D5D4
 color14:         #CDAB53
 color15:         #F7F7F7
 EOF
-        ;;
+		;;
 
-    "Aci")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Aci")
+		cat >"$COLORS_FILE" <<'EOF'
 # Aci color scheme
 background:     #0D1926
 foreground:     #B4E1FD
@@ -118,10 +118,10 @@ color13:         #8E1EFF
 color14:         #1EFF8E
 color15:         #C2C2C2
 EOF
-        ;;
+		;;
 
-    "Acme")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Acme")
+		cat >"$COLORS_FILE" <<'EOF'
 # plan9-for-vimspace (https://github.com/plan9-for-vimspace/acme-colors)
 background:     #ffffea
 foreground:     #000000
@@ -143,10 +143,10 @@ color13:         #505050
 color14:         #aeeeee
 color15:         #fcfcce
 EOF
-        ;;
+		;;
 
-    "Aco")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Aco")
+		cat >"$COLORS_FILE" <<'EOF'
 # Aco color scheme
 background:     #1F1305
 foreground:     #B4E1FD
@@ -168,10 +168,10 @@ color13:         #8E1EFF
 color14:         #1EFF8E
 color15:         #C4C4C4
 EOF
-        ;;
+		;;
 
-    "Adventure Time")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Adventure Time")
+		cat >"$COLORS_FILE" <<'EOF'
 # Adventure Time color scheme
 background:     #1F1D45
 foreground:     #F8DCC0
@@ -193,10 +193,10 @@ color13:         #9B5953
 color14:         #C8FAF4
 color15:         #F6F5FB
 EOF
-        ;;
+		;;
 
-    "Afterglow")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Afterglow")
+		cat >"$COLORS_FILE" <<'EOF'
 # Afterglow color scheme
 background:     #222222
 foreground:     #D0D0D0
@@ -218,10 +218,10 @@ color13:         #9F4E85
 color14:         #7DD6CF
 color15:         #F5F5F5
 EOF
-        ;;
+		;;
 
-    "Alien Blood")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Alien Blood")
+		cat >"$COLORS_FILE" <<'EOF'
 # Alien Blood color scheme
 background:     #0F1610
 foreground:     #637D75
@@ -243,10 +243,10 @@ color13:         #0058E0
 color14:         #00E0C4
 color15:         #73FA91
 EOF
-        ;;
+		;;
 
-    "Apprentice")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Apprentice")
+		cat >"$COLORS_FILE" <<'EOF'
 # Apprentice color scheme
 background:     #262626
 foreground:     #BCBCBC
@@ -268,10 +268,10 @@ color13:         #8787AF
 color14:         #5FAFAF
 color15:         #FFFFFF
 EOF
-        ;;
+		;;
 
-    "Arc Dark")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Arc Dark")
+		cat >"$COLORS_FILE" <<'EOF'
 # https://hesamrad.com
 background:     #0D1117
 foreground:     #9198A1
@@ -293,10 +293,10 @@ color13:         #D930D9
 color14:         #30D1D9
 color15:         #FFFFFF
 EOF
-        ;;
+		;;
 
-    "Arc Light")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Arc Light")
+		cat >"$COLORS_FILE" <<'EOF'
 # https://hesamrad.com
 background:     #E8ECF2
 foreground:     #333333
@@ -318,10 +318,10 @@ color13:         #BE23BE
 color14:         #23B6BE
 color15:         #FFFFFF
 EOF
-        ;;
+		;;
 
-    "Argonaut")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Argonaut")
+		cat >"$COLORS_FILE" <<'EOF'
 # Argonaut color scheme
 background:     #0E1019
 foreground:     #FFFAF4
@@ -343,10 +343,10 @@ color13:         #9A5FEB
 color14:         #67FFF0
 color15:         #FFFFFF
 EOF
-        ;;
+		;;
 
-    "Arthur")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Arthur")
+		cat >"$COLORS_FILE" <<'EOF'
 # Arthur color scheme
 background:     #1C1C1C
 foreground:     #DDEEDD
@@ -368,10 +368,10 @@ color13:         #996600
 color14:         #B0C4DE
 color15:         #DDCCBB
 EOF
-        ;;
+		;;
 
-    "Astrodark")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Astrodark")
+		cat >"$COLORS_FILE" <<'EOF'
 # Astrodark color scheme
 background:     #1A1D23
 foreground:     #9B9FA9
@@ -393,10 +393,10 @@ color13:         #DEAEED
 color14:         #27FFDF
 color15:         #CACCD3
 EOF
-        ;;
+		;;
 
-    "Atelier Cave")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Atelier Cave")
+		cat >"$COLORS_FILE" <<'EOF'
 # Bram de Haan (http://atelierbram.github.io/syntax-highlighting/atelier-schemes/cave)
 background:     #19171C
 foreground:     #7E7887
@@ -418,10 +418,10 @@ color13:         #955AE7
 color14:         #398BC6
 color15:         #EFECF4
 EOF
-        ;;
+		;;
 
-    "Atelier Dune")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Atelier Dune")
+		cat >"$COLORS_FILE" <<'EOF'
 # Bram de Haan (http://atelierbram.github.io/syntax-highlighting/atelier-schemes/dune)
 background:     #20201D
 foreground:     #999580
@@ -443,10 +443,10 @@ color13:         #B854D4
 color14:         #1FAD83
 color15:         #FEFBEC
 EOF
-        ;;
+		;;
 
-    "Atelier Estuary")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Atelier Estuary")
+		cat >"$COLORS_FILE" <<'EOF'
 # Bram de Haan (http://atelierbram.github.io/syntax-highlighting/atelier-schemes/estuary)
 background:     #22221B
 foreground:     #878573
@@ -468,10 +468,10 @@ color13:         #5F9182
 color14:         #5B9D48
 color15:         #F4F3EC
 EOF
-        ;;
+		;;
 
-    "Atelier Forest")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Atelier Forest")
+		cat >"$COLORS_FILE" <<'EOF'
 # Bram de Haan (http://atelierbram.github.io/syntax-highlighting/atelier-schemes/forest)
 background:     #1B1918
 foreground:     #9C9491
@@ -493,10 +493,10 @@ color13:         #6666EA
 color14:         #3D97B8
 color15:         #F1EFEE
 EOF
-        ;;
+		;;
 
-    "Atelier Heath")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Atelier Heath")
+		cat >"$COLORS_FILE" <<'EOF'
 # Bram de Haan (http://atelierbram.github.io/syntax-highlighting/atelier-schemes/heath)
 background:     #1B181B
 foreground:     #9E8F9E
@@ -518,10 +518,10 @@ color13:         #7b59C0
 color14:         #159393
 color15:         #F7F3F7
 EOF
-        ;;
+		;;
 
-    "Atelier Lakeside")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Atelier Lakeside")
+		cat >"$COLORS_FILE" <<'EOF'
 # Bram de Haan (http://atelierbram.github.io/syntax-highlighting/atelier-schemes/lakeside)
 background:     #161B1D
 foreground:     #7195A8
@@ -543,10 +543,10 @@ color13:         #6B6BB8
 color14:         #2D8F6F
 color15:         #EBF8FF
 EOF
-        ;;
+		;;
 
-    "Atelier Plateau")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Atelier Plateau")
+		cat >"$COLORS_FILE" <<'EOF'
 # Bram de Haan (http://atelierbram.github.io/syntax-highlighting/atelier-schemes/plateau)
 background:     #1B1818
 foreground:     #7E7777
@@ -568,10 +568,10 @@ color13:         #8464C4
 color14:         #5485B6
 color15:         #F4ECEC
 EOF
-        ;;
+		;;
 
-    "Atelier Savanna")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Atelier Savanna")
+		cat >"$COLORS_FILE" <<'EOF'
 # Bram de Haan (http://atelierbram.github.io/syntax-highlighting/atelier-schemes/savanna)
 background:     #171C19
 foreground:     #78877D
@@ -593,10 +593,10 @@ color13:         #55859B
 color14:         #1C9AA0
 color15:         #ECF4EE
 EOF
-        ;;
+		;;
 
-    "Atelier Seaside")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Atelier Seaside")
+		cat >"$COLORS_FILE" <<'EOF'
 # Bram de Haan (http://atelierbram.github.io/syntax-highlighting/atelier-schemes/seaside)
 background:     #131513
 foreground:     #809980
@@ -618,10 +618,10 @@ color13:         #AD2BEE
 color14:         #1999B3
 color15:         #F4FBF4
 EOF
-        ;;
+		;;
 
-    "Atelier Sulphurpool")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Atelier Sulphurpool")
+		cat >"$COLORS_FILE" <<'EOF'
 # Bram de Haan (http://atelierbram.github.io/syntax-highlighting/atelier-schemes/sulphurpool)
 background:     #202746
 foreground:     #898EA4
@@ -643,10 +643,10 @@ color13:         #6679CC
 color14:         #22A2C9
 color15:         #F5F7FF
 EOF
-        ;;
+		;;
 
-    "Atom")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Atom")
+		cat >"$COLORS_FILE" <<'EOF'
 # Atom color scheme
 background:     #161719
 foreground:     #C5C8C6
@@ -668,10 +668,10 @@ color13:         #B9B6FC
 color14:         #85BEFD
 color15:         #E0E0E0
 EOF
-        ;;
+		;;
 
-    "Aura")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Aura")
+		cat >"$COLORS_FILE" <<'EOF'
 # Aura color scheme
 background:     #15141B
 foreground:     #EDECEE
@@ -693,10 +693,10 @@ color13:         #A277FF
 color14:         #61FFCA
 color15:         #EDECEE
 EOF
-        ;;
+		;;
 
-    "Ayaka")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Ayaka")
+		cat >"$COLORS_FILE" <<'EOF'
 # Ruhannn (https://github.com/ruhannn)
 background:     #36283d
 foreground:     #cedaeb
@@ -718,10 +718,10 @@ color13:         #E1B4CE
 color14:         #cedaeb
 color15:         #FFFEFE
 EOF
-        ;;
+		;;
 
-    "Ayu Dark")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Ayu Dark")
+		cat >"$COLORS_FILE" <<'EOF'
 # Ayu Dark color scheme
 background:     #0A0E14
 foreground:     #B3B1AD
@@ -743,10 +743,10 @@ color13:         #FFEE99
 color14:         #95E6CB
 color15:         #B3B1AD
 EOF
-        ;;
+		;;
 
-    "Ayu Light")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Ayu Light")
+		cat >"$COLORS_FILE" <<'EOF'
 # Ayu Light color scheme
 background:     #FAFAFA
 foreground:     #575F66
@@ -768,10 +768,10 @@ color13:         #A37ACC
 color14:         #4CBF99
 color15:         #FAFAFA
 EOF
-        ;;
+		;;
 
-    "Ayu Mirage")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Ayu Mirage")
+		cat >"$COLORS_FILE" <<'EOF'
 # Ayu Mirage color scheme
 background:     #1F2430
 foreground:     #CBCCC6
@@ -793,10 +793,10 @@ color13:         #D4BFFF
 color14:         #95E6CB
 color15:         #CBCCC6
 EOF
-        ;;
+		;;
 
-    "Azu")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Azu")
+		cat >"$COLORS_FILE" <<'EOF'
 # Azu color scheme
 background:     #09111A
 foreground:     #D9E6F2
@@ -818,10 +818,10 @@ color13:         #D3B8D6
 color14:         #B8D6D3
 color15:         #FFFFFF
 EOF
-        ;;
+		;;
 
-    "Base2Tone Cave")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Base2Tone Cave")
+		cat >"$COLORS_FILE" <<'EOF'
 # Base2Tone Cave color scheme
 background:     #222021
 foreground:     #9f999b
@@ -843,10 +843,10 @@ color13:         #f0a8c1
 color14:         #c39622
 color15:         #ffebf2
 EOF
-        ;;
+		;;
 
-    "Base2Tone Desert")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Base2Tone Desert")
+		cat >"$COLORS_FILE" <<'EOF'
 # Base2Tone Desert color scheme
 background:     #292724
 foreground:     #ada594
@@ -868,10 +868,10 @@ color13:         #ddcba6
 color14:         #e58748
 color15:         #f2ead9
 EOF
-        ;;
+		;;
 
-    "Base2Tone Drawbridge")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Base2Tone Drawbridge")
+		cat >"$COLORS_FILE" <<'EOF'
 # Base2Tone Drawbridge color scheme
 background:     #1b1f32
 foreground:     #9094a7
@@ -893,10 +893,10 @@ color13:         #c3cdfe
 color14:         #5cbcd6
 color15:         #e1e6ff
 EOF
-        ;;
+		;;
 
-    "Base2Tone Earth")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Base2Tone Earth")
+		cat >"$COLORS_FILE" <<'EOF'
 # Base2Tone Earth color scheme
 background:     #322d29
 foreground:     #b5a9a1
@@ -918,10 +918,10 @@ color13:         #dfb99f
 color14:         #cda956
 color15:         #fff3eb
 EOF
-        ;;
+		;;
 
-    "Base2Tone Evening")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Base2Tone Evening")
+		cat >"$COLORS_FILE" <<'EOF'
 # Base2Tone Evening color scheme
 background:     #2a2734
 foreground:     #a4a1b5
@@ -943,10 +943,10 @@ color13:         #d9d2fe
 color14:         #ffa142
 color15:         #eeebff
 EOF
-        ;;
+		;;
 
-    "Base2Tone Field")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Base2Tone Field")
+		cat >"$COLORS_FILE" <<'EOF'
 # Base2Tone Field color scheme
 background:     #18201e
 foreground:     #8ea4a0
@@ -968,10 +968,10 @@ color13:         #88f2e0
 color14:         #25d46e
 color15:         #a8fff1
 EOF
-        ;;
+		;;
 
-    "Base2Tone Forest")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Base2Tone Forest")
+		cat >"$COLORS_FILE" <<'EOF'
 # Base2Tone Forest color scheme
 background:     #2a2d2a
 foreground:     #a1b5a1
@@ -993,10 +993,10 @@ color13:         #c8e4c8
 color14:         #b1c44f
 color15:         #f0fff0
 EOF
-        ;;
+		;;
 
-    "Base2Tone Garden")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Base2Tone Garden")
+		cat >"$COLORS_FILE" <<'EOF'
 # Base2Tone Garden color scheme
 background:     #1e1f1e
 foreground:     #969c96
@@ -1018,10 +1018,10 @@ color13:         #b7e3b5
 color14:         #dd843c
 color15:         #dcf0db
 EOF
-        ;;
+		;;
 
-    "Base2Tone Heath")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Base2Tone Heath")
+		cat >"$COLORS_FILE" <<'EOF'
 # Base2Tone Heath color scheme
 background:     #222022
 foreground:     #9e999f
@@ -1043,10 +1043,10 @@ color13:         #eaa8f0
 color14:         #c38022
 color15:         #fdebff
 EOF
-        ;;
+		;;
 
-    "Base2Tone Lake")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Base2Tone Lake")
+		cat >"$COLORS_FILE" <<'EOF'
 # Base2Tone Lake color scheme
 background:     #192d34
 foreground:     #7ba8b7
@@ -1068,10 +1068,10 @@ color13:         #a5d8e9
 color14:         #c4b031
 color15:         #e1f7ff
 EOF
-        ;;
+		;;
 
-    "Base2Tone Lavender")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Base2Tone Lavender")
+		cat >"$COLORS_FILE" <<'EOF'
 # Base2Tone Lavender color scheme
 background:     #201d2a
 foreground:     #9992b0
@@ -1093,10 +1093,10 @@ color13:         #dcd2fe
 color14:         #ca80ff
 color15:         #efebff
 EOF
-        ;;
+		;;
 
-    "Base2Tone Mall")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Base2Tone Mall")
+		cat >"$COLORS_FILE" <<'EOF'
 # Base2Tone Mall color scheme
 background:     #1e1e1f
 foreground:     #97959d
@@ -1118,10 +1118,10 @@ color13:         #e5dbff
 color14:         #69b5f7
 color15:         #f4f0ff
 EOF
-        ;;
+		;;
 
-    "Base2Tone Meadow")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Base2Tone Meadow")
+		cat >"$COLORS_FILE" <<'EOF'
 # Base2Tone Meadow color scheme
 background:     #192834
 foreground:     #7b9eb7
@@ -1143,10 +1143,10 @@ color13:         #afddfe
 color14:         #73b234
 color15:         #d1ecff
 EOF
-        ;;
+		;;
 
-    "Base2Tone Morning")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Base2Tone Morning")
+		cat >"$COLORS_FILE" <<'EOF'
 # Base2Tone Morning color scheme
 background:     #232834
 foreground:     #8d95a5
@@ -1168,10 +1168,10 @@ color13:         #b7c9eb
 color14:         #9a7c42
 color15:         #dee6f7
 EOF
-        ;;
+		;;
 
-    "Base2Tone Motel")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Base2Tone Motel")
+		cat >"$COLORS_FILE" <<'EOF'
 # Base2Tone Motel color scheme
 background:     #242323
 foreground:     #a5979a
@@ -1193,10 +1193,10 @@ color13:         #dec9cc
 color14:         #f77c64
 color15:         #f0dbdf
 EOF
-        ;;
+		;;
 
-    "Base2Tone Pool")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Base2Tone Pool")
+		cat >"$COLORS_FILE" <<'EOF'
 # Base2Tone Pool color scheme
 background:     #2a2433
 foreground:     #9a90a7
@@ -1218,10 +1218,10 @@ color13:         #e4d2fe
 color14:         #f36f68
 color15:         #f3ebff
 EOF
-        ;;
+		;;
 
-    "Base2Tone Porch")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Base2Tone Porch")
+		cat >"$COLORS_FILE" <<'EOF'
 # Base2Tone Porch color scheme
 background:     #221e24
 foreground:     #9f95a3
@@ -1243,10 +1243,10 @@ color13:         #dfcbe6
 color14:         #ec8d55
 color15:         #f2e3f7
 EOF
-        ;;
+		;;
 
-    "Base2Tone Sea")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Base2Tone Sea")
+		cat >"$COLORS_FILE" <<'EOF'
 # Base2Tone Sea color scheme
 background:     #1d262f
 foreground:     #a1aab5
@@ -1268,10 +1268,10 @@ color13:         #afd4fe
 color14:         #0db57d
 color15:         #ebf4ff
 EOF
-        ;;
+		;;
 
-    "Base2Tone Space")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Base2Tone Space")
+		cat >"$COLORS_FILE" <<'EOF'
 # Base2Tone Space color scheme
 background:     #24242e
 foreground:     #a1a1b5
@@ -1293,10 +1293,10 @@ color13:         #cecee3
 color14:         #e66e33
 color15:         #ebebff
 EOF
-        ;;
+		;;
 
-    "Base2Tone Suburb")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Base2Tone Suburb")
+		cat >"$COLORS_FILE" <<'EOF'
 # Base2Tone Suburb color scheme
 background:     #1e202f
 foreground:     #878ba6
@@ -1318,10 +1318,10 @@ color13:         #d2d8fe
 color14:         #f764a1
 color15:         #ebedff
 EOF
-        ;;
+		;;
 
-    "Base4Tone Classic A")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Base4Tone Classic A")
+		cat >"$COLORS_FILE" <<'EOF'
 # Base4Tone Classic A color scheme
 background:     #211d1c
 foreground:     #a19391
@@ -1343,10 +1343,10 @@ color13:         #e8a02c
 color14:         #fbbab1
 color15:         #f9f6f6
 EOF
-        ;;
+		;;
 
-    "Base4Tone Classic B")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Base4Tone Classic B")
+		cat >"$COLORS_FILE" <<'EOF'
 # Base4Tone Classic B color scheme
 background:     #211e1c
 foreground:     #a29790
@@ -1368,10 +1368,10 @@ color13:         #dcc218
 color14:         #f5c1a3
 color15:         #f9f7f6
 EOF
-        ;;
+		;;
 
-    "Base4Tone Classic C")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Base4Tone Classic C")
+		cat >"$COLORS_FILE" <<'EOF'
 # Base4Tone Classic C color scheme
 background:     #221f1c
 foreground:     #a39b8f
@@ -1393,10 +1393,10 @@ color13:         #c5dc18
 color14:         #f3cd91
 color15:         #f9f8f6
 EOF
-        ;;
+		;;
 
-    "Base4Tone Classic D")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Base4Tone Classic D")
+		cat >"$COLORS_FILE" <<'EOF'
 # Base4Tone Classic D color scheme
 background:     #21211c
 foreground:     #a2a090
@@ -1418,10 +1418,10 @@ color13:         #95dc18
 color14:         #f2e58c
 color15:         #f9f8f6
 EOF
-        ;;
+		;;
 
-    "Base4Tone Classic E")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Base4Tone Classic E")
+		cat >"$COLORS_FILE" <<'EOF'
 # Base4Tone Classic E color scheme
 background:     #21211c
 foreground:     #a0a290
@@ -1443,10 +1443,10 @@ color13:         #69d425
 color14:         #e6f28c
 color15:         #f9f9f6
 EOF
-        ;;
+		;;
 
-    "Base4Tone Classic F")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Base4Tone Classic F")
+		cat >"$COLORS_FILE" <<'EOF'
 # Base4Tone Classic F color scheme
 background:     #1f211c
 foreground:     #9ba191
@@ -1468,10 +1468,10 @@ color13:         #18d85e
 color14:         #cdf28c
 color15:         #f8f9f6
 EOF
-        ;;
+		;;
 
-    "Base4Tone Classic I")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Base4Tone Classic I")
+		cat >"$COLORS_FILE" <<'EOF'
 # Base4Tone Classic I color scheme
 background:     #1d201d
 foreground:     #949e95
@@ -1493,10 +1493,10 @@ color13:         #3ccadd
 color14:         #97eda1
 color15:         #f6f9f6
 EOF
-        ;;
+		;;
 
-    "Base4Tone Classic L")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Base4Tone Classic L")
+		cat >"$COLORS_FILE" <<'EOF'
 # Base4Tone Classic L color scheme
 background:     #1b2221
 foreground:     #8ea4a1
@@ -1518,10 +1518,10 @@ color13:         #88b4fc
 color14:         #93ece0
 color15:         #f6f9f8
 EOF
-        ;;
+		;;
 
-    "Base4Tone Classic O")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Base4Tone Classic O")
+		cat >"$COLORS_FILE" <<'EOF'
 # Base4Tone Classic O color scheme
 background:     #1a1d23
 foreground:     #8995a9
@@ -1543,10 +1543,10 @@ color13:         #aba1f7
 color14:         #c2d9ff
 color15:         #f6f7f9
 EOF
-        ;;
+		;;
 
-    "Base4Tone Classic P")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Base4Tone Classic P")
+		cat >"$COLORS_FILE" <<'EOF'
 # Base4Tone Classic P color scheme
 background:     #1c1d21
 foreground:     #9092a2
@@ -1568,10 +1568,10 @@ color13:         #b792f6
 color14:         #c6cdfb
 color15:         #f6f6f9
 EOF
-        ;;
+		;;
 
-    "Base4Tone Classic Q")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Base4Tone Classic Q")
+		cat >"$COLORS_FILE" <<'EOF'
 # Base4Tone Classic Q color scheme
 background:     #1d1d20
 foreground:     #95949e
@@ -1593,10 +1593,10 @@ color13:         #c988f2
 color14:         #d1cbfb
 color15:         #f6f6f9
 EOF
-        ;;
+		;;
 
-    "Base4Tone Classic R")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Base4Tone Classic R")
+		cat >"$COLORS_FILE" <<'EOF'
 # Base4Tone Classic R color scheme
 background:     #1e1d20
 foreground:     #98949e
@@ -1618,10 +1618,10 @@ color13:         #e17ef1
 color14:         #d6c2fa
 color15:         #f7f6f9
 EOF
-        ;;
+		;;
 
-    "Base4Tone Classic S")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Base4Tone Classic S")
+		cat >"$COLORS_FILE" <<'EOF'
 # Base4Tone Classic S color scheme
 background:     #1f1d20
 foreground:     #9a949e
@@ -1643,10 +1643,10 @@ color13:         #f17ec7
 color14:         #e0baf7
 color15:         #f8f6f9
 EOF
-        ;;
+		;;
 
-    "Base4Tone Classic T")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Base4Tone Classic T")
+		cat >"$COLORS_FILE" <<'EOF'
 # Base4Tone Classic T color scheme
 background:     #201d20
 foreground:     #9d949e
@@ -1668,10 +1668,10 @@ color13:         #f17eaa
 color14:         #edb1f6
 color15:         #f8f6f9
 EOF
-        ;;
+		;;
 
-    "Base4Tone Classic U")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Base4Tone Classic U")
+		cat >"$COLORS_FILE" <<'EOF'
 # Base4Tone Classic U color scheme
 background:     #201d20
 foreground:     #9e949d
@@ -1693,10 +1693,10 @@ color13:         #f17e8e
 color14:         #f6b1ee
 color15:         #f9f6f8
 EOF
-        ;;
+		;;
 
-    "Base4Tone Classic W")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Base4Tone Classic W")
+		cat >"$COLORS_FILE" <<'EOF'
 # Base4Tone Classic W color scheme
 background:     #201d1e
 foreground:     #9e9498
@@ -1718,10 +1718,10 @@ color13:         #f18c7e
 color14:         #f6b1cc
 color15:         #f9f6f7
 EOF
-        ;;
+		;;
 
-    "Base4Tone Modern C")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Base4Tone Modern C")
+		cat >"$COLORS_FILE" <<'EOF'
 # Base4Tone Modern C color scheme
 background:     #221f1c
 foreground:     #a39b8f
@@ -1743,10 +1743,10 @@ color13:         #1ed2ba
 color14:         #f3cd91
 color15:         #f9f8f6
 EOF
-        ;;
+		;;
 
-    "Base4Tone Modern N")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Base4Tone Modern N")
+		cat >"$COLORS_FILE" <<'EOF'
 # Base4Tone Modern N color scheme
 background:     #1a2023
 foreground:     #8a9da8
@@ -1768,10 +1768,10 @@ color13:         #a0acf8
 color14:         #b1e0fb
 color15:         #f6f8f9
 EOF
-        ;;
+		;;
 
-    "Base4Tone Modern W")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Base4Tone Modern W")
+		cat >"$COLORS_FILE" <<'EOF'
 # Base4Tone Modern W color scheme
 background:     #201d1e
 foreground:     #9e9498
@@ -1793,10 +1793,10 @@ color13:         #f18c7e
 color14:         #f6b1cc
 color15:         #f9f6f7
 EOF
-        ;;
+		;;
 
-    "Belafonte Day")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Belafonte Day")
+		cat >"$COLORS_FILE" <<'EOF'
 # Belafonte Day color scheme
 background:     #D5CCBA
 foreground:     #45373C
@@ -1818,10 +1818,10 @@ color13:         #97522C
 color14:         #989A9C
 color15:         #D5CCBA
 EOF
-        ;;
+		;;
 
-    "Belafonte Night")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Belafonte Night")
+		cat >"$COLORS_FILE" <<'EOF'
 # Belafonte Night color scheme
 background:     #20111B
 foreground:     #968C83
@@ -1843,10 +1843,10 @@ color13:         #97522C
 color14:         #989A9C
 color15:         #D5CCBA
 EOF
-        ;;
+		;;
 
-    "Bim")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Bim")
+		cat >"$COLORS_FILE" <<'EOF'
 # Bim color scheme
 background:     #012849
 foreground:     #A9BED8
@@ -1868,10 +1868,10 @@ color13:         #BB79EC
 color14:         #81EEB2
 color15:         #F5EEEC
 EOF
-        ;;
+		;;
 
-    "Birds Of Paradise")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Birds Of Paradise")
+		cat >"$COLORS_FILE" <<'EOF'
 # Birds Of Paradise color scheme
 background:     #2A1F1D
 foreground:     #E0DBB7
@@ -1893,10 +1893,10 @@ color13:         #D19ECB
 color14:         #93CFD7
 color15:         #FFF9D5
 EOF
-        ;;
+		;;
 
-    "Blazer")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Blazer")
+		cat >"$COLORS_FILE" <<'EOF'
 # Blazer color scheme
 background:     #0D1926
 foreground:     #D9E6F2
@@ -1918,10 +1918,10 @@ color13:         #DBBDDB
 color14:         #BDDBDB
 color15:         #FFFFFF
 EOF
-        ;;
+		;;
 
-    "Blue Dolphin")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Blue Dolphin")
+		cat >"$COLORS_FILE" <<'EOF'
 # Blue Dolphin color scheme
 background:     #006984
 foreground:     #C5F2FF
@@ -1943,10 +1943,10 @@ color13:         #DDB0F6
 color14:         #A3F7FF
 color15:         #FFFFFF
 EOF
-        ;;
+		;;
 
-    "Blue Moon Light")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Blue Moon Light")
+		cat >"$COLORS_FILE" <<'EOF'
 # kyazdani42 (https://github.com/kyazdani42/blue-moon)
 background:     #32374d
 foreground:     #fbfbfb
@@ -1968,10 +1968,10 @@ color13:         #a9a3db
 color14:         #89bbdd
 color15:         #ffffff
 EOF
-        ;;
+		;;
 
-    "Blue Moon")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Blue Moon")
+		cat >"$COLORS_FILE" <<'EOF'
 # kyazdani42 (https://github.com/kyazdani42/blue-moon)
 background:     #1b1e2b
 foreground:     #676e96
@@ -1993,10 +1993,10 @@ color13:         #b9a3eb
 color14:         #89ddff
 color15:         #ffffff
 EOF
-        ;;
+		;;
 
-    "Bluloco Light")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Bluloco Light")
+		cat >"$COLORS_FILE" <<'EOF'
 # Bluloco Light color scheme
 background:     #F9F9F9
 foreground:     #383A42
@@ -2018,10 +2018,10 @@ color13:         #CE33C0
 color14:         #6D93BB
 color15:         #26272D
 EOF
-        ;;
+		;;
 
-    "Bluloco Zsh Light")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Bluloco Zsh Light")
+		cat >"$COLORS_FILE" <<'EOF'
 # Bluloco Zsh Light color scheme
 background:     #F9F9F9
 foreground:     #383A42
@@ -2043,10 +2043,10 @@ color13:         #CE33C0
 color14:         #6D93BB
 color15:         #26272D
 EOF
-        ;;
+		;;
 
-    "Borland")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Borland")
+		cat >"$COLORS_FILE" <<'EOF'
 # Borland color scheme
 background:     #0000A4
 foreground:     #FFFF4E
@@ -2068,10 +2068,10 @@ color13:         #FF9CFE
 color14:         #DFDFFE
 color15:         #FFFFFF
 EOF
-        ;;
+		;;
 
-    "Breadog")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Breadog")
+		cat >"$COLORS_FILE" <<'EOF'
 # Breadog color scheme
 background:     #F1EBE6
 foreground:     #362C24
@@ -2093,10 +2093,10 @@ color13:         #C300BD
 color14:         #008697
 color15:         #EAE1DA
 EOF
-        ;;
+		;;
 
-    "Breath Darker")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Breath Darker")
+		cat >"$COLORS_FILE" <<'EOF'
 # Breath Darker color scheme
 background:     #080D14
 foreground:     #17A88B
@@ -2118,10 +2118,10 @@ color13:         #8E44AD
 color14:         #16A085
 color15:         #FFFFFF
 EOF
-        ;;
+		;;
 
-    "Breath Light")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Breath Light")
+		cat >"$COLORS_FILE" <<'EOF'
 # Breath Light color scheme
 background:     #E8E8E8
 foreground:     #292F34
@@ -2143,10 +2143,10 @@ color13:         #8E44AD
 color14:         #16A085
 color15:         #FFFFFF
 EOF
-        ;;
+		;;
 
-    "Breath Silverfox")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Breath Silverfox")
+		cat >"$COLORS_FILE" <<'EOF'
 # Breath Silverfox color scheme
 background:     #1E2229
 foreground:     #BBBBBB
@@ -2168,10 +2168,10 @@ color13:         #8E44AD
 color14:         #16A085
 color15:         #FFFFFF
 EOF
-        ;;
+		;;
 
-    "Breath")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Breath")
+		cat >"$COLORS_FILE" <<'EOF'
 # Breath color scheme
 background:     #1E2229
 foreground:     #17A88B
@@ -2193,10 +2193,10 @@ color13:         #8E44AD
 color14:         #16A085
 color15:         #FFFFFF
 EOF
-        ;;
+		;;
 
-    "Breeze")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Breeze")
+		cat >"$COLORS_FILE" <<'EOF'
 # Breeze color scheme
 background:     #232627
 foreground:     #FCFCFC
@@ -2218,10 +2218,10 @@ color13:         #8E44AD
 color14:         #16A085
 color15:         #FFFFFF
 EOF
-        ;;
+		;;
 
-    "Broadcast")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Broadcast")
+		cat >"$COLORS_FILE" <<'EOF'
 # Broadcast color scheme
 background:     #2B2B2B
 foreground:     #E6E1DC
@@ -2243,10 +2243,10 @@ color13:         #FFFFFF
 color14:         #A0CEF0
 color15:         #FFFFFF
 EOF
-        ;;
+		;;
 
-    "Brogrammer")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Brogrammer")
+		cat >"$COLORS_FILE" <<'EOF'
 # Brogrammer color scheme
 background:     #131313
 foreground:     #D6DBE5
@@ -2268,10 +2268,10 @@ color13:         #5350B9
 color14:         #0F7DDB
 color15:         #FFFFFF
 EOF
-        ;;
+		;;
 
-    "Butrin")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Butrin")
+		cat >"$COLORS_FILE" <<'EOF'
 # Butrin color scheme
 background:     #4B3B3C
 foreground:     #F2F2F2
@@ -2293,10 +2293,10 @@ color13:         #D8BFD8
 color14:         #64DBDB
 color15:         #F2F2F2
 EOF
-        ;;
+		;;
 
-    "C64")
-        cat >"$COLORS_FILE" <<'EOF'
+	"C64")
+		cat >"$COLORS_FILE" <<'EOF'
 # C64 color scheme
 background:     #40318D
 foreground:     #7869C4
@@ -2318,10 +2318,10 @@ color13:         #8B3F96
 color14:         #67B6BD
 color15:         #F7F7F7
 EOF
-        ;;
+		;;
 
-    "Cai")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Cai")
+		cat >"$COLORS_FILE" <<'EOF'
 # Cai color scheme
 background:     #09111A
 foreground:     #D9E6F2
@@ -2343,10 +2343,10 @@ color13:         #D48DE9
 color14:         #8DE9D4
 color15:         #FFFFFF
 EOF
-        ;;
+		;;
 
-    "Campbell")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Campbell")
+		cat >"$COLORS_FILE" <<'EOF'
 # Campbell color scheme
 background:     #0C0C0C
 foreground:     #CCCCCC
@@ -2368,10 +2368,10 @@ color13:         #B4009E
 color14:         #61D6D6
 color15:         #F2F2F2
 EOF
-        ;;
+		;;
 
-    "Catppuccin Frappé")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Catppuccin Frappé")
+		cat >"$COLORS_FILE" <<'EOF'
 # Catppuccin Frappé color scheme
 background:     #303446
 foreground:     #C6D0F5
@@ -2393,10 +2393,10 @@ color13:         #F4B8E4
 color14:         #81C8BE
 color15:         #A5ADCE
 EOF
-        ;;
+		;;
 
-    "Catppuccin Latte")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Catppuccin Latte")
+		cat >"$COLORS_FILE" <<'EOF'
 # Catppuccin Latte color scheme
 background:     #EFF1F5
 foreground:     #4C4F69
@@ -2418,10 +2418,10 @@ color13:         #EA76CB
 color14:         #179299
 color15:         #BCC0CC
 EOF
-        ;;
+		;;
 
-    "Catppuccin Macchiato")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Catppuccin Macchiato")
+		cat >"$COLORS_FILE" <<'EOF'
 # Catppuccin Macchiato color scheme
 background:     #24273A
 foreground:     #CAD3F5
@@ -2443,10 +2443,10 @@ color13:         #F5BDE6
 color14:         #8BD5CA
 color15:         #A5ADCB
 EOF
-        ;;
+		;;
 
-    "Catppuccin Mocha")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Catppuccin Mocha")
+		cat >"$COLORS_FILE" <<'EOF'
 # Catppuccin Mocha color scheme
 background:     #1E1E2E
 foreground:     #CDD6F4
@@ -2468,10 +2468,10 @@ color13:         #F5C2E7
 color14:         #94E2D5
 color15:         #A6ADC8
 EOF
-        ;;
+		;;
 
-    "Chalk")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Chalk")
+		cat >"$COLORS_FILE" <<'EOF'
 # Chalk color scheme
 background:     #2D2D2D
 foreground:     #D4D4D4
@@ -2493,10 +2493,10 @@ color13:         #D6ADD5
 color14:         #79D4D5
 color15:         #D4D4D4
 EOF
-        ;;
+		;;
 
-    "Chalkboard")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Chalkboard")
+		cat >"$COLORS_FILE" <<'EOF'
 # Chalkboard color scheme
 background:     #29262F
 foreground:     #D9E6F2
@@ -2518,10 +2518,10 @@ color13:         #DBAADA
 color14:         #AADADB
 color15:         #FFFFFF
 EOF
-        ;;
+		;;
 
-    "Chameleon")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Chameleon")
+		cat >"$COLORS_FILE" <<'EOF'
 # Chameleon color scheme
 background:     #2C2C2C
 foreground:     #DEDEDE
@@ -2543,10 +2543,10 @@ color13:         #4E5165
 color14:         #458587
 color15:         #C8BB97
 EOF
-        ;;
+		;;
 
-    "Ciapre")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Ciapre")
+		cat >"$COLORS_FILE" <<'EOF'
 # Ciapre color scheme
 background:     #191C27
 foreground:     #AEA47A
@@ -2568,10 +2568,10 @@ color13:         #D33061
 color14:         #F3DBB2
 color15:         #F4F4F4
 EOF
-        ;;
+		;;
 
-    "City Lights")
-        cat >"$COLORS_FILE" <<'EOF'
+	"City Lights")
+		cat >"$COLORS_FILE" <<'EOF'
 # City Lights color scheme
 background:     #171D23
 foreground:     #FFFFFF
@@ -2593,10 +2593,10 @@ color13:         #B62D65
 color14:         #70E1E8
 color15:         #FFFFFF
 EOF
-        ;;
+		;;
 
-    "Clone Of Ubuntu")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Clone Of Ubuntu")
+		cat >"$COLORS_FILE" <<'EOF'
 # Clone Of Ubuntu color scheme
 background:     #300A24
 foreground:     #FFFFFF
@@ -2618,10 +2618,10 @@ color13:         #AD7FA8
 color14:         #34E2E2
 color15:         #EEEEEC
 EOF
-        ;;
+		;;
 
-    "Clrs")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Clrs")
+		cat >"$COLORS_FILE" <<'EOF'
 # Clrs color scheme
 background:     #FFFFFF
 foreground:     #262626
@@ -2643,10 +2643,10 @@ color13:         #E900B0
 color14:         #3AD5CE
 color15:         #EEEEEC
 EOF
-        ;;
+		;;
 
-    "Cobalt 2")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Cobalt 2")
+		cat >"$COLORS_FILE" <<'EOF'
 # Cobalt 2 color scheme
 background:     #132738
 foreground:     #FFFFFF
@@ -2668,10 +2668,10 @@ color13:         #FF55FF
 color14:         #6AE3FA
 color15:         #FFFFFF
 EOF
-        ;;
+		;;
 
-    "Cobalt Neon")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Cobalt Neon")
+		cat >"$COLORS_FILE" <<'EOF'
 # Cobalt Neon color scheme
 background:     #142838
 foreground:     #8FF586
@@ -2693,10 +2693,10 @@ color13:         #8230A7
 color14:         #6CBC67
 color15:         #8FF586
 EOF
-        ;;
+		;;
 
-    "Colorcli")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Colorcli")
+		cat >"$COLORS_FILE" <<'EOF'
 # Colorcli color scheme
 background:     #FFFFFF
 foreground:     #005F87
@@ -2718,10 +2718,10 @@ color13:         #0087AF
 color14:         #0087AF
 color15:         #FFFFFF
 EOF
-        ;;
+		;;
 
-    "Crayon Pony Fish")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Crayon Pony Fish")
+		cat >"$COLORS_FILE" <<'EOF'
 # Crayon Pony Fish color scheme
 background:     #150707
 foreground:     #68525A
@@ -2743,10 +2743,10 @@ color13:         #FC6CBA
 color14:         #FFCEAF
 color15:         #B0949D
 EOF
-        ;;
+		;;
 
-    "Dark Pastel")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Dark Pastel")
+		cat >"$COLORS_FILE" <<'EOF'
 # Dark Pastel color scheme
 background:     #000000
 foreground:     #FFFFFF
@@ -2768,10 +2768,10 @@ color13:         #FF55FF
 color14:         #55FFFF
 color15:         #FFFFFF
 EOF
-        ;;
+		;;
 
-    "Darkside")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Darkside")
+		cat >"$COLORS_FILE" <<'EOF'
 # Darkside color scheme
 background:     #222324
 foreground:     #BABABA
@@ -2793,10 +2793,10 @@ color13:         #957BBE
 color14:         #3D97E2
 color15:         #BABABA
 EOF
-        ;;
+		;;
 
-    "Dehydration")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Dehydration")
+		cat >"$COLORS_FILE" <<'EOF'
 # Dehydration color scheme
 background:     #333333
 foreground:     #CCCCCC
@@ -2818,10 +2818,10 @@ color13:         #CD87DE
 color14:         #87DECD
 color15:         #CCCCCC
 EOF
-        ;;
+		;;
 
-    "Desert")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Desert")
+		cat >"$COLORS_FILE" <<'EOF'
 # Desert color scheme
 background:     #333333
 foreground:     #FFFFFF
@@ -2843,10 +2843,10 @@ color13:         #FF55FF
 color14:         #FFD700
 color15:         #FFFFFF
 EOF
-        ;;
+		;;
 
-    "Dimmed Monokai")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Dimmed Monokai")
+		cat >"$COLORS_FILE" <<'EOF'
 # Dimmed Monokai color scheme
 background:     #1F1F1F
 foreground:     #B9BCBA
@@ -2868,10 +2868,10 @@ color13:         #FB0067
 color14:         #2E706D
 color15:         #FDFFB9
 EOF
-        ;;
+		;;
 
-    "Dissonance")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Dissonance")
+		cat >"$COLORS_FILE" <<'EOF'
 # Dissonance color scheme
 background:     #000000
 foreground:     #FFFFFF
@@ -2893,10 +2893,10 @@ color13:         #B729D9
 color14:         #CCCCFF
 color15:         #FFFFFF
 EOF
-        ;;
+		;;
 
-    "Doom One")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Doom One")
+		cat >"$COLORS_FILE" <<'EOF'
 # Henrik Lissner
 background:     #21242b
 foreground:     #5b6268
@@ -2918,10 +2918,10 @@ color13:         #c678dd
 color14:         #46d9ff
 color15:         #bbc2cf
 EOF
-        ;;
+		;;
 
-    "Dracula")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Dracula")
+		cat >"$COLORS_FILE" <<'EOF'
 # Dracula (https://draculatheme.com)
 background:     #282A36
 foreground:     #F8F8F2
@@ -2943,10 +2943,10 @@ color13:         #FF79C6
 color14:         #8BE9FD
 color15:         #F9F9FB
 EOF
-        ;;
+		;;
 
-    "Earthsong")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Earthsong")
+		cat >"$COLORS_FILE" <<'EOF'
 # Earthsong color scheme
 background:     #292520
 foreground:     #E5C7A9
@@ -2968,10 +2968,10 @@ color13:         #FF9269
 color14:         #84F088
 color15:         #F6F7EC
 EOF
-        ;;
+		;;
 
-    "Elemental")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Elemental")
+		cat >"$COLORS_FILE" <<'EOF'
 # Elemental color scheme
 background:     #22211D
 foreground:     #807A74
@@ -2993,10 +2993,10 @@ color13:         #CD7C54
 color14:         #59D599
 color15:         #FFF1E9
 EOF
-        ;;
+		;;
 
-    "Elementary")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Elementary")
+		cat >"$COLORS_FILE" <<'EOF'
 # Elementary color scheme
 background:     #101010
 foreground:     #F2F2F2
@@ -3018,10 +3018,10 @@ color13:         #FF1D62
 color14:         #4BB8FD
 color15:         #A020F0
 EOF
-        ;;
+		;;
 
-    "Elic")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Elic")
+		cat >"$COLORS_FILE" <<'EOF'
 # Elic color scheme
 background:     #4A453E
 foreground:     #F2F2F2
@@ -3043,10 +3043,10 @@ color13:         #FF1D62
 color14:         #4BB8FD
 color15:         #A020F0
 EOF
-        ;;
+		;;
 
-    "Elio")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Elio")
+		cat >"$COLORS_FILE" <<'EOF'
 # Elio color scheme
 background:     #041A3B
 foreground:     #F2F2F2
@@ -3068,10 +3068,10 @@ color13:         #FF1D62
 color14:         #4BB8FD
 color15:         #A020F0
 EOF
-        ;;
+		;;
 
-    "Espresso Libre")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Espresso Libre")
+		cat >"$COLORS_FILE" <<'EOF'
 # Espresso Libre color scheme
 background:     #2A211C
 foreground:     #B8A898
@@ -3093,10 +3093,10 @@ color13:         #FF818A
 color14:         #34E2E2
 color15:         #EEEEEC
 EOF
-        ;;
+		;;
 
-    "Espresso")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Espresso")
+		cat >"$COLORS_FILE" <<'EOF'
 # Espresso color scheme
 background:     #323232
 foreground:     #FFFFFF
@@ -3118,10 +3118,10 @@ color13:         #EFB5F7
 color14:         #DCF4FF
 color15:         #FFFFFF
 EOF
-        ;;
+		;;
 
-    "Everblush")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Everblush")
+		cat >"$COLORS_FILE" <<'EOF'
 # Everblush color scheme
 background:     #141B1E
 foreground:     #DADADA
@@ -3143,10 +3143,10 @@ color13:         #CE89DF
 color14:         #67CBE7
 color15:         #BDC3C2
 EOF
-        ;;
+		;;
 
-    "Everforest Dark Hard")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Everforest Dark Hard")
+		cat >"$COLORS_FILE" <<'EOF'
 # Everforest Dark Hard color scheme
 background:     #272E33
 foreground:     #D3C6AA
@@ -3168,10 +3168,10 @@ color13:         #DF69BA
 color14:         #35A77C
 color15:         #DFDDC8
 EOF
-        ;;
+		;;
 
-    "Everforest Dark Medium")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Everforest Dark Medium")
+		cat >"$COLORS_FILE" <<'EOF'
 # Everforest Dark Medium color scheme
 background:     #2D353B
 foreground:     #D3C6AA
@@ -3193,10 +3193,10 @@ color13:         #DF69BA
 color14:         #35A77C
 color15:         #DFDDC8
 EOF
-        ;;
+		;;
 
-    "Everforest Dark Soft")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Everforest Dark Soft")
+		cat >"$COLORS_FILE" <<'EOF'
 # Everforest Dark Soft color scheme
 background:     #333C43
 foreground:     #D3C6AA
@@ -3218,10 +3218,10 @@ color13:         #DF69BA
 color14:         #35A77C
 color15:         #DFDDC8
 EOF
-        ;;
+		;;
 
-    "Everforest Light Hard")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Everforest Light Hard")
+		cat >"$COLORS_FILE" <<'EOF'
 # Everforest Light Hard color scheme
 background:     #FFFBEF
 foreground:     #5C6A72
@@ -3243,10 +3243,10 @@ color13:         #D699B6
 color14:         #83C092
 color15:         #D3C6AA
 EOF
-        ;;
+		;;
 
-    "Everforest Light Medium")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Everforest Light Medium")
+		cat >"$COLORS_FILE" <<'EOF'
 # Everforest Light Medium color scheme
 background:     #FDF6E3
 foreground:     #5C6A72
@@ -3268,10 +3268,10 @@ color13:         #D699B6
 color14:         #83C092
 color15:         #D3C6AA
 EOF
-        ;;
+		;;
 
-    "Everforest Light Soft")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Everforest Light Soft")
+		cat >"$COLORS_FILE" <<'EOF'
 # Everforest Light Soft color scheme
 background:     #F3EAD3
 foreground:     #5C6A72
@@ -3293,10 +3293,10 @@ color13:         #D699B6
 color14:         #83C092
 color15:         #D3C6AA
 EOF
-        ;;
+		;;
 
-    "Fairy Floss Dark")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Fairy Floss Dark")
+		cat >"$COLORS_FILE" <<'EOF'
 # Fairy Floss Dark color scheme
 background:     #42395D
 foreground:     #C2FFDF
@@ -3318,10 +3318,10 @@ color13:         #8077A8
 color14:         #C2FFFF
 color15:         #F8F8F0
 EOF
-        ;;
+		;;
 
-    "Fairy Floss")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Fairy Floss")
+		cat >"$COLORS_FILE" <<'EOF'
 # Fairy Floss color scheme
 background:     #5A5475
 foreground:     #C2FFDF
@@ -3343,10 +3343,10 @@ color13:         #8077A8
 color14:         #C2FFFF
 color15:         #F8F8F0
 EOF
-        ;;
+		;;
 
-    "Fishtank")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Fishtank")
+		cat >"$COLORS_FILE" <<'EOF'
 # Fishtank color scheme
 background:     #232537
 foreground:     #ECF0FE
@@ -3368,10 +3368,10 @@ color13:         #FDA5CD
 color14:         #A5BD86
 color15:         #F6FFEC
 EOF
-        ;;
+		;;
 
-    "Flat Remix")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Flat Remix")
+		cat >"$COLORS_FILE" <<'EOF'
 # Flat Remix color scheme
 background:     #272A34
 foreground:     #FFFFFF
@@ -3393,10 +3393,10 @@ color13:         #D71655
 color14:         #05A1F7
 color15:         #FFFFFF
 EOF
-        ;;
+		;;
 
-    "Flat")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Flat")
+		cat >"$COLORS_FILE" <<'EOF'
 # Flat color scheme
 background:     #1F2D3A
 foreground:     #1ABC9C
@@ -3418,10 +3418,10 @@ color13:         #9B59B6
 color14:         #2AA198
 color15:         #ECF0F1
 EOF
-        ;;
+		;;
 
-    "Flatland")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Flatland")
+		cat >"$COLORS_FILE" <<'EOF'
 # Flatland color scheme
 background:     #1D1F21
 foreground:     #B8DBEF
@@ -3443,10 +3443,10 @@ color13:         #695ABC
 color14:         #D63865
 color15:         #FFFFFF
 EOF
-        ;;
+		;;
 
-    "Flexoki Dark")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Flexoki Dark")
+		cat >"$COLORS_FILE" <<'EOF'
 # Flexoki Dark color scheme
 background:     #100F0F
 foreground:     #878580
@@ -3468,10 +3468,10 @@ color13:         #CE5D97
 color14:         #3AA99F
 color15:         #FFFCF0
 EOF
-        ;;
+		;;
 
-    "Flexoki Light")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Flexoki Light")
+		cat >"$COLORS_FILE" <<'EOF'
 # Flexoki Light color scheme
 background:     #FFFCF0
 foreground:     #100F0F
@@ -3493,10 +3493,10 @@ color13:         #CE5D97
 color14:         #3AA99F
 color15:         #6F6E69
 EOF
-        ;;
+		;;
 
-    "Foxnightly")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Foxnightly")
+		cat >"$COLORS_FILE" <<'EOF'
 # Foxnightly color scheme
 background:     #2A2A2E
 foreground:     #D7D7DB
@@ -3518,10 +3518,10 @@ color13:         #8F5902
 color14:         #C4A000
 color15:         #5C3566
 EOF
-        ;;
+		;;
 
-    "Freya")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Freya")
+		cat >"$COLORS_FILE" <<'EOF'
 # Freya color scheme
 background:     #252E32
 foreground:     #94A3A5
@@ -3543,10 +3543,10 @@ color13:         #D33682
 color14:         #2AA198
 color15:         #6C71C4
 EOF
-        ;;
+		;;
 
-    "Frontend Delight")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Frontend Delight")
+		cat >"$COLORS_FILE" <<'EOF'
 # Frontend Delight color scheme
 background:     #1B1C1D
 foreground:     #ADADAD
@@ -3568,10 +3568,10 @@ color13:         #E75E4F
 color14:         #4FBCE6
 color15:         #8C735B
 EOF
-        ;;
+		;;
 
-    "Frontend Fun Forrest")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Frontend Fun Forrest")
+		cat >"$COLORS_FILE" <<'EOF'
 # Frontend Fun Forrest color scheme
 background:     #251200
 foreground:     #DEC165
@@ -3593,10 +3593,10 @@ color13:         #D26349
 color14:         #E6A96B
 color15:         #FFEAA3
 EOF
-        ;;
+		;;
 
-    "Frontend Galaxy")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Frontend Galaxy")
+		cat >"$COLORS_FILE" <<'EOF'
 # Frontend Galaxy color scheme
 background:     #1D2837
 foreground:     #FFFFFF
@@ -3618,10 +3618,10 @@ color13:         #E75699
 color14:         #3979BC
 color15:         #FFFFFF
 EOF
-        ;;
+		;;
 
-    "Geohot")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Geohot")
+		cat >"$COLORS_FILE" <<'EOF'
 # Geohot color scheme
 background:     #1F1E1F
 foreground:     #FFFFFF
@@ -3643,10 +3643,10 @@ color13:         #B74438
 color14:         #408F0C
 color15:         #FFFFFF
 EOF
-        ;;
+		;;
 
-    "Github Dark")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Github Dark")
+		cat >"$COLORS_FILE" <<'EOF'
 # Github Dark color scheme
 background:     #101216
 foreground:     #8B949E
@@ -3668,10 +3668,10 @@ color13:         #DB61A2
 color14:         #2B7489
 color15:         #FFFFFF
 EOF
-        ;;
+		;;
 
-    "Github Light")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Github Light")
+		cat >"$COLORS_FILE" <<'EOF'
 # Github Light color scheme
 background:     #f6f8fa
 foreground:     #1f2328
@@ -3693,10 +3693,10 @@ color13:         #a475f9
 color14:         #3192aa
 color15:         #8c959f
 EOF
-        ;;
+		;;
 
-    "Gogh")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Gogh")
+		cat >"$COLORS_FILE" <<'EOF'
 # Gogh color scheme
 background:     #292D3E
 foreground:     #BFC7D5
@@ -3718,10 +3718,10 @@ color13:         #FFCB6B
 color14:         #676E95
 color15:         #FFFEFE
 EOF
-        ;;
+		;;
 
-    "Gooey")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Gooey")
+		cat >"$COLORS_FILE" <<'EOF'
 # Gooey color scheme
 background:     #0D101B
 foreground:     #EBEEF9
@@ -3743,10 +3743,10 @@ color13:         #97BBF7
 color14:         #C0B7F9
 color15:         #FFFFFF
 EOF
-        ;;
+		;;
 
-    "Google Dark")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Google Dark")
+		cat >"$COLORS_FILE" <<'EOF'
 # Google Dark color scheme
 background:     #202124
 foreground:     #E8EAED
@@ -3768,10 +3768,10 @@ color13:         #A142F4
 color14:         #24C1E0
 color15:         #FFFFFF
 EOF
-        ;;
+		;;
 
-    "Google Light")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Google Light")
+		cat >"$COLORS_FILE" <<'EOF'
 # Google Light color scheme
 background:     #FFFFFF
 foreground:     #5F6368
@@ -3793,10 +3793,10 @@ color13:         #A142F4
 color14:         #24C1E0
 color15:         #FFFFFF
 EOF
-        ;;
+		;;
 
-    "Gotham")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Gotham")
+		cat >"$COLORS_FILE" <<'EOF'
 # Gotham color scheme
 background:     #0A0F14
 foreground:     #98D1CE
@@ -3818,10 +3818,10 @@ color13:         #888BA5
 color14:         #599CAA
 color15:         #D3EBE9
 EOF
-        ;;
+		;;
 
-    "Grape")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Grape")
+		cat >"$COLORS_FILE" <<'EOF'
 # Grape color scheme
 background:     #171423
 foreground:     #9F9FA1
@@ -3843,10 +3843,10 @@ color13:         #AD81C2
 color14:         #9DE3EB
 color15:         #A288F7
 EOF
-        ;;
+		;;
 
-    "Grass")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Grass")
+		cat >"$COLORS_FILE" <<'EOF'
 # Grass color scheme
 background:     #13773D
 foreground:     #FFF0A5
@@ -3868,10 +3868,10 @@ color13:         #FF55FF
 color14:         #55FFFF
 color15:         #FFFFFF
 EOF
-        ;;
+		;;
 
-    "Gruvbox Dark")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Gruvbox Dark")
+		cat >"$COLORS_FILE" <<'EOF'
 # Gruvbox Dark color scheme
 background:     #282828
 foreground:     #EBDBB2
@@ -3893,10 +3893,10 @@ color13:         #D3869B
 color14:         #8EC07C
 color15:         #EBDBB2
 EOF
-        ;;
+		;;
 
-    "Gruvbox Material Dark")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Gruvbox Material Dark")
+		cat >"$COLORS_FILE" <<'EOF'
 # Gruvbox Material Dark color scheme
 background:     #282828
 foreground:     #D4BE98
@@ -3918,10 +3918,10 @@ color13:         #D3869B
 color14:         #89B482
 color15:         #D4BE98
 EOF
-        ;;
+		;;
 
-    "Gruvbox Material Light")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Gruvbox Material Light")
+		cat >"$COLORS_FILE" <<'EOF'
 # Gruvbox Material Light color scheme
 background:     #FBF1C7
 foreground:     #654735
@@ -3943,10 +3943,10 @@ color13:         #945E80
 color14:         #4C7A5D
 color15:         #654735
 EOF
-        ;;
+		;;
 
-    "Gruvbox")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Gruvbox")
+		cat >"$COLORS_FILE" <<'EOF'
 # Gruvbox color scheme
 background:     #FBF1C7
 foreground:     #3C3836
@@ -3968,10 +3968,10 @@ color13:         #8F3F71
 color14:         #427B58
 color15:         #3C3836
 EOF
-        ;;
+		;;
 
-    "Guezwhoz")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Guezwhoz")
+		cat >"$COLORS_FILE" <<'EOF'
 # Egor Lem (http://egorlem.com)
 background:     #1d1d1d
 foreground:     #d9d9d9
@@ -3993,10 +3993,10 @@ color13:         #A398ED
 color14:         #61EDE4
 color15:         #EDEDED
 EOF
-        ;;
+		;;
 
-    "Hardcore")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Hardcore")
+		cat >"$COLORS_FILE" <<'EOF'
 # Hardcore color scheme
 background:     #121212
 foreground:     #A0A0A0
@@ -4018,10 +4018,10 @@ color13:         #9E6FFE
 color14:         #A3BABF
 color15:         #F8F8F2
 EOF
-        ;;
+		;;
 
-    "Harper")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Harper")
+		cat >"$COLORS_FILE" <<'EOF'
 # Harper color scheme
 background:     #010101
 foreground:     #A8A49D
@@ -4043,10 +4043,10 @@ color13:         #B296C6
 color14:         #F5BFD7
 color15:         #FEFBEA
 EOF
-        ;;
+		;;
 
-    "Hemisu Dark")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Hemisu Dark")
+		cat >"$COLORS_FILE" <<'EOF'
 # Hemisu Dark color scheme
 background:     #000000
 foreground:     #FFFFFF
@@ -4068,10 +4068,10 @@ color13:         #DEB3DF
 color14:         #B6E0E5
 color15:         #FFFFFF
 EOF
-        ;;
+		;;
 
-    "Hemisu Light")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Hemisu Light")
+		cat >"$COLORS_FILE" <<'EOF'
 # Hemisu Light color scheme
 background:     #EFEFEF
 foreground:     #444444
@@ -4093,10 +4093,10 @@ color13:         #A184A4
 color14:         #85B2AA
 color15:         #BABABA
 EOF
-        ;;
+		;;
 
-    "Highway")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Highway")
+		cat >"$COLORS_FILE" <<'EOF'
 # Highway color scheme
 background:     #222225
 foreground:     #EDEDED
@@ -4118,10 +4118,10 @@ color13:         #DE0071
 color14:         #5D504A
 color15:         #FFFFFF
 EOF
-        ;;
+		;;
 
-    "Hipster Green")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Hipster Green")
+		cat >"$COLORS_FILE" <<'EOF'
 # Hipster Green color scheme
 background:     #100B05
 foreground:     #84C138
@@ -4143,10 +4143,10 @@ color13:         #E500E5
 color14:         #00E5E5
 color15:         #E5E5E5
 EOF
-        ;;
+		;;
 
-    "Homebrew Light")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Homebrew Light")
+		cat >"$COLORS_FILE" <<'EOF'
 # Homebrew Light color scheme
 background:     #FFFFFF
 foreground:     #000000
@@ -4168,10 +4168,10 @@ color13:         #E500E5
 color14:         #00E5E5
 color15:         #E5E5E5
 EOF
-        ;;
+		;;
 
-    "Homebrew Ocean")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Homebrew Ocean")
+		cat >"$COLORS_FILE" <<'EOF'
 # Homebrew Ocean color scheme
 background:     #224FBC
 foreground:     #FFFFFF
@@ -4193,10 +4193,10 @@ color13:         #E500E5
 color14:         #00E5E5
 color15:         #E5E5E5
 EOF
-        ;;
+		;;
 
-    "Homebrew")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Homebrew")
+		cat >"$COLORS_FILE" <<'EOF'
 # Homebrew color scheme
 background:     #000000
 foreground:     #00FF00
@@ -4218,10 +4218,10 @@ color13:         #E500E5
 color14:         #00E5E5
 color15:         #E5E5E5
 EOF
-        ;;
+		;;
 
-    "Horizon Bright")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Horizon Bright")
+		cat >"$COLORS_FILE" <<'EOF'
 # Horizon Bright color scheme
 background:     #FDF0ED
 foreground:     #1C1E26
@@ -4243,10 +4243,10 @@ color13:         #F075B7
 color14:         #1EAEAE
 color15:         #FDF0ED
 EOF
-        ;;
+		;;
 
-    "Horizon Dark")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Horizon Dark")
+		cat >"$COLORS_FILE" <<'EOF'
 # Horizon Dark color scheme
 background:     #1C1E26
 foreground:     #FDF0ED
@@ -4268,10 +4268,10 @@ color13:         #F075B7
 color14:         #6BE6E6
 color15:         #FDF0ED
 EOF
-        ;;
+		;;
 
-    "Hurtado")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Hurtado")
+		cat >"$COLORS_FILE" <<'EOF'
 # Hurtado color scheme
 background:     #000000
 foreground:     #DBDBDB
@@ -4293,10 +4293,10 @@ color13:         #C001C1
 color14:         #86EAFE
 color15:         #DBDBDB
 EOF
-        ;;
+		;;
 
-    "Hybrid")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Hybrid")
+		cat >"$COLORS_FILE" <<'EOF'
 # Hybrid color scheme
 background:     #141414
 foreground:     #94A3A5
@@ -4318,10 +4318,10 @@ color13:         #B294BB
 color14:         #8ABEB7
 color15:         #C5C8C6
 EOF
-        ;;
+		;;
 
-    "Ibm 3270 (High Contrast)")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Ibm 3270 (High Contrast)")
+		cat >"$COLORS_FILE" <<'EOF'
 # Ibm 3270 (High Contrast) color scheme
 background:     #000000
 foreground:     #FDFDFD
@@ -4343,10 +4343,10 @@ color13:         #A020F0
 color14:         #AEEEEE
 color15:         #FFFFFF
 EOF
-        ;;
+		;;
 
-    "Ibm3270")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Ibm3270")
+		cat >"$COLORS_FILE" <<'EOF'
 # Ibm3270 color scheme
 background:     #000000
 foreground:     #FDFDFD
@@ -4368,10 +4368,10 @@ color13:         #EFB3E3
 color14:         #9CE2E2
 color15:         #FFFFFF
 EOF
-        ;;
+		;;
 
-    "Ic Green Ppl")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Ic Green Ppl")
+		cat >"$COLORS_FILE" <<'EOF'
 # Ic Green Ppl color scheme
 background:     #3A3D3F
 foreground:     #D9EFD3
@@ -4393,10 +4393,10 @@ color13:         #50FF3E
 color14:         #22FF71
 color15:         #DAEFD0
 EOF
-        ;;
+		;;
 
-    "Ic Orange Ppl")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Ic Orange Ppl")
+		cat >"$COLORS_FILE" <<'EOF'
 # Ic Orange Ppl color scheme
 background:     #262626
 foreground:     #FFCB83
@@ -4418,10 +4418,10 @@ color13:         #FC874F
 color14:         #C69752
 color15:         #FAFAFF
 EOF
-        ;;
+		;;
 
-    "Iceberg")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Iceberg")
+		cat >"$COLORS_FILE" <<'EOF'
 # Iceberg color scheme
 background:     #161821
 foreground:     #c6c8d1
@@ -4443,10 +4443,10 @@ color13:         #ada0d3
 color14:         #95c4ce
 color15:         #d2d4de
 EOF
-        ;;
+		;;
 
-    "Idle Toes")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Idle Toes")
+		cat >"$COLORS_FILE" <<'EOF'
 # Idle Toes color scheme
 background:     #323232
 foreground:     #FFFFFF
@@ -4468,10 +4468,10 @@ color13:         #FF9DFF
 color14:         #DCF4FF
 color15:         #FFFFFF
 EOF
-        ;;
+		;;
 
-    "Ir Black")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Ir Black")
+		cat >"$COLORS_FILE" <<'EOF'
 # Ir Black color scheme
 background:     #000000
 foreground:     #EEEEEE
@@ -4493,10 +4493,10 @@ color13:         #FF9CFE
 color14:         #DFDFFE
 color15:         #FFFFFF
 EOF
-        ;;
+		;;
 
-    "Jackie Brown")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Jackie Brown")
+		cat >"$COLORS_FILE" <<'EOF'
 # Jackie Brown color scheme
 background:     #2C1D16
 foreground:     #FFCC2F
@@ -4518,10 +4518,10 @@ color13:         #E500E5
 color14:         #00E5E5
 color15:         #E5E5E5
 EOF
-        ;;
+		;;
 
-    "Japanesque")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Japanesque")
+		cat >"$COLORS_FILE" <<'EOF'
 # Japanesque color scheme
 background:     #1E1E1E
 foreground:     #F7F6EC
@@ -4543,10 +4543,10 @@ color13:         #604291
 color14:         #76BBCA
 color15:         #B2B5AE
 EOF
-        ;;
+		;;
 
-    "Jellybeans")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Jellybeans")
+		cat >"$COLORS_FILE" <<'EOF'
 # Jellybeans color scheme
 background:     #121212
 foreground:     #DEDEDE
@@ -4568,10 +4568,10 @@ color13:         #FBDAFF
 color14:         #1AB2A8
 color15:         #FFFFFF
 EOF
-        ;;
+		;;
 
-    "Jup")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Jup")
+		cat >"$COLORS_FILE" <<'EOF'
 # Jup color scheme
 background:     #758480
 foreground:     #23476A
@@ -4593,10 +4593,10 @@ color13:         #B974FF
 color14:         #74FFB9
 color15:         #FFFFFF
 EOF
-        ;;
+		;;
 
-    "Kanagawa Dragon")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Kanagawa Dragon")
+		cat >"$COLORS_FILE" <<'EOF'
 # Kanagawa Dragon color scheme
 background:     #181616
 foreground:     #C5C9C5
@@ -4618,10 +4618,10 @@ color13:         #938AA9
 color14:         #7AA89F
 color15:         #C5C9C5
 EOF
-        ;;
+		;;
 
-    "Kanagawa Lotus")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Kanagawa Lotus")
+		cat >"$COLORS_FILE" <<'EOF'
 # Kanagawa Lotus color scheme
 background:     #f2ecbc
 foreground:     #545464
@@ -4643,10 +4643,10 @@ color13:         #624c83
 color14:         #5e857a
 color15:         #43436c
 EOF
-        ;;
+		;;
 
-    "Kanagawa Wave")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Kanagawa Wave")
+		cat >"$COLORS_FILE" <<'EOF'
 # Kanagawa Wave color scheme
 background:     #1F1F28
 foreground:     #DCD7BA
@@ -4668,10 +4668,10 @@ color13:         #938AA9
 color14:         #7AA89F
 color15:         #DCD7BA
 EOF
-        ;;
+		;;
 
-    "Kibble")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Kibble")
+		cat >"$COLORS_FILE" <<'EOF'
 # Kibble color scheme
 background:     #0E100A
 foreground:     #F7F7F7
@@ -4693,10 +4693,10 @@ color13:         #C495F0
 color14:         #68F2E0
 color15:         #FFFFFF
 EOF
-        ;;
+		;;
 
-    "Kokuban")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Kokuban")
+		cat >"$COLORS_FILE" <<'EOF'
 # Kokuban color scheme
 background:     #0D4A08
 foreground:     #D8E2D7
@@ -4718,10 +4718,10 @@ color13:         #AE63E9
 color14:         #FFAA2B
 color15:         #FFFEFE
 EOF
-        ;;
+		;;
 
-    "Laserwave")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Laserwave")
+		cat >"$COLORS_FILE" <<'EOF'
 # Laserwave color scheme
 background:     #1F1926
 foreground:     #E0E0E0
@@ -4743,10 +4743,10 @@ color13:         #6D75E0
 color14:         #B4DCE7
 color15:         #FFFFFF
 EOF
-        ;;
+		;;
 
-    "Later This Evening")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Later This Evening")
+		cat >"$COLORS_FILE" <<'EOF'
 # Later This Evening color scheme
 background:     #222222
 foreground:     #959595
@@ -4768,10 +4768,10 @@ color13:         #AB53D6
 color14:         #5FC0AE
 color15:         #C1C2C2
 EOF
-        ;;
+		;;
 
-    "Lavandula")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Lavandula")
+		cat >"$COLORS_FILE" <<'EOF'
 # Lavandula color scheme
 background:     #050014
 foreground:     #736E7D
@@ -4793,10 +4793,10 @@ color13:         #A776E0
 color14:         #9AD4E0
 color15:         #8C91FA
 EOF
-        ;;
+		;;
 
-    "Liquid Carbon Transparent")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Liquid Carbon Transparent")
+		cat >"$COLORS_FILE" <<'EOF'
 # Liquid Carbon Transparent color scheme
 background:     #000000
 foreground:     #AFC2C2
@@ -4818,10 +4818,10 @@ color13:         #CC69C8
 color14:         #7AC4CC
 color15:         #BCCCCC
 EOF
-        ;;
+		;;
 
-    "Liquid Carbon")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Liquid Carbon")
+		cat >"$COLORS_FILE" <<'EOF'
 # Liquid Carbon color scheme
 background:     #303030
 foreground:     #AFC2C2
@@ -4843,10 +4843,10 @@ color13:         #CC69C8
 color14:         #7AC4CC
 color15:         #BCCCCC
 EOF
-        ;;
+		;;
 
-    "Lunaria Dark")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Lunaria Dark")
+		cat >"$COLORS_FILE" <<'EOF'
 # Lunaria Dark color scheme
 background:     #36464E
 foreground:     #CACED8
@@ -4868,10 +4868,10 @@ color13:         #BF9DB9
 color14:         #BDDCFF
 color15:         #DFE2ED
 EOF
-        ;;
+		;;
 
-    "Lunaria Eclipse")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Lunaria Eclipse")
+		cat >"$COLORS_FILE" <<'EOF'
 # Lunaria Eclipse color scheme
 background:     #323F46
 foreground:     #C9CDD7
@@ -4893,10 +4893,10 @@ color13:         #BE9CB8
 color14:         #BCDBFF
 color15:         #DFE2ED
 EOF
-        ;;
+		;;
 
-    "Lunaria Light")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Lunaria Light")
+		cat >"$COLORS_FILE" <<'EOF'
 # Lunaria Light color scheme
 background:     #EBE4E1
 foreground:     #484646
@@ -4918,10 +4918,10 @@ color13:         #B56895
 color14:         #64BAFF
 color15:         #EBE4E1
 EOF
-        ;;
+		;;
 
-    "Maia")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Maia")
+		cat >"$COLORS_FILE" <<'EOF'
 # Maia color scheme
 background:     #31363B
 foreground:     #BDC3C7
@@ -4943,10 +4943,10 @@ color13:         #487D72
 color14:         #00D1D1
 color15:         #E8E8E8
 EOF
-        ;;
+		;;
 
-    "Man Page")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Man Page")
+		cat >"$COLORS_FILE" <<'EOF'
 # Man Page color scheme
 background:     #FEF49C
 foreground:     #000000
@@ -4968,10 +4968,10 @@ color13:         #E500E5
 color14:         #00E5E5
 color15:         #E5E5E5
 EOF
-        ;;
+		;;
 
-    "Mar")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Mar")
+		cat >"$COLORS_FILE" <<'EOF'
 # Mar color scheme
 background:     #FFFFFF
 foreground:     #23476A
@@ -4993,10 +4993,10 @@ color13:         #A073CD
 color14:         #73CDA0
 color15:         #FFFFFF
 EOF
-        ;;
+		;;
 
-    "Material")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Material")
+		cat >"$COLORS_FILE" <<'EOF'
 # Material color scheme
 background:     #1E282C
 foreground:     #C3C7D1
@@ -5018,10 +5018,10 @@ color13:         #6C71C3
 color14:         #34434D
 color15:         #FFFFFF
 EOF
-        ;;
+		;;
 
-    "Mathias")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Mathias")
+		cat >"$COLORS_FILE" <<'EOF'
 # Mathias color scheme
 background:     #000000
 foreground:     #BBBBBB
@@ -5043,10 +5043,10 @@ color13:         #FF55FF
 color14:         #55FFFF
 color15:         #FFFFFF
 EOF
-        ;;
+		;;
 
-    "Medallion")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Medallion")
+		cat >"$COLORS_FILE" <<'EOF'
 # Medallion color scheme
 background:     #1D1908
 foreground:     #CAC296
@@ -5068,10 +5068,10 @@ color13:         #FFA0FF
 color14:         #FFBC51
 color15:         #FED698
 EOF
-        ;;
+		;;
 
-    "Minimalist Dark")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Minimalist Dark")
+		cat >"$COLORS_FILE" <<'EOF'
 # Gabriel Soares (https://github.com/Gabrielsoac)
 background:     #13141f
 foreground:     #F5F5F5
@@ -5093,10 +5093,10 @@ color13:         #A020F0
 color14:         #FF69B4
 color15:         #CACAD0
 EOF
-        ;;
+		;;
 
-    "Miramare")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Miramare")
+		cat >"$COLORS_FILE" <<'EOF'
 # Miramare color scheme
 background:     #2a2426
 foreground:     #e6d6ac
@@ -5118,10 +5118,10 @@ color13:         #d3a0bc
 color14:         #87c095
 color15:         #e6d6ac
 EOF
-        ;;
+		;;
 
-    "Misterioso")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Misterioso")
+		cat >"$COLORS_FILE" <<'EOF'
 # Misterioso color scheme
 background:     #2D3743
 foreground:     #E1E1E0
@@ -5143,10 +5143,10 @@ color13:         #FF37FF
 color14:         #00EDE1
 color15:         #FFFFFF
 EOF
-        ;;
+		;;
 
-    "Modus Operandi Tinted")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Modus Operandi Tinted")
+		cat >"$COLORS_FILE" <<'EOF'
 # Modus Operandi Tinted color scheme
 background:     #fbf7f0
 foreground:     #000000
@@ -5168,10 +5168,10 @@ color13:         #dd22dd
 color14:         #008899
 color15:         #595959
 EOF
-        ;;
+		;;
 
-    "Modus Operandi")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Modus Operandi")
+		cat >"$COLORS_FILE" <<'EOF'
 # Modus Operandi color scheme
 background:     #ffffff
 foreground:     #000000
@@ -5193,10 +5193,10 @@ color13:         #dd22dd
 color14:         #008899
 color15:         #595959
 EOF
-        ;;
+		;;
 
-    "Modus Vivendi Tinted")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Modus Vivendi Tinted")
+		cat >"$COLORS_FILE" <<'EOF'
 # Modus Vivendi Tinted color scheme
 background:     #0d0e1c
 foreground:     #ffffff
@@ -5218,10 +5218,10 @@ color13:         #ff66ff
 color14:         #00eff0
 color15:         #989898
 EOF
-        ;;
+		;;
 
-    "Modus Vivendi")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Modus Vivendi")
+		cat >"$COLORS_FILE" <<'EOF'
 # Modus Vivendi color scheme
 background:     #000000
 foreground:     #ffffff
@@ -5243,10 +5243,10 @@ color13:         #ff66ff
 color14:         #00eff0
 color15:         #989898
 EOF
-        ;;
+		;;
 
-    "Molokai")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Molokai")
+		cat >"$COLORS_FILE" <<'EOF'
 # Molokai color scheme
 background:     #1B1D1E
 foreground:     #BBBBBB
@@ -5268,10 +5268,10 @@ color13:         #FF87AF
 color14:         #FFCE51
 color15:         #FFFFFF
 EOF
-        ;;
+		;;
 
-    "Mona Lisa")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Mona Lisa")
+		cat >"$COLORS_FILE" <<'EOF'
 # Mona Lisa color scheme
 background:     #120B0D
 foreground:     #F7D66A
@@ -5293,10 +5293,10 @@ color13:         #FF5B6A
 color14:         #8ACD8F
 color15:         #FFE598
 EOF
-        ;;
+		;;
 
-    "Mono Amber")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Mono Amber")
+		cat >"$COLORS_FILE" <<'EOF'
 # Mono Amber color scheme
 background:     #2B1900
 foreground:     #FF9400
@@ -5318,10 +5318,10 @@ color13:         #FF9400
 color14:         #FF9400
 color15:         #FF9400
 EOF
-        ;;
+		;;
 
-    "Mono Cyan")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Mono Cyan")
+		cat >"$COLORS_FILE" <<'EOF'
 # Mono Cyan color scheme
 background:     #00222B
 foreground:     #00CCFF
@@ -5343,10 +5343,10 @@ color13:         #00CCFF
 color14:         #00CCFF
 color15:         #00CCFF
 EOF
-        ;;
+		;;
 
-    "Mono Green")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Mono Green")
+		cat >"$COLORS_FILE" <<'EOF'
 # Mono Green color scheme
 background:     #022B00
 foreground:     #0BFF00
@@ -5368,10 +5368,10 @@ color13:         #0BFF00
 color14:         #0BFF00
 color15:         #0BFF00
 EOF
-        ;;
+		;;
 
-    "Mono Red")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Mono Red")
+		cat >"$COLORS_FILE" <<'EOF'
 # Mono Red color scheme
 background:     #2B0C00
 foreground:     #FF3600
@@ -5393,10 +5393,10 @@ color13:         #FF3600
 color14:         #FF3600
 color15:         #FF3600
 EOF
-        ;;
+		;;
 
-    "Mono White")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Mono White")
+		cat >"$COLORS_FILE" <<'EOF'
 # Mono White color scheme
 background:     #262626
 foreground:     #FAFAFA
@@ -5418,10 +5418,10 @@ color13:         #FAFAFA
 color14:         #FAFAFA
 color15:         #FAFAFA
 EOF
-        ;;
+		;;
 
-    "Mono Yellow")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Mono Yellow")
+		cat >"$COLORS_FILE" <<'EOF'
 # Mono Yellow color scheme
 background:     #2B2400
 foreground:     #FFD300
@@ -5443,10 +5443,10 @@ color13:         #FFD300
 color14:         #FFD300
 color15:         #FFD300
 EOF
-        ;;
+		;;
 
-    "Monokai Dark")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Monokai Dark")
+		cat >"$COLORS_FILE" <<'EOF'
 # Monokai Dark color scheme
 background:     #272822
 foreground:     #F8F8F2
@@ -5468,10 +5468,10 @@ color13:         #AE81FF
 color14:         #2AA198
 color15:         #F8F8F2
 EOF
-        ;;
+		;;
 
-    "Monokai Pro Light Sun")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Monokai Pro Light Sun")
+		cat >"$COLORS_FILE" <<'EOF'
 # Monokai Pro Light Sun color scheme
 background:     #FDF7F3
 foreground:     #2C232E
@@ -5493,10 +5493,10 @@ color13:         #6851A2
 color14:         #2473B6
 color15:         #2C232E
 EOF
-        ;;
+		;;
 
-    "Monokai Pro Light")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Monokai Pro Light")
+		cat >"$COLORS_FILE" <<'EOF'
 # Monokai Pro Light color scheme
 background:     #FEFAF9
 foreground:     #29242A
@@ -5518,10 +5518,10 @@ color13:         #7058BE
 color14:         #1C8CA8
 color15:         #29242A
 EOF
-        ;;
+		;;
 
-    "Monokai Pro Machine")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Monokai Pro Machine")
+		cat >"$COLORS_FILE" <<'EOF'
 # Monokai Pro Machine color scheme
 background:     #273136
 foreground:     #F2FFFC
@@ -5543,10 +5543,10 @@ color13:         #BAA0F8
 color14:         #7CD5F1
 color15:         #F2FFFC
 EOF
-        ;;
+		;;
 
-    "Monokai Pro Ocatagon")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Monokai Pro Ocatagon")
+		cat >"$COLORS_FILE" <<'EOF'
 # Monokai Pro Ocatagon color scheme
 background:     #3A3D4B
 foreground:     #EAF2F1
@@ -5568,10 +5568,10 @@ color13:         #C39AC9
 color14:         #9CD1BB
 color15:         #EAF2F1
 EOF
-        ;;
+		;;
 
-    "Monokai Pro Ristretto")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Monokai Pro Ristretto")
+		cat >"$COLORS_FILE" <<'EOF'
 # Monokai Pro Ristretto color scheme
 background:     #3E3838
 foreground:     #FBF2F3
@@ -5593,10 +5593,10 @@ color13:         #A9AAE9
 color14:         #A4D7CC
 color15:         #FBF2F3
 EOF
-        ;;
+		;;
 
-    "Monokai Pro Spectrum")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Monokai Pro Spectrum")
+		cat >"$COLORS_FILE" <<'EOF'
 # Monokai Pro Spectrum color scheme
 background:     #363537
 foreground:     #F7F1FF
@@ -5618,10 +5618,10 @@ color13:         #948AE3
 color14:         #5AD4E6
 color15:         #F7F1FF
 EOF
-        ;;
+		;;
 
-    "Monokai Pro")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Monokai Pro")
+		cat >"$COLORS_FILE" <<'EOF'
 # Monokai Pro color scheme
 background:     #2D2A2E
 foreground:     #FCFCFA
@@ -5643,10 +5643,10 @@ color13:         #AB9DF2
 color14:         #78DCE8
 color15:         #FCFCFA
 EOF
-        ;;
+		;;
 
-    "Monokai Soda")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Monokai Soda")
+		cat >"$COLORS_FILE" <<'EOF'
 # Monokai Soda color scheme
 background:     #1A1A1A
 foreground:     #C4C5B5
@@ -5668,10 +5668,10 @@ color13:         #F4005F
 color14:         #58D1EB
 color15:         #F6F6EF
 EOF
-        ;;
+		;;
 
-    "Moonfly")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Moonfly")
+		cat >"$COLORS_FILE" <<'EOF'
 # Moonfly color scheme
 background:     #080808
 foreground:     #BDBDBD
@@ -5693,10 +5693,10 @@ color13:         #AE81FF
 color14:         #85DC85
 color15:         #E4E4E4
 EOF
-        ;;
+		;;
 
-    "Morada")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Morada")
+		cat >"$COLORS_FILE" <<'EOF'
 # Morada color scheme
 background:     #211F46
 foreground:     #FFFFFF
@@ -5718,10 +5718,10 @@ color13:         #975B5A
 color14:         #1EFF8E
 color15:         #F6F5FB
 EOF
-        ;;
+		;;
 
-    "N0Tch2K")
-        cat >"$COLORS_FILE" <<'EOF'
+	"N0Tch2K")
+		cat >"$COLORS_FILE" <<'EOF'
 # N0Tch2K color scheme
 background:     #222222
 foreground:     #A0A0A0
@@ -5743,10 +5743,10 @@ color13:         #A3A3A3
 color14:         #DCDCDC
 color15:         #D8C8BB
 EOF
-        ;;
+		;;
 
-    "Nanosecond")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Nanosecond")
+		cat >"$COLORS_FILE" <<'EOF'
 # Nanosecond color scheme
 background:     #112233
 foreground:     #FAFAFA
@@ -5768,10 +5768,10 @@ color13:         #FFAAFF
 color14:         #80FFFF
 color15:         #FFFFFF
 EOF
-        ;;
+		;;
 
-    "Neon Night")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Neon Night")
+		cat >"$COLORS_FILE" <<'EOF'
 # Neon Night color scheme
 background:     #20242D
 foreground:     #C7C8FF
@@ -5793,10 +5793,10 @@ color13:         #DD92F6
 color14:         #8CE8FF
 color15:         #C9CCCD
 EOF
-        ;;
+		;;
 
-    "Neopolitan")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Neopolitan")
+		cat >"$COLORS_FILE" <<'EOF'
 # Neopolitan color scheme
 background:     #271F19
 foreground:     #FFFFFF
@@ -5818,10 +5818,10 @@ color13:         #FF0080
 color14:         #8DA6CE
 color15:         #F8F8F8
 EOF
-        ;;
+		;;
 
-    "Nep")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Nep")
+		cat >"$COLORS_FILE" <<'EOF'
 # Nep color scheme
 background:     #758480
 foreground:     #23476A
@@ -5843,10 +5843,10 @@ color13:         #FF74B9
 color14:         #74B9FF
 color15:         #FFFFFF
 EOF
-        ;;
+		;;
 
-    "Neutron")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Neutron")
+		cat >"$COLORS_FILE" <<'EOF'
 # Neutron color scheme
 background:     #1C1E22
 foreground:     #E6E8EF
@@ -5868,10 +5868,10 @@ color13:         #A4799D
 color14:         #3F94A8
 color15:         #EBEDF2
 EOF
-        ;;
+		;;
 
-    "Night Owl")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Night Owl")
+		cat >"$COLORS_FILE" <<'EOF'
 # Night Owl color scheme
 background:     #011627
 foreground:     #D6DEEB
@@ -5893,10 +5893,10 @@ color13:         #C792EA
 color14:         #7FDBCA
 color15:         #FFFFFF
 EOF
-        ;;
+		;;
 
-    "Nightfly")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Nightfly")
+		cat >"$COLORS_FILE" <<'EOF'
 # Nightfly color scheme
 background:     #011627
 foreground:     #BDC1C6
@@ -5918,10 +5918,10 @@ color13:         #AE81FF
 color14:         #7FDBCA
 color15:         #D6DEEB
 EOF
-        ;;
+		;;
 
-    "Nightlion V1")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Nightlion V1")
+		cat >"$COLORS_FILE" <<'EOF'
 # Nightlion V1 color scheme
 background:     #000000
 foreground:     #BBBBBB
@@ -5943,10 +5943,10 @@ color13:         #FF55FF
 color14:         #55FFFF
 color15:         #FFFFFF
 EOF
-        ;;
+		;;
 
-    "Nightlion V2")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Nightlion V2")
+		cat >"$COLORS_FILE" <<'EOF'
 # Nightlion V2 color scheme
 background:     #171717
 foreground:     #BBBBBB
@@ -5968,10 +5968,10 @@ color13:         #FF9BF5
 color14:         #00CCD8
 color15:         #FFFFFF
 EOF
-        ;;
+		;;
 
-    "Nighty")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Nighty")
+		cat >"$COLORS_FILE" <<'EOF'
 # Nighty color scheme
 background:     #2F2F2F
 foreground:     #DFDFDF
@@ -5993,10 +5993,10 @@ color13:         #ED86C9
 color14:         #70D2A4
 color15:         #DFDFDF
 EOF
-        ;;
+		;;
 
-    "Nord Light")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Nord Light")
+		cat >"$COLORS_FILE" <<'EOF'
 # Nord Light color scheme
 background:     #EBEAF2
 foreground:     #004F7C
@@ -6018,10 +6018,10 @@ color13:         #E586E7
 color14:         #96DCDA
 color15:         #DEDEDE
 EOF
-        ;;
+		;;
 
-    "Nord")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Nord")
+		cat >"$COLORS_FILE" <<'EOF'
 # Nord color scheme
 background:     #2E3440
 foreground:     #D8DEE9
@@ -6043,10 +6043,10 @@ color13:         #B48EAD
 color14:         #8FBCBB
 color15:         #ECEFF4
 EOF
-        ;;
+		;;
 
-    "Novel")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Novel")
+		cat >"$COLORS_FILE" <<'EOF'
 # Novel color scheme
 background:     #DFDBC3
 foreground:     #3B2322
@@ -6068,10 +6068,10 @@ color13:         #CC00CC
 color14:         #0087CC
 color15:         #FFFFFF
 EOF
-        ;;
+		;;
 
-    "Obsidian")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Obsidian")
+		cat >"$COLORS_FILE" <<'EOF'
 # Obsidian color scheme
 background:     #283033
 foreground:     #CDCDCD
@@ -6093,10 +6093,10 @@ color13:         #FF55FF
 color14:         #55FFFF
 color15:         #FFFFFF
 EOF
-        ;;
+		;;
 
-    "Ocean Dark")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Ocean Dark")
+		cat >"$COLORS_FILE" <<'EOF'
 # Ocean Dark color scheme
 background:     #1C1F27
 foreground:     #979CAC
@@ -6118,10 +6118,10 @@ color13:         #FB9BFE
 color14:         #DFDFFD
 color15:         #FEFFFE
 EOF
-        ;;
+		;;
 
-    "Oceanic Next")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Oceanic Next")
+		cat >"$COLORS_FILE" <<'EOF'
 # Oceanic Next color scheme
 background:     #121B21
 foreground:     #B3B8C3
@@ -6143,10 +6143,10 @@ color13:         #B77EB8
 color14:         #50A5A4
 color15:         #FFFFFF
 EOF
-        ;;
+		;;
 
-    "Ollie")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Ollie")
+		cat >"$COLORS_FILE" <<'EOF'
 # Ollie color scheme
 background:     #222125
 foreground:     #8A8DAE
@@ -6168,10 +6168,10 @@ color13:         #FFC21D
 color14:         #1FFAFF
 color15:         #5B6EA7
 EOF
-        ;;
+		;;
 
-    "Omni")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Omni")
+		cat >"$COLORS_FILE" <<'EOF'
 # Omni color scheme
 background:     #191622
 foreground:     #ABB2BF
@@ -6193,10 +6193,10 @@ color13:         #988BC7
 color14:         #FF79C6
 color15:         #FFFFFF
 EOF
-        ;;
+		;;
 
-    "One Dark")
-        cat >"$COLORS_FILE" <<'EOF'
+	"One Dark")
+		cat >"$COLORS_FILE" <<'EOF'
 # One Dark color scheme
 background:     #1E2127
 foreground:     #5C6370
@@ -6218,10 +6218,10 @@ color13:         #C678DD
 color14:         #56B6C2
 color15:         #FFFEFE
 EOF
-        ;;
+		;;
 
-    "One Half Black")
-        cat >"$COLORS_FILE" <<'EOF'
+	"One Half Black")
+		cat >"$COLORS_FILE" <<'EOF'
 # One Half Black color scheme
 background:     #000000
 foreground:     #DCDFE4
@@ -6243,10 +6243,10 @@ color13:         #C678DD
 color14:         #56B6C2
 color15:         #DCDFE4
 EOF
-        ;;
+		;;
 
-    "One Light")
-        cat >"$COLORS_FILE" <<'EOF'
+	"One Light")
+		cat >"$COLORS_FILE" <<'EOF'
 # One Light color scheme
 background:     #F8F8F8
 foreground:     #2A2B32
@@ -6268,10 +6268,10 @@ color13:         #930092
 color14:         #0E6FAD
 color15:         #FFFEFE
 EOF
-        ;;
+		;;
 
-    "Oxocarbon Dark")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Oxocarbon Dark")
+		cat >"$COLORS_FILE" <<'EOF'
 # Oxocarbon Dark color scheme
 background:     #161616
 foreground:     #FFFFFF
@@ -6293,10 +6293,10 @@ color13:         #FF7EB6
 color14:         #3DDBD9
 color15:         #FFFFFF
 EOF
-        ;;
+		;;
 
-    "Palenight")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Palenight")
+		cat >"$COLORS_FILE" <<'EOF'
 # Palenight color scheme
 background:     #292D3E
 foreground:     #BFC7D5
@@ -6318,10 +6318,10 @@ color13:         #FFCB6B
 color14:         #676E95
 color15:         #FFFEFE
 EOF
-        ;;
+		;;
 
-    "Pali")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Pali")
+		cat >"$COLORS_FILE" <<'EOF'
 # Pali color scheme
 background:     #232E37
 foreground:     #D9E6F2
@@ -6343,10 +6343,10 @@ color13:         #FF1D62
 color14:         #4BB8FD
 color15:         #A020F0
 EOF
-        ;;
+		;;
 
-    "Panda")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Panda")
+		cat >"$COLORS_FILE" <<'EOF'
 # Panda color scheme
 background:     #1D1E20
 foreground:     #F0F0F0
@@ -6368,10 +6368,10 @@ color13:         #FD95D0
 color14:         #26FFD4
 color15:         #F0F0F0
 EOF
-        ;;
+		;;
 
-    "Paper")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Paper")
+		cat >"$COLORS_FILE" <<'EOF'
 # Paper color scheme
 background:     #f2eede
 foreground:     #000000
@@ -6393,10 +6393,10 @@ color13:         #5c21a5
 color14:         #158c86
 color15:         #aaaaaa
 EOF
-        ;;
+		;;
 
-    "Papercolor Dark")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Papercolor Dark")
+		cat >"$COLORS_FILE" <<'EOF'
 # Papercolor Dark color scheme
 background:     #1C1C1C
 foreground:     #D0D0D0
@@ -6418,10 +6418,10 @@ color13:         #FF5FAF
 color14:         #00AFAF
 color15:         #5F8787
 EOF
-        ;;
+		;;
 
-    "Papercolor Light")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Papercolor Light")
+		cat >"$COLORS_FILE" <<'EOF'
 # Papercolor Light color scheme
 background:     #EEEEEE
 foreground:     #444444
@@ -6443,10 +6443,10 @@ color13:         #D75F00
 color14:         #005FAF
 color15:         #005F87
 EOF
-        ;;
+		;;
 
-    "Paraiso Dark")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Paraiso Dark")
+		cat >"$COLORS_FILE" <<'EOF'
 # Paraiso Dark color scheme
 background:     #2F1E2E
 foreground:     #A39E9B
@@ -6468,10 +6468,10 @@ color13:         #815BA4
 color14:         #5BC4BF
 color15:         #E7E9DB
 EOF
-        ;;
+		;;
 
-    "Paul Millr")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Paul Millr")
+		cat >"$COLORS_FILE" <<'EOF'
 # Paul Millr color scheme
 background:     #000000
 foreground:     #F2F2F2
@@ -6493,10 +6493,10 @@ color13:         #DB67E6
 color14:         #7ADFF2
 color15:         #FFFFFF
 EOF
-        ;;
+		;;
 
-    "Pencil Dark")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Pencil Dark")
+		cat >"$COLORS_FILE" <<'EOF'
 # Pencil Dark color scheme
 background:     #212121
 foreground:     #F1F1F1
@@ -6518,10 +6518,10 @@ color13:         #6855DE
 color14:         #4FB8CC
 color15:         #F1F1F1
 EOF
-        ;;
+		;;
 
-    "Pencil Light")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Pencil Light")
+		cat >"$COLORS_FILE" <<'EOF'
 # Pencil Light color scheme
 background:     #F1F1F1
 foreground:     #424242
@@ -6543,10 +6543,10 @@ color13:         #6855DE
 color14:         #4FB8CC
 color15:         #F1F1F1
 EOF
-        ;;
+		;;
 
-    "Peppermint")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Peppermint")
+		cat >"$COLORS_FILE" <<'EOF'
 # Peppermint color scheme
 background:     #000000
 foreground:     #C7C7C7
@@ -6568,10 +6568,10 @@ color13:         #E586E7
 color14:         #96DCDA
 color15:         #DEDEDE
 EOF
-        ;;
+		;;
 
-    "Pixiefloss")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Pixiefloss")
+		cat >"$COLORS_FILE" <<'EOF'
 # Pixiefloss color scheme
 background:     #241F33
 foreground:     #D1CAE8
@@ -6593,10 +6593,10 @@ color13:         #EF6155
 color14:         #C2FFFF
 color15:         #F8F8F0
 EOF
-        ;;
+		;;
 
-    "Pnevma")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Pnevma")
+		cat >"$COLORS_FILE" <<'EOF'
 # Pnevma color scheme
 background:     #1C1C1C
 foreground:     #D0D0D0
@@ -6618,10 +6618,10 @@ color13:         #D7BEDA
 color14:         #B1E7DD
 color15:         #EFEFEF
 EOF
-        ;;
+		;;
 
-    "Powershell")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Powershell")
+		cat >"$COLORS_FILE" <<'EOF'
 # Powershell color scheme
 background:     #052454
 foreground:     #F6F6F7
@@ -6643,10 +6643,10 @@ color13:         #FE13FA
 color14:         #29FFFE
 color15:         #C2C1C3
 EOF
-        ;;
+		;;
 
-    "Predawn")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Predawn")
+		cat >"$COLORS_FILE" <<'EOF'
 # Predawn color scheme
 background:     #282828
 foreground:     #F1F1F1
@@ -6668,10 +6668,10 @@ color13:         #EF8A50
 color14:         #A5EBEA
 color15:         #FFFFFF
 EOF
-        ;;
+		;;
 
-    "Pro")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Pro")
+		cat >"$COLORS_FILE" <<'EOF'
 # Pro color scheme
 background:     #000000
 foreground:     #F2F2F2
@@ -6693,10 +6693,10 @@ color13:         #E500E5
 color14:         #00E5E5
 color15:         #E5E5E5
 EOF
-        ;;
+		;;
 
-    "Purple People Eater")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Purple People Eater")
+		cat >"$COLORS_FILE" <<'EOF'
 # Purple People Eater color scheme
 background:     #161B22
 foreground:     #C9D1D9
@@ -6718,10 +6718,10 @@ color13:         #79C0FF
 color14:         #B694DF
 color15:         #C9D1D9
 EOF
-        ;;
+		;;
 
-    "Quiet")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Quiet")
+		cat >"$COLORS_FILE" <<'EOF'
 # Quiet color scheme
 background:     #141414
 foreground:     #B9B9B9
@@ -6743,10 +6743,10 @@ color13:         #C067E4
 color14:         #70DBD8
 color15:         #F0F0F0
 EOF
-        ;;
+		;;
 
-    "Red Alert")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Red Alert")
+		cat >"$COLORS_FILE" <<'EOF'
 # Red Alert color scheme
 background:     #762423
 foreground:     #FFFFFF
@@ -6768,10 +6768,10 @@ color13:         #DDB7DF
 color14:         #B7DFDD
 color15:         #FFFFFF
 EOF
-        ;;
+		;;
 
-    "Red Sands")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Red Sands")
+		cat >"$COLORS_FILE" <<'EOF'
 # Red Sands color scheme
 background:     #7A251E
 foreground:     #D7C9A7
@@ -6793,10 +6793,10 @@ color13:         #FF55FF
 color14:         #55FFFF
 color15:         #FFFFFF
 EOF
-        ;;
+		;;
 
-    "Relaxed")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Relaxed")
+		cat >"$COLORS_FILE" <<'EOF'
 # Relaxed color scheme
 background:     #353A44
 foreground:     #D9D9D9
@@ -6818,10 +6818,10 @@ color13:         #B06698
 color14:         #ACBBD0
 color15:         #F7F7F7
 EOF
-        ;;
+		;;
 
-    "Rippedcasts")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Rippedcasts")
+		cat >"$COLORS_FILE" <<'EOF'
 # Rippedcasts color scheme
 background:     #2B2B2B
 foreground:     #FFFFFF
@@ -6843,10 +6843,10 @@ color13:         #E500E5
 color14:         #8C9BC4
 color15:         #E5E5E5
 EOF
-        ;;
+		;;
 
-    "Rosé Pine Dawn")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Rosé Pine Dawn")
+		cat >"$COLORS_FILE" <<'EOF'
 # Rosé Pine Dawn color scheme
 background:     #FAF4ED
 foreground:     #575279
@@ -6868,10 +6868,10 @@ color13:         #907AA9
 color14:         #D7827E
 color15:         #575279
 EOF
-        ;;
+		;;
 
-    "Rosé Pine Moon")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Rosé Pine Moon")
+		cat >"$COLORS_FILE" <<'EOF'
 # Rosé Pine Moon color scheme
 background:     #232136
 foreground:     #E0DEF4
@@ -6893,10 +6893,10 @@ color13:         #C4A7E7
 color14:         #EA9A97
 color15:         #E0DEF4
 EOF
-        ;;
+		;;
 
-    "Rosé Pine")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Rosé Pine")
+		cat >"$COLORS_FILE" <<'EOF'
 # Rosé Pine color scheme
 background:     #191724
 foreground:     #E0DEF4
@@ -6918,10 +6918,10 @@ color13:         #C4A7E7
 color14:         #EBBCBA
 color15:         #E0DEF4
 EOF
-        ;;
+		;;
 
-    "Royal")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Royal")
+		cat >"$COLORS_FILE" <<'EOF'
 # Royal color scheme
 background:     #100815
 foreground:     #514968
@@ -6943,10 +6943,10 @@ color13:         #A479E3
 color14:         #ACD4EB
 color15:         #9E8CBD
 EOF
-        ;;
+		;;
 
-    "Sat")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Sat")
+		cat >"$COLORS_FILE" <<'EOF'
 # Sat color scheme
 background:     #758480
 foreground:     #23476A
@@ -6968,10 +6968,10 @@ color13:         #FA74FF
 color14:         #74FFFA
 color15:         #FFFFFF
 EOF
-        ;;
+		;;
 
-    "Sea Shells")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Sea Shells")
+		cat >"$COLORS_FILE" <<'EOF'
 # Sea Shells color scheme
 background:     #09141B
 foreground:     #DEB88D
@@ -6993,10 +6993,10 @@ color13:         #BBE3EE
 color14:         #87ACB4
 color15:         #FEE4CE
 EOF
-        ;;
+		;;
 
-    "Seafoam Pastel")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Seafoam Pastel")
+		cat >"$COLORS_FILE" <<'EOF'
 # Seafoam Pastel color scheme
 background:     #243435
 foreground:     #D4E7D4
@@ -7018,10 +7018,10 @@ color13:         #D6B2A1
 color14:         #ADE0E0
 color15:         #E0E0E0
 EOF
-        ;;
+		;;
 
-    "Selenized Black")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Selenized Black")
+		cat >"$COLORS_FILE" <<'EOF'
 # Selenized Black color scheme
 background:     #181818
 foreground:     #b9b9b9
@@ -7043,10 +7043,10 @@ color13:         #ff81ca
 color14:         #56d8c9
 color15:         #dedede
 EOF
-        ;;
+		;;
 
-    "Selenized Dark")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Selenized Dark")
+		cat >"$COLORS_FILE" <<'EOF'
 # Selenized Dark color scheme
 background:     #103c48
 foreground:     #adbcbc
@@ -7068,10 +7068,10 @@ color13:         #ff84cd
 color14:         #53d6c7
 color15:         #cad8d9
 EOF
-        ;;
+		;;
 
-    "Selenized Light")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Selenized Light")
+		cat >"$COLORS_FILE" <<'EOF'
 # Selenized Light color scheme
 background:     #fbf3db
 foreground:     #53676d
@@ -7093,10 +7093,10 @@ color13:         #c44392
 color14:         #00978a
 color15:         #3a4d53
 EOF
-        ;;
+		;;
 
-    "Selenized White")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Selenized White")
+		cat >"$COLORS_FILE" <<'EOF'
 # Selenized White color scheme
 background:     #ffffff
 foreground:     #474747
@@ -7118,10 +7118,10 @@ color13:         #c7008b
 color14:         #009a8a
 color15:         #282828
 EOF
-        ;;
+		;;
 
-    "Seoul256 Light")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Seoul256 Light")
+		cat >"$COLORS_FILE" <<'EOF'
 # Seoul256 Light color scheme
 background:     #dadada
 foreground:     #4e4e4e
@@ -7143,10 +7143,10 @@ color13:         #87025f
 color14:         #008787
 color15:         #eeeeee
 EOF
-        ;;
+		;;
 
-    "Seoul256")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Seoul256")
+		cat >"$COLORS_FILE" <<'EOF'
 # Seoul256 color scheme
 background:     #3a3a3a
 foreground:     #d0d0d0
@@ -7168,10 +7168,10 @@ color13:         #ffafaf
 color14:         #87d7d7
 color15:         #e4e4e4
 EOF
-        ;;
+		;;
 
-    "Seti")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Seti")
+		cat >"$COLORS_FILE" <<'EOF'
 # Seti color scheme
 background:     #111213
 foreground:     #CACECD
@@ -7193,10 +7193,10 @@ color13:         #8B57B5
 color14:         #8EC43D
 color15:         #FFFFFF
 EOF
-        ;;
+		;;
 
-    "Shaman")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Shaman")
+		cat >"$COLORS_FILE" <<'EOF'
 # Shaman color scheme
 background:     #001015
 foreground:     #405555
@@ -7218,10 +7218,10 @@ color13:         #1298FF
 color14:         #98D028
 color15:         #58FBD6
 EOF
-        ;;
+		;;
 
-    "Shel")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Shel")
+		cat >"$COLORS_FILE" <<'EOF'
 # Shel color scheme
 background:     #2A201F
 foreground:     #4882CD
@@ -7243,10 +7243,10 @@ color13:         #C288EC
 color14:         #8FEEB9
 color15:         #F5EEEC
 EOF
-        ;;
+		;;
 
-    "Slate")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Slate")
+		cat >"$COLORS_FILE" <<'EOF'
 # Slate color scheme
 background:     #222222
 foreground:     #35B1D2
@@ -7268,10 +7268,10 @@ color13:         #C5A7D9
 color14:         #8CDFE0
 color15:         #E0E0E0
 EOF
-        ;;
+		;;
 
-    "Smyck")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Smyck")
+		cat >"$COLORS_FILE" <<'EOF'
 # Smyck color scheme
 background:     #242424
 foreground:     #F7F7F7
@@ -7293,10 +7293,10 @@ color13:         #FBB1F9
 color14:         #77DFD8
 color15:         #F7F7F7
 EOF
-        ;;
+		;;
 
-    "Snazzy")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Snazzy")
+		cat >"$COLORS_FILE" <<'EOF'
 # Snazzy color scheme
 background:     #282A36
 foreground:     #EFF0EB
@@ -7318,10 +7318,10 @@ color13:         #FF6AC1
 color14:         #9AEDFE
 color15:         #EFF0EB
 EOF
-        ;;
+		;;
 
-    "Soft Server")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Soft Server")
+		cat >"$COLORS_FILE" <<'EOF'
 # Soft Server color scheme
 background:     #242626
 foreground:     #99A3A2
@@ -7343,10 +7343,10 @@ color13:         #606EDF
 color14:         #64E39C
 color15:         #D2E0DE
 EOF
-        ;;
+		;;
 
-    "Solarized Darcula")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Solarized Darcula")
+		cat >"$COLORS_FILE" <<'EOF'
 # Solarized Darcula color scheme
 background:     #3D3F41
 foreground:     #D2D8D9
@@ -7368,10 +7368,10 @@ color13:         #797FD4
 color14:         #15968D
 color15:         #D2D8D9
 EOF
-        ;;
+		;;
 
-    "Solarized Dark Higher Contrast")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Solarized Dark Higher Contrast")
+		cat >"$COLORS_FILE" <<'EOF'
 # Solarized Dark Higher Contrast color scheme
 background:     #001E27
 foreground:     #9CC2C3
@@ -7393,10 +7393,10 @@ color13:         #E24D8E
 color14:         #00B39E
 color15:         #FCF4DC
 EOF
-        ;;
+		;;
 
-    "Solarized Dark")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Solarized Dark")
+		cat >"$COLORS_FILE" <<'EOF'
 # Solarized Dark color scheme
 background:     #002B36
 foreground:     #839496
@@ -7418,10 +7418,10 @@ color13:         #D33682
 color14:         #2AA198
 color15:         #FDF6E3
 EOF
-        ;;
+		;;
 
-    "Solarized Light")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Solarized Light")
+		cat >"$COLORS_FILE" <<'EOF'
 # Solarized Light color scheme
 background:     #FDF6E3
 foreground:     #657B83
@@ -7443,10 +7443,10 @@ color13:         #D33682
 color14:         #2AA198
 color15:         #073642
 EOF
-        ;;
+		;;
 
-    "Sonokai")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Sonokai")
+		cat >"$COLORS_FILE" <<'EOF'
 # Sonokai color scheme
 background:     #2C2E34
 foreground:     #E2E2E3
@@ -7468,10 +7468,10 @@ color13:         #B39DF3
 color14:         #76CCE0
 color15:         #E2E2E3
 EOF
-        ;;
+		;;
 
-    "Spacedust")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Spacedust")
+		cat >"$COLORS_FILE" <<'EOF'
 # Spacedust color scheme
 background:     #0A1E24
 foreground:     #ECF0C1
@@ -7493,10 +7493,10 @@ color13:         #FF8A3A
 color14:         #83A7B4
 color15:         #FEFFF1
 EOF
-        ;;
+		;;
 
-    "Spacegray Eighties Dull")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Spacegray Eighties Dull")
+		cat >"$COLORS_FILE" <<'EOF'
 # Spacegray Eighties Dull color scheme
 background:     #222222
 foreground:     #C9C6BC
@@ -7518,10 +7518,10 @@ color13:         #BF83C1
 color14:         #58C2C1
 color15:         #FFFFFF
 EOF
-        ;;
+		;;
 
-    "Spacegray Eighties")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Spacegray Eighties")
+		cat >"$COLORS_FILE" <<'EOF'
 # Spacegray Eighties color scheme
 background:     #222222
 foreground:     #BDBAAE
@@ -7543,10 +7543,10 @@ color13:         #FF55FF
 color14:         #83E9E4
 color15:         #FFFFFF
 EOF
-        ;;
+		;;
 
-    "Spacegray")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Spacegray")
+		cat >"$COLORS_FILE" <<'EOF'
 # Spacegray color scheme
 background:     #20242D
 foreground:     #B3B8C3
@@ -7568,10 +7568,10 @@ color13:         #A47996
 color14:         #85A7A5
 color15:         #FFFFFF
 EOF
-        ;;
+		;;
 
-    "Sparky")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Sparky")
+		cat >"$COLORS_FILE" <<'EOF'
 # Sparky color scheme
 background:     #072B31
 foreground:     #F4F5F0
@@ -7593,10 +7593,10 @@ color13:         #F99FC9
 color14:         #00C1D5
 color15:         #D9E1E2
 EOF
-        ;;
+		;;
 
-    "Spring")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Spring")
+		cat >"$COLORS_FILE" <<'EOF'
 # Spring color scheme
 background:     #0A1E24
 foreground:     #ECF0C1
@@ -7618,10 +7618,10 @@ color13:         #8959A8
 color14:         #3E999F
 color15:         #FFFFFF
 EOF
-        ;;
+		;;
 
-    "Square")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Square")
+		cat >"$COLORS_FILE" <<'EOF'
 # Square color scheme
 background:     #0A1E24
 foreground:     #A1A1A1
@@ -7643,10 +7643,10 @@ color13:         #AD7FA8
 color14:         #D7D9FC
 color15:         #E2E2E2
 EOF
-        ;;
+		;;
 
-    "Srcery")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Srcery")
+		cat >"$COLORS_FILE" <<'EOF'
 # Srcery color scheme
 background:     #1C1B19
 foreground:     #FCE8C3
@@ -7668,10 +7668,10 @@ color13:         #FF5C8F
 color14:         #2BE4D0
 color15:         #FCE8C3
 EOF
-        ;;
+		;;
 
-    "Summer Pop")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Summer Pop")
+		cat >"$COLORS_FILE" <<'EOF'
 # Summer Pop color scheme
 background:     #272822
 foreground:     #FFFFFF
@@ -7693,10 +7693,10 @@ color13:         #E500E5
 color14:         #00E5E5
 color15:         #E5E5E5
 EOF
-        ;;
+		;;
 
-    "Sundried")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Sundried")
+		cat >"$COLORS_FILE" <<'EOF'
 # Sundried color scheme
 background:     #1A1818
 foreground:     #C9C9C9
@@ -7718,10 +7718,10 @@ color13:         #FD8AA1
 color14:         #FAD484
 color15:         #FFFFFF
 EOF
-        ;;
+		;;
 
-    "Sweet Eliverlara")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Sweet Eliverlara")
+		cat >"$COLORS_FILE" <<'EOF'
 # Sweet Eliverlara color scheme
 background:     #282C34
 foreground:     #C3C7D1
@@ -7743,10 +7743,10 @@ color13:         #C74DED
 color14:         #00C1E4
 color15:         #DCDFE4
 EOF
-        ;;
+		;;
 
-    "Sweet Terminal")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Sweet Terminal")
+		cat >"$COLORS_FILE" <<'EOF'
 # Sweet Terminal color scheme
 background:     #222235
 foreground:     #FFFFFF
@@ -7768,10 +7768,10 @@ color13:         #EC89CB
 color14:         #00DDED
 color15:         #FFFFFF
 EOF
-        ;;
+		;;
 
-    "Symphonic")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Symphonic")
+		cat >"$COLORS_FILE" <<'EOF'
 # Symphonic color scheme
 background:     #000000
 foreground:     #FFFFFF
@@ -7793,10 +7793,10 @@ color13:         #B729D9
 color14:         #CCCCFF
 color15:         #FFFFFF
 EOF
-        ;;
+		;;
 
-    "Synthwave Alpha")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Synthwave Alpha")
+		cat >"$COLORS_FILE" <<'EOF'
 # Synthwave Alpha color scheme
 background:     #241B30
 foreground:     #F2F2E3
@@ -7818,10 +7818,10 @@ color13:         #FF00F6
 color14:         #00FBFD
 color15:         #F2F2E3
 EOF
-        ;;
+		;;
 
-    "Synthwave")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Synthwave")
+		cat >"$COLORS_FILE" <<'EOF'
 # Synthwave color scheme
 background:     #262335
 foreground:     #FFFFFF
@@ -7843,10 +7843,10 @@ color13:         #FF7EDB
 color14:         #03EDF9
 color15:         #FFFFFF
 EOF
-        ;;
+		;;
 
-    "Teerb")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Teerb")
+		cat >"$COLORS_FILE" <<'EOF'
 # Teerb color scheme
 background:     #262626
 foreground:     #D0D0D0
@@ -7868,10 +7868,10 @@ color13:         #D6AED6
 color14:         #B1E7DD
 color15:         #EFEFEF
 EOF
-        ;;
+		;;
 
-    "Tempus Autumn")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Tempus Autumn")
+		cat >"$COLORS_FILE" <<'EOF'
 # Protesilaos Stavrou (https://protesilaos.com)
 background:     #302420
 foreground:     #a9a2a6
@@ -7893,10 +7893,10 @@ color13:         #ce7dc4
 color14:         #2fa6b7
 color15:         #a9a2a6
 EOF
-        ;;
+		;;
 
-    "Tempus Classic")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Tempus Classic")
+		cat >"$COLORS_FILE" <<'EOF'
 # Protesilaos Stavrou (https://protesilaos.com)
 background:     #232323
 foreground:     #aeadaf
@@ -7918,10 +7918,10 @@ color13:         #d58888
 color14:         #7aa880
 color15:         #aeadaf
 EOF
-        ;;
+		;;
 
-    "Tempus Dawn")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Tempus Dawn")
+		cat >"$COLORS_FILE" <<'EOF'
 # Protesilaos Stavrou (https://protesilaos.com)
 background:     #eff0f2
 foreground:     #4a4b4e
@@ -7943,10 +7943,10 @@ color13:         #8e45a8
 color14:         #3f649c
 color15:         #eff0f2
 EOF
-        ;;
+		;;
 
-    "Tempus Day")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Tempus Day")
+		cat >"$COLORS_FILE" <<'EOF'
 # Protesilaos Stavrou (https://protesilaos.com)
 background:     #f8f2e5
 foreground:     #464340
@@ -7968,10 +7968,10 @@ color13:         #8050a7
 color14:         #336c87
 color15:         #f8f2e5
 EOF
-        ;;
+		;;
 
-    "Tempus Dusk")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Tempus Dusk")
+		cat >"$COLORS_FILE" <<'EOF'
 # Protesilaos Stavrou (https://protesilaos.com)
 background:     #1f252d
 foreground:     #a2a8ba
@@ -7993,10 +7993,10 @@ color13:         #c69ac6
 color14:         #8caeb6
 color15:         #a2a8ba
 EOF
-        ;;
+		;;
 
-    "Tempus Fugit")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Tempus Fugit")
+		cat >"$COLORS_FILE" <<'EOF'
 # Protesilaos Stavrou (https://protesilaos.com)
 background:     #fff5f3
 foreground:     #4d595f
@@ -8018,10 +8018,10 @@ color13:         #a234c0
 color14:         #00756a
 color15:         #fff5f3
 EOF
-        ;;
+		;;
 
-    "Tempus Future")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Tempus Future")
+		cat >"$COLORS_FILE" <<'EOF'
 # Protesilaos Stavrou (https://protesilaos.com)
 background:     #090a18
 foreground:     #b4abac
@@ -8043,10 +8043,10 @@ color13:         #e08bd6
 color14:         #2cbab6
 color15:         #b4abac
 EOF
-        ;;
+		;;
 
-    "Tempus Night")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Tempus Night")
+		cat >"$COLORS_FILE" <<'EOF'
 # Protesilaos Stavrou (https://protesilaos.com)
 background:     #1a1a1a
 foreground:     #e0e0e0
@@ -8068,10 +8068,10 @@ color13:         #de99f0
 color14:         #00ca9a
 color15:         #e0e0e0
 EOF
-        ;;
+		;;
 
-    "Tempus Past")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Tempus Past")
+		cat >"$COLORS_FILE" <<'EOF'
 # Protesilaos Stavrou (https://protesilaos.com)
 background:     #f3f2f4
 foreground:     #53545b
@@ -8093,10 +8093,10 @@ color13:         #b022a7
 color14:         #07707a
 color15:         #f3f2f4
 EOF
-        ;;
+		;;
 
-    "Tempus Rift")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Tempus Rift")
+		cat >"$COLORS_FILE" <<'EOF'
 # Protesilaos Stavrou (https://protesilaos.com)
 background:     #162c22
 foreground:     #bbbcbc
@@ -8118,10 +8118,10 @@ color13:         #cca0ba
 color14:         #10c480
 color15:         #bbbcbc
 EOF
-        ;;
+		;;
 
-    "Tempus Spring")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Tempus Spring")
+		cat >"$COLORS_FILE" <<'EOF'
 # Protesilaos Stavrou (https://protesilaos.com)
 background:     #283a37
 foreground:     #b5b8b7
@@ -8143,10 +8143,10 @@ color13:         #d095e2
 color14:         #3cbfaf
 color15:         #b5b8b7
 EOF
-        ;;
+		;;
 
-    "Tempus Summer")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Tempus Summer")
+		cat >"$COLORS_FILE" <<'EOF'
 # Protesilaos Stavrou (https://protesilaos.com)
 background:     #202c3d
 foreground:     #a0abae
@@ -8168,10 +8168,10 @@ color13:         #cc82d7
 color14:         #2aacbf
 color15:         #a0abae
 EOF
-        ;;
+		;;
 
-    "Tempus Tempest")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Tempus Tempest")
+		cat >"$COLORS_FILE" <<'EOF'
 # Protesilaos Stavrou (https://protesilaos.com)
 background:     #282b2b
 foreground:     #b6e0ca
@@ -8193,10 +8193,10 @@ color13:         #d2d4aa
 color14:         #9bdfc4
 color15:         #b6e0ca
 EOF
-        ;;
+		;;
 
-    "Tempus Totus")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Tempus Totus")
+		cat >"$COLORS_FILE" <<'EOF'
 # Protesilaos Stavrou (https://protesilaos.com)
 background:     #ffffff
 foreground:     #4a484d
@@ -8218,10 +8218,10 @@ color13:         #700dc9
 color14:         #005289
 color15:         #ffffff
 EOF
-        ;;
+		;;
 
-    "Tempus Warp")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Tempus Warp")
+		cat >"$COLORS_FILE" <<'EOF'
 # Protesilaos Stavrou (https://protesilaos.com)
 background:     #001514
 foreground:     #a29fa0
@@ -8243,10 +8243,10 @@ color13:         #d85cf2
 color14:         #1da1af
 color15:         #a29fa0
 EOF
-        ;;
+		;;
 
-    "Tempus Winter")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Tempus Winter")
+		cat >"$COLORS_FILE" <<'EOF'
 # Protesilaos Stavrou (https://protesilaos.com)
 background:     #202427
 foreground:     #8da3b8
@@ -8268,10 +8268,10 @@ color13:         #ca77c5
 color14:         #1ba6a4
 color15:         #8da3b8
 EOF
-        ;;
+		;;
 
-    "Tender")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Tender")
+		cat >"$COLORS_FILE" <<'EOF'
 # Tender color scheme
 background:     #282828
 foreground:     #EEEEEE
@@ -8293,10 +8293,10 @@ color13:         #EFD093
 color14:         #A1D6EC
 color15:         #FFFFFF
 EOF
-        ;;
+		;;
 
-    "Terminal Basic")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Terminal Basic")
+		cat >"$COLORS_FILE" <<'EOF'
 # Terminal Basic color scheme
 background:     #ffffff
 foreground:     #000000
@@ -8318,10 +8318,10 @@ color13:         #e500e5
 color14:         #00e5e5
 color15:         #e5e5e5
 EOF
-        ;;
+		;;
 
-    "Terminix Dark")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Terminix Dark")
+		cat >"$COLORS_FILE" <<'EOF'
 # Terminix Dark color scheme
 background:     #091116
 foreground:     #868A8C
@@ -8343,10 +8343,10 @@ color13:         #BA8BAF
 color14:         #86C1B9
 color15:         #C5C8C6
 EOF
-        ;;
+		;;
 
-    "Thayer Bright")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Thayer Bright")
+		cat >"$COLORS_FILE" <<'EOF'
 # Thayer Bright color scheme
 background:     #1B1D1E
 foreground:     #F8F8F8
@@ -8368,10 +8368,10 @@ color13:         #9E6FFE
 color14:         #23CFD5
 color15:         #F8F8F2
 EOF
-        ;;
+		;;
 
-    "Tin")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Tin")
+		cat >"$COLORS_FILE" <<'EOF'
 # Tin color scheme
 background:     #2E2E35
 foreground:     #FFFFFF
@@ -8393,10 +8393,10 @@ color13:         #B578B0
 color14:         #78B0B5
 color15:         #FFFFFF
 EOF
-        ;;
+		;;
 
-    "Tokyo Night Light")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Tokyo Night Light")
+		cat >"$COLORS_FILE" <<'EOF'
 # Tokyo Night Light color scheme
 background:     #D5D6DB
 foreground:     #565A6E
@@ -8418,10 +8418,10 @@ color13:         #5A4A78
 color14:         #0F4B6E
 color15:         #343B58
 EOF
-        ;;
+		;;
 
-    "Tokyo Night Storm")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Tokyo Night Storm")
+		cat >"$COLORS_FILE" <<'EOF'
 # Tokyo Night Storm color scheme
 background:     #24283B
 foreground:     #C0CAF5
@@ -8443,10 +8443,10 @@ color13:         #BB9AF7
 color14:         #7DCFFF
 color15:         #C0CAF5
 EOF
-        ;;
+		;;
 
-    "Tokyo Night")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Tokyo Night")
+		cat >"$COLORS_FILE" <<'EOF'
 # Tokyo Night color scheme
 background:     #1A1B26
 foreground:     #C0CAF5
@@ -8468,10 +8468,10 @@ color13:         #BB9AF7
 color14:         #7DCFFF
 color15:         #C0CAF5
 EOF
-        ;;
+		;;
 
-    "Tomorrow Night Blue")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Tomorrow Night Blue")
+		cat >"$COLORS_FILE" <<'EOF'
 # Chris Kempson (http://chriskempson.com)
 background:     #002451
 foreground:     #FFFFFF
@@ -8493,10 +8493,10 @@ color13:         #EBBBFF
 color14:         #99FFFF
 color15:         #FFFFFF
 EOF
-        ;;
+		;;
 
-    "Tomorrow Night Bright")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Tomorrow Night Bright")
+		cat >"$COLORS_FILE" <<'EOF'
 # Chris Kempson (http://chriskempson.com)
 background:     #000000
 foreground:     #EAEAEA
@@ -8518,10 +8518,10 @@ color13:         #C397D8
 color14:         #70C0B1
 color15:         #FFFFFF
 EOF
-        ;;
+		;;
 
-    "Tomorrow Night Eighties")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Tomorrow Night Eighties")
+		cat >"$COLORS_FILE" <<'EOF'
 # Chris Kempson (http://chriskempson.com)
 background:     #2D2D2D
 foreground:     #CCCCCC
@@ -8543,10 +8543,10 @@ color13:         #CC99CC
 color14:         #66CCCC
 color15:         #FFFFFF
 EOF
-        ;;
+		;;
 
-    "Tomorrow Night")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Tomorrow Night")
+		cat >"$COLORS_FILE" <<'EOF'
 # Chris Kempson (http://chriskempson.com)
 background:     #1D1F21
 foreground:     #C5C8C6
@@ -8568,10 +8568,10 @@ color13:         #B294BB
 color14:         #8ABEB7
 color15:         #FFFFFF
 EOF
-        ;;
+		;;
 
-    "Tomorrow")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Tomorrow")
+		cat >"$COLORS_FILE" <<'EOF'
 # Chris Kempson (http://chriskempson.com)
 background:     #FFFFFF
 foreground:     #4D4D4C
@@ -8593,10 +8593,10 @@ color13:         #8959A8
 color14:         #3E999F
 color15:         #1D1F21
 EOF
-        ;;
+		;;
 
-    "Toy Chest")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Toy Chest")
+		cat >"$COLORS_FILE" <<'EOF'
 # Toy Chest color scheme
 background:     #24364B
 foreground:     #31D07B
@@ -8618,10 +8618,10 @@ color13:         #AE6BDC
 color14:         #42C3AE
 color15:         #D5D5D5
 EOF
-        ;;
+		;;
 
-    "Treehouse")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Treehouse")
+		cat >"$COLORS_FILE" <<'EOF'
 # Treehouse color scheme
 background:     #191919
 foreground:     #786B53
@@ -8643,10 +8643,10 @@ color13:         #E14C5A
 color14:         #F07D14
 color15:         #FFC800
 EOF
-        ;;
+		;;
 
-    "Twilight")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Twilight")
+		cat >"$COLORS_FILE" <<'EOF'
 # Twilight color scheme
 background:     #141414
 foreground:     #FFFFD4
@@ -8668,10 +8668,10 @@ color13:         #D0DC8E
 color14:         #8A989B
 color15:         #FFFFD4
 EOF
-        ;;
+		;;
 
-    "Ura")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Ura")
+		cat >"$COLORS_FILE" <<'EOF'
 # Ura color scheme
 background:     #FEFFEE
 foreground:     #23476A
@@ -8693,10 +8693,10 @@ color13:         #B984EE
 color14:         #84EEB9
 color15:         #E5E5E5
 EOF
-        ;;
+		;;
 
-    "Urple")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Urple")
+		cat >"$COLORS_FILE" <<'EOF'
 # Urple color scheme
 background:     #1B1B23
 foreground:     #877A9B
@@ -8718,10 +8718,10 @@ color13:         #A05EEE
 color14:         #EAEAEA
 color15:         #BFA3FF
 EOF
-        ;;
+		;;
 
-    "Vag")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Vag")
+		cat >"$COLORS_FILE" <<'EOF'
 # Vag color scheme
 background:     #191F1D
 foreground:     #D9E6F2
@@ -8743,10 +8743,10 @@ color13:         #B03B76
 color14:         #3B76B0
 color15:         #CFCFCF
 EOF
-        ;;
+		;;
 
-    "Vaombe")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Vaombe")
+		cat >"$COLORS_FILE" <<'EOF'
 # Daniel Perez (https://www.github.com/sysaloe)
 background:     #010a08
 foreground:     #f5fffd
@@ -8768,10 +8768,10 @@ color13:         #935fb8
 color14:         #51b8b0
 color15:         #f5fffd
 EOF
-        ;;
+		;;
 
-    "Vaughn")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Vaughn")
+		cat >"$COLORS_FILE" <<'EOF'
 # Vaughn color scheme
 background:     #25234F
 foreground:     #DCDCCC
@@ -8793,10 +8793,10 @@ color13:         #EC93D3
 color14:         #93E0E3
 color15:         #FFFFFF
 EOF
-        ;;
+		;;
 
-    "Vibrant Ink")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Vibrant Ink")
+		cat >"$COLORS_FILE" <<'EOF'
 # Vibrant Ink color scheme
 background:     #000000
 foreground:     #FFFFFF
@@ -8818,10 +8818,10 @@ color13:         #FF00FF
 color14:         #00FFFF
 color15:         #E5E5E5
 EOF
-        ;;
+		;;
 
-    "Vs Code Dark+")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Vs Code Dark+")
+		cat >"$COLORS_FILE" <<'EOF'
 # Vs Code Dark+ color scheme
 background:     #1E1E1E
 foreground:     #CCCCCC
@@ -8843,10 +8843,10 @@ color13:         #FF578F
 color14:         #5FFFFF
 color15:         #D9FBFF
 EOF
-        ;;
+		;;
 
-    "Vs Code Light+")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Vs Code Light+")
+		cat >"$COLORS_FILE" <<'EOF'
 # Vs Code Light+ color scheme
 background:     #F9F9F9
 foreground:     #020202
@@ -8868,10 +8868,10 @@ color13:         #C451CE
 color14:         #52A8C7
 color15:         #A6A3A6
 EOF
-        ;;
+		;;
 
-    "Warm Neon")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Warm Neon")
+		cat >"$COLORS_FILE" <<'EOF'
 # Warm Neon color scheme
 background:     #404040
 foreground:     #AFDAB6
@@ -8893,10 +8893,10 @@ color13:         #F674BA
 color14:         #5ED1E5
 color15:         #D8C8BB
 EOF
-        ;;
+		;;
 
-    "Website")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Website")
+		cat >"$COLORS_FILE" <<'EOF'
 # Website color scheme
 background:     #132f35
 foreground:     #d1b890
@@ -8918,10 +8918,10 @@ color13:         #ff4cc2
 color14:         #35ffb6
 color15:         #ffd48f
 EOF
-        ;;
+		;;
 
-    "Wez")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Wez")
+		cat >"$COLORS_FILE" <<'EOF'
 # Wez color scheme
 background:     #000000
 foreground:     #B3B3B3
@@ -8943,10 +8943,10 @@ color13:         #FF55FF
 color14:         #55FFFF
 color15:         #FFFFFF
 EOF
-        ;;
+		;;
 
-    "Wild Cherry")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Wild Cherry")
+		cat >"$COLORS_FILE" <<'EOF'
 # Wild Cherry color scheme
 background:     #1F1726
 foreground:     #DAFAFF
@@ -8968,10 +8968,10 @@ color13:         #AE636B
 color14:         #FF919D
 color15:         #E4838D
 EOF
-        ;;
+		;;
 
-    "Wombat")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Wombat")
+		cat >"$COLORS_FILE" <<'EOF'
 # Wombat color scheme
 background:     #171717
 foreground:     #DEDACF
@@ -8993,10 +8993,10 @@ color13:         #DDAAFF
 color14:         #B7FFF9
 color15:         #FFFFFF
 EOF
-        ;;
+		;;
 
-    "Wryan")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Wryan")
+		cat >"$COLORS_FILE" <<'EOF'
 # Wryan color scheme
 background:     #101010
 foreground:     #999993
@@ -9018,10 +9018,10 @@ color13:         #7E62B3
 color14:         #6096BF
 color15:         #C0C0C0
 EOF
-        ;;
+		;;
 
-    "Wzoreck")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Wzoreck")
+		cat >"$COLORS_FILE" <<'EOF'
 # Wzoreck color scheme
 background:     #424043
 foreground:     #FCFCFA
@@ -9043,10 +9043,10 @@ color13:         #AB9DF2
 color14:         #34E2E2
 color15:         #D1D1C0
 EOF
-        ;;
+		;;
 
-    "Zenburn")
-        cat >"$COLORS_FILE" <<'EOF'
+	"Zenburn")
+		cat >"$COLORS_FILE" <<'EOF'
 # Zenburn color scheme
 background:     #3a3a3a
 foreground:     #dcdccc
@@ -9068,620 +9068,620 @@ color13:         #d7afaf
 color14:         #93bea3
 color15:         #dcdccc
 EOF
-        ;;
-    esac
-    termux-reload-settings
+		;;
+	esac
+	termux-reload-settings
 }
 
 # Get all available schemes
 get_schemes() {
-    echo "3024 Day"
-    echo "3024 Night"
-    echo "Aci"
-    echo "Acme"
-    echo "Aco"
-    echo "Adventure Time"
-    echo "Afterglow"
-    echo "Alien Blood"
-    echo "Apprentice"
-    echo "Arc Dark"
-    echo "Arc Light"
-    echo "Argonaut"
-    echo "Arthur"
-    echo "Astrodark"
-    echo "Atelier Cave"
-    echo "Atelier Dune"
-    echo "Atelier Estuary"
-    echo "Atelier Forest"
-    echo "Atelier Heath"
-    echo "Atelier Lakeside"
-    echo "Atelier Plateau"
-    echo "Atelier Savanna"
-    echo "Atelier Seaside"
-    echo "Atelier Sulphurpool"
-    echo "Atom"
-    echo "Aura"
-    echo "Ayaka"
-    echo "Ayu Dark"
-    echo "Ayu Light"
-    echo "Ayu Mirage"
-    echo "Azu"
-    echo "Base2Tone Cave"
-    echo "Base2Tone Desert"
-    echo "Base2Tone Drawbridge"
-    echo "Base2Tone Earth"
-    echo "Base2Tone Evening"
-    echo "Base2Tone Field"
-    echo "Base2Tone Forest"
-    echo "Base2Tone Garden"
-    echo "Base2Tone Heath"
-    echo "Base2Tone Lake"
-    echo "Base2Tone Lavender"
-    echo "Base2Tone Mall"
-    echo "Base2Tone Meadow"
-    echo "Base2Tone Morning"
-    echo "Base2Tone Motel"
-    echo "Base2Tone Pool"
-    echo "Base2Tone Porch"
-    echo "Base2Tone Sea"
-    echo "Base2Tone Space"
-    echo "Base2Tone Suburb"
-    echo "Base4Tone Classic A"
-    echo "Base4Tone Classic B"
-    echo "Base4Tone Classic C"
-    echo "Base4Tone Classic D"
-    echo "Base4Tone Classic E"
-    echo "Base4Tone Classic F"
-    echo "Base4Tone Classic I"
-    echo "Base4Tone Classic L"
-    echo "Base4Tone Classic O"
-    echo "Base4Tone Classic P"
-    echo "Base4Tone Classic Q"
-    echo "Base4Tone Classic R"
-    echo "Base4Tone Classic S"
-    echo "Base4Tone Classic T"
-    echo "Base4Tone Classic U"
-    echo "Base4Tone Classic W"
-    echo "Base4Tone Modern C"
-    echo "Base4Tone Modern N"
-    echo "Base4Tone Modern W"
-    echo "Belafonte Day"
-    echo "Belafonte Night"
-    echo "Bim"
-    echo "Birds Of Paradise"
-    echo "Blazer"
-    echo "Blue Dolphin"
-    echo "Blue Moon Light"
-    echo "Blue Moon"
-    echo "Bluloco Light"
-    echo "Bluloco Zsh Light"
-    echo "Borland"
-    echo "Breadog"
-    echo "Breath Darker"
-    echo "Breath Light"
-    echo "Breath Silverfox"
-    echo "Breath"
-    echo "Breeze"
-    echo "Broadcast"
-    echo "Brogrammer"
-    echo "Butrin"
-    echo "C64"
-    echo "Cai"
-    echo "Campbell"
-    echo "Catppuccin Frappé"
-    echo "Catppuccin Latte"
-    echo "Catppuccin Macchiato"
-    echo "Catppuccin Mocha"
-    echo "Chalk"
-    echo "Chalkboard"
-    echo "Chameleon"
-    echo "Ciapre"
-    echo "City Lights"
-    echo "Clone Of Ubuntu"
-    echo "Clrs"
-    echo "Cobalt 2"
-    echo "Cobalt Neon"
-    echo "Colorcli"
-    echo "Crayon Pony Fish"
-    echo "Dark Pastel"
-    echo "Darkside"
-    echo "Dehydration"
-    echo "Desert"
-    echo "Dimmed Monokai"
-    echo "Dissonance"
-    echo "Doom One"
-    echo "Dracula"
-    echo "Earthsong"
-    echo "Elemental"
-    echo "Elementary"
-    echo "Elic"
-    echo "Elio"
-    echo "Espresso Libre"
-    echo "Espresso"
-    echo "Everblush"
-    echo "Everforest Dark Hard"
-    echo "Everforest Dark Medium"
-    echo "Everforest Dark Soft"
-    echo "Everforest Light Hard"
-    echo "Everforest Light Medium"
-    echo "Everforest Light Soft"
-    echo "Fairy Floss Dark"
-    echo "Fairy Floss"
-    echo "Fishtank"
-    echo "Flat Remix"
-    echo "Flat"
-    echo "Flatland"
-    echo "Flexoki Dark"
-    echo "Flexoki Light"
-    echo "Foxnightly"
-    echo "Freya"
-    echo "Frontend Delight"
-    echo "Frontend Fun Forrest"
-    echo "Frontend Galaxy"
-    echo "Geohot"
-    echo "Github Dark"
-    echo "Github Light"
-    echo "Gogh"
-    echo "Gooey"
-    echo "Google Dark"
-    echo "Google Light"
-    echo "Gotham"
-    echo "Grape"
-    echo "Grass"
-    echo "Gruvbox Dark"
-    echo "Gruvbox Material Dark"
-    echo "Gruvbox Material Light"
-    echo "Gruvbox"
-    echo "Guezwhoz"
-    echo "Hardcore"
-    echo "Harper"
-    echo "Hemisu Dark"
-    echo "Hemisu Light"
-    echo "Highway"
-    echo "Hipster Green"
-    echo "Homebrew Light"
-    echo "Homebrew Ocean"
-    echo "Homebrew"
-    echo "Horizon Bright"
-    echo "Horizon Dark"
-    echo "Hurtado"
-    echo "Hybrid"
-    echo "Ibm 3270 (High Contrast)"
-    echo "Ibm3270"
-    echo "Ic Green Ppl"
-    echo "Ic Orange Ppl"
-    echo "Iceberg"
-    echo "Idle Toes"
-    echo "Ir Black"
-    echo "Jackie Brown"
-    echo "Japanesque"
-    echo "Jellybeans"
-    echo "Jup"
-    echo "Kanagawa Dragon"
-    echo "Kanagawa Lotus"
-    echo "Kanagawa Wave"
-    echo "Kibble"
-    echo "Kokuban"
-    echo "Laserwave"
-    echo "Later This Evening"
-    echo "Lavandula"
-    echo "Liquid Carbon Transparent"
-    echo "Liquid Carbon"
-    echo "Lunaria Dark"
-    echo "Lunaria Eclipse"
-    echo "Lunaria Light"
-    echo "Maia"
-    echo "Man Page"
-    echo "Mar"
-    echo "Material"
-    echo "Mathias"
-    echo "Medallion"
-    echo "Minimalist Dark"
-    echo "Miramare"
-    echo "Misterioso"
-    echo "Modus Operandi Tinted"
-    echo "Modus Operandi"
-    echo "Modus Vivendi Tinted"
-    echo "Modus Vivendi"
-    echo "Molokai"
-    echo "Mona Lisa"
-    echo "Mono Amber"
-    echo "Mono Cyan"
-    echo "Mono Green"
-    echo "Mono Red"
-    echo "Mono White"
-    echo "Mono Yellow"
-    echo "Monokai Dark"
-    echo "Monokai Pro Light Sun"
-    echo "Monokai Pro Light"
-    echo "Monokai Pro Machine"
-    echo "Monokai Pro Ocatagon"
-    echo "Monokai Pro Ristretto"
-    echo "Monokai Pro Spectrum"
-    echo "Monokai Pro"
-    echo "Monokai Soda"
-    echo "Moonfly"
-    echo "Morada"
-    echo "N0Tch2K"
-    echo "Nanosecond"
-    echo "Neon Night"
-    echo "Neopolitan"
-    echo "Nep"
-    echo "Neutron"
-    echo "Night Owl"
-    echo "Nightfly"
-    echo "Nightlion V1"
-    echo "Nightlion V2"
-    echo "Nighty"
-    echo "Nord Light"
-    echo "Nord"
-    echo "Novel"
-    echo "Obsidian"
-    echo "Ocean Dark"
-    echo "Oceanic Next"
-    echo "Ollie"
-    echo "Omni"
-    echo "One Dark"
-    echo "One Half Black"
-    echo "One Light"
-    echo "Oxocarbon Dark"
-    echo "Palenight"
-    echo "Pali"
-    echo "Panda"
-    echo "Paper"
-    echo "Papercolor Dark"
-    echo "Papercolor Light"
-    echo "Paraiso Dark"
-    echo "Paul Millr"
-    echo "Pencil Dark"
-    echo "Pencil Light"
-    echo "Peppermint"
-    echo "Pixiefloss"
-    echo "Pnevma"
-    echo "Powershell"
-    echo "Predawn"
-    echo "Pro"
-    echo "Purple People Eater"
-    echo "Quiet"
-    echo "Red Alert"
-    echo "Red Sands"
-    echo "Relaxed"
-    echo "Rippedcasts"
-    echo "Rosé Pine Dawn"
-    echo "Rosé Pine Moon"
-    echo "Rosé Pine"
-    echo "Royal"
-    echo "Sat"
-    echo "Sea Shells"
-    echo "Seafoam Pastel"
-    echo "Selenized Black"
-    echo "Selenized Dark"
-    echo "Selenized Light"
-    echo "Selenized White"
-    echo "Seoul256 Light"
-    echo "Seoul256"
-    echo "Seti"
-    echo "Shaman"
-    echo "Shel"
-    echo "Slate"
-    echo "Smyck"
-    echo "Snazzy"
-    echo "Soft Server"
-    echo "Solarized Darcula"
-    echo "Solarized Dark Higher Contrast"
-    echo "Solarized Dark"
-    echo "Solarized Light"
-    echo "Sonokai"
-    echo "Spacedust"
-    echo "Spacegray Eighties Dull"
-    echo "Spacegray Eighties"
-    echo "Spacegray"
-    echo "Sparky"
-    echo "Spring"
-    echo "Square"
-    echo "Srcery"
-    echo "Summer Pop"
-    echo "Sundried"
-    echo "Sweet Eliverlara"
-    echo "Sweet Terminal"
-    echo "Symphonic"
-    echo "Synthwave Alpha"
-    echo "Synthwave"
-    echo "Teerb"
-    echo "Tempus Autumn"
-    echo "Tempus Classic"
-    echo "Tempus Dawn"
-    echo "Tempus Day"
-    echo "Tempus Dusk"
-    echo "Tempus Fugit"
-    echo "Tempus Future"
-    echo "Tempus Night"
-    echo "Tempus Past"
-    echo "Tempus Rift"
-    echo "Tempus Spring"
-    echo "Tempus Summer"
-    echo "Tempus Tempest"
-    echo "Tempus Totus"
-    echo "Tempus Warp"
-    echo "Tempus Winter"
-    echo "Tender"
-    echo "Terminal Basic"
-    echo "Terminix Dark"
-    echo "Thayer Bright"
-    echo "Tin"
-    echo "Tokyo Night Light"
-    echo "Tokyo Night Storm"
-    echo "Tokyo Night"
-    echo "Tomorrow Night Blue"
-    echo "Tomorrow Night Bright"
-    echo "Tomorrow Night Eighties"
-    echo "Tomorrow Night"
-    echo "Tomorrow"
-    echo "Toy Chest"
-    echo "Treehouse"
-    echo "Twilight"
-    echo "Ura"
-    echo "Urple"
-    echo "Vag"
-    echo "Vaombe"
-    echo "Vaughn"
-    echo "Vibrant Ink"
-    echo "Vs Code Dark+"
-    echo "Vs Code Light+"
-    echo "Warm Neon"
-    echo "Website"
-    echo "Wez"
-    echo "Wild Cherry"
-    echo "Wombat"
-    echo "Wryan"
-    echo "Wzoreck"
-    echo "Zenburn"
+	echo "3024 Day"
+	echo "3024 Night"
+	echo "Aci"
+	echo "Acme"
+	echo "Aco"
+	echo "Adventure Time"
+	echo "Afterglow"
+	echo "Alien Blood"
+	echo "Apprentice"
+	echo "Arc Dark"
+	echo "Arc Light"
+	echo "Argonaut"
+	echo "Arthur"
+	echo "Astrodark"
+	echo "Atelier Cave"
+	echo "Atelier Dune"
+	echo "Atelier Estuary"
+	echo "Atelier Forest"
+	echo "Atelier Heath"
+	echo "Atelier Lakeside"
+	echo "Atelier Plateau"
+	echo "Atelier Savanna"
+	echo "Atelier Seaside"
+	echo "Atelier Sulphurpool"
+	echo "Atom"
+	echo "Aura"
+	echo "Ayaka"
+	echo "Ayu Dark"
+	echo "Ayu Light"
+	echo "Ayu Mirage"
+	echo "Azu"
+	echo "Base2Tone Cave"
+	echo "Base2Tone Desert"
+	echo "Base2Tone Drawbridge"
+	echo "Base2Tone Earth"
+	echo "Base2Tone Evening"
+	echo "Base2Tone Field"
+	echo "Base2Tone Forest"
+	echo "Base2Tone Garden"
+	echo "Base2Tone Heath"
+	echo "Base2Tone Lake"
+	echo "Base2Tone Lavender"
+	echo "Base2Tone Mall"
+	echo "Base2Tone Meadow"
+	echo "Base2Tone Morning"
+	echo "Base2Tone Motel"
+	echo "Base2Tone Pool"
+	echo "Base2Tone Porch"
+	echo "Base2Tone Sea"
+	echo "Base2Tone Space"
+	echo "Base2Tone Suburb"
+	echo "Base4Tone Classic A"
+	echo "Base4Tone Classic B"
+	echo "Base4Tone Classic C"
+	echo "Base4Tone Classic D"
+	echo "Base4Tone Classic E"
+	echo "Base4Tone Classic F"
+	echo "Base4Tone Classic I"
+	echo "Base4Tone Classic L"
+	echo "Base4Tone Classic O"
+	echo "Base4Tone Classic P"
+	echo "Base4Tone Classic Q"
+	echo "Base4Tone Classic R"
+	echo "Base4Tone Classic S"
+	echo "Base4Tone Classic T"
+	echo "Base4Tone Classic U"
+	echo "Base4Tone Classic W"
+	echo "Base4Tone Modern C"
+	echo "Base4Tone Modern N"
+	echo "Base4Tone Modern W"
+	echo "Belafonte Day"
+	echo "Belafonte Night"
+	echo "Bim"
+	echo "Birds Of Paradise"
+	echo "Blazer"
+	echo "Blue Dolphin"
+	echo "Blue Moon Light"
+	echo "Blue Moon"
+	echo "Bluloco Light"
+	echo "Bluloco Zsh Light"
+	echo "Borland"
+	echo "Breadog"
+	echo "Breath Darker"
+	echo "Breath Light"
+	echo "Breath Silverfox"
+	echo "Breath"
+	echo "Breeze"
+	echo "Broadcast"
+	echo "Brogrammer"
+	echo "Butrin"
+	echo "C64"
+	echo "Cai"
+	echo "Campbell"
+	echo "Catppuccin Frappé"
+	echo "Catppuccin Latte"
+	echo "Catppuccin Macchiato"
+	echo "Catppuccin Mocha"
+	echo "Chalk"
+	echo "Chalkboard"
+	echo "Chameleon"
+	echo "Ciapre"
+	echo "City Lights"
+	echo "Clone Of Ubuntu"
+	echo "Clrs"
+	echo "Cobalt 2"
+	echo "Cobalt Neon"
+	echo "Colorcli"
+	echo "Crayon Pony Fish"
+	echo "Dark Pastel"
+	echo "Darkside"
+	echo "Dehydration"
+	echo "Desert"
+	echo "Dimmed Monokai"
+	echo "Dissonance"
+	echo "Doom One"
+	echo "Dracula"
+	echo "Earthsong"
+	echo "Elemental"
+	echo "Elementary"
+	echo "Elic"
+	echo "Elio"
+	echo "Espresso Libre"
+	echo "Espresso"
+	echo "Everblush"
+	echo "Everforest Dark Hard"
+	echo "Everforest Dark Medium"
+	echo "Everforest Dark Soft"
+	echo "Everforest Light Hard"
+	echo "Everforest Light Medium"
+	echo "Everforest Light Soft"
+	echo "Fairy Floss Dark"
+	echo "Fairy Floss"
+	echo "Fishtank"
+	echo "Flat Remix"
+	echo "Flat"
+	echo "Flatland"
+	echo "Flexoki Dark"
+	echo "Flexoki Light"
+	echo "Foxnightly"
+	echo "Freya"
+	echo "Frontend Delight"
+	echo "Frontend Fun Forrest"
+	echo "Frontend Galaxy"
+	echo "Geohot"
+	echo "Github Dark"
+	echo "Github Light"
+	echo "Gogh"
+	echo "Gooey"
+	echo "Google Dark"
+	echo "Google Light"
+	echo "Gotham"
+	echo "Grape"
+	echo "Grass"
+	echo "Gruvbox Dark"
+	echo "Gruvbox Material Dark"
+	echo "Gruvbox Material Light"
+	echo "Gruvbox"
+	echo "Guezwhoz"
+	echo "Hardcore"
+	echo "Harper"
+	echo "Hemisu Dark"
+	echo "Hemisu Light"
+	echo "Highway"
+	echo "Hipster Green"
+	echo "Homebrew Light"
+	echo "Homebrew Ocean"
+	echo "Homebrew"
+	echo "Horizon Bright"
+	echo "Horizon Dark"
+	echo "Hurtado"
+	echo "Hybrid"
+	echo "Ibm 3270 (High Contrast)"
+	echo "Ibm3270"
+	echo "Ic Green Ppl"
+	echo "Ic Orange Ppl"
+	echo "Iceberg"
+	echo "Idle Toes"
+	echo "Ir Black"
+	echo "Jackie Brown"
+	echo "Japanesque"
+	echo "Jellybeans"
+	echo "Jup"
+	echo "Kanagawa Dragon"
+	echo "Kanagawa Lotus"
+	echo "Kanagawa Wave"
+	echo "Kibble"
+	echo "Kokuban"
+	echo "Laserwave"
+	echo "Later This Evening"
+	echo "Lavandula"
+	echo "Liquid Carbon Transparent"
+	echo "Liquid Carbon"
+	echo "Lunaria Dark"
+	echo "Lunaria Eclipse"
+	echo "Lunaria Light"
+	echo "Maia"
+	echo "Man Page"
+	echo "Mar"
+	echo "Material"
+	echo "Mathias"
+	echo "Medallion"
+	echo "Minimalist Dark"
+	echo "Miramare"
+	echo "Misterioso"
+	echo "Modus Operandi Tinted"
+	echo "Modus Operandi"
+	echo "Modus Vivendi Tinted"
+	echo "Modus Vivendi"
+	echo "Molokai"
+	echo "Mona Lisa"
+	echo "Mono Amber"
+	echo "Mono Cyan"
+	echo "Mono Green"
+	echo "Mono Red"
+	echo "Mono White"
+	echo "Mono Yellow"
+	echo "Monokai Dark"
+	echo "Monokai Pro Light Sun"
+	echo "Monokai Pro Light"
+	echo "Monokai Pro Machine"
+	echo "Monokai Pro Ocatagon"
+	echo "Monokai Pro Ristretto"
+	echo "Monokai Pro Spectrum"
+	echo "Monokai Pro"
+	echo "Monokai Soda"
+	echo "Moonfly"
+	echo "Morada"
+	echo "N0Tch2K"
+	echo "Nanosecond"
+	echo "Neon Night"
+	echo "Neopolitan"
+	echo "Nep"
+	echo "Neutron"
+	echo "Night Owl"
+	echo "Nightfly"
+	echo "Nightlion V1"
+	echo "Nightlion V2"
+	echo "Nighty"
+	echo "Nord Light"
+	echo "Nord"
+	echo "Novel"
+	echo "Obsidian"
+	echo "Ocean Dark"
+	echo "Oceanic Next"
+	echo "Ollie"
+	echo "Omni"
+	echo "One Dark"
+	echo "One Half Black"
+	echo "One Light"
+	echo "Oxocarbon Dark"
+	echo "Palenight"
+	echo "Pali"
+	echo "Panda"
+	echo "Paper"
+	echo "Papercolor Dark"
+	echo "Papercolor Light"
+	echo "Paraiso Dark"
+	echo "Paul Millr"
+	echo "Pencil Dark"
+	echo "Pencil Light"
+	echo "Peppermint"
+	echo "Pixiefloss"
+	echo "Pnevma"
+	echo "Powershell"
+	echo "Predawn"
+	echo "Pro"
+	echo "Purple People Eater"
+	echo "Quiet"
+	echo "Red Alert"
+	echo "Red Sands"
+	echo "Relaxed"
+	echo "Rippedcasts"
+	echo "Rosé Pine Dawn"
+	echo "Rosé Pine Moon"
+	echo "Rosé Pine"
+	echo "Royal"
+	echo "Sat"
+	echo "Sea Shells"
+	echo "Seafoam Pastel"
+	echo "Selenized Black"
+	echo "Selenized Dark"
+	echo "Selenized Light"
+	echo "Selenized White"
+	echo "Seoul256 Light"
+	echo "Seoul256"
+	echo "Seti"
+	echo "Shaman"
+	echo "Shel"
+	echo "Slate"
+	echo "Smyck"
+	echo "Snazzy"
+	echo "Soft Server"
+	echo "Solarized Darcula"
+	echo "Solarized Dark Higher Contrast"
+	echo "Solarized Dark"
+	echo "Solarized Light"
+	echo "Sonokai"
+	echo "Spacedust"
+	echo "Spacegray Eighties Dull"
+	echo "Spacegray Eighties"
+	echo "Spacegray"
+	echo "Sparky"
+	echo "Spring"
+	echo "Square"
+	echo "Srcery"
+	echo "Summer Pop"
+	echo "Sundried"
+	echo "Sweet Eliverlara"
+	echo "Sweet Terminal"
+	echo "Symphonic"
+	echo "Synthwave Alpha"
+	echo "Synthwave"
+	echo "Teerb"
+	echo "Tempus Autumn"
+	echo "Tempus Classic"
+	echo "Tempus Dawn"
+	echo "Tempus Day"
+	echo "Tempus Dusk"
+	echo "Tempus Fugit"
+	echo "Tempus Future"
+	echo "Tempus Night"
+	echo "Tempus Past"
+	echo "Tempus Rift"
+	echo "Tempus Spring"
+	echo "Tempus Summer"
+	echo "Tempus Tempest"
+	echo "Tempus Totus"
+	echo "Tempus Warp"
+	echo "Tempus Winter"
+	echo "Tender"
+	echo "Terminal Basic"
+	echo "Terminix Dark"
+	echo "Thayer Bright"
+	echo "Tin"
+	echo "Tokyo Night Light"
+	echo "Tokyo Night Storm"
+	echo "Tokyo Night"
+	echo "Tomorrow Night Blue"
+	echo "Tomorrow Night Bright"
+	echo "Tomorrow Night Eighties"
+	echo "Tomorrow Night"
+	echo "Tomorrow"
+	echo "Toy Chest"
+	echo "Treehouse"
+	echo "Twilight"
+	echo "Ura"
+	echo "Urple"
+	echo "Vag"
+	echo "Vaombe"
+	echo "Vaughn"
+	echo "Vibrant Ink"
+	echo "Vs Code Dark+"
+	echo "Vs Code Light+"
+	echo "Warm Neon"
+	echo "Website"
+	echo "Wez"
+	echo "Wild Cherry"
+	echo "Wombat"
+	echo "Wryan"
+	echo "Wzoreck"
+	echo "Zenburn"
 }
 
 # Main TUI function - Two column layout
 show_menu() {
-    local search_term=""
-    local selected_row=0
-    local selected_col=0
-    local scroll_offset=0
-    local schemes=()
-    # Calculate available screen height dynamically
-    local term_height=$(tput lines)
-    local visible_rows=$((term_height - 7)) # Reserve 7 lines for header/footer (3 header + 4 footer)
-    ((visible_rows < 5)) && visible_rows=5  # Minimum 5 rows
+	local search_term=""
+	local selected_row=0
+	local selected_col=0
+	local scroll_offset=0
+	local schemes=()
+	# Calculate available screen height dynamically
+	local term_height=$(tput lines)
+	local visible_rows=$((term_height - 7)) # Reserve 7 lines for header/footer (3 header + 4 footer)
+	((visible_rows < 5)) && visible_rows=5  # Minimum 5 rows
 
-    # Load all schemes into array
-    while IFS= read -r scheme; do
-        schemes+=("$scheme")
-    done < <(get_schemes)
+	# Load all schemes into array
+	while IFS= read -r scheme; do
+		schemes+=("$scheme")
+	done < <(get_schemes)
 
-    while true; do
-        # Filter schemes based on search term
-        local filtered_schemes=()
-        for scheme in "${schemes[@]}"; do
-            [[ -z "$search_term" ]] || [[ "${scheme,,}" == *"${search_term,,}"* ]] && filtered_schemes+=("$scheme")
-        done
+	while true; do
+		# Filter schemes based on search term
+		local filtered_schemes=()
+		for scheme in "${schemes[@]}"; do
+			[[ -z "$search_term" ]] || [[ "${scheme,,}" == *"${search_term,,}"* ]] && filtered_schemes+=("$scheme")
+		done
 
-        local total_filtered=${#filtered_schemes[@]}
-        local total_rows=$(((total_filtered + 1) / 2))
+		local total_filtered=${#filtered_schemes[@]}
+		local total_rows=$(((total_filtered + 1) / 2))
 
-        # Boundary checks
-        ((selected_row >= total_rows)) && selected_row=$((total_rows - 1))
-        ((selected_row < 0)) && selected_row=0
+		# Boundary checks
+		((selected_row >= total_rows)) && selected_row=$((total_rows - 1))
+		((selected_row < 0)) && selected_row=0
 
-        # Check if selected column is valid for current row
-        local idx=$((selected_row * 2 + selected_col))
-        if ((idx >= total_filtered)); then
-            selected_col=0
-        fi
+		# Check if selected column is valid for current row
+		local idx=$((selected_row * 2 + selected_col))
+		if ((idx >= total_filtered)); then
+			selected_col=0
+		fi
 
-        # Auto-scroll logic
-        if ((selected_row < scroll_offset)); then
-            scroll_offset=$selected_row
-        elif ((selected_row >= scroll_offset + visible_rows)); then
-            scroll_offset=$((selected_row - visible_rows + 1))
-        fi
+		# Auto-scroll logic
+		if ((selected_row < scroll_offset)); then
+			scroll_offset=$selected_row
+		elif ((selected_row >= scroll_offset + visible_rows)); then
+			scroll_offset=$((selected_row - visible_rows + 1))
+		fi
 
-        # Ensure scroll offset is valid
-        local max_scroll=$((total_rows - visible_rows))
-        ((max_scroll < 0)) && max_scroll=0
-        ((scroll_offset > max_scroll)) && scroll_offset=$max_scroll
-        ((scroll_offset < 0)) && scroll_offset=0
+		# Ensure scroll offset is valid
+		local max_scroll=$((total_rows - visible_rows))
+		((max_scroll < 0)) && max_scroll=0
+		((scroll_offset > max_scroll)) && scroll_offset=$max_scroll
+		((scroll_offset < 0)) && scroll_offset=0
 
-        # Clear screen and draw UI
-        clear
+		# Clear screen and draw UI
+		clear
 
-        # Compact header
-        echo "╭─ TERMUX COLOR SWITCHER ──────────────────────────────────────────────╮"
-        echo "  🔍 ${search_term}_"
-        echo "╰──────────────────────────────────────────────────────────────────────╯"
+		# Compact header
+		echo "╭─ TERMUX COLOR SWITCHER ──────────────────────────────────────────────╮"
+		echo "  🔍 ${search_term}_"
+		echo "╰──────────────────────────────────────────────────────────────────────╯"
 
-        # Show schemes in two columns
-        if ((total_filtered == 0)); then
-            echo "  No matches found"
-        else
-            local end_row=$((scroll_offset + visible_rows))
-            ((end_row > total_rows)) && end_row=$total_rows
+		# Show schemes in two columns
+		if ((total_filtered == 0)); then
+			echo "  No matches found"
+		else
+			local end_row=$((scroll_offset + visible_rows))
+			((end_row > total_rows)) && end_row=$total_rows
 
-            for ((row = scroll_offset; row < end_row; row++)); do
-                local left_idx=$((row * 2))
-                local right_idx=$((row * 2 + 1))
+			for ((row = scroll_offset; row < end_row; row++)); do
+				local left_idx=$((row * 2))
+				local right_idx=$((row * 2 + 1))
 
-                # Left column
-                if ((left_idx < total_filtered)); then
-                    local left_scheme="${filtered_schemes[left_idx]}"
-                    if ((row == selected_row && selected_col == 0)); then
-                        printf "  \033[1;36m▶ %-32s\033[0m" "$left_scheme"
-                    else
-                        printf "    %-32s" "$left_scheme"
-                    fi
-                else
-                    printf "    %-32s" ""
-                fi
+				# Left column
+				if ((left_idx < total_filtered)); then
+					local left_scheme="${filtered_schemes[left_idx]}"
+					if ((row == selected_row && selected_col == 0)); then
+						printf "  \033[1;36m▶ %-32s\033[0m" "$left_scheme"
+					else
+						printf "    %-32s" "$left_scheme"
+					fi
+				else
+					printf "    %-32s" ""
+				fi
 
-                # Right column
-                if ((right_idx < total_filtered)); then
-                    local right_scheme="${filtered_schemes[right_idx]}"
-                    if ((row == selected_row && selected_col == 1)); then
-                        printf "  \033[1;36m▶ %-32s\033[0m\n" "$right_scheme"
-                    else
-                        printf "    %-32s\n" "$right_scheme"
-                    fi
-                else
-                    echo ""
-                fi
-            done
+				# Right column
+				if ((right_idx < total_filtered)); then
+					local right_scheme="${filtered_schemes[right_idx]}"
+					if ((row == selected_row && selected_col == 1)); then
+						printf "  \033[1;36m▶ %-32s\033[0m\n" "$right_scheme"
+					else
+						printf "    %-32s\n" "$right_scheme"
+					fi
+				else
+					echo ""
+				fi
+			done
 
-            # Fill remaining lines to reach full screen
-            local shown=$((end_row - scroll_offset))
-            for ((i = shown; i < visible_rows; i++)); do
-                printf "  %-32s  %-32s\n" "" ""
-            done
-        fi
+			# Fill remaining lines to reach full screen
+			local shown=$((end_row - scroll_offset))
+			for ((i = shown; i < visible_rows; i++)); do
+				printf "  %-32s  %-32s\n" "" ""
+			done
+		fi
 
-        echo "╭────────────────────────────────────────────────────────────────────────╮"
+		echo "╭────────────────────────────────────────────────────────────────────────╮"
 
-        # Status bar
-        if ((total_filtered > 0)); then
-            local current_idx=$((selected_row * 2 + selected_col))
-            local pos=$((current_idx + 1))
-            printf "  %d/%d • ↑↓←→:Navigate PgUp/PgDn:Scroll ⏎:Apply ^U:Clear ESC:Exit\n" "$pos" "$total_filtered"
+		# Status bar
+		if ((total_filtered > 0)); then
+			local current_idx=$((selected_row * 2 + selected_col))
+			local pos=$((current_idx + 1))
+			printf "  %d/%d • ↑↓←→:Navigate PgUp/PgDn:Scroll ⏎:Apply ^U:Clear ESC:Exit\n" "$pos" "$total_filtered"
 
-            # Live preview - apply current selection
-            local preview_idx=$((selected_row * 2 + selected_col))
-            if ((preview_idx < total_filtered)); then
-                apply_colors "${filtered_schemes[preview_idx]}"
-            fi
-        else
-            echo "  Type to search • ESC: Exit"
-        fi
-        echo "╰────────────────────────────────────────────────────────────────────────╯"
+			# Live preview - apply current selection
+			local preview_idx=$((selected_row * 2 + selected_col))
+			if ((preview_idx < total_filtered)); then
+				apply_colors "${filtered_schemes[preview_idx]}"
+			fi
+		else
+			echo "  Type to search • ESC: Exit"
+		fi
+		echo "╰────────────────────────────────────────────────────────────────────────╯"
 
-        # Read input
-        IFS= read -rsn1 key
-        case "$key" in
-        $'\033') # ESC or arrow keys
-            read -rsn2 -t 0.1 key2
-            if [[ -z "$key2" ]]; then
-                # Standalone ESC - exit
-                clear
-                restore_colors
-                exit 0
-            else
-                case "$key2" in
-                '[A') # Up arrow
-                    ((selected_row > 0)) && ((selected_row--))
-                    ;;
-                '[B') # Down arrow
-                    if ((selected_row < total_rows - 1)); then
-                        ((selected_row++))
-                        # Check if new position is valid
-                        local check_idx=$((selected_row * 2 + selected_col))
-                        ((check_idx >= total_filtered)) && selected_col=0
-                    fi
-                    ;;
-                '[D') # Left arrow
-                    if ((selected_col == 1)); then
-                        selected_col=0
-                    elif ((selected_row > 0)); then
-                        ((selected_row--))
-                        # Move to right column of previous row if it exists
-                        local check_idx=$((selected_row * 2 + 1))
-                        if ((check_idx < total_filtered)); then
-                            selected_col=1
-                        else
-                            selected_col=0
-                        fi
-                    fi
-                    ;;
-                '[C') # Right arrow
-                    local next_idx=$((selected_row * 2 + 1))
-                    if ((selected_col == 0 && next_idx < total_filtered)); then
-                        selected_col=1
-                    elif ((selected_row < total_rows - 1)); then
-                        ((selected_row++))
-                        selected_col=0
-                    fi
-                    ;;
-                '[5')                 # Page Up
-                    read -rsn1 -t 0.1 # consume ~
-                    ((selected_row -= visible_rows))
-                    ((selected_row < 0)) && selected_row=0
-                    ;;
-                '[6')                 # Page Down
-                    read -rsn1 -t 0.1 # consume ~
-                    ((selected_row += visible_rows))
-                    ((selected_row >= total_rows)) && selected_row=$((total_rows - 1))
-                    # Validate column
-                    local check_idx=$((selected_row * 2 + selected_col))
-                    ((check_idx >= total_filtered)) && selected_col=0
-                    ;;
-                '[H') # Home
-                    selected_row=0
-                    selected_col=0
-                    ;;
-                '[F') # End
-                    selected_row=$((total_rows - 1))
-                    local last_idx=$((total_filtered - 1))
-                    selected_col=$((last_idx % 2))
-                    ;;
-                esac
-            fi
-            ;;
-        '') # Enter
-            if ((total_filtered > 0)); then
-                local apply_idx=$((selected_row * 2 + selected_col))
-                if ((apply_idx < total_filtered)); then
-                    clear
-                    echo "✓ Applied: ${filtered_schemes[apply_idx]}"
-                    rm -f "$BACKUP_FILE" 2>/dev/null
-                    exit 0
-                fi
-            fi
-            ;;
-        $'\x7f' | $'\x08') # Backspace
-            if [[ -n "$search_term" ]]; then
-                search_term="${search_term%?}"
-                selected_row=0
-                selected_col=0
-                scroll_offset=0
-            fi
-            ;;
-        $'\x15') # Ctrl+U - clear search
-            search_term=""
-            selected_row=0
-            selected_col=0
-            scroll_offset=0
-            ;;
-        *)
-            if [[ -n "$key" && "$key" =~ [[:print:]] ]]; then
-                search_term+="$key"
-                selected_row=0
-                selected_col=0
-                scroll_offset=0
-            fi
-            ;;
-        esac
-    done
+		# Read input
+		IFS= read -rsn1 key
+		case "$key" in
+		$'\033') # ESC or arrow keys
+			read -rsn2 -t 0.1 key2
+			if [[ -z "$key2" ]]; then
+				# Standalone ESC - exit
+				clear
+				restore_colors
+				exit 0
+			else
+				case "$key2" in
+				'[A') # Up arrow
+					((selected_row > 0)) && ((selected_row--))
+					;;
+				'[B') # Down arrow
+					if ((selected_row < total_rows - 1)); then
+						((selected_row++))
+						# Check if new position is valid
+						local check_idx=$((selected_row * 2 + selected_col))
+						((check_idx >= total_filtered)) && selected_col=0
+					fi
+					;;
+				'[D') # Left arrow
+					if ((selected_col == 1)); then
+						selected_col=0
+					elif ((selected_row > 0)); then
+						((selected_row--))
+						# Move to right column of previous row if it exists
+						local check_idx=$((selected_row * 2 + 1))
+						if ((check_idx < total_filtered)); then
+							selected_col=1
+						else
+							selected_col=0
+						fi
+					fi
+					;;
+				'[C') # Right arrow
+					local next_idx=$((selected_row * 2 + 1))
+					if ((selected_col == 0 && next_idx < total_filtered)); then
+						selected_col=1
+					elif ((selected_row < total_rows - 1)); then
+						((selected_row++))
+						selected_col=0
+					fi
+					;;
+				'[5')              # Page Up
+					read -rsn1 -t 0.1 # consume ~
+					((selected_row -= visible_rows))
+					((selected_row < 0)) && selected_row=0
+					;;
+				'[6')              # Page Down
+					read -rsn1 -t 0.1 # consume ~
+					((selected_row += visible_rows))
+					((selected_row >= total_rows)) && selected_row=$((total_rows - 1))
+					# Validate column
+					local check_idx=$((selected_row * 2 + selected_col))
+					((check_idx >= total_filtered)) && selected_col=0
+					;;
+				'[H') # Home
+					selected_row=0
+					selected_col=0
+					;;
+				'[F') # End
+					selected_row=$((total_rows - 1))
+					local last_idx=$((total_filtered - 1))
+					selected_col=$((last_idx % 2))
+					;;
+				esac
+			fi
+			;;
+		'') # Enter
+			if ((total_filtered > 0)); then
+				local apply_idx=$((selected_row * 2 + selected_col))
+				if ((apply_idx < total_filtered)); then
+					clear
+					echo "✓ Applied: ${filtered_schemes[apply_idx]}"
+					rm -f "$BACKUP_FILE" 2>/dev/null
+					exit 0
+				fi
+			fi
+			;;
+		$'\x7f' | $'\x08') # Backspace
+			if [[ -n "$search_term" ]]; then
+				search_term="${search_term%?}"
+				selected_row=0
+				selected_col=0
+				scroll_offset=0
+			fi
+			;;
+		$'\x15') # Ctrl+U - clear search
+			search_term=""
+			selected_row=0
+			selected_col=0
+			scroll_offset=0
+			;;
+		*)
+			if [[ -n "$key" && "$key" =~ [[:print:]] ]]; then
+				search_term+="$key"
+				selected_row=0
+				selected_col=0
+				scroll_offset=0
+			fi
+			;;
+		esac
+	done
 }
 
 # Main execution
 main() {
-    # Check if running in Termux
-    if [[ -z "$PREFIX" || "$PREFIX" != *"/com.termux/"* ]]; then
-        echo "✗ This script must be run inside Termux"
-        exit 1
-    fi
+	# Check if running in Termux
+	if [[ -z "$PREFIX" || "$PREFIX" != *"/com.termux/"* ]]; then
+		echo "✗ This script must be run inside Termux"
+		exit 1
+	fi
 
-    # Create .termux directory if needed
-    [[ ! -d "$HOME/.termux" ]] && mkdir -p "$HOME/.termux"
+	# Create .termux directory if needed
+	[[ ! -d "$HOME/.termux" ]] && mkdir -p "$HOME/.termux"
 
-    # Backup and set trap
-    backup_colors
-    trap restore_colors INT TERM
+	# Backup and set trap
+	backup_colors
+	trap restore_colors INT TERM
 
-    # Show the menu
-    show_menu
+	# Show the menu
+	show_menu
 }
 
 # Run the script

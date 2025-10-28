@@ -1,20 +1,20 @@
 #!/data/data/com.termux/files/usr/bin/bash
 
 _tx11start_completions() {
-    local cur prev opts
-    COMPREPLY=()
+	local cur prev opts
+	COMPREPLY=()
 
-    cur="${COMP_WORDS[COMP_CWORD]}"
-    prev="${COMP_WORDS[COMP_CWORD - 1]}"
+	cur="${COMP_WORDS[COMP_CWORD]}"
+	prev="${COMP_WORDS[COMP_CWORD - 1]}"
 
-    opts="--help --nogpu --nodbus --legacy --debug --xstartup"
+	opts="--help --nogpu --nodbus --legacy --debug --xstartup"
 
-    # Stop suggesting options if --help is already present
-    if [[ " ${COMP_WORDS[*]} " =~ " --help " ]]; then
-        return
-    fi
+	# Stop suggesting options if --help is already present
+	if [[ " ${COMP_WORDS[*]} " =~ " --help " ]]; then
+		return
+	fi
 
-    COMPREPLY=($(compgen -W "$opts" -- "$cur"))
+	COMPREPLY=($(compgen -W "$opts" -- "$cur"))
 }
 
 complete -F _tx11start_completions tx11start

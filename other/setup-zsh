@@ -1,8 +1,8 @@
 #!/data/data/com.termux/files/usr/bin/bash
 
 function setup_td_zsh_theme() {
-    check_and_create_directory "$HOME/.zsh-themes"
-    cat <<EOF >"$HOME/.zsh-themes/td.zsh-theme"
+	check_and_create_directory "$HOME/.zsh-themes"
+	cat <<EOF >"$HOME/.zsh-themes/td.zsh-theme"
 # td.zsh-theme - A clean and functional ZSH theme with distro detection
 # Created for Termux and proot-distro environments
 
@@ -66,87 +66,87 @@ EOF
 }
 
 function check_parameter() {
-    if [[ -n "$PREFIX" && "$PREFIX" == *"/com.termux/"* && -z "$user_name" ]]; then
-        while true; do
-            echo " "
-            while true; do
-                read -r -p "${R}[${C}-${R}]${G} Input username [Lowercase]: ${NC}" user_name
-                if [[ -n "$user_name" ]]; then
-                    break
-                else
-                    print_warn "You can't leave the username empty. Please enter a valid username."
-                fi
-            done
-            echo
-            local choice
-            read -r -p "${R}[${C}-${R}]${Y} Do you want to continue with username ${C}$user_name ${Y}? (y/n) : ${NC}" choice
-            echo
-            choice="${choice:-y}"
-            echo
-            print_success "Continuing with answer: $choice"
-            sleep 0.2
-            case $choice in
-                [yY]*)
-                    print_success "Continuing with username ${C}$user_name"
-                    break
-                    ;;
-                [nN]*)
-                    print_msg "Please provide username again."
-                    echo
-                    ;;
-                *)
-                    print_failed "Invalid input, Please enter y or n"
-                    ;;
-            esac
-        done
-    fi
-    final_user_name="${user_name}"
+	if [[ -n "$PREFIX" && "$PREFIX" == *"/com.termux/"* && -z "$user_name" ]]; then
+		while true; do
+			echo " "
+			while true; do
+				read -r -p "${R}[${C}-${R}]${G} Input username [Lowercase]: ${NC}" user_name
+				if [[ -n "$user_name" ]]; then
+					break
+				else
+					print_warn "You can't leave the username empty. Please enter a valid username."
+				fi
+			done
+			echo
+			local choice
+			read -r -p "${R}[${C}-${R}]${Y} Do you want to continue with username ${C}$user_name ${Y}? (y/n) : ${NC}" choice
+			echo
+			choice="${choice:-y}"
+			echo
+			print_success "Continuing with answer: $choice"
+			sleep 0.2
+			case $choice in
+			[yY]*)
+				print_success "Continuing with username ${C}$user_name"
+				break
+				;;
+			[nN]*)
+				print_msg "Please provide username again."
+				echo
+				;;
+			*)
+				print_failed "Invalid input, Please enter y or n"
+				;;
+			esac
+		done
+	fi
+	final_user_name="${user_name}"
 }
 
 function clone_zinit() {
-    print_msg "Installing zinit..."
-    git clone https://github.com/zdharma-continuum/zinit "$HOME/.local/share/zinit/zinit.git"
+	print_msg "Installing zinit..."
+	git clone https://github.com/zdharma-continuum/zinit "$HOME/.local/share/zinit/zinit.git"
 }
 
 function set_theme() {
-    print_msg "Installing zsh theme..."
-    # shellcheck disable=SC2154
-    if [[ "$selected_zsh_theme_name" == "td_zsh" ]]; then
-        check_parameter
-        setup_td_zsh_theme
-        cat <<'EOF' >>"$HOME/.zshrc"
+	print_msg "Installing zsh theme..."
+	# shellcheck disable=SC2154
+	if [[ "$selected_zsh_theme_name" == "td_zsh" ]]; then
+		check_parameter
+		setup_td_zsh_theme
+		cat <<'EOF' >>"$HOME/.zshrc"
 # Load theme
 source "$HOME/.zsh-themes/td.zsh-theme"
 EOF
-    elif [[ "$selected_zsh_theme_name" == "p10k_zsh" ]]; then
-        cat <<'EOF' >>"$HOME/.zshrc"
+	elif [[ "$selected_zsh_theme_name" == "p10k_zsh" ]]; then
+		cat <<'EOF' >>"$HOME/.zshrc"
 # Powerlevel10k Theme.
 zinit ice depth=1; zinit light romkatv/powerlevel10k
 EOF
-    elif [[ "$selected_zsh_theme_name" == "pure_zsh" ]]; then
-        cat <<'EOF' >>"$HOME/.zshrc"
+	elif [[ "$selected_zsh_theme_name" == "pure_zsh" ]]; then
+		cat <<'EOF' >>"$HOME/.zshrc"
 # Load pure theme
 zinit ice pick"async.zsh" src"pure.zsh" # with zsh-async library that's bundled with it.
 zinit light sindresorhus/pure
 EOF
-    else
-        check_parameter
-        setup_td_zsh_theme
-        cat <<'EOF' >>"$HOME/.zshrc"
+	else
+		check_parameter
+		setup_td_zsh_theme
+		cat <<'EOF' >>"$HOME/.zshrc"
 # Load theme
 source "$HOME/.zsh-themes/td.zsh-theme"
 EOF
-    fi
+	fi
 }
 
 write_zsh_config() {
-    download_file "$HOME/.zshenv2" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/other/.zshenv"
-    cat "$HOME/.zshenv2" >> "$HOME/.zshenv"
-    check_and_delete "$HOME/.zshenv2"
-    download_file "$HOME/.zshrc2" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/other/.zshrc"
-    cat "$HOME/.zshrc2" >>"$HOME/.zshrc"
-    check_and_delete "$HOME/.zshrc2"
-    zsh -i -c "source $HOME/.zshrc; exit"
+	download_file "$HOME/.zshenv2" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/other/.zshenv"
+	cat "$HOME/.zshenv2" >>"$HOME/.zshenv"
+	check_and_delete "$HOME/.zshenv2"
+	download_file "$HOME/.zshrc2" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/other/.zshrc"
+	cat "$HOME/.zshrc2" >>"$HOME/.zshrc"
+	check_and_delete "$HOME/.zshrc2"
+	zsh -i -c "source $HOME/.zshrc; exit"
 }
 
 check_and_backup "$HOME/.zshrc"

@@ -31,303 +31,303 @@ NC="$(printf '\033[0m')"
 FONT_TO_DOWNLOAD=$1
 
 function print_msg() {
-    local msg
-    msg="$1"
-    echo "${R}[${C}-${R}]${G} $msg ${NC}"
+	local msg
+	msg="$1"
+	echo "${R}[${C}-${R}]${G} $msg ${NC}"
 }
 
 function check_and_create_directory() {
-    if [[ -n "$1" && ! -d "$1" ]]; then
-        mkdir -p "$1"
-    fi
+	if [[ -n "$1" && ! -d "$1" ]]; then
+		mkdir -p "$1"
+	fi
 }
 
 function print_success() {
-    local msg
-    msg="$1"
-    echo "${R}[${G}✓${R}]${G} $msg ${NC}"
+	local msg
+	msg="$1"
+	echo "${R}[${G}✓${R}]${G} $msg ${NC}"
 }
 
 function print_failed() {
-    local msg
-    msg="$1"
-    echo "${R}[${R}☓${R}]${R} $msg ${NC}"
+	local msg
+	msg="$1"
+	echo "${R}[${R}☓${R}]${R} $msg ${NC}"
 }
 
 function check_and_delete() {
-    local files_folders
-    for files_folders in "$@"; do
-        if [[ -e "$files_folders" ]]; then
-            rm -rf "$files_folders" >/dev/null 2>&1
-        fi
-    done
+	local files_folders
+	for files_folders in "$@"; do
+		if [[ -e "$files_folders" ]]; then
+			rm -rf "$files_folders" >/dev/null 2>&1
+		fi
+	done
 }
 
 function select_an_option() {
-    local max_options=$1
-    local default_option=${2:-1}
-    local response_var=$3
-    local response
+	local max_options=$1
+	local default_option=${2:-1}
+	local response_var=$3
+	local response
 
-    while true; do
-        read -r -p "${Y}select an option (Default ${default_option}): ${NC}" response
-        response=${response:-$default_option}
+	while true; do
+		read -r -p "${Y}select an option (Default ${default_option}): ${NC}" response
+		response=${response:-$default_option}
 
-        if [[ $response =~ ^[0-9]+$ ]] && ((response >= 1 && response <= max_options)); then
-            echo
-            print_success "Continuing with answer: $response"
-            sleep 0.2
-            eval "$response_var=$response"
-            break
-        else
-            echo
-            print_failed " Invalid input, Please enter a number between 1 and $max_options"
-        fi
-    done
+		if [[ $response =~ ^[0-9]+$ ]] && ((response >= 1 && response <= max_options)); then
+			echo
+			print_success "Continuing with answer: $response"
+			sleep 0.2
+			eval "$response_var=$response"
+			break
+		else
+			echo
+			print_failed " Invalid input, Please enter a number between 1 and $max_options"
+		fi
+	done
 }
 
 function download_file() {
-    local dest
-    local url
-    local max_retries=5
-    local attempt=1
-    local successful_attempt=0
+	local dest
+	local url
+	local max_retries=5
+	local attempt=1
+	local successful_attempt=0
 
-    if [[ -z "$2" ]]; then
-        url="$1"
-        dest="$(basename "$url")"
-    else
-        dest="$1"
-        url="$2"
-    fi
+	if [[ -z "$2" ]]; then
+		url="$1"
+		dest="$(basename "$url")"
+	else
+		dest="$1"
+		url="$2"
+	fi
 
-    if [[ -z "$url" ]]; then
-        print_failed "No URL provided!"
-        return 1
-    fi
+	if [[ -z "$url" ]]; then
+		print_failed "No URL provided!"
+		return 1
+	fi
 
-    while [[ $attempt -le $max_retries ]]; do
-        print_msg "Downloading $dest..."
-        if [[ ! -s "$dest" ]]; then
-            check_and_delete "$dest"
-        fi
+	while [[ $attempt -le $max_retries ]]; do
+		print_msg "Downloading $dest..."
+		if [[ ! -s "$dest" ]]; then
+			check_and_delete "$dest"
+		fi
 
-        if command -v wget &>/dev/null; then
-            wget --tries=5 --timeout=15 --retry-connrefused -O "$dest" "$url"
-        else
-            curl -# -L "$url" -o "$dest"
-        fi
+		if command -v wget &>/dev/null; then
+			wget --tries=5 --timeout=15 --retry-connrefused -O "$dest" "$url"
+		else
+			curl -# -L "$url" -o "$dest"
+		fi
 
-        if [[ -f "$dest" && -s "$dest" ]]; then
-            successful_attempt=$attempt
-            break
-        else
-            print_failed "Download failed. Retrying... ($attempt/$max_retries)"
-        fi
-        ((attempt++))
-    done
+		if [[ -f "$dest" && -s "$dest" ]]; then
+			successful_attempt=$attempt
+			break
+		else
+			print_failed "Download failed. Retrying... ($attempt/$max_retries)"
+		fi
+		((attempt++))
+	done
 
-    if [[ -f "$dest" ]]; then
-        if [[ $successful_attempt -eq 1 ]]; then
-            print_success "File downloaded successfully."
-        else
-            print_success "File downloaded successfully on attempt $successful_attempt."
-        fi
-        return 0
-    fi
+	if [[ -f "$dest" ]]; then
+		if [[ $successful_attempt -eq 1 ]]; then
+			print_success "File downloaded successfully."
+		else
+			print_success "File downloaded successfully on attempt $successful_attempt."
+		fi
+		return 0
+	fi
 
-    print_failed "Failed to download the file after $max_retries attempts. Exiting."
-    return 1
+	print_failed "Failed to download the file after $max_retries attempts. Exiting."
+	return 1
 }
 
 function extract_archive() {
-    local archive="$1"
-    if [[ ! -f "$archive" ]]; then
-        print_failed "$archive doesn't exist"
-    fi
+	local archive="$1"
+	if [[ ! -f "$archive" ]]; then
+		print_failed "$archive doesn't exist"
+	fi
 
-    case "$archive" in
-    *.tar.gz | *.tgz)
-        print_success "Extracting ${C}$archive"
-        tar xzvf "$archive" || {
-            print_failed "Failed to extract ${C}$archive"
-            return 1
-        }
-        ;;
-    *.tar.xz)
-        print_success "Extracting ${C}$archive"
-        tar xJvf "$archive" || {
-            print_failed "Failed to extract ${C}$archive"
-            return 1
-        }
-        ;;
-    *.tar.bz2 | *.tbz2)
-        print_success "Extracting ${C}$archive"
-        tar xjvf "$archive" || {
-            print_failed "Failed to extract ${C}$archive"
-            return 1
-        }
-        ;;
-    *.tar)
-        print_success "Extracting ${C}$archive"
-        tar xvf "$archive" || {
-            print_failed "Failed to extract ${C}$archive"
-            return 1
-        }
-        ;;
-    *.bz2)
-        print_success "Extracting ${C}$archive"
-        bunzip2 -v "$archive" || {
-            print_failed "Failed to extract ${C}$archive"
-            return 1
-        }
-        ;;
-    *.gz)
-        print_success "Extracting ${C}$archive${NC}"
-        gunzip -v "$archive" || {
-            print_failed "Failed to extract ${C}$archive"
-            return 1
-        }
-        ;;
-    *.7z)
-        print_success "Extracting ${C}$archive"
-        7z x "$archive" -y || {
-            print_failed "Failed to extract ${C}$archive"
-            return 1
-        }
-        ;;
-    *.zip)
-        print_success "Extracting ${C}$archive"
-        unzip "${archive}" || {
-            print_failed "Failed to extract ${C}$archive"
-            return 1
-        }
-        ;;
-    *.rar)
-        print_success "Extracting ${C}$archive"
-        unrar x "$archive" || {
-            print_failed "Failed to extract ${C}$archive"
-            return 1
-        }
-        ;;
-    *)
-        print_failed "Unsupported archive format: ${C}$archive"
-        return 1
-        ;;
-    esac
-    print_success "Successfully extracted ${C}$archive"
+	case "$archive" in
+	*.tar.gz | *.tgz)
+		print_success "Extracting ${C}$archive"
+		tar xzvf "$archive" || {
+			print_failed "Failed to extract ${C}$archive"
+			return 1
+		}
+		;;
+	*.tar.xz)
+		print_success "Extracting ${C}$archive"
+		tar xJvf "$archive" || {
+			print_failed "Failed to extract ${C}$archive"
+			return 1
+		}
+		;;
+	*.tar.bz2 | *.tbz2)
+		print_success "Extracting ${C}$archive"
+		tar xjvf "$archive" || {
+			print_failed "Failed to extract ${C}$archive"
+			return 1
+		}
+		;;
+	*.tar)
+		print_success "Extracting ${C}$archive"
+		tar xvf "$archive" || {
+			print_failed "Failed to extract ${C}$archive"
+			return 1
+		}
+		;;
+	*.bz2)
+		print_success "Extracting ${C}$archive"
+		bunzip2 -v "$archive" || {
+			print_failed "Failed to extract ${C}$archive"
+			return 1
+		}
+		;;
+	*.gz)
+		print_success "Extracting ${C}$archive${NC}"
+		gunzip -v "$archive" || {
+			print_failed "Failed to extract ${C}$archive"
+			return 1
+		}
+		;;
+	*.7z)
+		print_success "Extracting ${C}$archive"
+		7z x "$archive" -y || {
+			print_failed "Failed to extract ${C}$archive"
+			return 1
+		}
+		;;
+	*.zip)
+		print_success "Extracting ${C}$archive"
+		unzip "${archive}" || {
+			print_failed "Failed to extract ${C}$archive"
+			return 1
+		}
+		;;
+	*.rar)
+		print_success "Extracting ${C}$archive"
+		unrar x "$archive" || {
+			print_failed "Failed to extract ${C}$archive"
+			return 1
+		}
+		;;
+	*)
+		print_failed "Unsupported archive format: ${C}$archive"
+		return 1
+		;;
+	esac
+	print_success "Successfully extracted ${C}$archive"
 }
 
 # download a archive file and extract it in a folder
 function download_and_extract() {
-    local url="$1"
-    local target_dir="$2"
-    local filename="${url##*/}"
+	local url="$1"
+	local target_dir="$2"
+	local filename="${url##*/}"
 
-    if [[ -n "$target_dir" ]]; then
-        check_and_create_directory "$target_dir"
-        cd "$target_dir" || return 1
-    fi
+	if [[ -n "$target_dir" ]]; then
+		check_and_create_directory "$target_dir"
+		cd "$target_dir" || return 1
+	fi
 
-    if download_file "$filename" "$url"; then
-        if [[ -f "$filename" ]]; then
-            echo
-            extract_archive "$filename"
-            check_and_delete "$filename"
-        fi
-    else
-        print_failed "Failed to download ${C}${filename}"
-        print_msg "${C}Please check your internet connection"
-    fi
+	if download_file "$filename" "$url"; then
+		if [[ -f "$filename" ]]; then
+			echo
+			extract_archive "$filename"
+			check_and_delete "$filename"
+		fi
+	else
+		print_failed "Failed to download ${C}${filename}"
+		print_msg "${C}Please check your internet connection"
+	fi
 }
 
 function get_latest_release() {
-    local repo_owner="$1"
-    local repo_name="$2"
-    curl -s "https://api.github.com/repos/$repo_owner/$repo_name/releases/latest" |
-        grep '"tag_name":' |
-        sed -E 's/.*"([^"]+)".*/\1/'
+	local repo_owner="$1"
+	local repo_name="$2"
+	curl -s "https://api.github.com/repos/$repo_owner/$repo_name/releases/latest" |
+		grep '"tag_name":' |
+		sed -E 's/.*"([^"]+)".*/\1/'
 }
 
 cd "$HOME" || exit 1
 clear
 
 function create_font_select_menu() {
-    print_msg "Select nerd font you want to install..."
-    echo
+	print_msg "Select nerd font you want to install..."
+	echo
 
-    release_json=$(curl -sSL "https://api.github.com/repos/ryanoasis/nerd-fonts/releases/tags/${latest_nf_version}")
+	release_json=$(curl -sSL "https://api.github.com/repos/ryanoasis/nerd-fonts/releases/tags/${latest_nf_version}")
 
-    if ! command -v jq &>/dev/null; then
-        print_failed "Please install jq"
-        exit 1
-    fi
+	if ! command -v jq &>/dev/null; then
+		print_failed "Please install jq"
+		exit 1
+	fi
 
-    mapfile -t ASSET_NAMES < <(
-        jq -r '
+	mapfile -t ASSET_NAMES < <(
+		jq -r '
         .assets // []
         | map(select(.name | endswith(".tar.xz")))
         | .[].name
       ' <<<"$release_json"
-    )
+	)
 
-    FONT_DISPLAY=()
-    for asset in "${ASSET_NAMES[@]}"; do
-        FONT_DISPLAY+=("${asset%.tar.xz}")
-    done
+	FONT_DISPLAY=()
+	for asset in "${ASSET_NAMES[@]}"; do
+		FONT_DISPLAY+=("${asset%.tar.xz}")
+	done
 
-    ((${#ASSET_NAMES[@]} == 0)) && {
-        print_failed "No .tar.xz fonts found for ${latest_nf_version}." >&2
-        exit 1
-    }
+	((${#ASSET_NAMES[@]} == 0)) && {
+		print_failed "No .tar.xz fonts found for ${latest_nf_version}." >&2
+		exit 1
+	}
 
-    term_width=$(tput cols 2>/dev/null || echo 80)
-    (
-        for i in "${!FONT_DISPLAY[@]}"; do
-            printf "%3d) %s\n" "$((i + 1))" "${FONT_DISPLAY[$i]}"
-        done
-    ) | pr -2 -t -w"$term_width"
+	term_width=$(tput cols 2>/dev/null || echo 80)
+	(
+		for i in "${!FONT_DISPLAY[@]}"; do
+			printf "%3d) %s\n" "$((i + 1))" "${FONT_DISPLAY[$i]}"
+		done
+	) | pr -2 -t -w"$term_width"
 
-    echo
-    select_an_option "${#ASSET_NAMES[@]}" 1 nerd_choice
+	echo
+	select_an_option "${#ASSET_NAMES[@]}" 1 nerd_choice
 
-    sel_base_name="${FONT_DISPLAY[$((nerd_choice - 1))]}"
+	sel_base_name="${FONT_DISPLAY[$((nerd_choice - 1))]}"
 
-    unset release_json ASSET_NAMES FONT_DISPLAY term_width nerd_choice
+	unset release_json ASSET_NAMES FONT_DISPLAY term_width nerd_choice
 }
 
 function download_and_install_font() {
-    latest_nf_version=$(get_latest_release "ryanoasis" "nerd-fonts")
+	latest_nf_version=$(get_latest_release "ryanoasis" "nerd-fonts")
 
-    if [[ -z $FONT_TO_DOWNLOAD ]]; then
-        create_font_select_menu
-    else
-        sel_base_name="$FONT_TO_DOWNLOAD"
-    fi
-    print_msg "Installing $sel_base_name Font..."
-    download_and_extract "https://github.com/ryanoasis/nerd-fonts/releases/download/${latest_nf_version}/${sel_base_name}.tar.xz" "$HOME/.fonts"
+	if [[ -z $FONT_TO_DOWNLOAD ]]; then
+		create_font_select_menu
+	else
+		sel_base_name="$FONT_TO_DOWNLOAD"
+	fi
+	print_msg "Installing $sel_base_name Font..."
+	download_and_extract "https://github.com/ryanoasis/nerd-fonts/releases/download/${latest_nf_version}/${sel_base_name}.tar.xz" "$HOME/.fonts"
 
-    nerd_font_file=$(find "$HOME/.fonts" -type f \( -iname "${sel_base_name}*NerdFont-Regular.ttf" -o -iname "${sel_base_name}*NerdFont-Regular.otf" \) | head -n1)
+	nerd_font_file=$(find "$HOME/.fonts" -type f \( -iname "${sel_base_name}*NerdFont-Regular.ttf" -o -iname "${sel_base_name}*NerdFont-Regular.otf" \) | head -n1)
 
-    if [[ -z "$nerd_font_file" ]]; then
-        nerd_font_file=$(find "$HOME/.fonts" -type f -iname "*NerdFont*" | head -n1)
-    fi
+	if [[ -z "$nerd_font_file" ]]; then
+		nerd_font_file=$(find "$HOME/.fonts" -type f -iname "*NerdFont*" | head -n1)
+	fi
 
-    check_and_delete "$HOME/.fonts/README.md"
-    check_and_delete "$HOME/.fonts/LICENSE"
-    check_and_delete "$HOME/.fonts/LICENSE.txt"
+	check_and_delete "$HOME/.fonts/README.md"
+	check_and_delete "$HOME/.fonts/LICENSE"
+	check_and_delete "$HOME/.fonts/LICENSE.txt"
 
-    if [[ -n "$nerd_font_file" ]]; then
-        check_and_create_directory "$HOME/.termux"
-        check_and_delete "$HOME/.termux/font.ttf"
-        cp "$nerd_font_file" "$HOME/.termux/font.ttf"
-        fc-cache -f
-    else
-        print_failed "Could not locate a NerdFont-Regular file for ${sel_base_name}."
-        exit 1
-    fi
+	if [[ -n "$nerd_font_file" ]]; then
+		check_and_create_directory "$HOME/.termux"
+		check_and_delete "$HOME/.termux/font.ttf"
+		cp "$nerd_font_file" "$HOME/.termux/font.ttf"
+		fc-cache -f
+	else
+		print_failed "Could not locate a NerdFont-Regular file for ${sel_base_name}."
+		exit 1
+	fi
 
-    unset latest_nf_version sel_base_name nerd_font_file
+	unset latest_nf_version sel_base_name nerd_font_file
 }
 
 download_and_install_font

@@ -1,32 +1,32 @@
 #!/data/data/com.termux/files/usr/bin/bash
 
 _distro_completions() {
-    local cur prev opts commands
+	local cur prev opts commands
 
-    # Get the current and previous words
-    COMPREPLY=()
-    cur="${COMP_WORDS[COMP_CWORD]}"
-    prev="${COMP_WORDS[COMP_CWORD-1]}"
+	# Get the current and previous words
+	COMPREPLY=()
+	cur="${COMP_WORDS[COMP_CWORD]}"
+	prev="${COMP_WORDS[COMP_CWORD - 1]}"
 
-    # Define valid commands (positional arguments)
-    commands="install in remove rm update"
+	# Define valid commands (positional arguments)
+	commands="install in remove rm update"
 
-    # Define valid options (flags)
-    opts="--help --root -r --remove"
+	# Define valid options (flags)
+	opts="--help --root -r --remove"
 
-    # If completing after `distro --`, show only options
-    if [[ "${prev}" == "--" ]]; then
-        COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
-        return 0
-    fi
+	# If completing after `distro --`, show only options
+	if [[ "${prev}" == "--" ]]; then
+		COMPREPLY=($(compgen -W "${opts}" -- "${cur}"))
+		return 0
+	fi
 
-    # If it's the first argument after `distro`, show both commands and options
-    if [[ ${COMP_CWORD} -eq 1 ]]; then
-        COMPREPLY=( $(compgen -W "${commands} ${opts}" -- "${cur}") )
-        return 0
-    fi
+	# If it's the first argument after `distro`, show both commands and options
+	if [[ ${COMP_CWORD} -eq 1 ]]; then
+		COMPREPLY=($(compgen -W "${commands} ${opts}" -- "${cur}"))
+		return 0
+	fi
 
-    return 0
+	return 0
 }
 
 # Register completion function for `distro`

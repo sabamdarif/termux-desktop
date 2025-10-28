@@ -1,55 +1,55 @@
 #!/data/data/com.termux/files/usr/bin/bash
 
 _setup_termux_desktop_completion() {
-    local cur prev opts change_opts reinstall_opts conf_files
+	local cur prev opts change_opts reinstall_opts conf_files
 
-    COMPREPLY=()
-    cur="${COMP_WORDS[COMP_CWORD]}"
-    prev="${COMP_WORDS[COMP_CWORD-1]}"
+	COMPREPLY=()
+	cur="${COMP_WORDS[COMP_CWORD]}"
+	prev="${COMP_WORDS[COMP_CWORD - 1]}"
 
-    # Define main options
-    opts="--debug --install -i --remove -r --change -c --reinstall -ri --reset --local-config --config -config --help -h --update"
+	# Define main options
+	opts="--debug --install -i --remove -r --change -c --reinstall -ri --reset --local-config --config -config --help -h --update"
 
-    # Define options for --change
-    change_opts="style distro pd hw hwa autostart display help h"
+	# Define options for --change
+	change_opts="style distro pd hw hwa autostart display help h"
 
-    # Define options for --reinstall
-    reinstall_opts="icons themes config help h"
+	# Define options for --reinstall
+	reinstall_opts="icons themes config help h"
 
-    # Prevent completion after standalone options
-    case "$prev" in
-        --help|-h|--reset|--update|--install|-i|--remove|-r)
-            return 0
-            ;;
-    esac
+	# Prevent completion after standalone options
+	case "$prev" in
+	--help | -h | --reset | --update | --install | -i | --remove | -r)
+		return 0
+		;;
+	esac
 
-    # Completion for --local-config / --config / -config (only .conf files)
-    if [[ "$prev" == "--local-config" || "$prev" == "--config" || "$prev" == "-config" ]]; then
-        COMPREPLY=( $(compgen -f -X '!*.conf' -- "$cur") )
-        return 0
-    fi
+	# Completion for --local-config / --config / -config (only .conf files)
+	if [[ "$prev" == "--local-config" || "$prev" == "--config" || "$prev" == "-config" ]]; then
+		COMPREPLY=($(compgen -f -X '!*.conf' -- "$cur"))
+		return 0
+	fi
 
-    # Handle subcommands for --change (only show change-related options)
-    if [[ "$prev" == "--change" || "$prev" == "-c" ]]; then
-        COMPREPLY=( $(compgen -W "$change_opts" -- "$cur") )
-        return 0
-    fi
+	# Handle subcommands for --change (only show change-related options)
+	if [[ "$prev" == "--change" || "$prev" == "-c" ]]; then
+		COMPREPLY=($(compgen -W "$change_opts" -- "$cur"))
+		return 0
+	fi
 
-    # Handle subcommands for --reinstall (only show reinstall-related options)
-    if [[ "$prev" == "--reinstall" || "$prev" == "-ri" ]]; then
-        COMPREPLY=( $(compgen -W "$reinstall_opts" -- "$cur") )
-        return 0
-    fi
+	# Handle subcommands for --reinstall (only show reinstall-related options)
+	if [[ "$prev" == "--reinstall" || "$prev" == "-ri" ]]; then
+		COMPREPLY=($(compgen -W "$reinstall_opts" -- "$cur"))
+		return 0
+	fi
 
-    # Default completion (first argument)
-    if [[ $COMP_CWORD -eq 1 ]]; then
-        COMPREPLY=( $(compgen -W "$opts" -- "$cur") )
-    fi
+	# Default completion (first argument)
+	if [[ $COMP_CWORD -eq 1 ]]; then
+		COMPREPLY=($(compgen -W "$opts" -- "$cur"))
+	fi
 }
 
 # Ensure function is loaded before running complete
-if declare -F _setup_termux_desktop_completion > /dev/null; then
-    complete -F _setup_termux_desktop_completion setup-termux-desktop
+if declare -F _setup_termux_desktop_completion >/dev/null; then
+	complete -F _setup_termux_desktop_completion setup-termux-desktop
 else
-    echo "Error: Function _setup_termux_desktop_completion not loaded"
+	echo "Error: Function _setup_termux_desktop_completion not loaded"
 fi

@@ -20,25 +20,25 @@ jobs:
           # Method 1: Try to read from enable-hw-acceleration file
           if [ -f "enable-hw-acceleration" ]; then
             echo "Found enable-hw-acceleration file, attempting to read TURNIP_MESA_VERSION..."
-            
+
             # Method 1a:
             old_version=$(grep -E '^\s*TURNIP_MESA_VERSION=' enable-hw-acceleration | cut -d'"' -f2 | head -1)
-            
+
             # Method 1b:
             if [ -z "$old_version" ]; then
               old_version=$(sed -n 's/^\s*TURNIP_MESA_VERSION="\([^"]*\)".*/\1/p' enable-hw-acceleration | head -1)
             fi
-            
+
             # Method 1c:
             if [ -z "$old_version" ]; then
               old_version=$(awk -F'"' '/TURNIP_MESA_VERSION=/ {print $2; exit}' enable-hw-acceleration)
             fi
-            
+
             # Method 1d:
             if [ -z "$old_version" ]; then
               old_version=$(grep "TURNIP_MESA_VERSION" enable-hw-acceleration | grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+' | head -1)
             fi
-            
+
             if [ -n "$old_version" ]; then
               echo "Successfully read version from file: $old_version"
             else

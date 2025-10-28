@@ -1,14 +1,14 @@
 #compdef vncstart
 
 _vncstart() {
-    local -a opts
-    opts=(
-        "--nogpu:Start VNC server without GPU acceleration"
-        "--help:Show help message"
-        "-h:Show help message"
-    )
+	local -a opts
+	opts=(
+		"--nogpu:Start VNC server without GPU acceleration"
+		"--help:Show help message"
+		"-h:Show help message"
+	)
 
-    _describe 'VNC Start Options' opts
+	_describe 'VNC Start Options' opts
 }
 
 _vncstart "$@"

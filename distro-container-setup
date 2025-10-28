@@ -24,101 +24,101 @@
 # shellcheck disable=SC2154
 # shellcheck disable=SC2120
 function check_termux() {
-    if [[ -z "$PREFIX" && "$PREFIX" != *"/com.termux/"* ]]; then
-        echo "${R}[${R}☓${R}]${R}${BOLD}Please run it inside termux${NC}"
-        exit 0
-    fi
+	if [[ -z "$PREFIX" && "$PREFIX" != *"/com.termux/"* ]]; then
+		echo "${R}[${R}☓${R}]${R}${BOLD}Please run it inside termux${NC}"
+		exit 0
+	fi
 }
 
 function setup_proot_distro() {
-    print_msg "${BOLD}Setting up ${C}proot-distro"
-    package_install_and_check "proot-distro"
-    banner
-    print_msg "${BOLD}Setting up Selected Linux Distro: ${C}${selected_distro}"
-    echo
-    print_to_config "selected_distro"
-    pd install "$selected_distro"
+	print_msg "${BOLD}Setting up ${C}proot-distro"
+	package_install_and_check "proot-distro"
+	banner
+	print_msg "${BOLD}Setting up Selected Linux Distro: ${C}${selected_distro}"
+	echo
+	print_to_config "selected_distro"
+	pd install "$selected_distro"
 }
 
 function check_su_access() {
-    if command -v su >/dev/null 2>&1; then
-        if su -c true >/dev/null 2>&1; then
-            return 0
-        fi
-    fi
-    return 1
+	if command -v su >/dev/null 2>&1; then
+		if su -c true >/dev/null 2>&1; then
+			return 0
+		fi
+	fi
+	return 1
 }
 
 function check_root_access() {
-    if ! check_su_access; then
-        return 1
-    fi
+	if ! check_su_access; then
+		return 1
+	fi
 
-    local whoami_out
-    if whoami_out=$(su -c 'whoami' 2>/dev/null) && [ "$whoami_out" = "root" ]; then
-        return 0
-    fi
-    return 1
+	local whoami_out
+	if whoami_out=$(su -c 'whoami' 2>/dev/null) && [ "$whoami_out" = "root" ]; then
+		return 0
+	fi
+	return 1
 }
 
 function check_chroot_file() {
-    if ! check_su_access; then
-        return 1
-    fi
+	if ! check_su_access; then
+		return 1
+	fi
 
-    if su -c 'ls /system/bin/chroot-distro' >/dev/null 2>&1; then
-        return 0
-    fi
-    return 1
+	if su -c 'ls /system/bin/chroot-distro' >/dev/null 2>&1; then
+		return 0
+	fi
+	return 1
 }
 
 function setup_chroot_distro() {
-    print_msg "Checking if you have root access or not"
-    package_install_and_check "sudo"
-    local retry_count
-    local max_retries
-    retry_count=0
-    max_retries=3
-    while [ $retry_count -lt $max_retries ]; do
-        if check_root_access; then
-            print_success "Root access is enabled"
-            break
-        else
-            ((retry_count++))
-            if [[ "$retry_count" -lt "$max_retries" ]]; then
-                print_failed "Please grant root access to termux"
-                print_msg "Want to check again (Attempt $retry_count/$max_retries)"
-                wait_for_keypress
-            else
-                print_failed "Failed to get root access after $max_retries attempts"
-                print_failed "Exiting..."
-                exit 1
-            fi
-        fi
-    done
-    print_msg "Checking access to chroot-distro"
-    retry_count=0
-    while [ $retry_count -lt $max_retries ]; do
-        if check_chroot_file; then
-            print_success "chroot-distro binary exist"
-            break
-        else
-            ((retry_count++))
+	print_msg "Checking if you have root access or not"
+	package_install_and_check "sudo"
+	local retry_count
+	local max_retries
+	retry_count=0
+	max_retries=3
+	while [ $retry_count -lt $max_retries ]; do
+		if check_root_access; then
+			print_success "Root access is enabled"
+			break
+		else
+			((retry_count++))
+			if [[ "$retry_count" -lt "$max_retries" ]]; then
+				print_failed "Please grant root access to termux"
+				print_msg "Want to check again (Attempt $retry_count/$max_retries)"
+				wait_for_keypress
+			else
+				print_failed "Failed to get root access after $max_retries attempts"
+				print_failed "Exiting..."
+				exit 1
+			fi
+		fi
+	done
+	print_msg "Checking access to chroot-distro"
+	retry_count=0
+	while [ $retry_count -lt $max_retries ]; do
+		if check_chroot_file; then
+			print_success "chroot-distro binary exist"
+			break
+		else
+			((retry_count++))
 
-            if [ $retry_count -lt $max_retries ]; then
-                print_failed "Cannot access /system/bin/chroot-distro file"
-                print_msg "Please flash:- ${B}https://github.com/sabamdarif/chroot-distro"
-                print_msg "Want to check again (Attempt $retry_count/$max_retries)"
-                wait_for_keypress
-            else
-                print_failed "Failed to access chroot-distro after $max_retries attempts"
-                print_msg "Exiting..."
-                exit 1
-            fi
-        fi
-    done
-    print_msg "Creating a chroot-distro launcher..."
-    cat <<'EOF' >"$PREFIX/bin/chroot-distro"
+			if [ $retry_count -lt $max_retries ]; then
+				print_failed "Cannot access /system/bin/chroot-distro file"
+				print_msg "Please flash:- ${B}https://github.com/sabamdarif/chroot-distro"
+				print_msg "Want to check again (Attempt $retry_count/$max_retries)"
+				wait_for_keypress
+			else
+				print_failed "Failed to access chroot-distro after $max_retries attempts"
+				print_msg "Exiting..."
+				exit 1
+			fi
+		fi
+	done
+	print_msg "Creating a chroot-distro launcher..."
+	cat <<'EOF' >"$PREFIX/bin/chroot-distro"
 #!/data/data/com.termux/files/usr/bin/bash
 
 function check_su_access() {
@@ -183,35 +183,35 @@ done
 
 su -c "/system/bin/chroot-distro $args"
 EOF
-    chmod +x "$PREFIX/bin/chroot-distro"
-    chroot-distro install "$selected_distro"
-    print_to_config "selected_distro"
+	chmod +x "$PREFIX/bin/chroot-distro"
+	chroot-distro install "$selected_distro"
+	print_to_config "selected_distro"
 }
 
 function set_distro_paths {
-    banner
-    print_msg "Setiing up distro related paths"
-    if [[ "$selected_distro_type" == "proot" ]]; then
-        distro_path="$PREFIX/var/lib/proot-distro/installed-rootfs/$selected_distro"
-    elif [[ "$selected_distro_type" == "chroot" ]]; then
-        distro_path="/data/local/chroot-distro/installed-rootfs/$selected_distro"
-    else
-        print_failed "Unable to determine what distro type to use"
-        print_msg "Fallback to:- proot-distro"
-        selected_distro_type=proot
-        distro_path="$PREFIX/var/lib/proot-distro/installed-rootfs/$selected_distro"
-    fi
-    save_path="$distro_path/root"
+	banner
+	print_msg "Setiing up distro related paths"
+	if [[ "$selected_distro_type" == "proot" ]]; then
+		distro_path="$PREFIX/var/lib/proot-distro/installed-rootfs/$selected_distro"
+	elif [[ "$selected_distro_type" == "chroot" ]]; then
+		distro_path="/data/local/chroot-distro/installed-rootfs/$selected_distro"
+	else
+		print_failed "Unable to determine what distro type to use"
+		print_msg "Fallback to:- proot-distro"
+		selected_distro_type=proot
+		distro_path="$PREFIX/var/lib/proot-distro/installed-rootfs/$selected_distro"
+	fi
+	save_path="$distro_path/root"
 }
 
 function setup_distro() {
-    banner
-    if [[ "$selected_distro_type" == "proot" ]]; then
-        setup_proot_distro
-    elif [[ "$selected_distro_type" == "chroot" ]]; then
-        setup_chroot_distro
-    fi
-    print_to_config "selected_distro_type"
+	banner
+	if [[ "$selected_distro_type" == "proot" ]]; then
+		setup_proot_distro
+	elif [[ "$selected_distro_type" == "chroot" ]]; then
+		setup_chroot_distro
+	fi
+	print_to_config "selected_distro_type"
 }
 
 #########################################################################
@@ -221,149 +221,149 @@ function setup_distro() {
 #########################################################################
 
 function pd_package_install_and_check() {
-    # Check for --root flag
-    local use_sudo=true
-    if [[ "$1" == "--root" ]]; then
-        use_sudo=false
-        shift
-    fi
+	# Check for --root flag
+	local use_sudo=true
+	if [[ "$1" == "--root" ]]; then
+		use_sudo=false
+		shift
+	fi
 
-    # shellcheck disable=SC2206
-    packs_list=($@)
+	# shellcheck disable=SC2206
+	packs_list=($@)
 
-    # Get distro id
-    # shellcheck disable=SC1091
-    if [ -f /etc/os-release ]; then
-        . /etc/os-release
-    fi
+	# Get distro id
+	# shellcheck disable=SC1091
+	if [ -f /etc/os-release ]; then
+		. /etc/os-release
+	fi
 
-    # Install package
-    for package_name in "${packs_list[@]}"; do
-        print_msg "${BOLD}Installing package: ${C}$package_name"
+	# Install package
+	for package_name in "${packs_list[@]}"; do
+		print_msg "${BOLD}Installing package: ${C}$package_name"
 
-        # Install package and handle errors
-        install_failed=false
-        if [[ "$ID" == "debian" ]] || [[ "$ID" == "ubuntu" ]]; then
-            if $use_sudo; then
-                if ! sudo apt install "$package_name" -y; then
-                    install_failed=true
-                fi
-            else
-                if ! apt install "$package_name" -y; then
-                    install_failed=true
-                fi
-            fi
-        elif [[ "$ID" == arch* ]]; then
-            if $use_sudo; then
-                if ! sudo pacman -Sy --noconfirm "$package_name"; then
-                    install_failed=true
-                fi
-            else
-                if ! pacman -Sy --noconfirm "$package_name"; then
-                    install_failed=true
-                fi
-            fi
-        elif [[ "$ID" == "fedora" ]]; then
-            if $use_sudo; then
-                if ! sudo dnf install "$package_name" -y; then
-                    install_failed=true
-                fi
-            else
-                if ! dnf install "$package_name" -y; then
-                    install_failed=true
-                fi
-            fi
-        fi
+		# Install package and handle errors
+		install_failed=false
+		if [[ "$ID" == "debian" ]] || [[ "$ID" == "ubuntu" ]]; then
+			if $use_sudo; then
+				if ! sudo apt install "$package_name" -y; then
+					install_failed=true
+				fi
+			else
+				if ! apt install "$package_name" -y; then
+					install_failed=true
+				fi
+			fi
+		elif [[ "$ID" == arch* ]]; then
+			if $use_sudo; then
+				if ! sudo pacman -Sy --noconfirm "$package_name"; then
+					install_failed=true
+				fi
+			else
+				if ! pacman -Sy --noconfirm "$package_name"; then
+					install_failed=true
+				fi
+			fi
+		elif [[ "$ID" == "fedora" ]]; then
+			if $use_sudo; then
+				if ! sudo dnf install "$package_name" -y; then
+					install_failed=true
+				fi
+			else
+				if ! dnf install "$package_name" -y; then
+					install_failed=true
+				fi
+			fi
+		fi
 
-        # Handle error in installation
-        if $install_failed; then
-            print_failed "${BOLD} Error detected during installation of: ${C}$package_name${NC}"
-            if [[ "$ID" == "debian" ]] || [[ "$ID" == "ubuntu" ]]; then
-                if $use_sudo; then
-                    sudo apt --fix-broken install -y
-                    sudo dpkg --configure -a
-                    sudo apt install "$package_name" -y
-                else
-                    apt --fix-broken install -y
-                    dpkg --configure -a
-                    apt install "$package_name" -y
-                fi
-            elif [[ "$ID" == arch* ]]; then
-                if $use_sudo; then
-                    sudo pacman -Syu --noconfirm
-                    sudo pacman -Sy --noconfirm "$package_name"
-                else
-                    pacman -Syu --noconfirm
-                    pacman -Sy --noconfirm "$package_name"
-                fi
-            elif [[ "$ID" == "fedora" ]]; then
-                if $use_sudo; then
-                    sudo dnf --refresh install -y
-                    sudo rpm --rebuilddb
-                    sudo dnf install "$package_name" -y
-                else
-                    dnf --refresh install -y
-                    rpm --rebuilddb
-                    dnf install "$package_name" -y
-                fi
-            fi
-        fi
+		# Handle error in installation
+		if $install_failed; then
+			print_failed "${BOLD} Error detected during installation of: ${C}$package_name${NC}"
+			if [[ "$ID" == "debian" ]] || [[ "$ID" == "ubuntu" ]]; then
+				if $use_sudo; then
+					sudo apt --fix-broken install -y
+					sudo dpkg --configure -a
+					sudo apt install "$package_name" -y
+				else
+					apt --fix-broken install -y
+					dpkg --configure -a
+					apt install "$package_name" -y
+				fi
+			elif [[ "$ID" == arch* ]]; then
+				if $use_sudo; then
+					sudo pacman -Syu --noconfirm
+					sudo pacman -Sy --noconfirm "$package_name"
+				else
+					pacman -Syu --noconfirm
+					pacman -Sy --noconfirm "$package_name"
+				fi
+			elif [[ "$ID" == "fedora" ]]; then
+				if $use_sudo; then
+					sudo dnf --refresh install -y
+					sudo rpm --rebuilddb
+					sudo dnf install "$package_name" -y
+				else
+					dnf --refresh install -y
+					rpm --rebuilddb
+					dnf install "$package_name" -y
+				fi
+			fi
+		fi
 
-        # Reinstall if necessary
-        if [[ "$ID" == "debian" ]] || [[ "$ID" == "ubuntu" ]]; then
-            if ! dpkg -s "$package_name" >/dev/null 2>&1; then
-                if $use_sudo; then
-                    sudo apt install "$package_name" -y
-                else
-                    apt install "$package_name" -y
-                fi
-            fi
-        elif [[ "$ID" == arch* ]]; then
-            if ! pacman -Qi "$package_name" >/dev/null 2>&1; then
-                if $use_sudo; then
-                    sudo pacman -Sy --noconfirm "$package_name"
-                else
-                    pacman -Sy --noconfirm "$package_name"
-                fi
-            fi
-        elif [[ "$ID" == "fedora" ]]; then
-            if ! rpm -q "$package_name" >/dev/null 2>&1; then
-                if $use_sudo; then
-                    sudo dnf install "$package_name" -y
-                else
-                    dnf install "$package_name" -y
-                fi
-            fi
-        fi
+		# Reinstall if necessary
+		if [[ "$ID" == "debian" ]] || [[ "$ID" == "ubuntu" ]]; then
+			if ! dpkg -s "$package_name" >/dev/null 2>&1; then
+				if $use_sudo; then
+					sudo apt install "$package_name" -y
+				else
+					apt install "$package_name" -y
+				fi
+			fi
+		elif [[ "$ID" == arch* ]]; then
+			if ! pacman -Qi "$package_name" >/dev/null 2>&1; then
+				if $use_sudo; then
+					sudo pacman -Sy --noconfirm "$package_name"
+				else
+					pacman -Sy --noconfirm "$package_name"
+				fi
+			fi
+		elif [[ "$ID" == "fedora" ]]; then
+			if ! rpm -q "$package_name" >/dev/null 2>&1; then
+				if $use_sudo; then
+					sudo dnf install "$package_name" -y
+				else
+					dnf install "$package_name" -y
+				fi
+			fi
+		fi
 
-        # Check installation
-        if [[ "$ID" == "debian" ]] || [[ "$ID" == "ubuntu" ]]; then
-            if dpkg -s "$package_name" >/dev/null 2>&1; then
-                print_success "$package_name ${G}installed successfully"
-            else
-                if command -v wget &>/dev/null || ls "$PREFIX/bin/"*"$package_name"* >/dev/null 2>&1; then
-                    print_success "$package_name ${G}installed successfully"
-                fi
-            fi
-        elif [[ "$ID" == arch* ]]; then
-            if pacman -Qi "$package_name" >/dev/null 2>&1; then
-                print_success "$package_name ${G}installed successfully"
-            else
-                if command -v wget &>/dev/null || ls "$PREFIX/bin/"*"$package_name"* >/dev/null 2>&1; then
-                    print_success "$package_name ${G}installed successfully"
-                fi
-            fi
-        elif [[ "$ID" == "fedora" ]]; then
-            if rpm -q "$package_name" >/dev/null 2>&1; then
-                print_success "$package_name ${G}installed successfully"
-            else
-                if command -v wget &>/dev/null || ls "$PREFIX/bin/"*"$package_name"* >/dev/null 2>&1; then
-                    print_success "$package_name ${G}installed successfully"
-                fi
-            fi
-        fi
-    done
-    echo ""
+		# Check installation
+		if [[ "$ID" == "debian" ]] || [[ "$ID" == "ubuntu" ]]; then
+			if dpkg -s "$package_name" >/dev/null 2>&1; then
+				print_success "$package_name ${G}installed successfully"
+			else
+				if command -v wget &>/dev/null || ls "$PREFIX/bin/"*"$package_name"* >/dev/null 2>&1; then
+					print_success "$package_name ${G}installed successfully"
+				fi
+			fi
+		elif [[ "$ID" == arch* ]]; then
+			if pacman -Qi "$package_name" >/dev/null 2>&1; then
+				print_success "$package_name ${G}installed successfully"
+			else
+				if command -v wget &>/dev/null || ls "$PREFIX/bin/"*"$package_name"* >/dev/null 2>&1; then
+					print_success "$package_name ${G}installed successfully"
+				fi
+			fi
+		elif [[ "$ID" == "fedora" ]]; then
+			if rpm -q "$package_name" >/dev/null 2>&1; then
+				print_success "$package_name ${G}installed successfully"
+			else
+				if command -v wget &>/dev/null || ls "$PREFIX/bin/"*"$package_name"* >/dev/null 2>&1; then
+					print_success "$package_name ${G}installed successfully"
+				fi
+			fi
+		fi
+	done
+	echo ""
 }
 
 #############################
@@ -371,17 +371,17 @@ function pd_package_install_and_check() {
 #############################
 
 function create_shell_script() {
-    local script_path="$1"
-    local shell_setup_content="$2"
-    # Create directory if it doesn't exist
-    if [[ "$selected_distro_type" == "chroot" ]]; then
-        sudo mkdir -p "$(dirname "$script_path")"
-    else
-        mkdir -p "$(dirname "$script_path")"
-    fi
+	local script_path="$1"
+	local shell_setup_content="$2"
+	# Create directory if it doesn't exist
+	if [[ "$selected_distro_type" == "chroot" ]]; then
+		sudo mkdir -p "$(dirname "$script_path")"
+	else
+		mkdir -p "$(dirname "$script_path")"
+	fi
 
-    if [[ "$selected_distro_type" == "chroot" ]]; then
-        sudo tee "$script_path" >/dev/null <<'EOF'
+	if [[ "$selected_distro_type" == "chroot" ]]; then
+		sudo tee "$script_path" >/dev/null <<'EOF'
 #!/bin/bash
 
 if [ -t 1 ] && [ -n "${TERM:-}" ]; then
@@ -406,8 +406,8 @@ TERMUX_DESKTOP_PATH="/data/data/com.termux/files/usr/etc/termux-desktop"
 CONFIG_FILE="$TERMUX_DESKTOP_PATH/configuration.conf"
 LOG_FILE="/data/data/com.termux/files/home/termux-desktop.log"
 EOF
-    else
-        cat <<'EOF' >"$script_path"
+	else
+		cat <<'EOF' >"$script_path"
 #!/bin/bash
 
 if [ -t 1 ] && [ -n "${TERM:-}" ]; then
@@ -432,144 +432,144 @@ TERMUX_DESKTOP_PATH="/data/data/com.termux/files/usr/etc/termux-desktop"
 CONFIG_FILE="$TERMUX_DESKTOP_PATH/configuration.conf"
 LOG_FILE="/data/data/com.termux/files/home/termux-desktop.log"
 EOF
-    fi
-    if [[ "$selected_distro_type" == "chroot" ]]; then
-        typeset -f banner log_debug print_msg print_success print_failed check_and_delete get_latest_release pd_package_install_and_check | sudo tee -a "$script_path" >/dev/null
-        echo "$shell_setup_content" | sudo tee -a "$script_path" >/dev/null
-    else
-        typeset -f banner log_debug print_msg print_success print_failed check_and_delete get_latest_release pd_package_install_and_check >>"$script_path"
-        echo "$shell_setup_content" >>"$script_path"
-    fi
-    # Make script executable
-    if [[ "$selected_distro_type" == "chroot" ]]; then
-        sudo chmod +x "$script_path"
-    else
-        chmod +x "$script_path"
-    fi
-    # Verify script was created
-    if [[ "$selected_distro_type" == "chroot" ]]; then
-        if ! su -c "ls '$script_path'" >/dev/null 2>&1; then
-            print_failed "Failed to create script at $script_path"
-        fi
-    else
-        if [[ ! -f "$script_path" ]]; then
-            print_failed "Failed to create script at $script_path"
-        fi
-    fi
+	fi
+	if [[ "$selected_distro_type" == "chroot" ]]; then
+		typeset -f banner log_debug print_msg print_success print_failed check_and_delete get_latest_release pd_package_install_and_check | sudo tee -a "$script_path" >/dev/null
+		echo "$shell_setup_content" | sudo tee -a "$script_path" >/dev/null
+	else
+		typeset -f banner log_debug print_msg print_success print_failed check_and_delete get_latest_release pd_package_install_and_check >>"$script_path"
+		echo "$shell_setup_content" >>"$script_path"
+	fi
+	# Make script executable
+	if [[ "$selected_distro_type" == "chroot" ]]; then
+		sudo chmod +x "$script_path"
+	else
+		chmod +x "$script_path"
+	fi
+	# Verify script was created
+	if [[ "$selected_distro_type" == "chroot" ]]; then
+		if ! su -c "ls '$script_path'" >/dev/null 2>&1; then
+			print_failed "Failed to create script at $script_path"
+		fi
+	else
+		if [[ ! -f "$script_path" ]]; then
+			print_failed "Failed to create script at $script_path"
+		fi
+	fi
 }
 
 #################
 # Update distro #
 #################
 function update_distro_repo() {
-    print_msg "${BOLD}Updating $selected_distro And Installing Required Packages"
-    echo
-    if [[ "$selected_distro" == "debian" ]] || [[ "$selected_distro" == "ubuntu" ]]; then
-        "${selected_distro_type}"-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:"$display_number" apt update
-        "${selected_distro_type}"-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:"$display_number" apt upgrade -y -o Dpkg::Options::="--force-confnew"
-        "${selected_distro_type}"-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:"$display_number" apt install sudo apt-file -y
-    elif [[ "$selected_distro" == "archlinux" ]]; then
-        "${selected_distro_type}"-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:"$display_number" pacman -Syu --noconfirm
-        "${selected_distro_type}"-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:"$display_number" pacman -S --noconfirm sudo
-    elif [[ "$selected_distro" == "fedora" ]]; then
-        "${selected_distro_type}"-distro login "$selected_distro" -- /bin/bash -c "echo 'max_parallel_downloads=10' >> '/etc/dnf/dnf.conf'"
-        "${selected_distro_type}"-distro login "$selected_distro" -- /bin/bash -c "echo 'fastestmirror=True/' >> '/etc/dnf/dnf.conf'"
-        "${selected_distro_type}"-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:"$display_number" dnf update -y
-        "${selected_distro_type}"-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:"$display_number" dnf upgrade -y
-        "${selected_distro_type}"-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:"$display_number" dnf install sudo -y
-    fi
-    if [[ "$selected_distro_type" == "proot" ]]; then
-        chmod -R +w "$distro_path/"
-    fi
+	print_msg "${BOLD}Updating $selected_distro And Installing Required Packages"
+	echo
+	if [[ "$selected_distro" == "debian" ]] || [[ "$selected_distro" == "ubuntu" ]]; then
+		"${selected_distro_type}"-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:"$display_number" apt update
+		"${selected_distro_type}"-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:"$display_number" apt upgrade -y -o Dpkg::Options::="--force-confnew"
+		"${selected_distro_type}"-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:"$display_number" apt install sudo apt-file -y
+	elif [[ "$selected_distro" == "archlinux" ]]; then
+		"${selected_distro_type}"-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:"$display_number" pacman -Syu --noconfirm
+		"${selected_distro_type}"-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:"$display_number" pacman -S --noconfirm sudo
+	elif [[ "$selected_distro" == "fedora" ]]; then
+		"${selected_distro_type}"-distro login "$selected_distro" -- /bin/bash -c "echo 'max_parallel_downloads=10' >> '/etc/dnf/dnf.conf'"
+		"${selected_distro_type}"-distro login "$selected_distro" -- /bin/bash -c "echo 'fastestmirror=True/' >> '/etc/dnf/dnf.conf'"
+		"${selected_distro_type}"-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:"$display_number" dnf update -y
+		"${selected_distro_type}"-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:"$display_number" dnf upgrade -y
+		"${selected_distro_type}"-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:"$display_number" dnf install sudo -y
+	fi
+	if [[ "$selected_distro_type" == "proot" ]]; then
+		chmod -R +w "$distro_path/"
+	fi
 }
 
 ###################
 # Setup time zone #
 ###################
 function set_distro_time_zone() {
-    timezone=$(getprop persist.sys.timezone)
-    "${selected_distro_type}"-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:"$display_number" rm /etc/localtime
-    "${selected_distro_type}"-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:"$display_number" cp "/usr/share/zoneinfo/$timezone" /etc/localtime
+	timezone=$(getprop persist.sys.timezone)
+	"${selected_distro_type}"-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:"$display_number" rm /etc/localtime
+	"${selected_distro_type}"-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:"$display_number" cp "/usr/share/zoneinfo/$timezone" /etc/localtime
 }
 
 ###################
 # Fix Sound Issue #
 ###################
 function distro_fix_sound_issue() {
-    banner
-    print_msg "${BOLD}Fixing ${selected_distro_type} distro Sound Problem..."
-    echo
-    audio_related_packs="pulseaudio"
-    install_audio_related_packs=$(
-        cat <<EOF
+	banner
+	print_msg "${BOLD}Fixing ${selected_distro_type} distro Sound Problem..."
+	echo
+	audio_related_packs="pulseaudio"
+	install_audio_related_packs=$(
+		cat <<EOF
 pd_package_install_and_check "$audio_related_packs"
 check_and_delete "install_audio_related_packs.sh"
 EOF
-    )
-    create_shell_script "$save_path/install_audio_related_packs.sh" "$install_audio_related_packs"
-    "${selected_distro_type}"-distro login "$selected_distro" -- /bin/bash -c 'bash /root/install_audio_related_packs.sh'
-    if [[ "$selected_distro_type" == "chroot" ]]; then
-        echo "export PULSE_SERVER=127.0.0.1" | sudo tee -a "$distro_path/etc/profile" >/dev/null
-    else
-        echo "export PULSE_SERVER=127.0.0.1" >>"$distro_path/etc/profile"
-    fi
-    print_to_config "pd_audio_config_answer"
+	)
+	create_shell_script "$save_path/install_audio_related_packs.sh" "$install_audio_related_packs"
+	"${selected_distro_type}"-distro login "$selected_distro" -- /bin/bash -c 'bash /root/install_audio_related_packs.sh'
+	if [[ "$selected_distro_type" == "chroot" ]]; then
+		echo "export PULSE_SERVER=127.0.0.1" | sudo tee -a "$distro_path/etc/profile" >/dev/null
+	else
+		echo "export PULSE_SERVER=127.0.0.1" >>"$distro_path/etc/profile"
+	fi
+	print_to_config "pd_audio_config_answer"
 }
 
 ###########################################
 # create a user account inside the distro #
 ###########################################
 function distro_setup_user() {
-    # set user name value
-    if [[ "$pd_useradd_answer" == "n" ]]; then
-        final_user_name="root"
-    elif [[ "$pd_useradd_answer" == "y" ]]; then
-        final_user_name="${user_name}"
-    fi
-    print_to_config "pd_useradd_answer"
-    print_to_config "user_name"
+	# set user name value
+	if [[ "$pd_useradd_answer" == "n" ]]; then
+		final_user_name="root"
+	elif [[ "$pd_useradd_answer" == "y" ]]; then
+		final_user_name="${user_name}"
+	fi
+	print_to_config "pd_useradd_answer"
+	print_to_config "user_name"
 
-    # set password value
-    if [[ "$pd_pass_type" == "2" ]]; then
-        final_pass="${pass}"
-    else
-        final_pass="root"
-    fi
-    print_to_config "pd_pass_type"
-    print_to_config "pass"
+	# set password value
+	if [[ "$pd_pass_type" == "2" ]]; then
+		final_pass="${pass}"
+	else
+		final_pass="root"
+	fi
+	print_to_config "pd_pass_type"
+	print_to_config "pass"
 
-    if [[ "$pd_useradd_answer" == "y" ]]; then
-        # first setup the user
-        "${selected_distro_type}"-distro login "$selected_distro" -- /bin/sh -c 'groupadd storage'
-        "${selected_distro_type}"-distro login "$selected_distro" -- /bin/sh -c 'groupadd wheel'
-        "${selected_distro_type}"-distro login "$selected_distro" -- /bin/sh -c "useradd -m -g users -s \$(which bash) ${final_user_name}"
-        "${selected_distro_type}"-distro login "$selected_distro" -- /bin/sh -c "usermod -aG wheel,polkitd,audio,video,storage ${final_user_name}"
-        "${selected_distro_type}"-distro login "$selected_distro" -- /bin/sh -c "echo '${final_user_name}:${final_pass}' | chpasswd"
+	if [[ "$pd_useradd_answer" == "y" ]]; then
+		# first setup the user
+		"${selected_distro_type}"-distro login "$selected_distro" -- /bin/sh -c 'groupadd storage'
+		"${selected_distro_type}"-distro login "$selected_distro" -- /bin/sh -c 'groupadd wheel'
+		"${selected_distro_type}"-distro login "$selected_distro" -- /bin/sh -c "useradd -m -g users -s \$(which bash) ${final_user_name}"
+		"${selected_distro_type}"-distro login "$selected_distro" -- /bin/sh -c "usermod -aG wheel,polkitd,audio,video,storage ${final_user_name}"
+		"${selected_distro_type}"-distro login "$selected_distro" -- /bin/sh -c "echo '${final_user_name}:${final_pass}' | chpasswd"
 
-        # setup user without password confirmation
-        if [[ "$pd_pass_type" == "1" ]]; then
-            "${selected_distro_type}"-distro login "$selected_distro" -- /bin/sh -c "chmod u+rw /etc/sudoers"
-            "${selected_distro_type}"-distro login "$selected_distro" -- /bin/sh -c "echo '$final_user_name ALL=(ALL) NOPASSWD:ALL' | tee -a /etc/sudoers > /dev/null 2>&1"
-            "${selected_distro_type}"-distro login "$selected_distro" -- /bin/sh -c "chmod u-w /etc/sudoers"
-            "${selected_distro_type}"-distro login "$selected_distro" -- /bin/sh -c 'sudo -k'
-        # setup user with password
-        elif [[ "$pd_pass_type" == "2" ]]; then
-            "${selected_distro_type}"-distro login "$selected_distro" -- /bin/sh -c "chmod u+rw /etc/sudoers"
-            "${selected_distro_type}"-distro login "$selected_distro" -- /bin/sh -c "echo '$final_user_name ALL=(ALL:ALL) ALL' | tee -a /etc/sudoers > /dev/null 2>&1"
-            "${selected_distro_type}"-distro login "$selected_distro" -- /bin/sh -c "chmod u-w /etc/sudoers"
-            "${selected_distro_type}"-distro login "$selected_distro" -- /bin/sh -c 'sudo -k'
+		# setup user without password confirmation
+		if [[ "$pd_pass_type" == "1" ]]; then
+			"${selected_distro_type}"-distro login "$selected_distro" -- /bin/sh -c "chmod u+rw /etc/sudoers"
+			"${selected_distro_type}"-distro login "$selected_distro" -- /bin/sh -c "echo '$final_user_name ALL=(ALL) NOPASSWD:ALL' | tee -a /etc/sudoers > /dev/null 2>&1"
+			"${selected_distro_type}"-distro login "$selected_distro" -- /bin/sh -c "chmod u-w /etc/sudoers"
+			"${selected_distro_type}"-distro login "$selected_distro" -- /bin/sh -c 'sudo -k'
+		# setup user with password
+		elif [[ "$pd_pass_type" == "2" ]]; then
+			"${selected_distro_type}"-distro login "$selected_distro" -- /bin/sh -c "chmod u+rw /etc/sudoers"
+			"${selected_distro_type}"-distro login "$selected_distro" -- /bin/sh -c "echo '$final_user_name ALL=(ALL:ALL) ALL' | tee -a /etc/sudoers > /dev/null 2>&1"
+			"${selected_distro_type}"-distro login "$selected_distro" -- /bin/sh -c "chmod u-w /etc/sudoers"
+			"${selected_distro_type}"-distro login "$selected_distro" -- /bin/sh -c 'sudo -k'
 
-        fi
+		fi
 
-    fi
+	fi
 }
 
 function distro_basic_task() {
-    banner
-    update_distro_repo
-    set_distro_time_zone
-    distro_fix_sound_issue
-    distro_setup_user
+	banner
+	update_distro_repo
+	set_distro_time_zone
+	distro_fix_sound_issue
+	distro_setup_user
 }
 
 #########################################################################
@@ -582,9 +582,9 @@ function distro_basic_task() {
 # ZSH Setup #
 #############
 function distro_zsh_setup() {
-    if [[ "$chosen_shell_name" == "zsh" ]]; then
-        zsh_setup_content=$(
-            cat <<EOF
+	if [[ "$chosen_shell_name" == "zsh" ]]; then
+		zsh_setup_content=$(
+			cat <<EOF
 pd_package_install_and_check "git zsh wget"
 
 if [[ "$selected_distro" == "debian" ]] || [[ "$selected_distro" == "ubuntu" ]]; then
@@ -594,42 +594,42 @@ chsh -s /bin/zsh ${final_user_name}
 fi
 check_and_delete "pd_zsh_install.sh"
 EOF
-        )
-        create_shell_script "$distro_path/root/pd_zsh_install.sh" "$zsh_setup_content"
-        banner
-        print_msg "${BOLD}Setting up shell for ${selected_distro}..."
-        echo
-        "${selected_distro_type}"-distro login "$selected_distro" -- /bin/bash -c 'bash /root/pd_zsh_install.sh'
-    fi
+		)
+		create_shell_script "$distro_path/root/pd_zsh_install.sh" "$zsh_setup_content"
+		banner
+		print_msg "${BOLD}Setting up shell for ${selected_distro}..."
+		echo
+		"${selected_distro_type}"-distro login "$selected_distro" -- /bin/bash -c 'bash /root/pd_zsh_install.sh'
+	fi
 }
 
 ##########################
 # Terminal Utility Setup #
 ##########################
 function distro_terminal_utility_setup() {
-    if [[ "$terminal_utility_setup_answer" == "y" ]]; then
+	if [[ "$terminal_utility_setup_answer" == "y" ]]; then
 
-        if [[ "$selected_distro" == "debian" ]] || [[ "$selected_distro" == "ubuntu" ]]; then
-            terminal_utility_content=$(
-                cat <<'EOF'
+		if [[ "$selected_distro" == "debian" ]] || [[ "$selected_distro" == "ubuntu" ]]; then
+			terminal_utility_content=$(
+				cat <<'EOF'
 pd_package_install_and_check "zoxide bat wget gpg fzf eza fastfetch nala"
 check_and_delete "pd_setup.sh"
 EOF
-            )
-        else
-            terminal_utility_content=$(
-                cat <<'EOF'
+			)
+		else
+			terminal_utility_content=$(
+				cat <<'EOF'
 pd_package_install_and_check "zoxide bat wget gpg eza fastfetch fzf"
 check_and_delete "pd_setup.sh"
 EOF
-            )
-        fi
-        create_shell_script "$save_path/pd_setup.sh" "$terminal_utility_content"
-        banner
-        print_msg "Configuring Terminal Utility For ${selected_distro}..."
-        echo
-        "${selected_distro_type}"-distro login --user "$final_user_name" "$selected_distro" -- /bin/bash -c 'bash /root/pd_setup.sh'
-    fi
+			)
+		fi
+		create_shell_script "$save_path/pd_setup.sh" "$terminal_utility_content"
+		banner
+		print_msg "Configuring Terminal Utility For ${selected_distro}..."
+		echo
+		"${selected_distro_type}"-distro login --user "$final_user_name" "$selected_distro" -- /bin/bash -c 'bash /root/pd_setup.sh'
+	fi
 }
 
 #########################################################################
@@ -639,7 +639,7 @@ EOF
 #########################################################################
 function add_installer_common() {
 
-    cat <<EOF >"$PREFIX/bin/$selected_distro"
+	cat <<EOF >"$PREFIX/bin/$selected_distro"
 #!/data/data/com.termux/files/usr/bin/bash
 
 source $PREFIX/etc/termux-desktop/common_functions
@@ -663,7 +663,7 @@ EOF
 
 function proot_distro_debian_based_app_installer() {
 
-    cat <<TOP_EOF >>"$PREFIX/bin/$selected_distro"
+	cat <<TOP_EOF >>"$PREFIX/bin/$selected_distro"
 package_install_and_add_to_menu() {
     #################################################
     ## Handle install package and add to menu part ##
@@ -813,7 +813,7 @@ TOP_EOF
 }
 
 function chroot_distro_debian_based_app_installer() {
-    cat <<TOP_EOF >>"$PREFIX/bin/$selected_distro"
+	cat <<TOP_EOF >>"$PREFIX/bin/$selected_distro"
 package_install_and_add_to_menu() {
     #################################################
     ## Handle install package and add to menu part ##
@@ -965,11 +965,11 @@ TOP_EOF
 }
 
 function debian_based_app_installer() {
-    if [[ "$selected_distro_type" == "chroot" ]]; then
-        chroot_distro_debian_based_app_installer
-    else
-        proot_distro_debian_based_app_installer
-    fi
+	if [[ "$selected_distro_type" == "chroot" ]]; then
+		chroot_distro_debian_based_app_installer
+	else
+		proot_distro_debian_based_app_installer
+	fi
 }
 
 #######################################################
@@ -977,7 +977,7 @@ function debian_based_app_installer() {
 #######################################################
 function proot_distro_arch_based_app_installer() {
 
-    cat <<TOP_EOF >>"$PREFIX/bin/$selected_distro"
+	cat <<TOP_EOF >>"$PREFIX/bin/$selected_distro"
 
 package_install_and_add_to_menu() {
     #################################################
@@ -1098,7 +1098,7 @@ TOP_EOF
 }
 
 function chroot_distro_arch_based_app_installer() {
-    cat <<TOP_EOF >>"$PREFIX/bin/$selected_distro"
+	cat <<TOP_EOF >>"$PREFIX/bin/$selected_distro"
 
 package_install_and_add_to_menu() {
     #################################################
@@ -1220,11 +1220,11 @@ TOP_EOF
 }
 
 function arch_based_app_installer() {
-    if [[ "$selected_distro_type" == "chroot" ]]; then
-        chroot_distro_arch_based_app_installer
-    else
-        proot_distro_arch_based_app_installer
-    fi
+	if [[ "$selected_distro_type" == "chroot" ]]; then
+		chroot_distro_arch_based_app_installer
+	else
+		proot_distro_arch_based_app_installer
+	fi
 
 }
 
@@ -1233,7 +1233,7 @@ function arch_based_app_installer() {
 #######################################################
 function proot_distro_fedora_based_app_installer() {
 
-    cat <<TOP_EOF >>"$PREFIX/bin/$selected_distro"
+	cat <<TOP_EOF >>"$PREFIX/bin/$selected_distro"
 package_install_and_add_to_menu() {
     #################################################
     ## Handle install package and add to menu part ##
@@ -1379,7 +1379,7 @@ TOP_EOF
 }
 
 function chroot_distro_fedora_based_app_installer() {
-    cat <<TOP_EOF >>"$PREFIX/bin/$selected_distro"
+	cat <<TOP_EOF >>"$PREFIX/bin/$selected_distro"
 package_install_and_add_to_menu() {
     #################################################
     ## Handle install package and add to menu part ##
@@ -1526,16 +1526,16 @@ TOP_EOF
 }
 
 function fedora_based_app_installer() {
-    if [[ "$selected_distro_type" == "chroot" ]]; then
-        chroot_distro_fedora_based_app_installer
-    else
-        proot_distro_fedora_based_app_installer
-    fi
+	if [[ "$selected_distro_type" == "chroot" ]]; then
+		chroot_distro_fedora_based_app_installer
+	else
+		proot_distro_fedora_based_app_installer
+	fi
 
 }
 
 function add_chroot_distro_function_caller() {
-    cat <<EOF >>"$PREFIX/bin/$selected_distro"
+	cat <<EOF >>"$PREFIX/bin/$selected_distro"
 remove_distro_container() {
     confirmation_y_or_n "Do you want to remove the distro\${R}it can't be undone" ans_remove_distro
     case \$ans_remove_distro in
@@ -1610,7 +1610,7 @@ EOF
 }
 
 function add_proot_distro_function_caller() {
-    cat <<EOF >>"$PREFIX/bin/$selected_distro"
+	cat <<EOF >>"$PREFIX/bin/$selected_distro"
 remove_distro_container() {
     confirmation_y_or_n "Do you want to remove the distro\${R}it can't be undone" ans_remove_distro
     case \$ans_remove_distro in
@@ -1685,28 +1685,28 @@ EOF
 }
 
 function add_distro_function_caller() {
-    if [[ "$selected_distro_type" == "chroot" ]]; then
-        add_chroot_distro_function_caller
-    else
-        add_proot_distro_function_caller
-    fi
+	if [[ "$selected_distro_type" == "chroot" ]]; then
+		add_chroot_distro_function_caller
+	else
+		add_proot_distro_function_caller
+	fi
 }
 
 function distro_create_app_installer() {
-    banner
-    print_msg "${BOLD}Creating distro app manager..."
+	banner
+	print_msg "${BOLD}Creating distro app manager..."
 
-    save_root_path="$distro_path/root"
-    add_installer_common
-    if [[ "$selected_distro" == "debian" ]] || [[ "$selected_distro" == "ubuntu" ]]; then
-        debian_based_app_installer
-    elif [[ "$selected_distro" == "archlinux" ]]; then
-        arch_based_app_installer
-    elif [[ "$selected_distro" == "fedora" ]]; then
-        fedora_based_app_installer
-    fi
-    add_distro_function_caller
-    chmod +x "$PREFIX/bin/$selected_distro"
+	save_root_path="$distro_path/root"
+	add_installer_common
+	if [[ "$selected_distro" == "debian" ]] || [[ "$selected_distro" == "ubuntu" ]]; then
+		debian_based_app_installer
+	elif [[ "$selected_distro" == "archlinux" ]]; then
+		arch_based_app_installer
+	elif [[ "$selected_distro" == "fedora" ]]; then
+		fedora_based_app_installer
+	fi
+	add_distro_function_caller
+	chmod +x "$PREFIX/bin/$selected_distro"
 
 }
 
@@ -1714,23 +1714,23 @@ function distro_create_app_installer() {
 # Add To Menu Setup #
 #####################
 function add_add_to_menu() {
-    banner
-    package_install_and_check "zenity"
+	banner
+	package_install_and_check "zenity"
 
-    check_and_create_directory "$PREFIX/share/applications/pd_added"
+	check_and_create_directory "$PREFIX/share/applications/pd_added"
 
-    check_and_create_directory "$PREFIX/share/applications/"
-    check_and_delete "$PREFIX/share/applications/add2menu.desktop"
-    check_and_delete "$HOME/Desktop/add2menu.desktop"
-    check_and_create_directory "$PREFIX/opt/add2menu"
-    download_file "$PREFIX/opt/add2menu/add2menu.py" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/add2menu/add2menu.py"
-    download_file "$PREFIX/opt/add2menu/add2menu_legacy" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/add2menu/add2menu_legacy"
-    download_file "$PREFIX/share/applications/org.sabamdarif.termux.add2menu.desktop" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/add2menu/org.sabamdarif.termux.add2menu.desktop"
-    cp "$PREFIX/share/applications/org.sabamdarif.termux.add2menu.desktop" "$HOME/Desktop/"
-    chmod +x "$HOME/Desktop/org.sabamdarif.termux.add2menu.desktop"
-    chmod +x "$PREFIX/opt/add2menu/add2menu_legacy"
+	check_and_create_directory "$PREFIX/share/applications/"
+	check_and_delete "$PREFIX/share/applications/add2menu.desktop"
+	check_and_delete "$HOME/Desktop/add2menu.desktop"
+	check_and_create_directory "$PREFIX/opt/add2menu"
+	download_file "$PREFIX/opt/add2menu/add2menu.py" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/add2menu/add2menu.py"
+	download_file "$PREFIX/opt/add2menu/add2menu_legacy" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/add2menu/add2menu_legacy"
+	download_file "$PREFIX/share/applications/org.sabamdarif.termux.add2menu.desktop" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/add2menu/org.sabamdarif.termux.add2menu.desktop"
+	cp "$PREFIX/share/applications/org.sabamdarif.termux.add2menu.desktop" "$HOME/Desktop/"
+	chmod +x "$HOME/Desktop/org.sabamdarif.termux.add2menu.desktop"
+	chmod +x "$PREFIX/opt/add2menu/add2menu_legacy"
 
-    cat <<EOF >"$PREFIX/bin/add2menu"
+	cat <<EOF >"$PREFIX/bin/add2menu"
 #!/data/data/com.termux/files/usr/bin/bash
 
 export distro_name="${selected_distro}"
@@ -1755,7 +1755,7 @@ esac
 
 EOF
 
-    chmod +x "$PREFIX/bin/add2menu"
+	chmod +x "$PREFIX/bin/add2menu"
 }
 
 #########################################################################
@@ -1765,9 +1765,9 @@ EOF
 #########################################################################
 
 function distro_app_launch_setup() {
-    if [[ "$enable_hw_acc" == "y" ]]; then
+	if [[ "$enable_hw_acc" == "y" ]]; then
 
-        cat <<EOF >"$PREFIX/bin/pdrun"
+		cat <<EOF >"$PREFIX/bin/pdrun"
 #!/data/data/com.termux/files/usr/bin/bash
 
 source /data/data/com.termux/files/usr/etc/termux-desktop/common_functions
@@ -1790,7 +1790,7 @@ fi
 selected_pd_hw_method="$pd_hw_method"
 EOF
 
-        cat <<EOF >>"$PREFIX/bin/pdrun"
+		cat <<EOF >>"$PREFIX/bin/pdrun"
 xhost + > /dev/null 2>&1
 case \$1 in
 --nogpu)
@@ -1805,9 +1805,9 @@ echo "${G}Type ${C}pdrun PACKAGE-NAME ${G}to start with GPU acceleration${NC}"
 esac
 EOF
 
-    elif [[ "$enable_hw_acc" == "n" ]]; then
+	elif [[ "$enable_hw_acc" == "n" ]]; then
 
-        cat <<EOF >"$PREFIX/bin/pdrun"
+		cat <<EOF >"$PREFIX/bin/pdrun"
 #!/data/data/com.termux/files/usr/bin/bash
 
 source /data/data/com.termux/files/usr/etc/termux-desktop/common_functions
@@ -1830,7 +1830,7 @@ fi
 
 EOF
 
-        cat <<EOF >>"$PREFIX/bin/pdrun"
+		cat <<EOF >>"$PREFIX/bin/pdrun"
 xhost + > /dev/null 2>&1
 case \$1 in
 --help|-h)
@@ -1841,8 +1841,8 @@ echo "${G}Type ${C}pdrun PACKAGE-NAME ${G}to start with gpu acceleration${NC}"
 ;;
 esac
 EOF
-    fi
-    chmod +x "$PREFIX/bin/pdrun"
+	fi
+	chmod +x "$PREFIX/bin/pdrun"
 }
 
 #########################################################################
@@ -1852,67 +1852,67 @@ EOF
 #########################################################################
 
 function install_some_required_pack() {
-    local some_required_pack_list=""
+	local some_required_pack_list=""
 
-    if [[ "$selected_distro" == "ubuntu" ]] || [[ "$selected_distro" == "debian" ]]; then
-        # Debian/Ubuntu
-        some_required_pack_list="\
+	if [[ "$selected_distro" == "ubuntu" ]] || [[ "$selected_distro" == "debian" ]]; then
+		# Debian/Ubuntu
+		some_required_pack_list="\
 zlib1g zlib1g-dev fuse xdg-utils apt-file dbus dbus-x11 \
 libnss3 libgtk-3-0 libx11-xcb1 libxext6 libxrender1 libxrandr2 \
 libxi6 libxtst6 libatk1.0-0 libatk-bridge2.0-0 libglib2.0-0 libglib2.0-bin \
 libpango-1.0-0 libcairo2 libfreetype6 libfontconfig1 libcups2 libdbus-1-3 \
 libdrm2 libgbm1 libxcomposite1 libxdamage1 libxcb-dri3-0 libxshmfence1"
 
-    elif [[ "$selected_distro" == "fedora" ]]; then
-        # Fedora (40+)
-        some_required_pack_list="\
+	elif [[ "$selected_distro" == "fedora" ]]; then
+		# Fedora (40+)
+		some_required_pack_list="\
 zlib-ng fuse xdg-utils dbus \
 nss gtk3 alsa-lib libX11 libXext libXrender libXrandr libXi libXtst \
 atk at-spi2-atk glib2 pango cairo freetype fontconfig cups-libs dbus-libs \
 libdrm mesa-libgbm libXcomposite libXdamage libxcb libxshmfence"
 
-    elif [[ "$selected_distro" == "archlinux" ]]; then
-        # Arch Linux
-        some_required_pack_list="\
+	elif [[ "$selected_distro" == "archlinux" ]]; then
+		# Arch Linux
+		some_required_pack_list="\
 zlib fuse2 xdg-utils dbus \
 nss gtk3 alsa-lib libx11 libxext libxrender libxrandr libxi libxtst \
 atk at-spi2-core glib2 pango cairo freetype2 fontconfig cups dbus \
 libdrm mesa-libgbm libxcomposite libxdamage libxcb libxshmfence"
-    fi
-    banner
-    print_msg "Installing some distro specfic required packages"
-    pd_setup_some_required_pack=$(
-        cat <<EOF
+	fi
+	banner
+	print_msg "Installing some distro specfic required packages"
+	pd_setup_some_required_pack=$(
+		cat <<EOF
 pd_package_install_and_check "$some_required_pack_list"
 check_and_delete "some_required_pack.sh"
 EOF
-    )
-    create_shell_script "$save_path/some_required_pack.sh" "$pd_setup_some_required_pack"
-    "${selected_distro_type}"-distro login "$selected_distro" -- /bin/bash -c 'bash /root/some_required_pack.sh'
+	)
+	create_shell_script "$save_path/some_required_pack.sh" "$pd_setup_some_required_pack"
+	"${selected_distro_type}"-distro login "$selected_distro" -- /bin/bash -c 'bash /root/some_required_pack.sh'
 }
 
 function install_distro_container() {
-    set_distro_paths
-    setup_distro
-    if [[ "$selected_distro_type" == "chroot" ]]; then
-        termux_home_link=" "
-    else
-        termux_home_link="--termux-home"
-    fi
-    distro_basic_task
-    if [[ "$CALL_FROM_CHANGE_DISTRO" == false ]]; then
-        if [[ "$enable_hw_acc" == "y" ]]; then
-            hw_config
-        fi
-    fi
-    distro_zsh_setup
-    distro_terminal_utility_setup
-    distro_create_app_installer
-    add_add_to_menu
-    if [[ "$LITE_MODE" != "1" && "$LITE_MODE" != "true" ]]; then
-        install_some_required_pack
-    fi
-    distro_app_launch_setup
+	set_distro_paths
+	setup_distro
+	if [[ "$selected_distro_type" == "chroot" ]]; then
+		termux_home_link=" "
+	else
+		termux_home_link="--termux-home"
+	fi
+	distro_basic_task
+	if [[ "$CALL_FROM_CHANGE_DISTRO" == false ]]; then
+		if [[ "$enable_hw_acc" == "y" ]]; then
+			hw_config
+		fi
+	fi
+	distro_zsh_setup
+	distro_terminal_utility_setup
+	distro_create_app_installer
+	add_add_to_menu
+	if [[ "$LITE_MODE" != "1" && "$LITE_MODE" != "true" ]]; then
+		install_some_required_pack
+	fi
+	distro_app_launch_setup
 }
 
 #########################################################################
@@ -1922,63 +1922,63 @@ function install_distro_container() {
 #########################################################################
 
 function chroot_disro_container_install_check() {
-    if [[ -f "$PREFIX/bin/$selected_distro" ]] && su -c "ls /data/local/chroot-distro/installed-rootfs/$selected_distro" &>/dev/null; then
-        echo
-        print_success "${BOLD} $selected_distro container setup successfully"
-    else
-        max_retries=2
-        retry_count=0
-        while [[ "$retry_count" -lt "$max_retries" ]]; do
-            print_failed "Some problem occurred in $selected_distro setup"
-            echo
-            print_msg "Trying again... (Attempt $((retry_count + 1)) of $max_retries)"
-            install_distro_container
-            if [[ -f "$PREFIX/bin/$selected_distro" ]] && su -c "ls /data/local/chroot-distro/installed-rootfs/$selected_distro" &>/dev/null; then
-                echo
-                print_success "${BOLD} $selected_distro container setup successfully"
-                break
-            fi
-            ((retry_count++))
-        done
+	if [[ -f "$PREFIX/bin/$selected_distro" ]] && su -c "ls /data/local/chroot-distro/installed-rootfs/$selected_distro" &>/dev/null; then
+		echo
+		print_success "${BOLD} $selected_distro container setup successfully"
+	else
+		max_retries=2
+		retry_count=0
+		while [[ "$retry_count" -lt "$max_retries" ]]; do
+			print_failed "Some problem occurred in $selected_distro setup"
+			echo
+			print_msg "Trying again... (Attempt $((retry_count + 1)) of $max_retries)"
+			install_distro_container
+			if [[ -f "$PREFIX/bin/$selected_distro" ]] && su -c "ls /data/local/chroot-distro/installed-rootfs/$selected_distro" &>/dev/null; then
+				echo
+				print_success "${BOLD} $selected_distro container setup successfully"
+				break
+			fi
+			((retry_count++))
+		done
 
-        if [[ "$retry_count" -eq "$max_retries" ]]; then
-            print_failed "Failed to set up $selected_distro container after multiple attempts. Skipping...${NC}"
-        fi
-    fi
+		if [[ "$retry_count" -eq "$max_retries" ]]; then
+			print_failed "Failed to set up $selected_distro container after multiple attempts. Skipping...${NC}"
+		fi
+	fi
 }
 
 function proot_disro_container_install_check() {
-    if [[ -f "$PREFIX/bin/$selected_distro" ]] && [[ -d "$PREFIX/var/lib/proot-distro/installed-rootfs/$selected_distro" ]]; then
-        echo
-        print_success "${BOLD} $selected_distro container setup successfully"
-    else
-        max_retries=2
-        retry_count=0
-        while [[ "$retry_count" -lt "$max_retries" ]]; do
-            print_failed "Some problem occurred in $selected_distro setup"
-            echo
-            print_msg "Trying again... (Attempt $((retry_count + 1)) of $max_retries)"
-            install_distro_container
-            if [[ -f "$PREFIX/bin/$selected_distro" ]] && [[ -d "$PREFIX/var/lib/proot-distro/installed-rootfs/$selected_distro" ]]; then
-                echo
-                print_success "${BOLD} $selected_distro container setup successfully"
-                break
-            fi
-            ((retry_count++))
-        done
+	if [[ -f "$PREFIX/bin/$selected_distro" ]] && [[ -d "$PREFIX/var/lib/proot-distro/installed-rootfs/$selected_distro" ]]; then
+		echo
+		print_success "${BOLD} $selected_distro container setup successfully"
+	else
+		max_retries=2
+		retry_count=0
+		while [[ "$retry_count" -lt "$max_retries" ]]; do
+			print_failed "Some problem occurred in $selected_distro setup"
+			echo
+			print_msg "Trying again... (Attempt $((retry_count + 1)) of $max_retries)"
+			install_distro_container
+			if [[ -f "$PREFIX/bin/$selected_distro" ]] && [[ -d "$PREFIX/var/lib/proot-distro/installed-rootfs/$selected_distro" ]]; then
+				echo
+				print_success "${BOLD} $selected_distro container setup successfully"
+				break
+			fi
+			((retry_count++))
+		done
 
-        if [[ "$retry_count" -eq "$max_retries" ]]; then
-            print_failed "Failed to set up $selected_distro container after multiple attempts. Skipping...${NC}"
-        fi
-    fi
+		if [[ "$retry_count" -eq "$max_retries" ]]; then
+			print_failed "Failed to set up $selected_distro container after multiple attempts. Skipping...${NC}"
+		fi
+	fi
 }
 
 function disro_container_install_check() {
-    if [[ "$selected_distro_type" == "chroot" ]]; then
-        chroot_disro_container_install_check
-    else
-        proot_disro_container_install_check
-    fi
+	if [[ "$selected_distro_type" == "chroot" ]]; then
+		chroot_disro_container_install_check
+	else
+		proot_disro_container_install_check
+	fi
 }
 
 check_termux
@@ -1988,6 +1988,6 @@ check_termux
 # you just want to source all the functions
 # but don't want to run the entire setup process
 function run_distro_container_setup_main() {
-    install_distro_container
-    disro_container_install_check
+	install_distro_container
+	disro_container_install_check
 }

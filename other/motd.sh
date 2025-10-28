@@ -53,11 +53,11 @@ echo -e "${NC}${BOLD}System Info:${NC}"
 # Android System Information
 #==============================================
 if [[ -d /system/app/ && -d /system/priv-app ]]; then
-    DISTRO="Android $(getprop ro.build.version.release)"
-    echo -e "${C} System          : ${G}   ${NC}${DISTRO}"
+	DISTRO="Android $(getprop ro.build.version.release)"
+	echo -e "${C} System          : ${G}   ${NC}${DISTRO}"
 
-    MODEL="$(getprop ro.product.brand) $(getprop ro.product.model)"
-    echo -e "${C} Host            : ${G}󰍹   ${NC}${MODEL}"
+	MODEL="$(getprop ro.product.brand) $(getprop ro.product.model)"
+	echo -e "${C} Host            : ${G}󰍹   ${NC}${MODEL}"
 fi
 
 #==============================================
@@ -73,9 +73,9 @@ PROC_MODEL=$(getprop ro.soc.model | tr '[:lower:]' '[:upper:]')
 HARDWARE=$(getprop ro.hardware | tr '[:lower:]' '[:upper:]')
 
 if [[ -n $PROC_BRAND && -n $PROC_MODEL ]]; then
-    soc_details="$PROC_BRAND $PROC_MODEL"
+	soc_details="$PROC_BRAND $PROC_MODEL"
 else
-    soc_details="$HARDWARE"
+	soc_details="$HARDWARE"
 fi
 
 PROCESSOR_COUNT=$(grep -c '^processor' /proc/cpuinfo)
@@ -105,17 +105,17 @@ echo -e "${C} Memory          : ${G}󰘚   ${USED}${NC} used, ${TOTAL}${NC} tota
 # Battery Information (Background Process)
 #==============================================
 (
-    if cmd package list packages --user 0 -e -f | sed 's/package://; s/\.apk=/\.apk /' | grep -q "com.termux.api"; then
-        if ! command -v termux-api-start &>/dev/null; then
-            echo "battery:N/A:N/A:false"
-            exit
-        fi
-        BATTERY=$(termux-battery-status 2>/dev/null | jq -r '.percentage // "N/A"')
-        BATTERY_STATUS=$(termux-battery-status 2>/dev/null | jq -r '.status // "UNKNOWN"')
-        echo "battery:${BATTERY}:${BATTERY_STATUS}:true"
-    else
-        echo "battery:N/A:N/A:false"
-    fi
+	if cmd package list packages --user 0 -e -f | sed 's/package://; s/\.apk=/\.apk /' | grep -q "com.termux.api"; then
+		if ! command -v termux-api-start &>/dev/null; then
+			echo "battery:N/A:N/A:false"
+			exit
+		fi
+		BATTERY=$(termux-battery-status 2>/dev/null | jq -r '.percentage // "N/A"')
+		BATTERY_STATUS=$(termux-battery-status 2>/dev/null | jq -r '.status // "UNKNOWN"')
+		echo "battery:${BATTERY}:${BATTERY_STATUS}:true"
+	else
+		echo "battery:N/A:N/A:false"
+	fi
 ) >"${TMPDIR}/battery_info.tmp" &
 battery_pid=$!
 
@@ -124,26 +124,26 @@ battery_pid=$!
 #==============================================
 raw_temp=""
 for zone in /sys/class/thermal/thermal_zone*/temp; do
-    if [[ -r "$zone" ]]; then
-        raw_temp=$(<"$zone")
-        break
-    fi
+	if [[ -r "$zone" ]]; then
+		raw_temp=$(<"$zone")
+		break
+	fi
 done
 
 if [[ $raw_temp =~ ^[0-9]+$ ]]; then
-    TEMP=$((raw_temp > 1000 ? raw_temp / 1000 : raw_temp / 100))
+	TEMP=$((raw_temp > 1000 ? raw_temp / 1000 : raw_temp / 100))
 elif command -v termux-battery-status >/dev/null 2>&1; then
-    TEMP=$(termux-battery-status 2>/dev/null | jq -r '.temperature // "N/A"' | cut -d'.' -f1)
+	TEMP=$(termux-battery-status 2>/dev/null | jq -r '.temperature // "N/A"' | cut -d'.' -f1)
 else
-    TEMP="N/A"
+	TEMP="N/A"
 fi
 
 if [[ $TEMP =~ ^[0-9]+$ ]]; then
-    ((TEMP < 20)) && TEMP_ICON="${C}"
-    ((TEMP >= 20 && TEMP < 40)) && TEMP_ICON="${G}"
-    ((TEMP >= 40)) && TEMP_ICON="${R}"
+	((TEMP < 20)) && TEMP_ICON="${C}"
+	((TEMP >= 20 && TEMP < 40)) && TEMP_ICON="${G}"
+	((TEMP >= 40)) && TEMP_ICON="${R}"
 else
-    TEMP_ICON=""
+	TEMP_ICON=""
 fi
 echo -e "${C} Temperature     : ${TEMP_ICON}   ${TEMP}°C${NC}"
 
@@ -156,43 +156,43 @@ sleep_interval=0.01
 max_iterations=$(awk "BEGIN {print int($timeout_duration / $sleep_interval)}")
 
 for ((i = 0; i < max_iterations; i++)); do
-    if ! kill -0 $battery_pid 2>/dev/null; then
-        # Process finished
-        break
-    fi
-    sleep $sleep_interval
+	if ! kill -0 $battery_pid 2>/dev/null; then
+		# Process finished
+		break
+	fi
+	sleep $sleep_interval
 done
 
 # Check if process is still running after timeout
 if kill -0 $battery_pid 2>/dev/null; then
-    # Timeout reached, kill the process
-    kill -9 $battery_pid 2>/dev/null
-    timeout_reached=true
+	# Timeout reached, kill the process
+	kill -9 $battery_pid 2>/dev/null
+	timeout_reached=true
 fi
 
 wait $battery_pid 2>/dev/null
 
 if [[ "$timeout_reached" == false && -f ${TMPDIR}/battery_info.tmp ]]; then
-    IFS=':' read -r _ BATTERY BATTERY_STATUS <"${TMPDIR}/battery_info.tmp"
-    rm -rf "${TMPDIR}/battery_info.tmp"
+	IFS=':' read -r _ BATTERY BATTERY_STATUS <"${TMPDIR}/battery_info.tmp"
+	rm -rf "${TMPDIR}/battery_info.tmp"
 
-    if [[ "$BATTERY" =~ ^[0-9]+$ ]]; then
-        ((BATTERY < 20)) && BAT_ICON="${R} "
-        ((BATTERY >= 20 && BATTERY < 40)) && BAT_ICON="${Y} "
-        ((BATTERY >= 40 && BATTERY < 60)) && BAT_ICON="${Y} "
-        ((BATTERY >= 60 && BATTERY < 80)) && BAT_ICON="${G} "
-        ((BATTERY >= 80)) && BAT_ICON="${G} "
-    else
-        BAT_ICON="${R} "
-        BATTERY="N/A"
-    fi
+	if [[ "$BATTERY" =~ ^[0-9]+$ ]]; then
+		((BATTERY < 20)) && BAT_ICON="${R} "
+		((BATTERY >= 20 && BATTERY < 40)) && BAT_ICON="${Y} "
+		((BATTERY >= 40 && BATTERY < 60)) && BAT_ICON="${Y} "
+		((BATTERY >= 60 && BATTERY < 80)) && BAT_ICON="${G} "
+		((BATTERY >= 80)) && BAT_ICON="${G} "
+	else
+		BAT_ICON="${R} "
+		BATTERY="N/A"
+	fi
 
-    [[ $BATTERY_STATUS == "CHARGING" ]] && CHARGE_ICON="${BOLD}${G}" || CHARGE_ICON=""
+	[[ $BATTERY_STATUS == "CHARGING" ]] && CHARGE_ICON="${BOLD}${G}" || CHARGE_ICON=""
 
-    echo -e "${C} Battery Level   : ${BAT_ICON}  ${NC}${BATTERY}%${NC} ${CHARGE_ICON}${NC}"
+	echo -e "${C} Battery Level   : ${BAT_ICON}  ${NC}${BATTERY}%${NC} ${CHARGE_ICON}${NC}"
 else
-    # Timeout reached or file not found - skip battery info
-    rm -rf "${TMPDIR}/battery_info.tmp" 2>/dev/null
+	# Timeout reached or file not found - skip battery info
+	rm -rf "${TMPDIR}/battery_info.tmp" 2>/dev/null
 fi
 
 #==============================================
@@ -211,16 +211,16 @@ mount_width=$((cols - indent - trailer))
 max_usage=95
 
 while read -r _ size used _ usep mount; do
-    pct=${usep%%%}
-    used_width=$((pct * bar_width / 100))
-    ((pct >= max_usage)) && bar_color=$R || bar_color=$G
+	pct=${usep%%%}
+	used_width=$((pct * bar_width / 100))
+	((pct >= max_usage)) && bar_color=$R || bar_color=$G
 
-    bar="[${bar_color}"
-    for ((i = 0; i < used_width; i++)); do bar+="#"; done
-    bar+="${WHITE}${DIM}"
-    for ((i = used_width; i < bar_width; i++)); do bar+="-"; done
-    bar+="${UNDIM}]"
+	bar="[${bar_color}"
+	for ((i = 0; i < used_width; i++)); do bar+="#"; done
+	bar+="${WHITE}${DIM}"
+	for ((i = used_width; i < bar_width; i++)); do bar+="-"; done
+	bar+="${UNDIM}]"
 
-    printf "%*s%-*s used %-4s of %-4s\n" "$indent" "" "$mount_width" "$mount" "$used" "$size"
-    printf "%*s%b\n" "$indent" "" "$bar"
+	printf "%*s%-*s used %-4s of %-4s\n" "$indent" "" "$mount_width" "$mount" "$used" "$size"
+	printf "%*s%b\n" "$indent" "" "$bar"
 done < <(df -H -t sdcardfs -t fuse -t fuse.rclone 2>/dev/null | tail -n +2)

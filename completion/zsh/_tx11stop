@@ -1,20 +1,21 @@
 #compdef tx11stop
 
 _tx11stop() {
-    local -a opts
-    opts=(
-        '--help[Show help information]'
-        '-h[Show help information]'
-        '--force[Force stop Termux:X11]'
-        '-f[Force stop Termux:X11]'
-    )
+	local -a opts
+	opts=(
+		'--help[Show help information]'
+		'-h[Show help information]'
+		'--force[Force stop Termux:X11]'
+		'-f[Force stop Termux:X11]'
+	)
 
-    # Prevent suggestions if an option is already used
-    if (( CURRENT > 2 )); then
-        return
-    fi
+	# Prevent suggestions if an option is already used
+	if ((CURRENT > 2)); then
+		return
+	fi
 
-    _arguments -s : "${opts[@]}"
+	_arguments -s : "${opts[@]}"
 }
 
 _tx11stop "$@"
+
