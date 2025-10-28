@@ -81,13 +81,20 @@ jobs:
       - name: Get new version
         id: get_new_version
         run: |
+          # Extract only stable releases (exclude rc, alpha, beta versions)
+          # Match pattern: mesa-X.Y.Z.tar.xz (not mesa-X.Y.Z-rcN.tar.xz)
           latest_version=$(curl -fsSL "https://archive.mesa3d.org/" | \
-            sed -rn 's/.*mesa-([0-9]+(\.[0-9]+)*).*/\1/p' | \
+            sed -rn 's/.*href="mesa-([0-9]+\.[0-9]+\.[0-9]+)\.tar\.xz".*/\1/p' | \
             sort -Vr | \
             head -1)
 
+          if [ -z "$latest_version" ]; then
+            echo "ERROR: Could not find any stable Mesa releases"
+            exit 1
+          fi
+
           echo "latest_version=$latest_version" >> $GITHUB_OUTPUT
-          echo "Latest Mesa version: $latest_version"
+          echo "Latest stable Mesa version: $latest_version"
 
       - name: Compare versions
         id: compare_versions
