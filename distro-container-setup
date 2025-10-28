@@ -1847,9 +1847,48 @@ EOF
 
 #########################################################################
 #
-# Install some required packages
+# Install some required packages and repos
 #
 #########################################################################
+
+function add_useful_repos() {
+	if [[ "$selected_distro" == "ubuntu" ]] || [[ "$selected_distro" == "debian" ]]; then
+		print_msg "Adding some useful repos..."
+		added_repo_list=$(
+			cat <<-EOF
+				# Install necessary packages without prompts
+				pd_package_install_and_check "wget gpg apt-transport-https"
+
+				# Download and store the Microsoft GPG key
+				wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor | sudo tee /etc/apt/keyrings/packages.microsoft.gpg > /dev/null
+
+				# Set correct permissions on the key
+				sudo install -D -o root -g root -m 644 /etc/apt/keyrings/packages.microsoft.gpg /etc/apt/keyrings/packages.microsoft.gpg
+
+				# Add the VS Code repository non-interactively
+				echo "deb [arch=amd64,arm64,armhf signed-by=/etc/apt/keyrings/packages.microsoft.gpg] https://packages.microsoft.com/repos/code stable main" | sudo tee /etc/apt/sources.list.d/vscode.list > /dev/null
+			EOF
+			create_shell_script "$save_path/run_add_useful_repos.sh" "$added_repo_list"
+			"${selected_distro_type}"-distro login "$selected_distro" -- /bin/bash -c "bash /root/run_add_useful_repos.sh"
+		)
+	elif [[ "$selected_distro" == "fedora" ]]; then
+		print_msg "Adding some useful repos..."
+		added_repo_list=$(
+			cat <<-EOF
+				# Import Microsoft GPG key
+				rpm --import https://packages.microsoft.com/keys/microsoft.asc
+
+				# Add the VS Code repository without user interaction
+				echo -e "[code]\nname=Visual Studio Code\nbaseurl=https://packages.microsoft.com/yumrepos/vscode\nenabled=1\ngpgcheck=1\ngpgkey=https://packages.microsoft.com/keys/microsoft.asc" | sudo tee /etc/yum.repos.d/vscode.repo > /dev/null
+
+				# Update the package list
+				dnf check-update -y
+			EOF
+			create_shell_script "$save_path/run_add_useful_repos.sh" "$added_repo_list"
+			"${selected_distro_type}"-distro login "$selected_distro" -- /bin/bash -c "bash /root/run_add_useful_repos.sh"
+		)
+	fi
+}
 
 function install_some_required_pack() {
 	local some_required_pack_list=""
@@ -1909,6 +1948,7 @@ function install_distro_container() {
 	distro_terminal_utility_setup
 	distro_create_app_installer
 	add_add_to_menu
+	add_useful_repos
 	if [[ "$LITE_MODE" != "1" && "$LITE_MODE" != "true" ]]; then
 		install_some_required_pack
 	fi
