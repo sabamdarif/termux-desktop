@@ -2569,7 +2569,7 @@ function install_desktop() {
 	elif [[ "$de_name" == "bspwm" ]]; then
 		print_msg "${BOLD}Installing BSPWM"
 		package_install_and_check "bspwm lxappearance xorg-xsetroot rofi feh st nemo"
-	elif [[ "$de_name" == "bspwm" ]]; then
+	elif [[ "$de_name" == "wmaker" ]]; then
 		print_msg "${BOLD}Installing WMAKER"
 		package_install_and_check "wmaker lxappearance xterm nemo"
 	elif [[ "$de_name" == "awesome" ]]; then
