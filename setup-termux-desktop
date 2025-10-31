@@ -992,6 +992,8 @@ function ask_to_chose_de() {
 	total_custom_fluxbox_setup=$(count_subfolders "$owner" "$repo" "setup-files/fluxbox" "$branch" 2>/dev/null)
 	local total_custom_icewm_setup
 	total_custom_icewm_setup=$(count_subfolders "$owner" "$repo" "setup-files/icewm" "$branch" 2>/dev/null)
+        local total_custom_icewm_setup
+        total_custom_wmaker_setup=$(count_subfolders "$owner" "$repo" "setup-files/wmaker" "$branch" 2>/dev/null)
 	banner
 	print_msg "Select Desktop Environment"
 	echo " "
