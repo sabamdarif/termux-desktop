@@ -74,7 +74,8 @@
 | GNOME                        | bspwm                              |
 | Cinnamon                     | Awesome                            |
 |                              | Fluxbox                            |
-|                              | IceWM                              |
+|                              | IceWM    
+|                   |          |Wmaker
 
 ##### 3. Start Installation:
 

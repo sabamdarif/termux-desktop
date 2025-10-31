@@ -1019,9 +1019,9 @@ function ask_to_chose_de() {
 	echo
 	echo "${Y}12. IceWM($total_custom_icewm_setup)${NC}"
 	echo
-	echo "${Y}13. wmaker($total_custom_wmaker_setup${NC}"
+	echo "${Y}13. wmaker($total_custom_wmaker_setup)${NC}"
 echo
-	select_an_option 12 1 desktop_answer
+	select_an_option 13 1 desktop_answer
 	# set the variables based on chosen de
 	sys_icons_folder="$PREFIX/share/icons"
 	sys_themes_folder="$PREFIX/share/themes"
