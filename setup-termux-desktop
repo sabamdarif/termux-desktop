@@ -4524,6 +4524,30 @@ function install_fm_tools() {
 
 #########################################################################
 #
+# Setup usb auto bookmarks utility
+#
+#########################################################################
+
+function add_usb_auto_mount() {
+	print_msg "Adding USB auto filemanager bookmarks utility..."
+	download_file "$PREFIX/bin/usb-bookmarks" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/other/usb-bookmarks"
+	chmod +x "$PREFIX/bin/usb-bookmarks"
+	check_and_create_directory "$HOME/.config/autostart"
+	cat <<-EOF >"$HOME/.config/autostart/usb-bookmarks.desktop"
+		[Desktop Entry]
+		Type=Application
+		Version=1.0
+		Name=USB Bookmarks Sync
+		Comment=Keep File Manager bookmarks in sync with mounted USB volumes
+		Exec=usb-bookmarks --watch
+		X-GNOME-Autostart-enabled=true
+		OnlyShowIn=XFCE;
+		NoDisplay=true
+	EOF
+}
+
+#########################################################################
+#
 # Install Fonts
 #
 #########################################################################
@@ -5717,6 +5741,7 @@ function install_termux_desktop() {
 	add_to_autostart
 	check_desktop_process
 	install_fm_tools
+	add_usb_auto_mount
 	add_auto_completion
 	some_fixes
 	cleanup_cache

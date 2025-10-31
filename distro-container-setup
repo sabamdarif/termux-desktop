@@ -645,11 +645,69 @@ function add_installer_common() {
 source $PREFIX/etc/termux-desktop/common_functions
 
 xhost + >/dev/null 2>&1
+# --- USB auto-bind helpers ---
+usb_mounts() {
+  # Candidate external filesystems under /mnt/media_rw/<UUID>
+  local candidates seen="" media uuid acc
+  candidates=\$(awk '(\$2 ~ "^/mnt/media_rw/[0-9A-Fa-f-]+\$") && (\$3 ~ /vfat|exfat|ntfs|fuseblk/) {print \$2}' /proc/mounts | sort -u)
+  while IFS= read -r media; do
+    [ -d "\$media" ] || continue
+    uuid="\${media##*/}"
+    acc="/storage/\${uuid}"; [ -r "\$acc" ] || acc="\$media"
+    [ -r "\$acc" ] || continue
+    case ",\$seen," in *",\$uuid,"*) ;; *) printf '%s\n' "\$acc"; seen="\${seen},\${uuid}";; esac
+  done <<< "\$candidates"
+}
+
+urldecode() { local s="\${1//+/ }"; printf '%b' "\${s//%/\\x}"; }
+
+normalize_arg() {
+  # Decode file:// and %XX to the real path (do not rewrite the path itself)
+  local a="$1"
+  case "\$a" in file://*) a="\${a#file://}";; esac
+  if [[ "\$a" == *%* || "\$a" == *+* ]]; then a="\$(urldecode "\$a")"; fi
+  echo "\$a"
+}
+
+enum_media=0
+
+usb_bind_args() {
+  if [ -n "\${PDRUN_DISABLE_USB_BIND:-}" ]; then printf ''; return 0; fi
+  local args="--bind /storage:/storage --bind /mnt/media_rw:/mnt/media_rw"
+
+  # Convenience bind (/mnt/usb/<UUID>)
+  local list; if [ -n "\${PDRUN_USB_BIND_PATH:-}" ]; then list="\${PDRUN_USB_BIND_PATH}"; else list="\$(usb_mounts 2>/dev/null)"; fi
+  if [ -n "\$list" ]; then
+    local include="\${PDRUN_USB_INCLUDE:-}"; local exclude="\${PDRUN_USB_EXCLUDE:-}"; local limit="\${PDRUN_USB_LIMIT:-0}"
+    local count=0
+    while IFS= read -r p; do
+      [ -n "\$p" ] || continue
+      local uuid="\${p##*/}"
+      if [ -n "\$include" ]; then case ",\$include," in *",\$uuid,"*) ;; *) continue;; esac; fi
+      if [ -n "\$exclude" ]; then case ",\$exclude," in *",\$uuid,"*) continue;; esac; fi
+      if [ "\$limit" -gt 0 ] && [ "\$count" -ge "\$limit" ]; then break; fi
+      args="\${args} --bind \${p}:/mnt/usb/\${uuid}"
+      count=\$((count+1))
+    done <<< "\$list"
+  fi
+
+  # If needed: self-bind individual paths (to prevent /mnt/media_rw from being omitted in file dialogs)
+  if [ "\${enum_media:-0}" -eq 1 ] || [[ "\${PDRUN_MEDIA_RW_ENUM:-}" =~ ^(1|true|yes)$ ]]; then
+    while IFS= read -r p; do
+      [ -n "\$p" ] || continue
+      args="\${args} --bind \${p}:\${p}"                    # /mnt/media_rw/<UUID>
+      uuid="\${p##*/}"; st="/storage/\${uuid}"
+      [ -r "\$st" ] && args="\${args} --bind \${st}:\${st}"  # /storage/<UUID>
+    done <<<"\$(usb_mounts 2>/dev/null | sed -E 's|^/storage/([0-9A-Fa-f-]+)$|/mnt/media_rw/\\1|')"
+  fi
+
+  printf '%s' "\$args"
+}
 if [ "\$#" -eq 0 ]; then
     if [ "\$PWD" = "$HOME" ]; then
-        ${selected_distro_type}-distro login --user "$final_user_name" "$selected_distro" --shared-tmp $termux_home_link
+        ${selected_distro_type}-distro login \$(usb_bind_args) --no-arch-warning --user "$final_user_name" "$selected_distro" --shared-tmp $termux_home_link
     else
-        ${selected_distro_type}-distro login --user "$final_user_name" "$selected_distro" --shared-tmp --work-dir "\$PWD" $termux_home_link
+        ${selected_distro_type}-distro login \$(usb_bind_args) --no-arch-warning --user "$final_user_name" "$selected_distro" --shared-tmp --work-dir "\$PWD" $termux_home_link
     fi
 
     check_and_create_directory "/data/data/com.termux/files/usr/share/applications/pd_added"
@@ -1772,6 +1830,61 @@ function distro_app_launch_setup() {
 
 source /data/data/com.termux/files/usr/etc/termux-desktop/common_functions
 
+usb_mounts() {
+  local candidates seen="" media uuid acc
+  candidates=\$(awk '(\$2 ~ "^/mnt/media_rw/[0-9A-Fa-f-]+\$") && (\$3 ~ /vfat|exfat|ntfs|fuseblk/) {print \$2}' /proc/mounts | sort -u)
+  while IFS= read -r media; do
+    [ -d "\$media" ] || continue
+    uuid="\${media##*/}"
+    acc="/storage/\${uuid}"; [ -r "\$acc" ] || acc="\$media"
+    [ -r "\$acc" ] || continue
+    case ",\$seen," in *",\$uuid,"*) ;; *) printf '%s\n' "\$acc"; seen="\${seen},\${uuid}";; esac
+  done <<< "\$candidates"
+}
+
+urldecode() { local s="\${1//+/ }"; printf '%b' "\${s//%/\\\\x}"; }
+
+normalize_arg() {
+  local a="\$1"
+  case "\$a" in file://*) a="\${a#file://}";; esac
+  if [[ "\$a" == *%* || "\$a" == *+* ]]; then a="\$(urldecode "\$a")"; fi
+  echo "\$a"
+}
+
+enum_media=0
+
+usb_bind_args() {
+  if [ -n "\${PDRUN_DISABLE_USB_BIND:-}" ]; then printf ''; return 0; fi
+
+  local args="--bind /storage:/storage --bind /mnt/media_rw:/mnt/media_rw"
+
+  local list; if [ -n "\${PDRUN_USB_BIND_PATH:-}" ]; then list="\${PDRUN_USB_BIND_PATH}"; else list="\$(usb_mounts 2>/dev/null)"; fi
+  if [ -n "\$list" ]; then
+    local include="\${PDRUN_USB_INCLUDE:-}"; local exclude="\${PDRUN_USB_EXCLUDE:-}"; local limit="\${PDRUN_USB_LIMIT:-0}"
+    local count=0
+    while IFS= read -r p; do
+      [ -n "\$p" ] || continue
+      local uuid="\${p##*/}"
+      if [ -n "\$include" ]; then case ",\$include," in *",\$uuid,"*) ;; *) continue;; esac; fi
+      if [ -n "\$exclude" ]; then case ",\$exclude," in *",\$uuid,"*) continue;; esac; fi
+      if [ "\$limit" -gt 0 ] && [ "\$count" -ge "\$limit" ]; then break; fi
+      args="\${args} --bind \${p}:/mnt/usb/\${uuid}"
+      count=\$((count+1))
+    done <<< "\$list"
+  fi
+
+  if [ "\${enum_media:-0}" -eq 1 ] || [[ "\${PDRUN_MEDIA_RW_ENUM:-}" =~ ^(1|true|yes)\$ ]]; then
+    while IFS= read -r p; do
+      [ -n "\$p" ] || continue
+      args="\${args} --bind \${p}:\${p}"
+      uuid="\${p##*/}"; st="/storage/\${uuid}"
+      [ -r "\$st" ] && args="\${args} --bind \${st}:\${st}"
+    done <<<"\$(usb_mounts 2>/dev/null | sed -E 's|^/storage/([0-9A-Fa-f-]+)\$|/mnt/media_rw/\\\\1|')"
+  fi
+
+  printf '%s' "\$args"
+}
+
 if [[ "${selected_distro_type}" == "proot" ]]; then
 # This code block is taken from:- https://github.com/termux/proot-distro/blob/master/proot-distro.sh#L172C1-L184C1
 TRACER_PID=\$(grep TracerPid "/proc/\$\$/status" | cut -d \$'\t' -f 2)
@@ -1794,13 +1907,13 @@ EOF
 xhost + > /dev/null 2>&1
 case \$1 in
 --nogpu)
-"${selected_distro_type}"-distro login --user "$final_user_name" "$selected_distro" --shared-tmp $termux_home_link -- eval "env DISPLAY=\$(echo \$DISPLAY) XDG_RUNTIME_DIR=\${TMPDIR} LIBGL_ALWAYS_SOFTWARE=1 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe \${@:2}"
+"${selected_distro_type}"-distro login \$(usb_bind_args) --no-arch-warning --user "$final_user_name" "$selected_distro" --shared-tmp $termux_home_link -- eval "env DISPLAY=\$(echo \$DISPLAY) XDG_RUNTIME_DIR=\${TMPDIR} LIBGL_ALWAYS_SOFTWARE=1 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe \${@:2}"
 ;;
 --help|-h)
 echo "${G}Type ${C}pdrun PACKAGE-NAME ${G}to start with GPU acceleration${NC}"
 ;;
 *)
-"${selected_distro_type}"-distro login --user "$final_user_name" "$selected_distro" --shared-tmp $termux_home_link -- eval "env DISPLAY=\$(echo \$DISPLAY) XDG_RUNTIME_DIR=\${TMPDIR} \$selected_pd_hw_method \$@"
+"${selected_distro_type}"-distro login \$(usb_bind_args) --no-arch-warning --user "$final_user_name" "$selected_distro" --shared-tmp $termux_home_link -- eval "env DISPLAY=\$(echo \$DISPLAY) XDG_RUNTIME_DIR=\${TMPDIR} \$selected_pd_hw_method \$@"
 ;;
 esac
 EOF
@@ -1811,6 +1924,61 @@ EOF
 #!/data/data/com.termux/files/usr/bin/bash
 
 source /data/data/com.termux/files/usr/etc/termux-desktop/common_functions
+
+usb_mounts() {
+  local candidates seen="" media uuid acc
+  candidates=\$(awk '(\$2 ~ "^/mnt/media_rw/[0-9A-Fa-f-]+\$") && (\$3 ~ /vfat|exfat|ntfs|fuseblk/) {print \$2}' /proc/mounts | sort -u)
+  while IFS= read -r media; do
+    [ -d "\$media" ] || continue
+    uuid="\${media##*/}"
+    acc="/storage/\${uuid}"; [ -r "\$acc" ] || acc="\$media"
+    [ -r "\$acc" ] || continue
+    case ",\$seen," in *",\$uuid,"*) ;; *) printf '%s\n' "\$acc"; seen="\${seen},\${uuid}";; esac
+  done <<< "\$candidates"
+}
+
+urldecode() { local s="\${1//+/ }"; printf '%b' "\${s//%/\\\\x}"; }
+
+normalize_arg() {
+  local a="\$1"
+  case "\$a" in file://*) a="\${a#file://}";; esac
+  if [[ "\$a" == *%* || "\$a" == *+* ]]; then a="\$(urldecode "\$a")"; fi
+  echo "\$a"
+}
+
+enum_media=0
+
+usb_bind_args() {
+  if [ -n "\${PDRUN_DISABLE_USB_BIND:-}" ]; then printf ''; return 0; fi
+
+  local args="--bind /storage:/storage --bind /mnt/media_rw:/mnt/media_rw"
+
+  local list; if [ -n "\${PDRUN_USB_BIND_PATH:-}" ]; then list="\${PDRUN_USB_BIND_PATH}"; else list="\$(usb_mounts 2>/dev/null)"; fi
+  if [ -n "\$list" ]; then
+    local include="\${PDRUN_USB_INCLUDE:-}"; local exclude="\${PDRUN_USB_EXCLUDE:-}"; local limit="\${PDRUN_USB_LIMIT:-0}"
+    local count=0
+    while IFS= read -r p; do
+      [ -n "\$p" ] || continue
+      local uuid="\${p##*/}"
+      if [ -n "\$include" ]; then case ",\$include," in *",\$uuid,"*) ;; *) continue;; esac; fi
+      if [ -n "\$exclude" ]; then case ",\$exclude," in *",\$uuid,"*) continue;; esac; fi
+      if [ "\$limit" -gt 0 ] && [ "\$count" -ge "\$limit" ]; then break; fi
+      args="\${args} --bind \${p}:/mnt/usb/\${uuid}"
+      count=\$((count+1))
+    done <<< "\$list"
+  fi
+
+  if [ "\${enum_media:-0}" -eq 1 ] || [[ "\${PDRUN_MEDIA_RW_ENUM:-}" =~ ^(1|true|yes)\$ ]]; then
+    while IFS= read -r p; do
+      [ -n "\$p" ] || continue
+      args="\${args} --bind \${p}:\${p}"
+      uuid="\${p##*/}"; st="/storage/\${uuid}"
+      [ -r "\$st" ] && args="\${args} --bind \${st}:\${st}"
+    done <<<"\$(usb_mounts 2>/dev/null | sed -E 's|^/storage/([0-9A-Fa-f-]+)\$|/mnt/media_rw/\\\\1|')"
+  fi
+
+  printf '%s' "\$args"
+}
 
 if [[ "${selected_distro_type}" == "proot" ]]; then
 # This code block is taken from:- https://github.com/termux/proot-distro/blob/master/proot-distro.sh#L172C1-L184C1
@@ -1837,7 +2005,7 @@ case \$1 in
 echo "${G}Type ${C}pdrun PACKAGE-NAME ${G}to start with gpu acceleration${NC}"
 ;;
 *)
-"${selected_distro_type}"-distro login --user "$final_user_name" "$selected_distro" --shared-tmp $termux_home_link -- eval "env DISPLAY=\$(echo \$DISPLAY) XDG_RUNTIME_DIR=\${TMPDIR} \$@"
+"${selected_distro_type}"-distro login \$(usb_bind_args) --no-arch-warning --user "$final_user_name" "$selected_distro" --shared-tmp $termux_home_link -- eval "env DISPLAY=\$(echo \$DISPLAY) XDG_RUNTIME_DIR=\${TMPDIR} \$@"
 ;;
 esac
 EOF
