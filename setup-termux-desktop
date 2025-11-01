@@ -992,6 +992,8 @@ function ask_to_chose_de() {
 	total_custom_fluxbox_setup=$(count_subfolders "$owner" "$repo" "setup-files/fluxbox" "$branch" 2>/dev/null)
 	local total_custom_icewm_setup
 	total_custom_icewm_setup=$(count_subfolders "$owner" "$repo" "setup-files/icewm" "$branch" 2>/dev/null)
+	local total_custom_wmaker_setup
+	total_custom_wmaker_setup=$(count_subfolders "$owner" "$repo" "setup-files/wmaker" "$branch" 2>/dev/null)
 	banner
 	print_msg "Select Desktop Environment"
 	echo " "
@@ -1019,7 +1021,9 @@ function ask_to_chose_de() {
 	echo
 	echo "${Y}12. IceWM($total_custom_icewm_setup)${NC}"
 	echo
-	select_an_option 12 1 desktop_answer
+	echo "${Y}13. WMaker($total_custom_wmaker_setup)${NC}"
+	echo
+	select_an_option 13 1 desktop_answer
 	# set the variables based on chosen de
 	sys_icons_folder="$PREFIX/share/icons"
 	sys_themes_folder="$PREFIX/share/themes"
@@ -1083,6 +1087,12 @@ function ask_to_chose_de() {
 		themes_folder="$HOME/.themes"
 		icons_folder="$HOME/.icons"
 		de_startup="icewm-session"
+	elif [[ "$desktop_answer" == "13" ]]; then
+		de_name="wmaker"
+		themes_folder="$HOME/.themes"
+		icons_folder="$HOME/.icons"
+		de_startup="wmaker"
+		
 	fi
 	banner
 	questions_theme_select
@@ -2560,6 +2570,9 @@ function install_desktop() {
 	elif [[ "$de_name" == "bspwm" ]]; then
 		print_msg "${BOLD}Installing BSPWM"
 		package_install_and_check "bspwm lxappearance xorg-xsetroot rofi feh st nemo"
+	elif [[ "$de_name" == "wmaker" ]]; then
+		print_msg "${BOLD}Installing WMAKER"
+		package_install_and_check "wmaker lxappearance xterm nemo"
 	elif [[ "$de_name" == "awesome" ]]; then
 		print_msg "${BOLD}Installing AWESOME WM"
 		package_install_and_check "awesome"
@@ -4794,6 +4807,8 @@ function remove_desktop_environments() {
 		package_check_and_remove "dwm"
 	elif [[ "$de_name" == "bspwm" ]]; then
 		package_check_and_remove "bspwm lxappearance xorg-xsetroot rofi feh nemo st"
+	elif [[ "$de_name" == "wmaker" ]]; then
+		package_check_and_remove "wmaker lxappearance nemo xterm"
 	elif [[ "$de_name" == "awesome" ]]; then
 		package_check_and_remove "awesome"
 	elif [[ "$de_name" == "fluxbox" ]]; then

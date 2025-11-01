@@ -75,6 +75,7 @@
 | Cinnamon                     | Awesome                            |
 |                              | Fluxbox                            |
 |                              | IceWM                              |
+|                              | WMaker                             |
 
 ##### 3. Start Installation:
 
