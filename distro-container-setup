@@ -1907,13 +1907,13 @@ EOF
 xhost + > /dev/null 2>&1
 case \$1 in
 --nogpu)
-"${selected_distro_type}"-distro login \$(usb_bind_args) --no-arch-warning --user "$final_user_name" "$selected_distro" --shared-tmp $termux_home_link -- eval "env DISPLAY=\$(echo \$DISPLAY) XDG_RUNTIME_DIR=\${TMPDIR} LIBGL_ALWAYS_SOFTWARE=1 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe \${@:2}"
+"${selected_distro_type}"-distro login \$(usb_bind_args) --no-arch-warning --user "$final_user_name" "$selected_distro" --shared-tmp $termux_home_link -- env DISPLAY=\$(echo \$DISPLAY) XDG_RUNTIME_DIR=\${TMPDIR} LIBGL_ALWAYS_SOFTWARE=1 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe sh -lc 'umask 022; exec "\$@"' _ "\${@:2}"
 ;;
 --help|-h)
 echo "${G}Type ${C}pdrun PACKAGE-NAME ${G}to start with GPU acceleration${NC}"
 ;;
 *)
-"${selected_distro_type}"-distro login \$(usb_bind_args) --no-arch-warning --user "$final_user_name" "$selected_distro" --shared-tmp $termux_home_link -- eval "env DISPLAY=\$(echo \$DISPLAY) XDG_RUNTIME_DIR=\${TMPDIR} \$selected_pd_hw_method \$@"
+"${selected_distro_type}"-distro login \$(usb_bind_args) --no-arch-warning --user "$final_user_name" "$selected_distro" --shared-tmp $termux_home_link -- env DISPLAY=\$(echo \$DISPLAY) XDG_RUNTIME_DIR=\${TMPDIR} \$selected_pd_hw_method sh -lc 'umask 022; exec "\$@"' _ "\$@"
 ;;
 esac
 EOF
@@ -2005,7 +2005,7 @@ case \$1 in
 echo "${G}Type ${C}pdrun PACKAGE-NAME ${G}to start with gpu acceleration${NC}"
 ;;
 *)
-"${selected_distro_type}"-distro login \$(usb_bind_args) --no-arch-warning --user "$final_user_name" "$selected_distro" --shared-tmp $termux_home_link -- eval "env DISPLAY=\$(echo \$DISPLAY) XDG_RUNTIME_DIR=\${TMPDIR} \$@"
+"${selected_distro_type}"-distro login \$(usb_bind_args) --no-arch-warning --user "$final_user_name" "$selected_distro" --shared-tmp $termux_home_link -- env DISPLAY=\$(echo \$DISPLAY) XDG_RUNTIME_DIR=\${TMPDIR} sh -lc 'umask 022; exec "\$@"' _ "\$@"
 ;;
 esac
 EOF
