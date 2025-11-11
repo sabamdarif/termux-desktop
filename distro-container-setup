@@ -705,9 +705,9 @@ usb_bind_args() {
 }
 if [ "\$#" -eq 0 ]; then
     if [ "\$PWD" = "$HOME" ]; then
-        ${selected_distro_type}-distro login \$(usb_bind_args) --no-arch-warning --user "$final_user_name" "$selected_distro" --shared-tmp $termux_home_link
+        ${selected_distro_type}-distro login \$(usb_bind_args) --user "$final_user_name" "$selected_distro" --shared-tmp $termux_home_link
     else
-        ${selected_distro_type}-distro login \$(usb_bind_args) --no-arch-warning --user "$final_user_name" "$selected_distro" --shared-tmp --work-dir "\$PWD" $termux_home_link
+        ${selected_distro_type}-distro login \$(usb_bind_args) --user "$final_user_name" "$selected_distro" --shared-tmp --work-dir "\$PWD" $termux_home_link
     fi
 
     check_and_create_directory "/data/data/com.termux/files/usr/share/applications/pd_added"
@@ -2005,7 +2005,7 @@ case \$1 in
 echo "${G}Type ${C}pdrun PACKAGE-NAME ${G}to start with gpu acceleration${NC}"
 ;;
 *)
-"${selected_distro_type}"-distro login \$(usb_bind_args) --no-arch-warning --user "$final_user_name" "$selected_distro" --shared-tmp $termux_home_link -- env DISPLAY=\$(echo \$DISPLAY) XDG_RUNTIME_DIR=\${TMPDIR} sh -lc 'umask 022; exec "\$@"' _ "\$@"
+"${selected_distro_type}"-distro login \$(usb_bind_args) --user "$final_user_name" "$selected_distro" --shared-tmp $termux_home_link -- env DISPLAY=\$(echo \$DISPLAY) XDG_RUNTIME_DIR=\${TMPDIR} sh -lc 'umask 022; exec "\$@"' _ "\$@"
 ;;
 esac
 EOF
