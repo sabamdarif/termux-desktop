@@ -1643,7 +1643,7 @@ $selected_distro --remove                to complitely remove the Linux distro a
 }
 case \$1 in
 --root|-r)
-    chroot-distro login "${selected_distro}"
+    chroot-distro login \$(usb_bind_args) "${selected_distro}" $termux_home_link
     ;;
 --remove | --uninstall)
     remove_distro_container
@@ -1718,7 +1718,7 @@ $selected_distro --remove                to complitely remove the Linux distro a
 }
 case \$1 in
 --root|-r)
-    "$selected_distro"
+    proot-distro login \$(usb_bind_args) "$selected_distro" $termux_home_link
     ;;
 --remove | --uninstall)
     remove_distro_container
