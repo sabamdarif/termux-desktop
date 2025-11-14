@@ -255,9 +255,9 @@ function download_file() {
 		fi
 
 		if command -v wget &>/dev/null; then
-			wget --tries=5 --timeout=15 --retry-connrefused -O "$dest" "$url" 2>/dev/null
+			wget --tries=5 --timeout=15 --retry-connrefused -O "$dest" "$url"
 		else
-			curl -# -L "$url" -o "$dest" 2>/dev/null
+			curl -# -L "$url" -o "$dest"
 		fi
 
 		if [[ -f "$dest" && -s "$dest" ]]; then
@@ -1092,7 +1092,7 @@ function ask_to_chose_de() {
 		themes_folder="$HOME/.themes"
 		icons_folder="$HOME/.icons"
 		de_startup="wmaker"
-		
+
 	fi
 	banner
 	questions_theme_select
