@@ -5343,6 +5343,10 @@ function change_de() {
 function reinstall_themes() {
 	read_conf
 	gui_check_up
+	if [[ "$style_answer" == "0" ]]; then
+		print_msg "You chose stock style there is nothing to reinstall..."
+		exit
+	fi
 	tmp_themes_folder="$PREFIX/tmp/themes"
 	check_and_create_directory "$tmp_themes_folder"
 	print_msg "Reinstalling Themes..."
@@ -5366,6 +5370,10 @@ function reinstall_themes() {
 function reinstall_icons() {
 	read_conf
 	gui_check_up
+	if [[ "$style_answer" == "0" ]]; then
+		print_msg "You chose stock style there is nothing to reinstall..."
+		exit
+	fi
 	tmp_icons_folder="$PREFIX/tmp/icons"
 	check_and_create_directory "$tmp_icons_folder"
 	package_install_and_check "gdk-pixbuf"
@@ -5393,6 +5401,10 @@ function reinstall_icons() {
 function reinstall_config() {
 	read_conf
 	gui_check_up
+	if [[ "$style_answer" == "0" ]]; then
+		print_msg "You chose stock style there is nothing to reinstall..."
+		exit
+	fi
 	tmp_config_folder="$PREFIX/tmp/config"
 	check_and_create_directory "$tmp_config_folder"
 	print_msg "Reinstalling Config..."
