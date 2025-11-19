@@ -305,6 +305,7 @@ build_for_architecture() {
 			-Dandroid-stub=true \
 			-Dgallium-drivers=zink \
 			-Dvulkan-drivers=freedreno \
+			-Dallow-fallback-for=libdrm,perfetto \
 			-Dfreedreno-kmds=kgsl \
 			-Db_lto=true \
 			-Db_lto_mode=thin \
@@ -322,6 +323,7 @@ build_for_architecture() {
 			-Dandroid-stub=true \
 			-Dgallium-drivers=zink \
 			-Dvulkan-drivers=freedreno \
+			-Dallow-fallback-for=libdrm,perfetto \
 			-Dfreedreno-kmds=kgsl \
 			-Db_lto=true \
 			-Db_lto_mode=thin \

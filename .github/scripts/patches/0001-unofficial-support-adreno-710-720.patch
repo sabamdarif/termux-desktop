@@ -7,12 +7,14 @@ https://github.com/KreitinnSoftware/MiceWine-RootFS-Generator/commit/6e9d54ab5d2
 Upstream issue:
 https://gitlab.freedesktop.org/mesa/mesa/-/issues/13036
 
---- a/src/freedreno/common/freedreno_devices.py
-+++ b/src/freedreno/common/freedreno_devices.py
-@@ -1065,6 +1065,42 @@ add_gpus([
+diff --git a/.github/scripts/turnip_workdir/mesa-25.3.0/src/freedreno/common/freedreno_devices.py b/.github/scripts/turnip_workdir/mesa-25.3.0/src/freedreno/common/freedreno_devices.py
+index b7a8573..0791e0f 100644
+--- a/.github/scripts/turnip_workdir/mesa-25.3.0/src/freedreno/common/freedreno_devices.py
++++ b/.github/scripts/turnip_workdir/mesa-25.3.0/src/freedreno/common/freedreno_devices.py
+@@ -1101,6 +1101,42 @@ add_gpus([
          raw_magic_regs = a730_raw_magic_regs,
      ))
-
+ 
 +add_gpus([
 +        GPUId(chip_id=0x07010000, name="FD710"), # KGSL, no speedbin data
 +        GPUId(chip_id=0xffff07010000, name="FD710"), # Default no-speedbin fallback
@@ -52,11 +54,13 @@ https://gitlab.freedesktop.org/mesa/mesa/-/issues/13036
  add_gpus([
          GPUId(chip_id=0x07030001, name="FD730"), # KGSL, no speedbin data
          GPUId(chip_id=0xffff07030001, name="FD730"), # Default no-speedbin fallback
---- a/src/freedreno/drm-shim/freedreno_noop.c
-+++ b/src/freedreno/drm-shim/freedreno_noop.c
-@@ -237,6 +237,16 @@ static const struct msm_device_info device_infos[] = {
-       .chip_id = CHIPID(6, 6, 0, 0xff),
-       .gmem_size = 1024 * 1024 + 512 * 1024,
+diff --git a/.github/scripts/turnip_workdir/mesa-25.3.0/src/freedreno/drm-shim/freedreno_noop.c b/.github/scripts/turnip_workdir/mesa-25.3.0/src/freedreno/drm-shim/freedreno_noop.c
+index fcd2887..0259427 100644
+--- a/.github/scripts/turnip_workdir/mesa-25.3.0/src/freedreno/drm-shim/freedreno_noop.c
++++ b/.github/scripts/turnip_workdir/mesa-25.3.0/src/freedreno/drm-shim/freedreno_noop.c
+@@ -235,6 +235,16 @@ static const struct msm_device_info device_infos[] = {
+       .chip_id = CHIPID(5, 1, 0, 0xff),
+       .gmem_size = 256 * 1024,
     },
 +   {
 +      .gpu_id = 710
@@ -69,5 +73,5 @@ https://gitlab.freedesktop.org/mesa/mesa/-/issues/13036
 +      .gmem_size = 2 * 1024 * 1024,
 +   },
     {
-       .gpu_id = 730,
-       .chip_id = 0x07030001,
+       .gpu_id = 530,
+       .chip_id = CHIPID(5, 3, 0, 2),

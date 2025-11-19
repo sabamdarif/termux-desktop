@@ -7,9 +7,11 @@ Assertion errno == ETIMEDOUT' failed.
 by allowing the program to proceed and printing a warning instead, which can sometimes work
 and preserve the GPU connection.
 
---- a/src/freedreno/vulkan/tu_knl_kgsl.cc
-+++ b/src/freedreno/vulkan/tu_knl_kgsl.cc
-@@ -579,7 +579,8 @@ wait_timestamp_safe(int fd,
+diff --git a/.github/scripts/turnip_workdir/mesa-25.3.0/src/freedreno/vulkan/tu_knl_kgsl.cc b/.github/scripts/turnip_workdir/mesa-25.3.0/src/freedreno/vulkan/tu_knl_kgsl.cc
+index eb19ef6..fe3a468 100644
+--- a/.github/scripts/turnip_workdir/mesa-25.3.0/src/freedreno/vulkan/tu_knl_kgsl.cc
++++ b/.github/scripts/turnip_workdir/mesa-25.3.0/src/freedreno/vulkan/tu_knl_kgsl.cc
+@@ -732,7 +732,8 @@ wait_timestamp_safe(int fd,
  
           wait.timeout = timeout_ms;
        } else if (ret == -1) {
