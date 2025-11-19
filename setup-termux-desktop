@@ -1281,7 +1281,7 @@ function questions_setup_manual() {
 	banner
 	print_msg " By default, it only adds 4-5 wallpapers"
 	echo
-	print_msg "${R}This is a 1GB+ collection (Thanks:-JaKooLit)"
+	print_msg "${R}This is a 1GB+ collection"
 	echo
 	confirmation_y_or_n "Do you want to add some more wallpapers" ext_wall_answer
 	banner
@@ -2666,13 +2666,12 @@ function ext_wall_setup() {
 			check_and_create_directory "$PREFIX/share/backgrounds"
 			# download_and_extract "https://archive.org/download/wallpaper-extra.tar/wallpaper-extra.tar.gz" "$PREFIX/share/backgrounds/"
 			cd "${HOME}" || exit 1
-			git clone --recursive --depth=1 -j "$(nproc)" https://github.com/JaKooLit/Wallpaper-Bank
-			cd Wallpaper-Bank/wallpapers/ || exit 1
-			mv Dynamic-Wallpapers/* "$PREFIX/share/backgrounds/"
-			check_and_delete "Dynamic-Wallpapers"
+			git clone --recursive --depth=1 -j "$(nproc)" https://github.com/sabamdarif/wallpapers.git wallpapers-collection
+			cd wallpapers-collection || exit 1
+			check_and_delete ".git"
 			mv ./* "$PREFIX/share/backgrounds/"
 			cd "${HOME}" || exit 1
-			check_and_delete "Wallpaper-Bank"
+			check_and_delete "wallpapers-collection"
 		fi
 	fi
 	print_to_config "ext_wall_answer"
