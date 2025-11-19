@@ -4305,7 +4305,7 @@ function install_termux_desktop_appstore() {
 	echo
 	download_file "https://raw.githubusercontent.com/sabamdarif/Termux-AppStore/refs/heads/src/appstore"
 	chmod +x "appstore"
-	./appstore --install v0.5.4
+	./appstore --install v0.5.4.1
 	cp "${PREFIX}/share/applications/org.sabamdarif.termux.appstore.desktop" "/data/data/com.termux/files/home/Desktop"
 	chmod +x /data/data/com.termux/files/home/Desktop/org.sabamdarif.termux.appstore.desktop
 }
