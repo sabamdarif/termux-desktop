@@ -31,17 +31,20 @@ import shutil
 import threading
 from datetime import datetime
 import gi
-gi.require_version('Gtk', '3.0')
+
+gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk, GLib, Gdk, Gio, GdkPixbuf, Pango
 
 # Icon cache to avoid repeated lookups
 ICON_CACHE = {}
 # Control verbose logging for icon search
 # Set this to True to debug icon issues
-VERBOSE_ICON_SEARCH = os.environ.get('VERBOSE_ICON_SEARCH', '0') == '1'
+VERBOSE_ICON_SEARCH = os.environ.get("VERBOSE_ICON_SEARCH", "0") == "1"
+
 
 class TerminalLogWindow(Gtk.Window):
     """A simple terminal-like window for displaying application launch logs"""
+
     def __init__(self, parent):
         Gtk.Window.__init__(self, title="Application Launch Log")
         self.set_default_size(650, 400)
@@ -52,7 +55,7 @@ class TerminalLogWindow(Gtk.Window):
         self.log_file = None
 
         # Apply the CSS class
-        self.get_style_context().add_class('terminal-window')
+        self.get_style_context().add_class("terminal-window")
 
         # Don't destroy window when closed, just hide it
         self.connect("delete-event", lambda w, e: self.on_window_close(w, e))
@@ -110,7 +113,9 @@ class TerminalLogWindow(Gtk.Window):
         self.time_tag = self.textbuffer.create_tag("timestamp", foreground="#AAAAAA")
 
         # Initialize with a welcome message
-        self.log("Terminal log window initialized. Application launch output will appear here.")
+        self.log(
+            "Terminal log window initialized. Application launch output will appear here."
+        )
 
     def on_window_close(self, window, event):
         """Handle window close event - also stop file logging if active"""
@@ -225,13 +230,17 @@ class TerminalLogWindow(Gtk.Window):
             parent=self,
             action=Gtk.FileChooserAction.SAVE,
             buttons=(
-                "Cancel", Gtk.ResponseType.CANCEL,
-                "Save", Gtk.ResponseType.ACCEPT
-            )
+                "Cancel",
+                Gtk.ResponseType.CANCEL,
+                "Save",
+                Gtk.ResponseType.ACCEPT,
+            ),
         )
 
         # Set default filename with timestamp
-        default_filename = f"app_launch_log_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
+        default_filename = (
+            f"app_launch_log_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
+        )
         dialog.set_current_name(default_filename)
 
         # Set a filter for text files
@@ -261,7 +270,7 @@ class TerminalLogWindow(Gtk.Window):
 
             try:
                 # Open the file for appending (we want to keep writing to it)
-                self.log_file = open(filepath, 'w')
+                self.log_file = open(filepath, "w")
 
                 # Write the current content
                 self.log_file.write(text)
@@ -295,25 +304,27 @@ class TerminalLogWindow(Gtk.Window):
         self.textview.scroll_to_mark(mark, 0.0, True, 0.0, 1.0)
         self.textbuffer.delete_mark(mark)
 
+
 def main():
     # Make GTK use system's preferred theme
     settings = Gtk.Settings.get_default()
     if settings:
-        settings.set_property("gtk-application-prefer-dark-theme",
-                             Gtk.Settings.get_default().get_property("gtk-application-prefer-dark-theme"))
+        settings.set_property(
+            "gtk-application-prefer-dark-theme",
+            Gtk.Settings.get_default().get_property(
+                "gtk-application-prefer-dark-theme"
+            ),
+        )
 
     # Create and run the application
     app = Add2MenuApplication()
     exit_status = app.run([sys.argv[0]])  # Only pass program name
     sys.exit(exit_status)
 
+
 class Add2MenuWindow(Gtk.ApplicationWindow):
     def __init__(self, app):
-        Gtk.ApplicationWindow.__init__(
-            self,
-            application=app,
-            title="Add To Menu"
-        )
+        Gtk.ApplicationWindow.__init__(self, application=app, title="Add To Menu")
 
         # Set window properties properly following GTK standards
         self.set_default_size(600, 500)
@@ -390,8 +401,12 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
 
     def read_termux_desktop_config(self):
         """Read termux-desktop configuration to determine distro type and settings"""
-        config_path = os.path.join(self.PREFIX if hasattr(self, 'PREFIX') else "/data/data/com.termux/files/usr",
-                                   "etc/termux-desktop/configuration.conf")
+        config_path = os.path.join(
+            self.PREFIX
+            if hasattr(self, "PREFIX")
+            else "/data/data/com.termux/files/usr",
+            "etc/termux-desktop/configuration.conf",
+        )
 
         # Default values
         self.distro_add_answer = "n"
@@ -403,11 +418,11 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
 
         try:
             if os.path.exists(config_path):
-                with open(config_path, 'r', encoding='utf-8') as f:
+                with open(config_path, "r", encoding="utf-8") as f:
                     for line in f:
                         line = line.strip()
-                        if '=' in line and not line.startswith('#'):
-                            key, value = line.split('=', 1)
+                        if "=" in line and not line.startswith("#"):
+                            key, value = line.split("=", 1)
                             key = key.strip()
                             value = value.strip()
 
@@ -431,22 +446,33 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
                 else:
                     # Fallback to environment variables if distro support is disabled
                     self.DISTRO_NAME = os.getenv("distro_name", "debian")
-                    self.DISTRO_PATH = os.getenv("distro_path", f"/data/data/com.termux/files/usr/var/lib/proot-distro/installed-rootfs/{self.DISTRO_NAME}")
+                    self.DISTRO_PATH = os.getenv(
+                        "distro_path",
+                        f"/data/data/com.termux/files/usr/var/lib/proot-distro/installed-rootfs/{self.DISTRO_NAME}",
+                    )
                     self.use_sudo = False
 
-                print(f"Configuration loaded: distro_type={self.selected_distro_type}, distro={self.DISTRO_NAME}, path={self.DISTRO_PATH}, use_sudo={self.use_sudo}")
+                print(
+                    f"Configuration loaded: distro_type={self.selected_distro_type}, distro={self.DISTRO_NAME}, path={self.DISTRO_PATH}, use_sudo={self.use_sudo}"
+                )
             else:
                 print(f"Configuration file not found at {config_path}, using defaults")
                 # Fallback to environment variables
                 self.DISTRO_NAME = os.getenv("distro_name", "debian")
-                self.DISTRO_PATH = os.getenv("distro_path", f"/data/data/com.termux/files/usr/var/lib/proot-distro/installed-rootfs/{self.DISTRO_NAME}")
+                self.DISTRO_PATH = os.getenv(
+                    "distro_path",
+                    f"/data/data/com.termux/files/usr/var/lib/proot-distro/installed-rootfs/{self.DISTRO_NAME}",
+                )
                 self.use_sudo = False
 
         except Exception as e:
             print(f"Error reading configuration: {e}")
             # Fallback to environment variables
             self.DISTRO_NAME = os.getenv("distro_name", "debian")
-            self.DISTRO_PATH = os.getenv("distro_path", f"/data/data/com.termux/files/usr/var/lib/proot-distro/installed-rootfs/{self.DISTRO_NAME}")
+            self.DISTRO_PATH = os.getenv(
+                "distro_path",
+                f"/data/data/com.termux/files/usr/var/lib/proot-distro/installed-rootfs/{self.DISTRO_NAME}",
+            )
             self.use_sudo = False
 
     def setup_css(self):
@@ -541,7 +567,7 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
         Gtk.StyleContext.add_provider_for_screen(
             Gdk.Screen.get_default(),
             style_provider,
-            Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+            Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION,
         )
 
     def setup_header_bar(self):
@@ -553,10 +579,12 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
 
         # Mode switch
         mode_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
-        mode_box.get_style_context().add_class('mode-switch')
+        mode_box.get_style_context().add_class("mode-switch")
 
         self.add_radio = Gtk.RadioButton.new_with_label_from_widget(None, "Add")
-        self.remove_radio = Gtk.RadioButton.new_with_label_from_widget(self.add_radio, "Remove")
+        self.remove_radio = Gtk.RadioButton.new_with_label_from_widget(
+            self.add_radio, "Remove"
+        )
 
         # Connect BOTH radio buttons to ensure mode changes are detected properly
         self.add_radio.connect("toggled", self.on_mode_changed)
@@ -574,7 +602,7 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
         self.search_toggle_button.connect("toggled", self.on_search_toggle)
 
         # Style the search toggle button
-        self.search_toggle_button.get_style_context().add_class('suggested-action')
+        self.search_toggle_button.get_style_context().add_class("suggested-action")
 
         # Add a small margin between mode switches and search button
         self.search_toggle_button.set_margin_start(8)
@@ -592,13 +620,17 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
         menu = Gio.Menu()
 
         # Create menu items with icons where appropriate
-        show_added_apps_item = Gio.MenuItem.new("Show added apps", "app.show-added-apps")
+        show_added_apps_item = Gio.MenuItem.new(
+            "Show added apps", "app.show-added-apps"
+        )
         no_sandbox_item = Gio.MenuItem.new("Launch with --no-sandbox", "app.no-sandbox")
         absolute_path_item = Gio.MenuItem.new("Use Absolute Paths", "app.absolute-path")
         nogpu_item = Gio.MenuItem.new("Launch with --nogpu", "app.nogpu")
 
         # Create terminal log item with an icon
-        terminal_item = Gio.MenuItem.new("Show app launch log", "app.show-app-launch-log")
+        terminal_item = Gio.MenuItem.new(
+            "Show app launch log", "app.show-app-launch-log"
+        )
         terminal_icon = Gio.ThemedIcon.new("utilities-terminal")
         terminal_item.set_icon(terminal_icon)
 
@@ -639,12 +671,12 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
         self.set_titlebar(header)
 
         # Set window decoration hints to follow GTK standards
-        self.set_decorated(True) # Let GTK manage the window decorations
+        self.set_decorated(True)  # Let GTK manage the window decorations
 
         # Make the headerbar use theme styling
         context = header.get_style_context()
-        context.add_class('titlebar')
-        context.add_class('default-decoration')
+        context.add_class("titlebar")
+        context.add_class("default-decoration")
 
     def setup_main_content(self):
         # Content area with padding
@@ -663,12 +695,12 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
         self.search_entry.set_placeholder_text("Search applications...")
         self.search_entry.connect("search-changed", self.on_search_changed)
         self.search_entry.set_hexpand(True)
-        self.search_entry.get_style_context().add_class('search')
+        self.search_entry.get_style_context().add_class("search")
 
         # Create search button
         search_button = Gtk.Button.new_with_label("Search")
         search_button.connect("clicked", self.on_search_button_clicked)
-        search_button.get_style_context().add_class('search-button')
+        search_button.get_style_context().add_class("search-button")
 
         # Add to search box
         self.search_box.pack_start(self.search_entry, True, True, 0)
@@ -693,10 +725,12 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
         scroll.set_shadow_type(Gtk.ShadowType.IN)
 
         # Use TreeView with exec command and description for tooltips
-        self.liststore = Gtk.ListStore(bool, str, str, str, str, str)  # checkbox, name, path, icon, exec_cmd, description
+        self.liststore = Gtk.ListStore(
+            bool, str, str, str, str, str
+        )  # checkbox, name, path, icon, exec_cmd, description
         self.treeview = Gtk.TreeView(model=self.liststore)
         self.treeview.set_headers_visible(True)
-        self.treeview.get_style_context().add_class('app-list')
+        self.treeview.get_style_context().add_class("app-list")
 
         # Enable tooltips showing the description
         self.treeview.set_tooltip_column(5)  # Use description column for tooltips
@@ -729,14 +763,16 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
         play_button_renderer.set_property("icon-name", "media-playback-start")
         play_button_renderer.set_property("stock-size", Gtk.IconSize.MENU)
         play_button_renderer.set_property("xpad", 12)  # Add horizontal padding
-        play_button_renderer.set_property("ypad", 6)   # Add vertical padding
+        play_button_renderer.set_property("ypad", 6)  # Add vertical padding
 
         # Create the column with our play button
         play_column = Gtk.TreeViewColumn("Run", play_button_renderer)
         play_column.set_alignment(0.5)  # Center the header text
 
         # Only show play button if exec_cmd exists
-        play_column.set_cell_data_func(play_button_renderer, self.play_button_visibility_func)
+        play_column.set_cell_data_func(
+            play_button_renderer, self.play_button_visibility_func
+        )
 
         self.treeview.append_column(play_column)
 
@@ -754,8 +790,10 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
         button_box.set_halign(Gtk.Align.END)
 
         self.action_button = Gtk.Button.new_with_label("Add Selected")
-        self.action_button.get_style_context().add_class('action-button')
-        self.action_button.get_style_context().add_class('suggested-action')  # Use theme's suggested action style
+        self.action_button.get_style_context().add_class("action-button")
+        self.action_button.get_style_context().add_class(
+            "suggested-action"
+        )  # Use theme's suggested action style
         self.action_button.connect("clicked", self.on_action_clicked)
         button_box.pack_start(self.action_button, False, False, 0)
 
@@ -764,7 +802,7 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
 
     def setup_status_bar(self):
         self.status_bar = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
-        self.status_bar.get_style_context().add_class('status-bar')
+        self.status_bar.get_style_context().add_class("status-bar")
 
         self.status_label = Gtk.Label(label="Ready")
         self.status_label.set_halign(Gtk.Align.START)
@@ -821,9 +859,13 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
                     try:
                         desktop_entry = self.parse_desktop_file(filepath)
                         if desktop_entry:
-                            app_name = desktop_entry.get('name') or os.path.splitext(file)[0]
+                            app_name = (
+                                desktop_entry.get("name") or os.path.splitext(file)[0]
+                            )
                             # Store both filename and app name for comparison
-                            added_apps[file] = app_name.replace("_", " ").strip().lower()
+                            added_apps[file] = (
+                                app_name.replace("_", " ").strip().lower()
+                            )
                     except Exception as e:
                         print(f"Error processing added file {filepath}: {str(e)}")
         return added_apps
@@ -846,7 +888,9 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
         # Non-root user's local applications
         user_name = os.getenv("USER_NAME", "")
         if user_name and user_name != "root":
-            distro_user_apps = os.path.join(self.DISTRO_PATH, "home", user_name, ".local/share/applications")
+            distro_user_apps = os.path.join(
+                self.DISTRO_PATH, "home", user_name, ".local/share/applications"
+            )
             user_paths.append(distro_user_apps)
 
         # Combine all paths
@@ -918,7 +962,9 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
                 filtered_apps.append(app)
 
             if skipped_count > 0:
-                print(f"Filtered out {skipped_count} applications that are already added")
+                print(
+                    f"Filtered out {skipped_count} applications that are already added"
+                )
 
             all_apps = filtered_apps
 
@@ -936,15 +982,28 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
         self.action_button.set_label(action_label)
 
         for name, filepath, icon, exec_cmd, description in apps:
-            self.liststore.append([False, name, filepath, icon or "application-x-executable", exec_cmd, description])
+            self.liststore.append(
+                [
+                    False,
+                    name,
+                    filepath,
+                    icon or "application-x-executable",
+                    exec_cmd,
+                    description,
+                ]
+            )
 
         # If we're in Add mode, set appropriate status message
         if self.add_radio.get_active():
             show_added_apps = self.app.show_added_apps
             if show_added_apps:
-                self.status_label.set_text(f"Showing {len(apps)} applications (including already added apps)")
+                self.status_label.set_text(
+                    f"Showing {len(apps)} applications (including already added apps)"
+                )
             else:
-                self.status_label.set_text(f"Showing {len(apps)} applications (already added apps are hidden)")
+                self.status_label.set_text(
+                    f"Showing {len(apps)} applications (already added apps are hidden)"
+                )
         else:
             self.status_label.set_text(f"Showing {len(apps)} applications")
 
@@ -974,21 +1033,30 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
                     filepath = os.path.join(root, file)
                     try:
                         desktop_entry = self.parse_desktop_file(filepath)
-                        if desktop_entry and not desktop_entry.get('no_display', False):
-                            display_name = desktop_entry.get('name') or os.path.splitext(file)[0]
+                        if desktop_entry and not desktop_entry.get("no_display", False):
+                            display_name = (
+                                desktop_entry.get("name") or os.path.splitext(file)[0]
+                            )
                             display_name = display_name.replace("_", " ").strip()
-                            icon = desktop_entry.get('icon') or "application-x-executable"
-                            exec_cmd = desktop_entry.get('exec') or ""
-                            description = desktop_entry.get('comment') or ""
-                            desktop_files.append((display_name, filepath, icon, exec_cmd, description))
+                            icon = (
+                                desktop_entry.get("icon") or "application-x-executable"
+                            )
+                            exec_cmd = desktop_entry.get("exec") or ""
+                            description = desktop_entry.get("comment") or ""
+                            desktop_files.append(
+                                (display_name, filepath, icon, exec_cmd, description)
+                            )
                     except Exception as e:
                         print(f"Error processing {filepath}: {str(e)}")
 
         # If we're in remove mode, only show files from pd_added directory
         if directory == self.ADDED_DIR:
             # Make sure we're only seeing pd_added files
-            desktop_files = [(name, path, icon, exec_cmd, desc) for name, path, icon, exec_cmd, desc in desktop_files
-                              if path.startswith(self.ADDED_DIR)]
+            desktop_files = [
+                (name, path, icon, exec_cmd, desc)
+                for name, path, icon, exec_cmd, desc in desktop_files
+                if path.startswith(self.ADDED_DIR)
+            ]
 
         return desktop_files
 
@@ -998,23 +1066,36 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
 
         try:
             # Use sudo to list files in the chroot directory
-            result = subprocess.run(['sudo', 'find', directory, '-name', '*.desktop', '-type', 'f'],
-                                  capture_output=True, text=True, timeout=30)
+            result = subprocess.run(
+                ["sudo", "find", directory, "-name", "*.desktop", "-type", "f"],
+                capture_output=True,
+                text=True,
+                timeout=30,
+            )
 
             if result.returncode == 0:
-                desktop_file_paths = result.stdout.strip().split('\n')
-                desktop_file_paths = [path for path in desktop_file_paths if path.strip()]
+                desktop_file_paths = result.stdout.strip().split("\n")
+                desktop_file_paths = [
+                    path for path in desktop_file_paths if path.strip()
+                ]
 
                 for filepath in desktop_file_paths:
                     try:
                         desktop_entry = self.parse_desktop_file_with_sudo(filepath)
-                        if desktop_entry and not desktop_entry.get('no_display', False):
-                            display_name = desktop_entry.get('name') or os.path.splitext(os.path.basename(filepath))[0]
+                        if desktop_entry and not desktop_entry.get("no_display", False):
+                            display_name = (
+                                desktop_entry.get("name")
+                                or os.path.splitext(os.path.basename(filepath))[0]
+                            )
                             display_name = display_name.replace("_", " ").strip()
-                            icon = desktop_entry.get('icon') or "application-x-executable"
-                            exec_cmd = desktop_entry.get('exec') or ""
-                            description = desktop_entry.get('comment') or ""
-                            desktop_files.append((display_name, filepath, icon, exec_cmd, description))
+                            icon = (
+                                desktop_entry.get("icon") or "application-x-executable"
+                            )
+                            exec_cmd = desktop_entry.get("exec") or ""
+                            description = desktop_entry.get("comment") or ""
+                            desktop_files.append(
+                                (display_name, filepath, icon, exec_cmd, description)
+                            )
                     except Exception as e:
                         print(f"Error processing {filepath}: {str(e)}")
             else:
@@ -1030,8 +1111,9 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
     def file_exists_with_sudo(self, filepath):
         """Check if a file exists using sudo for chroot environments"""
         try:
-            result = subprocess.run(['sudo', 'test', '-f', filepath],
-                                  capture_output=True, timeout=5)
+            result = subprocess.run(
+                ["sudo", "test", "-f", filepath], capture_output=True, timeout=5
+            )
             return result.returncode == 0
         except (subprocess.TimeoutExpired, Exception):
             return False
@@ -1039,11 +1121,11 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
     def parse_desktop_file_with_sudo(self, filepath):
         """Parse a desktop file using sudo for chroot environments"""
         result = {
-            'name': None,
-            'icon': None,
-            'no_display': False,
-            'exec': None,
-            'comment': None
+            "name": None,
+            "icon": None,
+            "no_display": False,
+            "exec": None,
+            "comment": None,
         }
 
         try:
@@ -1058,7 +1140,11 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
                         filepath = os.path.join(os.path.dirname(filepath), link_target)
                     else:
                         # Just ensure they start from the distro root
-                        if link_target.startswith('/usr/') or link_target.startswith('/opt/') or link_target.startswith('/'):
+                        if (
+                            link_target.startswith("/usr/")
+                            or link_target.startswith("/opt/")
+                            or link_target.startswith("/")
+                        ):
                             # The path is already within the chroot, so it's correct
                             filepath = link_target
 
@@ -1069,31 +1155,34 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
 
             # Check if the resolved file exists using sudo
             if not self.file_exists_with_sudo(filepath):
-                print(f"Resolved symlink path does not exist (checked with sudo): {filepath}")
+                print(
+                    f"Resolved symlink path does not exist (checked with sudo): {filepath}"
+                )
                 return None
 
             # Use sudo to read the file
-            cmd_result = subprocess.run(['sudo', 'cat', filepath],
-                                      capture_output=True, text=True, timeout=10)
+            cmd_result = subprocess.run(
+                ["sudo", "cat", filepath], capture_output=True, text=True, timeout=10
+            )
 
             if cmd_result.returncode == 0:
                 content = cmd_result.stdout
-                for line in content.split('\n'):
+                for line in content.split("\n"):
                     line = line.strip()
-                    if not line or line.startswith('#'):
+                    if not line or line.startswith("#"):
                         continue
-                    if line.startswith('Name=') and not result['name']:
-                        result['name'] = line.split("=", 1)[1].strip()
-                    elif line.startswith('Icon='):
+                    if line.startswith("Name=") and not result["name"]:
+                        result["name"] = line.split("=", 1)[1].strip()
+                    elif line.startswith("Icon="):
                         icon_name = line.split("=", 1)[1].strip()
                         # Try to find the real icon path
-                        result['icon'] = self.find_icon_cached(icon_name)
-                    elif line.startswith('Exec='):
-                        result['exec'] = line.split("=", 1)[1].strip()
-                    elif line.startswith('Comment='):
-                        result['comment'] = line.split("=", 1)[1].strip()
-                    elif line.startswith('NoDisplay=true'):
-                        result['no_display'] = True
+                        result["icon"] = self.find_icon_cached(icon_name)
+                    elif line.startswith("Exec="):
+                        result["exec"] = line.split("=", 1)[1].strip()
+                    elif line.startswith("Comment="):
+                        result["comment"] = line.split("=", 1)[1].strip()
+                    elif line.startswith("NoDisplay=true"):
+                        result["no_display"] = True
                         break
             else:
                 print(f"Error reading desktop file with sudo: {cmd_result.stderr}")
@@ -1111,8 +1200,9 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
     def is_symlink_with_sudo(self, filepath):
         """Check if a file is a symlink using sudo for chroot environments"""
         try:
-            result = subprocess.run(['sudo', 'test', '-L', filepath],
-                                  capture_output=True, timeout=5)
+            result = subprocess.run(
+                ["sudo", "test", "-L", filepath], capture_output=True, timeout=5
+            )
             return result.returncode == 0
         except (subprocess.TimeoutExpired, Exception):
             return False
@@ -1120,8 +1210,12 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
     def readlink_with_sudo(self, filepath):
         """Read a symlink target using sudo for chroot environments"""
         try:
-            result = subprocess.run(['sudo', 'readlink', filepath],
-                                  capture_output=True, text=True, timeout=5)
+            result = subprocess.run(
+                ["sudo", "readlink", filepath],
+                capture_output=True,
+                text=True,
+                timeout=5,
+            )
             if result.returncode == 0:
                 return result.stdout.strip()
             return None
@@ -1132,11 +1226,11 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
     def parse_desktop_file(self, filepath):
         """Parse a desktop file and return a dict of key attributes"""
         result = {
-            'name': None,
-            'icon': None,
-            'no_display': False,
-            'exec': None,  # Add exec command field
-            'comment': None  # Add description/comment field
+            "name": None,
+            "icon": None,
+            "no_display": False,
+            "exec": None,  # Add exec command field
+            "comment": None,  # Add description/comment field
         }
 
         try:
@@ -1150,8 +1244,12 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
                     filepath = os.path.join(os.path.dirname(filepath), link_target)
                 else:
                     # For absolute paths in the distro, prepend the distro path
-                    if link_target.startswith('/usr/') or link_target.startswith('/opt/'):
-                        filepath = os.path.join(self.DISTRO_PATH, link_target.lstrip('/'))
+                    if link_target.startswith("/usr/") or link_target.startswith(
+                        "/opt/"
+                    ):
+                        filepath = os.path.join(
+                            self.DISTRO_PATH, link_target.lstrip("/")
+                        )
                     else:
                         filepath = link_target
 
@@ -1166,20 +1264,20 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
             with open(filepath, "r", encoding="utf-8") as f:
                 for line in f:
                     line = line.strip()
-                    if not line or line.startswith('#'):
+                    if not line or line.startswith("#"):
                         continue
-                    if line.startswith('Name=') and not result['name']:
-                        result['name'] = line.split("=", 1)[1].strip()
-                    elif line.startswith('Icon='):
+                    if line.startswith("Name=") and not result["name"]:
+                        result["name"] = line.split("=", 1)[1].strip()
+                    elif line.startswith("Icon="):
                         icon_name = line.split("=", 1)[1].strip()
                         # Try to find the real icon path
-                        result['icon'] = self.find_icon_cached(icon_name)
-                    elif line.startswith('Exec='):
-                        result['exec'] = line.split("=", 1)[1].strip()
-                    elif line.startswith('Comment='):
-                        result['comment'] = line.split("=", 1)[1].strip()
-                    elif line.startswith('NoDisplay=true'):
-                        result['no_display'] = True
+                        result["icon"] = self.find_icon_cached(icon_name)
+                    elif line.startswith("Exec="):
+                        result["exec"] = line.split("=", 1)[1].strip()
+                    elif line.startswith("Comment="):
+                        result["comment"] = line.split("=", 1)[1].strip()
+                    elif line.startswith("NoDisplay=true"):
+                        result["no_display"] = True
                         break
         except Exception as e:
             print(f"Error parsing desktop file {filepath}: {e}")
@@ -1211,16 +1309,18 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
             return icon_name
 
         # Check if it's a path within the distro
-        if icon_name.startswith('/'):
+        if icon_name.startswith("/"):
             # It might be a path inside the distro
-            distro_relative_path = icon_name.lstrip('/')
+            distro_relative_path = icon_name.lstrip("/")
             distro_full_path = os.path.join(self.DISTRO_PATH, distro_relative_path)
 
             # Check if file exists, using sudo for chroot if needed
             if self.use_sudo and distro_full_path.startswith(self.DISTRO_PATH):
                 if self.file_exists_with_sudo(distro_full_path):
                     if VERBOSE_ICON_SEARCH:
-                        print(f"Found icon in distro path (with sudo): {distro_full_path}")
+                        print(
+                            f"Found icon in distro path (with sudo): {distro_full_path}"
+                        )
                     # For chroot, we can't directly access the file, so use a fallback
                     # Try to find a similar icon in accessible locations first
                     icon_basename = os.path.basename(icon_name)
@@ -1254,7 +1354,9 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
 
         # Try distro's icon theme (skip for chroot to avoid permission errors)
         if not self.use_sudo:
-            distro_theme_dir = os.path.join(self.DISTRO_PATH, "usr/share/icons", self.current_theme_name)
+            distro_theme_dir = os.path.join(
+                self.DISTRO_PATH, "usr/share/icons", self.current_theme_name
+            )
             if os.path.exists(distro_theme_dir):
                 search_paths.append(distro_theme_dir)
 
@@ -1272,7 +1374,9 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
 
             # Distro theme (skip for chroot to avoid permission errors)
             if not self.use_sudo:
-                distro_theme = os.path.join(self.DISTRO_PATH, "usr/share/icons", theme_name)
+                distro_theme = os.path.join(
+                    self.DISTRO_PATH, "usr/share/icons", theme_name
+                )
                 if os.path.exists(distro_theme):
                     search_paths.append(distro_theme)
 
@@ -1286,8 +1390,26 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
             print(f"Searching in {len(search_paths)} icon paths")
 
         # Common icon sizes and contexts
-        icon_sizes = ["scalable", "256x256", "128x128", "96x96", "64x64", "48x48", "32x32", "24x24", "22x22", "16x16"]
-        icon_contexts = ["apps", "places", "mimetypes", "devices", "actions", "categories"]
+        icon_sizes = [
+            "scalable",
+            "256x256",
+            "128x128",
+            "96x96",
+            "64x64",
+            "48x48",
+            "32x32",
+            "24x24",
+            "22x22",
+            "16x16",
+        ]
+        icon_contexts = [
+            "apps",
+            "places",
+            "mimetypes",
+            "devices",
+            "actions",
+            "categories",
+        ]
 
         # Search for the icon in our preferred paths
         for path in search_paths:
@@ -1304,15 +1426,23 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
             for context in icon_contexts:
                 for size in icon_sizes:
                     # Check common directory structures
-                    for structure in [f"{size}/{context}", f"{context}/{size}", context]:
+                    for structure in [
+                        f"{size}/{context}",
+                        f"{context}/{size}",
+                        context,
+                    ]:
                         check_path = os.path.join(path, structure)
                         if os.path.exists(check_path):
                             # Try different extensions
                             for ext in [".png", ".svg", ".xpm", ""]:
-                                icon_file = os.path.join(check_path, f"{icon_name}{ext}")
+                                icon_file = os.path.join(
+                                    check_path, f"{icon_name}{ext}"
+                                )
                                 if os.path.exists(icon_file):
                                     if VERBOSE_ICON_SEARCH:
-                                        print(f"Found icon in theme structure: {icon_file}")
+                                        print(
+                                            f"Found icon in theme structure: {icon_file}"
+                                        )
                                     ICON_CACHE[icon_name] = icon_file
                                     return icon_file
 
@@ -1353,7 +1483,7 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
             f"{icon_name}-symbolic",
             icon_name.lower(),
             f"application-x-{icon_name.lower()}",
-            f"applications-{icon_name.lower()}"
+            f"applications-{icon_name.lower()}",
         ]
 
         for variation in variations:
@@ -1400,8 +1530,8 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
             return base_name
 
         # Try icon based on potential app name
-        if '-' in base_name:
-            app_name = base_name.split('-')[0]
+        if "-" in base_name:
+            app_name = base_name.split("-")[0]
             if icon_theme.has_icon(app_name):
                 if VERBOSE_ICON_SEARCH:
                     print(f"Found icon using app name prefix: {app_name}")
@@ -1423,7 +1553,11 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
                 return app_name
 
         # If all else fails, try a generic category icon
-        fallback_icons = ["application-x-executable", "applications-other", "system-run"]
+        fallback_icons = [
+            "application-x-executable",
+            "applications-other",
+            "system-run",
+        ]
         for fallback in fallback_icons:
             if icon_theme.has_icon(fallback):
                 if VERBOSE_ICON_SEARCH:
@@ -1484,7 +1618,9 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
                 show_added_apps = self.app.show_added_apps
                 mode_text = "add"
                 if show_added_apps:
-                    self.status_label.set_text(f"Loading {mode_text} applications (including already added)...")
+                    self.status_label.set_text(
+                        f"Loading {mode_text} applications (including already added)..."
+                    )
                 else:
                     self.status_label.set_text(f"Loading {mode_text} applications...")
             else:
@@ -1513,7 +1649,9 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
             if show_added_apps_action:
                 # First set the correct state before enabling/disabling
                 # This preserves the toggle state when switching back to Add mode
-                show_added_apps_action.set_state(GLib.Variant.new_boolean(self.app.show_added_apps))
+                show_added_apps_action.set_state(
+                    GLib.Variant.new_boolean(self.app.show_added_apps)
+                )
                 show_added_apps_action.set_enabled(is_add_mode)
 
             # Reset search toggle button
@@ -1532,9 +1670,13 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
             if is_add_mode:
                 show_added_apps = self.app.show_added_apps
                 if show_added_apps:
-                    self.status_label.set_text(f"Loading {mode.lower()} applications (including already added)...")
+                    self.status_label.set_text(
+                        f"Loading {mode.lower()} applications (including already added)..."
+                    )
                 else:
-                    self.status_label.set_text(f"Loading {mode.lower()} applications...")
+                    self.status_label.set_text(
+                        f"Loading {mode.lower()} applications..."
+                    )
             else:
                 self.status_label.set_text(f"Loading {mode.lower()} applications...")
 
@@ -1552,7 +1694,9 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
     def _force_refresh(self):
         """Force a refresh of the application list"""
         self.is_loading = True
-        thread = threading.Thread(target=self._run_task_thread, args=(self.load_apps, ()))
+        thread = threading.Thread(
+            target=self._run_task_thread, args=(self.load_apps, ())
+        )
         thread.daemon = True
         thread.start()
         return False  # Don't repeat
@@ -1571,7 +1715,9 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
         """Update the status bar with current selection info"""
         selected_count = sum(1 for row in self.liststore if row[0])
         total_count = len(self.liststore)
-        self.status_label.set_text(f"Selected {selected_count} of {total_count} applications")
+        self.status_label.set_text(
+            f"Selected {selected_count} of {total_count} applications"
+        )
 
     def on_action_clicked(self, button):
         """Handle the main action button click"""
@@ -1634,19 +1780,22 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
         try:
             # Use sudo to read the file content and write it normally
             # This avoids permission issues with direct copying
-            read_result = subprocess.run(['sudo', 'cat', source_path],
-                                       capture_output=True, text=True, timeout=10)
+            read_result = subprocess.run(
+                ["sudo", "cat", source_path], capture_output=True, text=True, timeout=10
+            )
 
             if read_result.returncode == 0:
                 # Write the content to the destination file
-                with open(dest_path, 'w', encoding='utf-8') as f:
+                with open(dest_path, "w", encoding="utf-8") as f:
                     f.write(read_result.stdout)
 
                 # Set proper permissions
                 os.chmod(dest_path, 0o644)
                 print(f"Successfully copied {source_path} to {dest_path}")
             else:
-                raise Exception(f"Failed to read source file with sudo: {read_result.stderr}")
+                raise Exception(
+                    f"Failed to read source file with sudo: {read_result.stderr}"
+                )
 
         except subprocess.TimeoutExpired:
             print(f"Timeout while copying file with sudo: {source_path}")
@@ -1661,7 +1810,7 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
             content = f.read()
 
         # Replace the Exec line with our modified command
-        exec_pattern = re.compile(r'Exec=(.+)')
+        exec_pattern = re.compile(r"Exec=(.+)")
 
         if exec_pattern.search(content):
             # Extract the original command
@@ -1714,8 +1863,12 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
 
         # Update icon cache
         launcher = Gio.SubprocessLauncher.new(Gio.SubprocessFlags.NONE)
-        launcher.spawnv(["/usr/bin/gtk-update-icon-cache",
-                        os.path.join(self.PREFIX, "share/icons/hicolor")])
+        launcher.spawnv(
+            [
+                "/usr/bin/gtk-update-icon-cache",
+                os.path.join(self.PREFIX, "share/icons/hicolor"),
+            ]
+        )
 
         # Force reload of applications in desktop environment
         launcher = Gio.SubprocessLauncher.new(Gio.SubprocessFlags.NONE)
@@ -1740,9 +1893,11 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
         dialog = Gtk.MessageDialog(
             transient_for=self,
             flags=0,
-            message_type=Gtk.MessageType.INFO if title == "Success" else Gtk.MessageType.ERROR,
+            message_type=Gtk.MessageType.INFO
+            if title == "Success"
+            else Gtk.MessageType.ERROR,
             buttons=Gtk.ButtonsType.OK,
-            text=message
+            text=message,
         )
         dialog.set_title(title)
         dialog.connect("response", lambda dialog, response: dialog.destroy())
@@ -1755,7 +1910,9 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
             cell.set_property("visible", True)
 
             # Set a nice icon that matches the system theme
-            if Gtk.Settings.get_default().get_property("gtk-application-prefer-dark-theme"):
+            if Gtk.Settings.get_default().get_property(
+                "gtk-application-prefer-dark-theme"
+            ):
                 cell.set_property("icon-name", "media-playback-start-symbolic")
             else:
                 cell.set_property("icon-name", "media-playback-start")
@@ -1812,7 +1969,11 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
         self.status_bar.get_style_context().add_class("launch-flash")
 
         # Reset after a delay
-        GLib.timeout_add(400, lambda: self.status_bar.get_style_context().remove_class("launch-flash") or False)
+        GLib.timeout_add(
+            400,
+            lambda: self.status_bar.get_style_context().remove_class("launch-flash")
+            or False,
+        )
 
     def run_application(self, exec_cmd):
         """Run an application with pdrun"""
@@ -1857,10 +2018,14 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
                 if self.absolute_path_action.get_state().get_boolean():
                     # Find the index of the actual command after pdrun and flags
                     cmd_idx = 1
-                    while cmd_idx < len(cmd_parts) and cmd_parts[cmd_idx].startswith("--"):
+                    while cmd_idx < len(cmd_parts) and cmd_parts[cmd_idx].startswith(
+                        "--"
+                    ):
                         cmd_idx += 1
                     if cmd_idx < len(cmd_parts):
-                        cmd_parts[cmd_idx] = self.ensure_absolute_path(cmd_parts[cmd_idx])
+                        cmd_parts[cmd_idx] = self.ensure_absolute_path(
+                            cmd_parts[cmd_idx]
+                        )
 
             # Join the command parts for display and logging
             display_cmd = " ".join(cmd_parts[1:])  # Skip pdrun for display
@@ -1880,21 +2045,26 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
                 self.app.log_window.show_all()
 
                 # Configure launcher to capture output
-                launcher = Gio.SubprocessLauncher.new(Gio.SubprocessFlags.STDOUT_PIPE |
-                                                     Gio.SubprocessFlags.STDERR_MERGE)
+                launcher = Gio.SubprocessLauncher.new(
+                    Gio.SubprocessFlags.STDOUT_PIPE | Gio.SubprocessFlags.STDERR_MERGE
+                )
 
                 # Launch with output capture
                 subprocess = launcher.spawnv(cmd_parts)
 
                 # Start reading output in a separate thread to avoid blocking UI
-                thread = threading.Thread(target=self._read_process_output,
-                                         args=(subprocess, self.app.log_window))
+                thread = threading.Thread(
+                    target=self._read_process_output,
+                    args=(subprocess, self.app.log_window),
+                )
                 thread.daemon = True
                 thread.start()
             else:
                 # Normal launch without output capture
-                launcher = Gio.SubprocessLauncher.new(Gio.SubprocessFlags.STDOUT_SILENCE |
-                                                     Gio.SubprocessFlags.STDERR_SILENCE)
+                launcher = Gio.SubprocessLauncher.new(
+                    Gio.SubprocessFlags.STDOUT_SILENCE
+                    | Gio.SubprocessFlags.STDERR_SILENCE
+                )
 
                 # Launch in background
                 subprocess = launcher.spawnv(cmd_parts)
@@ -1943,33 +2113,27 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
             return cmd
 
         # Check if the first part is already an absolute path
-        if parts[0].startswith('/'):
+        if parts[0].startswith("/"):
             # Strip out the distro path prefix for cleaner display
             if parts[0].startswith(self.DISTRO_PATH):
-                parts[0] = parts[0].replace(self.DISTRO_PATH, '', 1)
+                parts[0] = parts[0].replace(self.DISTRO_PATH, "", 1)
                 # Make sure it still starts with a slash
-                if not parts[0].startswith('/'):
-                    parts[0] = '/' + parts[0]
-            return ' '.join(parts)
+                if not parts[0].startswith("/"):
+                    parts[0] = "/" + parts[0]
+            return " ".join(parts)
 
         # Try to find the program in the distro filesystem's common executable locations
-        common_paths = [
-            "/usr/bin/",
-            "/usr/local/bin/",
-            "/bin/",
-            "/usr/sbin/",
-            "/sbin/"
-        ]
+        common_paths = ["/usr/bin/", "/usr/local/bin/", "/bin/", "/usr/sbin/", "/sbin/"]
 
         # Try each common path
         for path in common_paths:
-            full_path = os.path.join(self.DISTRO_PATH, path.lstrip('/'), parts[0])
+            full_path = os.path.join(self.DISTRO_PATH, path.lstrip("/"), parts[0])
             if os.path.isfile(full_path) and os.access(full_path, os.X_OK):
                 # Replace with the full path but strip the distro path prefix
                 parts[0] = path + parts[0]
                 break
 
-        return ' '.join(parts)
+        return " ".join(parts)
 
     def clean_desktop_exec(self, exec_cmd):
         """Clean the Exec command from .desktop file format"""
@@ -1984,15 +2148,15 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
                 skip_next = False
                 continue
 
-            if part.startswith('%'):
+            if part.startswith("%"):
                 # Handle special case where % is escaped
-                if part == '%%':
-                    parts.append('%')
+                if part == "%%":
+                    parts.append("%")
                 # Skip field codes
                 elif len(part) == 2 and part[1] in "fFuUdDnNickvm":
                     continue
                 # Handle parameters to field codes
-                elif len(part) > 2 and part[1] in "fFuUdDnNickvm" and part[2] == '=':
+                elif len(part) > 2 and part[1] in "fFuUdDnNickvm" and part[2] == "=":
                     skip_next = True
                     continue
                 else:
@@ -2000,7 +2164,7 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
             else:
                 parts.append(part)
 
-        return ' '.join(parts)
+        return " ".join(parts)
 
     def show_launch_notification(self, cmd):
         """Show a notification that an application is being launched"""
@@ -2095,38 +2259,65 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
                         filepath = os.path.join(root, file)
                         try:
                             desktop_entry = self.parse_desktop_file(filepath)
-                            if desktop_entry and not desktop_entry.get('no_display', False):
-                                app_name = desktop_entry.get('name') or os.path.splitext(file)[0]
+                            if desktop_entry and not desktop_entry.get(
+                                "no_display", False
+                            ):
+                                app_name = (
+                                    desktop_entry.get("name")
+                                    or os.path.splitext(file)[0]
+                                )
                                 app_name = app_name.replace("_", " ").strip()
 
                                 # Check if the app matches the search query
-                                description = desktop_entry.get('comment') or ""
-                                if (query.lower() in app_name.lower() or
-                                    query.lower() in file.lower() or
-                                    query.lower() in description.lower()):
-
+                                description = desktop_entry.get("comment") or ""
+                                if (
+                                    query.lower() in app_name.lower()
+                                    or query.lower() in file.lower()
+                                    or query.lower() in description.lower()
+                                ):
                                     # Skip if app is already added (in Add mode) and show_added_apps is False
-                                    if is_add_mode and added_apps and not show_added_apps:
+                                    if (
+                                        is_add_mode
+                                        and added_apps
+                                        and not show_added_apps
+                                    ):
                                         filename = os.path.basename(filepath)
-                                        if filename in added_apps and app_name.lower() == added_apps[filename]:
+                                        if (
+                                            filename in added_apps
+                                            and app_name.lower() == added_apps[filename]
+                                        ):
                                             skipped_count += 1
                                             seen_files.add(file)
                                             continue
 
-                                    icon = desktop_entry.get('icon') or "application-x-executable"
-                                    exec_cmd = desktop_entry.get('exec') or ""
+                                    icon = (
+                                        desktop_entry.get("icon")
+                                        or "application-x-executable"
+                                    )
+                                    exec_cmd = desktop_entry.get("exec") or ""
 
                                     # Check if the item was previously selected
                                     is_selected = app_name in selected_items
 
-                                    filtered_apps.append((is_selected, app_name, filepath, icon, exec_cmd, description))
+                                    filtered_apps.append(
+                                        (
+                                            is_selected,
+                                            app_name,
+                                            filepath,
+                                            icon,
+                                            exec_cmd,
+                                            description,
+                                        )
+                                    )
                                     seen_files.add(file)
                         except Exception as e:
                             print(f"Error processing {filepath}: {str(e)}")
 
         # Log how many apps were filtered out
         if is_add_mode and skipped_count > 0:
-            print(f"Search: Filtered out {skipped_count} applications that are already added")
+            print(
+                f"Search: Filtered out {skipped_count} applications that are already added"
+            )
 
         # Update the list store with filtered results
         self.liststore.clear()
@@ -2284,19 +2475,22 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
             print(f"Error setting icon for '{icon_name}': {e}")
             cell.set_property("icon-name", "application-x-executable")
 
+
 class Add2MenuApplication(Gtk.Application):
     def __init__(self):
         Gtk.Application.__init__(
             self,
             application_id="org.sabamdarif.termux.add2menu",
-            flags=Gio.ApplicationFlags.FLAGS_NONE
+            flags=Gio.ApplicationFlags.FLAGS_NONE,
         )
         self.window = None
         self.no_sandbox = False  # Default setting for no-sandbox option
         self.use_absolute_path = False  # Default setting for absolute path option
         self.nogpu = False  # Default setting for nogpu option
         self.show_added_apps = False  # Default setting for show-added-apps option
-        self.show_app_launch_log = False  # Default setting for show-app-launch-log option
+        self.show_app_launch_log = (
+            False  # Default setting for show-app-launch-log option
+        )
         self.log_window = None  # Terminal log window instance
 
     def do_startup(self):
@@ -2313,33 +2507,40 @@ class Add2MenuApplication(Gtk.Application):
         self.add_action(about_action)
 
         # Add no-sandbox toggle action
-        no_sandbox_action = Gio.SimpleAction.new_stateful("no-sandbox", None,
-                                                         GLib.Variant.new_boolean(False))
+        no_sandbox_action = Gio.SimpleAction.new_stateful(
+            "no-sandbox", None, GLib.Variant.new_boolean(False)
+        )
         no_sandbox_action.connect("change-state", self.on_no_sandbox_toggled)
         self.add_action(no_sandbox_action)
 
         # Add absolute path toggle action
-        absolute_path_action = Gio.SimpleAction.new_stateful("absolute-path", None,
-                                                            GLib.Variant.new_boolean(False))
+        absolute_path_action = Gio.SimpleAction.new_stateful(
+            "absolute-path", None, GLib.Variant.new_boolean(False)
+        )
         absolute_path_action.connect("change-state", self.on_absolute_path_toggled)
         self.add_action(absolute_path_action)
 
         # Add nogpu toggle action
-        nogpu_action = Gio.SimpleAction.new_stateful("nogpu", None,
-                                                    GLib.Variant.new_boolean(False))
+        nogpu_action = Gio.SimpleAction.new_stateful(
+            "nogpu", None, GLib.Variant.new_boolean(False)
+        )
         nogpu_action.connect("change-state", self.on_nogpu_toggled)
         self.add_action(nogpu_action)
 
         # Add show-added-apps toggle action
-        show_added_apps_action = Gio.SimpleAction.new_stateful("show-added-apps", None,
-                                                             GLib.Variant.new_boolean(False))
+        show_added_apps_action = Gio.SimpleAction.new_stateful(
+            "show-added-apps", None, GLib.Variant.new_boolean(False)
+        )
         show_added_apps_action.connect("change-state", self.on_show_added_apps_toggled)
         self.add_action(show_added_apps_action)
 
         # Add show-app-launch-log toggle action
-        show_app_launch_log_action = Gio.SimpleAction.new_stateful("show-app-launch-log", None,
-                                                                  GLib.Variant.new_boolean(False))
-        show_app_launch_log_action.connect("change-state", self.on_show_app_launch_log_toggled)
+        show_app_launch_log_action = Gio.SimpleAction.new_stateful(
+            "show-app-launch-log", None, GLib.Variant.new_boolean(False)
+        )
+        show_app_launch_log_action.connect(
+            "change-state", self.on_show_app_launch_log_toggled
+        )
         self.add_action(show_app_launch_log_action)
 
         # Add keyboard accelerators
@@ -2372,7 +2573,9 @@ class Add2MenuApplication(Gtk.Application):
         about_dialog = Gtk.AboutDialog(transient_for=self.window, modal=True)
         about_dialog.set_program_name("Add To Menu")
         about_dialog.set_version("2.3.2")
-        about_dialog.set_comments("A utility to add Linux applications to Termux desktop")
+        about_dialog.set_comments(
+            "A utility to add Linux applications to Termux desktop"
+        )
         about_dialog.set_copyright(f"© {current_year} Termux-desktop (sabamdarif)")
         about_dialog.set_license_type(Gtk.License.GPL_3_0)
         about_dialog.set_website("https://github.com/sabamdarif/termux-desktop")
@@ -2417,8 +2620,13 @@ class Add2MenuApplication(Gtk.Application):
             self.log_window = TerminalLogWindow(self.window)
 
         # If logging is disabled and the window is visible, hide it
-        if not self.show_app_launch_log and self.log_window and self.log_window.get_visible():
+        if (
+            not self.show_app_launch_log
+            and self.log_window
+            and self.log_window.get_visible()
+        ):
             self.log_window.hide()
+
 
 if __name__ == "__main__":
     try:
