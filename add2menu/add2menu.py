@@ -388,6 +388,7 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
         self.no_sandbox_action = app.lookup_action("no-sandbox")
         self.absolute_path_action = app.lookup_action("absolute-path")
         self.nogpu_action = app.lookup_action("nogpu")
+        self.root_action = app.lookup_action("root")
         self.show_app_launch_log_action = app.lookup_action("show-app-launch-log")
 
         # Set initial state of show-added-apps action based on current mode
@@ -626,6 +627,7 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
         no_sandbox_item = Gio.MenuItem.new("Launch with --no-sandbox", "app.no-sandbox")
         absolute_path_item = Gio.MenuItem.new("Use Absolute Paths", "app.absolute-path")
         nogpu_item = Gio.MenuItem.new("Launch with --nogpu", "app.nogpu")
+        root_item = Gio.MenuItem.new("Launch with --root", "app.root")
 
         # Create terminal log item with an icon
         terminal_item = Gio.MenuItem.new(
@@ -642,6 +644,7 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
         menu.append_item(no_sandbox_item)
         menu.append_item(absolute_path_item)
         menu.append_item(nogpu_item)
+        menu.append_item(root_item)
         menu.append_item(terminal_item)
         menu.append_item(about_item)
         menu.append_item(quit_item)
@@ -1643,6 +1646,7 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
             self.no_sandbox_action.set_enabled(is_add_mode)
             self.absolute_path_action.set_enabled(is_add_mode)
             self.nogpu_action.set_enabled(is_add_mode)
+            self.root_action.set_enabled(is_add_mode)
 
             # Enable/disable show-added-apps action (only relevant in Add mode)
             show_added_apps_action = self.app.lookup_action("show-added-apps")
@@ -1818,6 +1822,10 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
 
             # Use pdrun for both chroot and proot since pdrun now supports both
             new_cmd = "pdrun"
+
+            # Add --root flag if enabled
+            if self.root_action.get_state().get_boolean():
+                new_cmd += " --root"
 
             # Add --nogpu flag if enabled
             if self.nogpu_action.get_state().get_boolean():
@@ -2002,6 +2010,10 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
 
                 # Build the final command with appropriate flags
                 cmd_parts = ["pdrun"]
+
+                # Add --root if enabled
+                if self.root_action.get_state().get_boolean():
+                    cmd_parts.append("--root")
 
                 # Add --nogpu if enabled
                 if self.nogpu_action.get_state().get_boolean():
@@ -2487,6 +2499,7 @@ class Add2MenuApplication(Gtk.Application):
         self.no_sandbox = False  # Default setting for no-sandbox option
         self.use_absolute_path = False  # Default setting for absolute path option
         self.nogpu = False  # Default setting for nogpu option
+        self.root = False  # Default setting for root option
         self.show_added_apps = False  # Default setting for show-added-apps option
         self.show_app_launch_log = (
             False  # Default setting for show-app-launch-log option
@@ -2526,6 +2539,13 @@ class Add2MenuApplication(Gtk.Application):
         )
         nogpu_action.connect("change-state", self.on_nogpu_toggled)
         self.add_action(nogpu_action)
+
+        # Add root toggle action
+        root_action = Gio.SimpleAction.new_stateful(
+            "root", None, GLib.Variant.new_boolean(False)
+        )
+        root_action.connect("change-state", self.on_root_toggled)
+        self.add_action(root_action)
 
         # Add show-added-apps toggle action
         show_added_apps_action = Gio.SimpleAction.new_stateful(
@@ -2572,9 +2592,9 @@ class Add2MenuApplication(Gtk.Application):
 
         about_dialog = Gtk.AboutDialog(transient_for=self.window, modal=True)
         about_dialog.set_program_name("Add To Menu")
-        about_dialog.set_version("2.3.2")
+        about_dialog.set_version("2.3.3")
         about_dialog.set_comments(
-            "A utility to add Linux applications to Termux desktop"
+            "A utility to add proot-distro's applications to Termux desktop"
         )
         about_dialog.set_copyright(f"© {current_year} Termux-desktop (sabamdarif)")
         about_dialog.set_license_type(Gtk.License.GPL_3_0)
@@ -2598,6 +2618,11 @@ class Add2MenuApplication(Gtk.Application):
         """Handle nogpu toggle"""
         action.set_state(value)
         self.nogpu = value.get_boolean()
+
+    def on_root_toggled(self, action, value):
+        """Handle root toggle"""
+        action.set_state(value)
+        self.root = value.get_boolean()
 
     def on_show_added_apps_toggled(self, action, value):
         """Handle show-added-apps toggle"""
