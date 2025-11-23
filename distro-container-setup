@@ -1825,191 +1825,277 @@ EOF
 function distro_app_launch_setup() {
 	if [[ "$enable_hw_acc" == "y" ]]; then
 
-		cat <<EOF >"$PREFIX/bin/pdrun"
-#!/data/data/com.termux/files/usr/bin/bash
+		cat <<-EOF >"$PREFIX/bin/pdrun"
+			#!/data/data/com.termux/files/usr/bin/bash
 
-source /data/data/com.termux/files/usr/etc/termux-desktop/common_functions
+			source /data/data/com.termux/files/usr/etc/termux-desktop/common_functions
 
-usb_mounts() {
-  local candidates seen="" media uuid acc
-  candidates=\$(awk '(\$2 ~ "^/mnt/media_rw/[0-9A-Fa-f-]+\$") && (\$3 ~ /vfat|exfat|ntfs|fuseblk/) {print \$2}' /proc/mounts | sort -u)
-  while IFS= read -r media; do
-    [ -d "\$media" ] || continue
-    uuid="\${media##*/}"
-    acc="/storage/\${uuid}"; [ -r "\$acc" ] || acc="\$media"
-    [ -r "\$acc" ] || continue
-    case ",\$seen," in *",\$uuid,"*) ;; *) printf '%s\n' "\$acc"; seen="\${seen},\${uuid}";; esac
-  done <<< "\$candidates"
-}
+			usb_mounts() {
+			  local candidates seen="" media uuid acc
+			  candidates=\$(awk '(\$2 ~ "^/mnt/media_rw/[0-9A-Fa-f-]+\$") && (\$3 ~ /vfat|exfat|ntfs|fuseblk/) {print \$2}' /proc/mounts | sort -u)
+			  while IFS= read -r media; do
+			    [ -d "\$media" ] || continue
+			    uuid="\${media##*/}"
+			    acc="/storage/\${uuid}"; [ -r "\$acc" ] || acc="\$media"
+			    [ -r "\$acc" ] || continue
+			    case ",\$seen," in *",\$uuid,"*) ;; *) printf '%s\n' "\$acc"; seen="\${seen},\${uuid}";; esac
+			  done <<< "\$candidates"
+			}
 
-urldecode() { local s="\${1//+/ }"; printf '%b' "\${s//%/\\\\x}"; }
+			urldecode() { local s="\${1//+/ }"; printf '%b' "\${s//%/\\\\x}"; }
 
-normalize_arg() {
-  local a="\$1"
-  case "\$a" in file://*) a="\${a#file://}";; esac
-  if [[ "\$a" == *%* || "\$a" == *+* ]]; then a="\$(urldecode "\$a")"; fi
-  echo "\$a"
-}
+			normalize_arg() {
+			  local a="\$1"
+			  case "\$a" in file://*) a="\${a#file://}";; esac
+			  if [[ "\$a" == *%* || "\$a" == *+* ]]; then a="\$(urldecode "\$a")"; fi
+			  echo "\$a"
+			}
 
-enum_media=0
+			enum_media=0
 
-usb_bind_args() {
-  if [ -n "\${PDRUN_DISABLE_USB_BIND:-}" ]; then printf ''; return 0; fi
+			usb_bind_args() {
+			  if [ -n "\${PDRUN_DISABLE_USB_BIND:-}" ]; then printf ''; return 0; fi
 
-  local args="--bind /storage:/storage --bind /mnt/media_rw:/mnt/media_rw"
+			  local args="--bind /storage:/storage --bind /mnt/media_rw:/mnt/media_rw"
 
-  local list; if [ -n "\${PDRUN_USB_BIND_PATH:-}" ]; then list="\${PDRUN_USB_BIND_PATH}"; else list="\$(usb_mounts 2>/dev/null)"; fi
-  if [ -n "\$list" ]; then
-    local include="\${PDRUN_USB_INCLUDE:-}"; local exclude="\${PDRUN_USB_EXCLUDE:-}"; local limit="\${PDRUN_USB_LIMIT:-0}"
-    local count=0
-    while IFS= read -r p; do
-      [ -n "\$p" ] || continue
-      local uuid="\${p##*/}"
-      if [ -n "\$include" ]; then case ",\$include," in *",\$uuid,"*) ;; *) continue;; esac; fi
-      if [ -n "\$exclude" ]; then case ",\$exclude," in *",\$uuid,"*) continue;; esac; fi
-      if [ "\$limit" -gt 0 ] && [ "\$count" -ge "\$limit" ]; then break; fi
-      args="\${args} --bind \${p}:/mnt/usb/\${uuid}"
-      count=\$((count+1))
-    done <<< "\$list"
-  fi
+			  local list; if [ -n "\${PDRUN_USB_BIND_PATH:-}" ]; then list="\${PDRUN_USB_BIND_PATH}"; else list="\$(usb_mounts 2>/dev/null)"; fi
+			  if [ -n "\$list" ]; then
+			    local include="\${PDRUN_USB_INCLUDE:-}"; local exclude="\${PDRUN_USB_EXCLUDE:-}"; local limit="\${PDRUN_USB_LIMIT:-0}"
+			    local count=0
+			    while IFS= read -r p; do
+			      [ -n "\$p" ] || continue
+			      local uuid="\${p##*/}"
+			      if [ -n "\$include" ]; then case ",\$include," in *",\$uuid,"*) ;; *) continue;; esac; fi
+			      if [ -n "\$exclude" ]; then case ",\$exclude," in *",\$uuid,"*) continue;; esac; fi
+			      if [ "\$limit" -gt 0 ] && [ "\$count" -ge "\$limit" ]; then break; fi
+			      args="\${args} --bind \${p}:/mnt/usb/\${uuid}"
+			      count=\$((count+1))
+			    done <<< "\$list"
+			  fi
 
-  if [ "\${enum_media:-0}" -eq 1 ] || [[ "\${PDRUN_MEDIA_RW_ENUM:-}" =~ ^(1|true|yes)\$ ]]; then
-    while IFS= read -r p; do
-      [ -n "\$p" ] || continue
-      args="\${args} --bind \${p}:\${p}"
-      uuid="\${p##*/}"; st="/storage/\${uuid}"
-      [ -r "\$st" ] && args="\${args} --bind \${st}:\${st}"
-    done <<<"\$(usb_mounts 2>/dev/null | sed -E 's|^/storage/([0-9A-Fa-f-]+)\$|/mnt/media_rw/\\\\1|')"
-  fi
+			  if [ "\${enum_media:-0}" -eq 1 ] || [[ "\${PDRUN_MEDIA_RW_ENUM:-}" =~ ^(1|true|yes)\$ ]]; then
+			    while IFS= read -r p; do
+			      [ -n "\$p" ] || continue
+			      args="\${args} --bind \${p}:\${p}"
+			      uuid="\${p##*/}"; st="/storage/\${uuid}"
+			      [ -r "\$st" ] && args="\${args} --bind \${st}:\${st}"
+			    done <<<"\$(usb_mounts 2>/dev/null | sed -E 's|^/storage/([0-9A-Fa-f-]+)\$|/mnt/media_rw/\\\\1|')"
+			  fi
 
-  printf '%s' "\$args"
-}
+			  printf '%s' "\$args"
+			}
 
-if [[ "${selected_distro_type}" == "proot" ]]; then
-# This code block is taken from:- https://github.com/termux/proot-distro/blob/master/proot-distro.sh#L172C1-L184C1
-TRACER_PID=\$(grep TracerPid "/proc/\$\$/status" | cut -d \$'\t' -f 2)
-if [ "\$TRACER_PID" != 0 ]; then
-	TRACER_NAME=\$(grep Name "/proc/\${TRACER_PID}/status" | cut -d \$'\t' -f 2)
-	if [ "\$TRACER_NAME" = "proot" ]; then
-		msg
-		print_failed "pdrun should not be executed under PRoot.\${W}"
-		msg
-		exit 1
-	fi
-	unset TRACER_NAME
-fi
-unset TRACER_PID
-fi
-selected_pd_hw_method="$pd_hw_method"
-EOF
+			if [[ "${selected_distro_type}" == "proot" ]]; then
+			# This code block is taken from:- https://github.com/termux/proot-distro/blob/master/proot-distro.sh#L172C1-L184C1
+			TRACER_PID=\$(grep TracerPid "/proc/\$\$/status" | cut -d \$'\t' -f 2)
+			if [ "\$TRACER_PID" != 0 ]; then
+				TRACER_NAME=\$(grep Name "/proc/\${TRACER_PID}/status" | cut -d \$'\t' -f 2)
+				if [ "\$TRACER_NAME" = "proot" ]; then
+					msg
+					print_failed "pdrun should not be executed under PRoot.\${W}"
+					msg
+					exit 1
+				fi
+				unset TRACER_NAME
+			fi
+			unset TRACER_PID
+			fi
+			selected_pd_hw_method="$pd_hw_method"
+		EOF
 
-		cat <<EOF >>"$PREFIX/bin/pdrun"
-xhost + > /dev/null 2>&1
-case \$1 in
---nogpu)
-"${selected_distro_type}"-distro login \$(usb_bind_args) --user "$final_user_name" "$selected_distro" --shared-tmp $termux_home_link -- env DISPLAY=\$(echo \$DISPLAY) XDG_RUNTIME_DIR=\${TMPDIR} LIBGL_ALWAYS_SOFTWARE=1 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe sh -lc 'umask 022; exec "\$@"' _ "\${@:2}"
-;;
---help|-h)
-echo "${G}Type ${C}pdrun PACKAGE-NAME ${G}to start with GPU acceleration${NC}"
-;;
-*)
-"${selected_distro_type}"-distro login \$(usb_bind_args) --user "$final_user_name" "$selected_distro" --shared-tmp $termux_home_link -- env DISPLAY=\$(echo \$DISPLAY) XDG_RUNTIME_DIR=\${TMPDIR} \$selected_pd_hw_method sh -lc 'umask 022; exec "\$@"' _ "\$@"
-;;
-esac
-EOF
+		if [[ "$pd_useradd_answer" == "n" ]]; then
+			cat <<-EOF >>"$PREFIX/bin/pdrun"
+				xhost + > /dev/null 2>&1
+
+				use_nogpu=false
+				args=()
+
+				while [[ \$# -gt 0 ]]; do
+				  case "\$1" in
+				    --nogpu)
+				      use_nogpu=true
+				      shift
+				      ;;
+				    --help|-h)
+				      echo "${G}Usage: pdrun [--nogpu] COMMAND${NC}"
+				      echo "${G}  --nogpu  Disable GPU acceleration${NC}"
+				      exit 0
+				      ;;
+				    *)
+				      args+=("\$1")
+				      shift
+				      ;;
+				  esac
+				done
+
+				user_arg="--user $final_user_name"
+
+				if [ "\$use_nogpu" = true ]; then
+				  gpu_env="env LIBGL_ALWAYS_SOFTWARE=1 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe"
+				else
+				  gpu_env="env $selected_pd_hw_method"
+				fi
+
+				"${selected_distro_type}"-distro login \$(usb_bind_args) \$user_arg "$selected_distro" --shared-tmp $termux_home_link -- env DISPLAY=\$(echo \$DISPLAY) XDG_RUNTIME_DIR=\${TMPDIR} \$gpu_env sh -lc 'umask 022; exec "\$@"' _ "\${args[@]}"
+			EOF
+		else
+			cat <<-EOF >>"$PREFIX/bin/pdrun"
+				xhost + > /dev/null 2>&1
+
+				use_root=false
+				use_nogpu=false
+				args=()
+
+				while [[ \$# -gt 0 ]]; do
+				  case "\$1" in
+				    --root)
+				      use_root=true
+				      shift
+				      ;;
+				    --nogpu)
+				      use_nogpu=true
+				      shift
+				      ;;
+				    --help|-h)
+				      echo "${G}Usage: pdrun [--root] [--nogpu] COMMAND${NC}"
+				      echo "${G}  --root   Run as root user${NC}"
+				      echo "${G}  --nogpu  Disable GPU acceleration${NC}"
+				      exit 0
+				      ;;
+				    *)
+				      args+=("\$1")
+				      shift
+				      ;;
+				  esac
+				done
+
+				if [ "\$use_root" = true ]; then
+				  user_arg="--user root"
+				else
+				  user_arg="--user $final_user_name"
+				fi
+
+				if [ "\$use_nogpu" = true ]; then
+				  gpu_env="env LIBGL_ALWAYS_SOFTWARE=1 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe"
+				else
+				  gpu_env="env $selected_pd_hw_method"
+				fi
+
+				"${selected_distro_type}"-distro login \$(usb_bind_args) \$user_arg "$selected_distro" --shared-tmp $termux_home_link -- env DISPLAY=\$(echo \$DISPLAY) XDG_RUNTIME_DIR=\${TMPDIR} \$gpu_env sh -lc 'umask 022; exec "\$@"' _ "\${args[@]}"
+			EOF
+		fi
 
 	elif [[ "$enable_hw_acc" == "n" ]]; then
 
-		cat <<EOF >"$PREFIX/bin/pdrun"
-#!/data/data/com.termux/files/usr/bin/bash
+		cat <<-EOF >"$PREFIX/bin/pdrun"
+			#!/data/data/com.termux/files/usr/bin/bash
 
-source /data/data/com.termux/files/usr/etc/termux-desktop/common_functions
+			source /data/data/com.termux/files/usr/etc/termux-desktop/common_functions
 
-usb_mounts() {
-  local candidates seen="" media uuid acc
-  candidates=\$(awk '(\$2 ~ "^/mnt/media_rw/[0-9A-Fa-f-]+\$") && (\$3 ~ /vfat|exfat|ntfs|fuseblk/) {print \$2}' /proc/mounts | sort -u)
-  while IFS= read -r media; do
-    [ -d "\$media" ] || continue
-    uuid="\${media##*/}"
-    acc="/storage/\${uuid}"; [ -r "\$acc" ] || acc="\$media"
-    [ -r "\$acc" ] || continue
-    case ",\$seen," in *",\$uuid,"*) ;; *) printf '%s\n' "\$acc"; seen="\${seen},\${uuid}";; esac
-  done <<< "\$candidates"
-}
+			usb_mounts() {
+			  local candidates seen="" media uuid acc
+			  candidates=\$(awk '(\$2 ~ "^/mnt/media_rw/[0-9A-Fa-f-]+\$") && (\$3 ~ /vfat|exfat|ntfs|fuseblk/) {print \$2}' /proc/mounts | sort -u)
+			  while IFS= read -r media; do
+			    [ -d "\$media" ] || continue
+			    uuid="\${media##*/}"
+			    acc="/storage/\${uuid}"; [ -r "\$acc" ] || acc="\$media"
+			    [ -r "\$acc" ] || continue
+			    case ",\$seen," in *",\$uuid,"*) ;; *) printf '%s\n' "\$acc"; seen="\${seen},\${uuid}";; esac
+			  done <<< "\$candidates"
+			}
 
-urldecode() { local s="\${1//+/ }"; printf '%b' "\${s//%/\\\\x}"; }
+			urldecode() { local s="\${1//+/ }"; printf '%b' "\${s//%/\\\\x}"; }
 
-normalize_arg() {
-  local a="\$1"
-  case "\$a" in file://*) a="\${a#file://}";; esac
-  if [[ "\$a" == *%* || "\$a" == *+* ]]; then a="\$(urldecode "\$a")"; fi
-  echo "\$a"
-}
+			normalize_arg() {
+			  local a="\$1"
+			  case "\$a" in file://*) a="\${a#file://}";; esac
+			  if [[ "\$a" == *%* || "\$a" == *+* ]]; then a="\$(urldecode "\$a")"; fi
+			  echo "\$a"
+			}
 
-enum_media=0
+			enum_media=0
 
-usb_bind_args() {
-  if [ -n "\${PDRUN_DISABLE_USB_BIND:-}" ]; then printf ''; return 0; fi
+			usb_bind_args() {
+			  if [ -n "\${PDRUN_DISABLE_USB_BIND:-}" ]; then printf ''; return 0; fi
 
-  local args="--bind /storage:/storage --bind /mnt/media_rw:/mnt/media_rw"
+			  local args="--bind /storage:/storage --bind /mnt/media_rw:/mnt/media_rw"
 
-  local list; if [ -n "\${PDRUN_USB_BIND_PATH:-}" ]; then list="\${PDRUN_USB_BIND_PATH}"; else list="\$(usb_mounts 2>/dev/null)"; fi
-  if [ -n "\$list" ]; then
-    local include="\${PDRUN_USB_INCLUDE:-}"; local exclude="\${PDRUN_USB_EXCLUDE:-}"; local limit="\${PDRUN_USB_LIMIT:-0}"
-    local count=0
-    while IFS= read -r p; do
-      [ -n "\$p" ] || continue
-      local uuid="\${p##*/}"
-      if [ -n "\$include" ]; then case ",\$include," in *",\$uuid,"*) ;; *) continue;; esac; fi
-      if [ -n "\$exclude" ]; then case ",\$exclude," in *",\$uuid,"*) continue;; esac; fi
-      if [ "\$limit" -gt 0 ] && [ "\$count" -ge "\$limit" ]; then break; fi
-      args="\${args} --bind \${p}:/mnt/usb/\${uuid}"
-      count=\$((count+1))
-    done <<< "\$list"
-  fi
+			  local list; if [ -n "\${PDRUN_USB_BIND_PATH:-}" ]; then list="\${PDRUN_USB_BIND_PATH}"; else list="\$(usb_mounts 2>/dev/null)"; fi
+			  if [ -n "\$list" ]; then
+			    local include="\${PDRUN_USB_INCLUDE:-}"; local exclude="\${PDRUN_USB_EXCLUDE:-}"; local limit="\${PDRUN_USB_LIMIT:-0}"
+			    local count=0
+			    while IFS= read -r p; do
+			      [ -n "\$p" ] || continue
+			      local uuid="\${p##*/}"
+			      if [ -n "\$include" ]; then case ",\$include," in *",\$uuid,"*) ;; *) continue;; esac; fi
+			      if [ -n "\$exclude" ]; then case ",\$exclude," in *",\$uuid,"*) continue;; esac; fi
+			      if [ "\$limit" -gt 0 ] && [ "\$count" -ge "\$limit" ]; then break; fi
+			      args="\${args} --bind \${p}:/mnt/usb/\${uuid}"
+			      count=\$((count+1))
+			    done <<< "\$list"
+			  fi
 
-  if [ "\${enum_media:-0}" -eq 1 ] || [[ "\${PDRUN_MEDIA_RW_ENUM:-}" =~ ^(1|true|yes)\$ ]]; then
-    while IFS= read -r p; do
-      [ -n "\$p" ] || continue
-      args="\${args} --bind \${p}:\${p}"
-      uuid="\${p##*/}"; st="/storage/\${uuid}"
-      [ -r "\$st" ] && args="\${args} --bind \${st}:\${st}"
-    done <<<"\$(usb_mounts 2>/dev/null | sed -E 's|^/storage/([0-9A-Fa-f-]+)\$|/mnt/media_rw/\\\\1|')"
-  fi
+			  if [ "\${enum_media:-0}" -eq 1 ] || [[ "\${PDRUN_MEDIA_RW_ENUM:-}" =~ ^(1|true|yes)\$ ]]; then
+			    while IFS= read -r p; do
+			      [ -n "\$p" ] || continue
+			      args="\${args} --bind \${p}:\${p}"
+			      uuid="\${p##*/}"; st="/storage/\${uuid}"
+			      [ -r "\$st" ] && args="\${args} --bind \${st}:\${st}"
+			    done <<<"\$(usb_mounts 2>/dev/null | sed -E 's|^/storage/([0-9A-Fa-f-]+)\$|/mnt/media_rw/\\\\1|')"
+			  fi
 
-  printf '%s' "\$args"
-}
+			  printf '%s' "\$args"
+			}
 
-if [[ "${selected_distro_type}" == "proot" ]]; then
-# This code block is taken from:- https://github.com/termux/proot-distro/blob/master/proot-distro.sh#L172C1-L184C1
-TRACER_PID=\$(grep TracerPid "/proc/\$\$/status" | cut -d \$'\t' -f 2)
-if [ "\$TRACER_PID" != 0 ]; then
-	TRACER_NAME=\$(grep Name "/proc/\${TRACER_PID}/status" | cut -d \$'\t' -f 2)
-	if [ "\$TRACER_NAME" = "proot" ]; then
-		msg
-		print_failed "pdrun should not be executed under PRoot.\${W}"
-		msg
-		exit 1
+			if [[ "${selected_distro_type}" == "proot" ]]; then
+			# This code block is taken from:- https://github.com/termux/proot-distro/blob/master/proot-distro.sh#L172C1-L184C1
+			TRACER_PID=\$(grep TracerPid "/proc/\$\$/status" | cut -d \$'\t' -f 2)
+			if [ "\$TRACER_PID" != 0 ]; then
+				TRACER_NAME=\$(grep Name "/proc/\${TRACER_PID}/status" | cut -d \$'\t' -f 2)
+				if [ "\$TRACER_NAME" = "proot" ]; then
+					msg
+					print_failed "pdrun should not be executed under PRoot.\${W}"
+					msg
+					exit 1
+				fi
+				unset TRACER_NAME
+			fi
+			unset TRACER_PID
+			fi
+
+		EOF
+
+		if [[ "$pd_useradd_answer" == "n" ]]; then
+			cat <<-EOF >>"$PREFIX/bin/pdrun"
+				xhost + > /dev/null 2>&1
+				case \$1 in
+				--help|-h)
+					echo "${G}Usage: pdrun COMMAND${NC}"
+				;;
+				*)
+				"${selected_distro_type}"-distro login \$(usb_bind_args) --user "$final_user_name" "$selected_distro" --shared-tmp $termux_home_link -- env DISPLAY=\$(echo \$DISPLAY) XDG_RUNTIME_DIR=\${TMPDIR} sh -lc 'umask 022; exec "\$@"' _ "\$@"
+				;;
+				esac
+			EOF
+		else
+			cat <<-EOF >>"$PREFIX/bin/pdrun"
+				xhost + > /dev/null 2>&1
+				case \$1 in
+				--root)
+				"${selected_distro_type}"-distro login \$(usb_bind_args) --user root "$selected_distro" --shared-tmp $termux_home_link -- env DISPLAY=\$(echo \$DISPLAY) XDG_RUNTIME_DIR=\${TMPDIR} sh -lc 'umask 022; exec "\$@"' _ "\${@:2}"
+				;;
+				--help|-h)
+					echo "${G}Usage: pdrun [--root] COMMAND${NC}"
+					echo "${G}  --root   Run as root user${NC}"
+				;;
+				*)
+				"${selected_distro_type}"-distro login \$(usb_bind_args) --user "$final_user_name" "$selected_distro" --shared-tmp $termux_home_link -- env DISPLAY=\$(echo \$DISPLAY) XDG_RUNTIME_DIR=\${TMPDIR} sh -lc 'umask 022; exec "\$@"' _ "\$@"
+				;;
+				esac
+			EOF
+		fi
 	fi
-	unset TRACER_NAME
-fi
-unset TRACER_PID
-fi
 
-EOF
-
-		cat <<EOF >>"$PREFIX/bin/pdrun"
-xhost + > /dev/null 2>&1
-case \$1 in
---help|-h)
-echo "${G}Type ${C}pdrun PACKAGE-NAME ${G}to start with gpu acceleration${NC}"
-;;
-*)
-"${selected_distro_type}"-distro login \$(usb_bind_args) --user "$final_user_name" "$selected_distro" --shared-tmp $termux_home_link -- env DISPLAY=\$(echo \$DISPLAY) XDG_RUNTIME_DIR=\${TMPDIR} sh -lc 'umask 022; exec "\$@"' _ "\$@"
-;;
-esac
-EOF
-	fi
 	chmod +x "$PREFIX/bin/pdrun"
 }
 
