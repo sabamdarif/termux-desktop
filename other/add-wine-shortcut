@@ -8,7 +8,7 @@ function check_termux() {
 }
 
 if [[ "$wine_answer" == "3" ]]; then
-	if [[ ! -f "$PREFIX/bin/wine" ]]; then
+	if [[ ! -f "$TERMUX_PREFIX/bin/wine" ]]; then
 		wine_cmd="wine"
 	else
 		wine_cmd="hangover-wine"
@@ -18,100 +18,117 @@ else
 fi
 
 function wine_shortcut() {
-	rm -rf "$PREFIX/share/applications/wine-explorer.desktop $PREFIX/share/applications/wine-winecfg.desktop $PREFIX/share/applications/wine-uninstaller.desktop $PREFIX/share/applications/wine-regedit.desktop $PREFIX/share/applications/wine-wineboot.desktop" >/dev/null 2>&1
+	local desktop_dir="$TERMUX_PREFIX/share/applications"
 
-	cat <<EOF >"$PREFIX/share/applications/wine-program-loader.desktop"
-[Desktop Entry]
-Name=Wine Program Loader
-Comment=Run Windows programs with Wine
-Name[ar]=مشغل برامج واين
-Comment[ar]=تشغيل برامج ويندوز باستخدام واين
-Exec=${wine_cmd} %f
-Icon=wine
-Terminal=false
-Type=Application
-MimeType=application/x-ms-dos-executable;application/x-msi;
-Categories=X-Wine;
-X-Desktop-File-Install-Version=0.26
-NoDisplay=true
-EOF
-	chmod +x "$PREFIX/share/applications/wine-program-loader.desktop"
-	cat <<EOF >"$PREFIX/share/applications/wine-explorer.desktop"
-[Desktop Entry]
-Name=Wine File
-Comment=Wine File Browser
-Name[ar]=مدير ملفات واين
-Comment[ar]=إدارة الملفات بطريقة واين
-Exec=${wine_cmd} explorer
-Icon=winefile
-Terminal=false
-Type=Application
-Categories=X-Wine;
-X-Desktop-File-Install-Version=0.26
-EOF
-	chmod +x "$PREFIX/share/applications/wine-explorer.desktop"
-	cat <<EOF >"$PREFIX/share/applications/wine-winecfg.desktop"
-[Desktop Entry]
-Name=Wine Configuration
-Comment=Interface to set wine parameters
-Name[ar]=إعدادات واين
-Comment[ar]=لوحة تحكم بمنظومة واين
-Exec=${wine_cmd} winecfg
-Icon=winecfg
-Terminal=false
-Type=Application
-StartupNotify=true
-StartupWMClass=winecfg.exe
-Categories=X-Wine;
-X-Desktop-File-Install-Version=0.26
-EOF
-	chmod +x "$PREFIX/share/applications/wine-winecfg.desktop"
-	cat <<EOF >"$PREFIX/share/applications/wine-uninstaller.desktop"
-[Desktop Entry]
-Name=Wine Software Uninstaller
-Comment=Interface to uninstall software
-Name[ar]=مزيل التطبيقات من واين
-Comment[ar]=واجهة إزالة التّطبيقات من واين
-Exec=${wine_cmd} uninstaller
-Icon=msiexec
-Terminal=false
-Type=Application
-StartupNotify=true
-StartupWMClass=uninstaller.exe
-Categories=X-Wine;
-X-Desktop-File-Install-Version=0.26
-EOF
-	chmod +x "$PREFIX/share/applications/wine-uninstaller.desktop"
-	cat <<EOF >"$PREFIX/share/applications/wine-regedit.desktop"
-[Desktop Entry]
-Name=Regedit
-Comment=Wine registry editor
-Name[ar]=محرر السّجل
-Comment[ar]=محرر لسجلات واين
-Exec=${wine_cmd} regedit
-Icon=regedit
-Terminal=false
-Type=Application
-StartupNotify=true
-StartupWMClass=regedit.exe
-Categories=X-Wine;
-X-Desktop-File-Install-Version=0.26
-EOF
-	chmod +x "$PREFIX/share/applications/wine-regedit.desktop"
-	cat <<EOF >"$PREFIX/share/applications/wine-wineboot.desktop"
-[Desktop Entry]
-Name=Wine Boot
-Comment=Simulate restart
-Name[ar]=إقلاع واين
-Comment[ar]=محاكاة إعادة التشغيل لواين
-Exec=${wine_cmd} wineboot
-Icon=wine
-Terminal=false
-Type=Application
-Categories=X-Wine;
-X-Desktop-File-Install-Version=0.26
-EOF
-	chmod +x "$PREFIX/share/applications/wine-wineboot.desktop"
+	# Create applications directory if it doesn't exist
+	if [[ ! -d "$desktop_dir" ]]; then
+		mkdir -p "$desktop_dir" || {
+			echo "${R}[${R}☓${R}]${R} Failed to create applications directory${NC}"
+			return 1
+		}
+	fi
+
+	# Remove old wine desktop files
+	rm -rf "$TERMUX_PREFIX/share/applications/wine-explorer.desktop" \
+		"$TERMUX_PREFIX/share/applications/wine-winecfg.desktop" \
+		"$TERMUX_PREFIX/share/applications/wine-uninstaller.desktop" \
+		"$TERMUX_PREFIX/share/applications/wine-regedit.desktop" \
+		"$TERMUX_PREFIX/share/applications/wine-wineboot.desktop" >/dev/null 2>&1
+
+	cat <<-EOF >"$TERMUX_PREFIX/share/applications/wine-program-loader.desktop"
+		[Desktop Entry]
+		Name=Wine Program Loader
+		Comment=Run Windows programs with Wine
+		Name[ar]=مشغل برامج واين
+		Comment[ar]=تشغيل برامج ويندوز باستخدام واين
+		Exec=${wine_cmd} %f
+		Icon=wine
+		Terminal=false
+		Type=Application
+		MimeType=application/x-ms-dos-executable;application/x-msi;
+		Categories=X-Wine;
+		X-Desktop-File-Install-Version=0.26
+		NoDisplay=true
+	EOF
+	chmod +x "$TERMUX_PREFIX/share/applications/wine-program-loader.desktop"
+	cat <<-EOF >"$TERMUX_PREFIX/share/applications/wine-explorer.desktop"
+		[Desktop Entry]
+		Name=Wine File
+		Comment=Wine File Browser
+		Name[ar]=مدير ملفات واين
+		Comment[ar]=إدارة الملفات بطريقة واين
+		Exec=${wine_cmd} explorer
+		Icon=winefile
+		Terminal=false
+		Type=Application
+		Categories=X-Wine;
+		X-Desktop-File-Install-Version=0.26
+	EOF
+	chmod +x "$TERMUX_PREFIX/share/applications/wine-explorer.desktop"
+	cat <<-EOF >"$TERMUX_PREFIX/share/applications/wine-winecfg.desktop"
+		[Desktop Entry]
+		Name=Wine Configuration
+		Comment=Interface to set wine parameters
+		Name[ar]=إعدادات واين
+		Comment[ar]=لوحة تحكم بمنظومة واين
+		Exec=${wine_cmd} winecfg
+		Icon=winecfg
+		Terminal=false
+		Type=Application
+		StartupNotify=true
+		StartupWMClass=winecfg.exe
+		Categories=X-Wine;
+		X-Desktop-File-Install-Version=0.26
+	EOF
+	chmod +x "$TERMUX_PREFIX/share/applications/wine-winecfg.desktop"
+	cat <<-EOF >"$TERMUX_PREFIX/share/applications/wine-uninstaller.desktop"
+		[Desktop Entry]
+		Name=Wine Software Uninstaller
+		Comment=Interface to uninstall software
+		Name[ar]=مزيل التطبيقات من واين
+		Comment[ar]=واجهة إزالة التّطبيقات من واين
+		Exec=${wine_cmd} uninstaller
+		Icon=msiexec
+		Terminal=false
+		Type=Application
+		StartupNotify=true
+		StartupWMClass=uninstaller.exe
+		Categories=X-Wine;
+		X-Desktop-File-Install-Version=0.26
+	EOF
+	chmod +x "$TERMUX_PREFIX/share/applications/wine-uninstaller.desktop"
+	cat <<-EOF >"$TERMUX_PREFIX/share/applications/wine-regedit.desktop"
+		[Desktop Entry]
+		Name=Regedit
+		Comment=Wine registry editor
+		Name[ar]=محرر السّجل
+		Comment[ar]=محرر لسجلات واين
+		Exec=${wine_cmd} regedit
+		Icon=regedit
+		Terminal=false
+		Type=Application
+		StartupNotify=true
+		StartupWMClass=regedit.exe
+		Categories=X-Wine;
+		X-Desktop-File-Install-Version=0.26
+	EOF
+	chmod +x "$TERMUX_PREFIX/share/applications/wine-regedit.desktop"
+	cat <<-EOF >"$TERMUX_PREFIX/share/applications/wine-wineboot.desktop"
+		[Desktop Entry]
+		Name=Wine Boot
+		Comment=Simulate restart
+		Name[ar]=إقلاع واين
+		Comment[ar]=محاكاة إعادة التشغيل لواين
+		Exec=${wine_cmd} wineboot
+		Icon=wine
+		Terminal=false
+		Type=Application
+		Categories=X-Wine;
+		X-Desktop-File-Install-Version=0.26
+	EOF
+	chmod +x "$TERMUX_PREFIX/share/applications/wine-wineboot.desktop"
+
+	print_success "${G}[${G}✓${G}]${G} Wine shortcuts created successfully${NC}"
 }
 
 check_termux

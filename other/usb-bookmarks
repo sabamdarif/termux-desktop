@@ -18,11 +18,12 @@
 
 set -euo pipefail
 
-USB_BM_FILE="${USB_BM_FILE:-$HOME/.config/gtk-3.0/bookmarks}"
-USB_LABEL_PREFIX="${USB_LABEL_PREFIX:-USB-}"
-USB_DESKTOP_LINKS="${USB_DESKTOP_LINKS:-}"
-DESKTOP_DIR="${HOME}/Desktop"
-LOCK_FILE="${LOCK_FILE:-$HOME/.cache/usb-bookmarks.lock}"
+readonly TERMUX_HOME=${HOME:-/data/data/com.termux/files/home}
+readonly USB_BM_FILE="${USB_BM_FILE:-$TERMUX_HOME/.config/gtk-3.0/bookmarks}"
+readonly USB_LABEL_PREFIX="${USB_LABEL_PREFIX:-USB-}"
+readonly USB_DESKTOP_LINKS="${USB_DESKTOP_LINKS:-}"
+readonly DESKTOP_DIR="TERMUX_HOME/Desktop"
+readonly LOCK_FILE="${LOCK_FILE:-$TERMUX_HOME/.cache/usb-bookmarks.lock}"
 
 mkdir -p "$(dirname "$USB_BM_FILE")" "$(dirname "$LOCK_FILE")"
 

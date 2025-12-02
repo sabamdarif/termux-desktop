@@ -179,8 +179,10 @@ apply_patches() {
 
 	cd "$WORKDIR/mesa"
 
-	# Find all .patch files and sort them numerically
-	local patch_files=($(find "$PATCHES_DIR" -name "*.patch" -type f | sort))
+	local patch_files=()
+	while IFS= read -r -d '' patch_file; do
+		patch_files+=("$patch_file")
+	done < <(find "$PATCHES_DIR" -name "*.patch" -type f -print0 | sort -z)
 
 	if [ ${#patch_files[@]} -eq 0 ]; then
 		log_info "No patch files found in patches directory, skipping patch application"
@@ -190,7 +192,8 @@ apply_patches() {
 	log_info "Found ${#patch_files[@]} patch file(s) to apply"
 
 	for patch_file in "${patch_files[@]}"; do
-		local patch_name=$(basename "$patch_file")
+		local patch_name
+		patch_name=$(basename "$patch_file")
 		log_info "Applying patch: $patch_name"
 
 		# Apply patch with git apply for better compatibility
@@ -227,7 +230,8 @@ apply_patches() {
 
 create_cross_files() {
 	local arch="$1"
-	local config=(${ARCH_CONFIG[$arch]})
+	local config_string="${ARCH_CONFIG[$arch]}"
+	read -ra config <<<"$config_string"
 	local clang="${config[0]}"
 	local strip_tool="${config[1]}"
 	local lib_arch="${config[2]}"
@@ -239,41 +243,42 @@ create_cross_files() {
 
 	log_info "Creating Meson cross file for $arch..."
 
-	cat <<EOF >"android-${arch}.txt"
-[binaries]
-ar = '$ndk_bin/llvm-ar'
-c = ['ccache', '$ndk_bin/$clang', '-Wno-deprecated-declarations', '-Wno-gnu-alignof-expression']
-cpp = ['ccache', '$ndk_bin/${clang/clang/clang++}', '--start-no-unused-arguments', '-fno-exceptions', '-fno-unwind-tables', '-fno-asynchronous-unwind-tables', '-static-libstdc++', '--end-no-unused-arguments', '-Wno-error=c++11-narrowing', '-Wno-deprecated-declarations', '-Wno-gnu-alignof-expression']
-c_ld = '$ndk_bin/ld.lld'
-cpp_ld = '$ndk_bin/ld.lld'
-strip = '$ndk_bin/$strip_tool'
-pkg-config = ['env', 'PKG_CONFIG_LIBDIR=$ndk_bin/pkg-config', '/usr/bin/pkg-config']
-[host_machine]
-system = 'android'
-cpu_family = '$arch'
-cpu = '$cpu'
-endian = 'little'
-EOF
+	cat <<-EOF >"android-${arch}.txt"
+		[binaries]
+		ar = '$ndk_bin/llvm-ar'
+		c = ['ccache', '$ndk_bin/$clang', '-Wno-deprecated-declarations', '-Wno-gnu-alignof-expression']
+		cpp = ['ccache', '$ndk_bin/${clang/clang/clang++}', '--start-no-unused-arguments', '-fno-exceptions', '-fno-unwind-tables', '-fno-asynchronous-unwind-tables', '-static-libstdc++', '--end-no-unused-arguments', '-Wno-error=c++11-narrowing', '-Wno-deprecated-declarations', '-Wno-gnu-alignof-expression']
+		c_ld = '$ndk_bin/ld.lld'
+		cpp_ld = '$ndk_bin/ld.lld'
+		strip = '$ndk_bin/$strip_tool'
+		pkg-config = ['env', 'PKG_CONFIG_LIBDIR=$ndk_bin/pkg-config', '/usr/bin/pkg-config']
+		[host_machine]
+		system = 'android'
+		cpu_family = '$arch'
+		cpu = '$cpu'
+		endian = 'little'
+	EOF
 
 	# Create native file
-	cat <<EOF >"native.txt"
-[build_machine]
-c = ['ccache', 'clang']
-cpp = ['ccache', 'clang++']
-ar = 'llvm-ar'
-strip = 'llvm-strip'
-c_ld = 'ld.lld'
-cpp_ld = 'ld.lld'
-system = 'linux'
-cpu_family = 'x86_64'
-cpu = 'x86_64'
-endian = 'little'
-EOF
+	cat <<-EOF >"native.txt"
+		[build_machine]
+		c = ['ccache', 'clang']
+		cpp = ['ccache', 'clang++']
+		ar = 'llvm-ar'
+		strip = 'llvm-strip'
+		c_ld = 'ld.lld'
+		cpp_ld = 'ld.lld'
+		system = 'linux'
+		cpu_family = 'x86_64'
+		cpu = 'x86_64'
+		endian = 'little'
+	EOF
 }
 
 build_for_architecture() {
 	local arch="$1"
-	local config=(${ARCH_CONFIG[$arch]})
+	local config_string="${ARCH_CONFIG[$arch]}"
+	read -ra config <<<"$config_string"
 	local lib_arch="${config[2]}"
 
 	log_info "Building Turnip for $arch architecture..."
@@ -332,7 +337,7 @@ build_for_architecture() {
 	fi
 
 	log_info "Compiling build files..."
-	ninja -C "$build_dir" -j $(nproc)
+	ninja -C "$build_dir" -j "$(nproc)"
 
 	local lib_src="$build_dir/src/freedreno/vulkan/libvulkan_freedreno.so"
 	if [ ! -f "$lib_src" ]; then
@@ -346,37 +351,39 @@ build_for_architecture() {
 create_icd_file() {
 	local arch="$1"
 	local package_dir="$2"
-	local config=(${ARCH_CONFIG[$arch]})
+	local config_string="${ARCH_CONFIG[$arch]}"
+	read -ra config <<<"$config_string"
 	local lib_arch="${config[2]}"
 
 	local icd_file="$package_dir/share/vulkan/icd.d/freedreno_icd.${arch}.json"
 
 	mkdir -p "$(dirname "$icd_file")"
 
-	cat >"$icd_file" <<EOF
-{
-    "ICD": {
-        "api_version": "1.4.318",
-        "library_arch": "64",
-        "library_path": "/usr/lib/${lib_arch}/libvulkan_freedreno.so"
-    },
-    "file_format_version": "1.0.1"
-}
-EOF
+	cat >"$icd_file" <<-EOF
+		{
+		    "ICD": {
+		        "api_version": "1.4.318",
+		        "library_arch": "64",
+		        "library_path": "/usr/lib/${lib_arch}/libvulkan_freedreno.so"
+		    },
+		    "file_format_version": "1.0.1"
+		}
+	EOF
 
 	log_info "Created ICD file for $arch at: $icd_file"
 }
 
 package_architecture() {
 	local arch="$1"
-	local config=(${ARCH_CONFIG[$arch]})
+	local config_string="${ARCH_CONFIG[$arch]}"
+	read -ra config <<<"$config_string"
 	local lib_arch="${config[2]}"
 
 	log_info "Packaging libraries for $arch..."
 
 	local arch_package_dir="$WORKDIR/turnip_package_${arch}"
 	mkdir -p "$arch_package_dir"
-	rm -rf "$arch_package_dir"/*
+	rm -rf "${arch_package_dir:?}"/*
 
 	local lib_dir="$arch_package_dir/lib/$lib_arch"
 	mkdir -p "$lib_dir"
@@ -384,7 +391,7 @@ package_architecture() {
 	local lib_src="$WORKDIR/mesa/build-android-$arch/src/freedreno/vulkan/libvulkan_freedreno.so"
 
 	if [ -f "$lib_src" ]; then
-		patchelf --set-soname vulkan.adreno.so $lib_src
+		patchelf --set-soname vulkan.adreno.so "$lib_src"
 		cp "$lib_src" "$lib_dir/"
 		log_success "Packaged library for $arch"
 		create_icd_file "$arch" "$arch_package_dir"
