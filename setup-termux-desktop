@@ -879,9 +879,9 @@ function questions_theme_select() {
 
 	# Set default style value based on the desktop environment (DE)
 	case "$de_name" in
-	xfce | mate) default_selection="1" ;;
+	xfce | mate | i3wm) default_selection="1" ;;
 	lxqt | openbox) default_selection="2" ;;
-	i3wm | dwm | bspwm | awesome | fluxbox) default_selection="0" ;;
+	dwm | bspwm | awesome | fluxbox) default_selection="0" ;;
 	*) default_selection="0" ;;
 	esac
 
