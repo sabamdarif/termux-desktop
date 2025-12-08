@@ -1,42 +1,42 @@
 #!/data/data/com.termux/files/usr/bin/bash
 
 function setup_bash_theme() {
-	check_and_backup "$HOME/.bashrc"
-	cat <<EOF >"$HOME/.bashrc"
-### Detect Linux Distro ###
-if command -v grep &> /dev/null && [ -f /etc/os-release ]; then
-    distro_id=\$(grep '^ID=' /etc/os-release | cut -d= -f2 | tr -d '"')
-else
-    distro_id="unknown"
-fi
+	check_and_backup "$TERMUX_HOME/.bashrc"
+	cat <<-EOF >"$TERMUX_HOME/.bashrc"
+		### Detect Linux Distro ###
+		if command -v grep &> /dev/null && [ -f /etc/os-release ]; then
+		    distro_id=\$(grep '^ID=' /etc/os-release | cut -d= -f2 | tr -d '"')
+		else
+		    distro_id="unknown"
+		fi
 
-### Set Distro Icon ###
-case "\$distro_id" in
-  kali) DISTRO_ICON="" ;;   # Kali Linux
-  arch*) DISTRO_ICON="" ;;   # Arch Linux
-  ubuntu) DISTRO_ICON="" ;; # Ubuntu
-  debian) DISTRO_ICON="" ;; # Debian
-  fedora) DISTRO_ICON="" ;; # Fedora
-  alpine) DISTRO_ICON="" ;; # Alpine
-  void) DISTRO_ICON="" ;;   # Void Linux
-  opensuse*|sles) DISTRO_ICON="" ;; # openSUSE
-  gentoo) DISTRO_ICON="" ;; # Gentoo
-  nixos) DISTRO_ICON="" ;; # NixOS
-  *) DISTRO_ICON=" " ;;      # Default Linux Icon
-esac
+		### Set Distro Icon ###
+		case "\$distro_id" in
+		  kali) DISTRO_ICON="" ;;   # Kali Linux
+		  arch*) DISTRO_ICON="" ;;   # Arch Linux
+		  ubuntu) DISTRO_ICON="" ;; # Ubuntu
+		  debian) DISTRO_ICON="" ;; # Debian
+		  fedora) DISTRO_ICON="" ;; # Fedora
+		  alpine) DISTRO_ICON="" ;; # Alpine
+		  void) DISTRO_ICON="" ;;   # Void Linux
+		  opensuse*|sles) DISTRO_ICON="" ;; # openSUSE
+		  gentoo) DISTRO_ICON="" ;; # Gentoo
+		  nixos) DISTRO_ICON="" ;; # NixOS
+		  *) DISTRO_ICON="󰀲" ;;      # Default Linux Icon
+		esac
 
-### Username ###
-if [[ -n "\$PREFIX" && "\$PREFIX" == */com.termux/* ]]; then
-    USER_NAME=${final_user_name}
-else
-    USER_NAME="\$(whoami)"
-fi
+		### Username ###
+		if [[ -n "\$PREFIX" && "\$PREFIX" == */com.termux/* ]]; then
+		    USER_NAME=${final_user_name}
+		else
+		    USER_NAME="\$(whoami)"
+		fi
 
-### Build PS1 with proper escaping ###
-PS1='\[\e[1;32m\]╭─\[\e[1;34m\][\[\e[1;36m\]'"\${USER_NAME}"'\[\e[1;33m\] '"\${DISTRO_ICON}"' \[\e[1;36m\]\h\[\e[1;34m\]] [\[\e[1;33m\]\w\[\e[1;34m\]]\[\e[0m\]
-\[\e[1;32m\]╰─❯\[\e[0m\] '
+		### Build PS1 with proper escaping ###
+		PS1='\[\e[1;32m\]╭─\[\e[1;34m\][\[\e[1;36m\]'"\${USER_NAME}"'\[\e[1;33m\] '"\${DISTRO_ICON}"' \[\e[1;36m\]\h\[\e[1;34m\]] [\[\e[1;33m\]\w\[\e[1;34m\]]\[\e[0m\]
+		\[\e[1;32m\]╰─❯\[\e[0m\] '
 
-EOF
+	EOF
 }
 
 function setup_ble_sh() {
@@ -45,13 +45,13 @@ function setup_ble_sh() {
 	git clone --recursive --depth 1 --shallow-submodules https://github.com/akinomyoga/ble.sh.git
 	make -C ble.sh install PREFIX=~/.local
 	check_and_delete "ble.sh"
-	cat <<EOF >>"$HOME/.bashrc"
-USER=$(whoami)
-source $HOME/.local/share/blesh/ble.sh
-EOF
+	cat <<-EOF >>"$TERMUX_HOME/.bashrc"
+		USER=$(whoami)
+		source $TERMUX_HOME/.local/share/blesh/ble.sh
+	EOF
 }
 
-function check_paramitter() {
+function check_parameter() {
 	if [[ -n "$PREFIX" && "$PREFIX" == *"/com.termux/"* && -z "$user_name" ]]; then
 		while true; do
 			echo " "
@@ -89,13 +89,14 @@ function check_paramitter() {
 	final_user_name="${user_name}"
 }
 
-check_paramitter
+check_parameter
 setup_bash_theme
+# shellcheck disable=SC2154
 if [[ "$chosen_shell_name" == "bash_with_ble" ]]; then
 	setup_ble_sh
 	# Delete the function block
-	sed -i '/^function ble\/util\/notify-broken-locale {/,/^}/d' "$HOME/.local/share/blesh/ble.sh"
+	sed -i '/^function ble\/util\/notify-broken-locale {/,/^}/d' "$TERMUX_HOME/.local/share/blesh/ble.sh"
 	# Delete all other occurrences of ble/util/notify-broken-locale
-	sed -i 's/ble\/util\/notify-broken-locale//g' "$HOME/.local/share/blesh/ble.sh"
+	sed -i 's/ble\/util\/notify-broken-locale//g' "$TERMUX_HOME/.local/share/blesh/ble.sh"
 fi
 chsh -s bash

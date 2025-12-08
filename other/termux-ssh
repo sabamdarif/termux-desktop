@@ -1,0 +1,65 @@
+#!/data/data/com.termux/files/usr/bin/bash
+
+R="$(printf '\033[1;31m')"
+G="$(printf '\033[1;32m')"
+B="$(printf '\033[1;34m')"
+RESET="$(printf '\033[0m')"
+readonly TERMUX_HOME=${HOME:-/data/data/com.termux/files/home}
+MARKER_FILE="$TERMUX_HOME/.first_pass_change_marker"
+
+function start_ssh() {
+	sshd
+	sleep 2
+	ifconfig_output=$(ifconfig 2>/dev/null)
+	ip_address=$(echo "$ifconfig_output" | awk '/ccmni1/,/inet/ { if ($1 == "inet") print $2 }')
+	if [[ -z "$ip_address" ]]; then
+		ip_address=$(echo "$ifconfig_output" | awk '/ap0/,/inet/ { if ($1 == "inet") print $2 }')
+	fi
+	port=8022
+	if [[ -n "$ip_address" ]]; then
+		echo "${G}Your Address Is: ${B}$ip_address $port${RESET}"
+	else
+		echo "${R}No IP address found.${RESET}"
+	fi
+}
+
+function stop_ssh() {
+	if pgrep sshd >/dev/null; then
+		echo "${G}sshd is running. Stopping it...${RESET}"
+		pkill -f sshd
+		if ! pgrep sshd >/dev/null; then
+			echo "${G}sshd has been stopped.${RESET}"
+		else
+			echo "${R}Failed to stop sshd.${RESET}"
+		fi
+	else
+		echo "${G}sshd is not running.${RESET}"
+	fi
+}
+
+case $1 in
+start)
+	if [[ ! -f "$MARKER_FILE" ]]; then
+		echo "${G}Enter your ssh password${RESET}"
+		passwd
+		touch "$MARKER_FILE"
+	fi
+	start_ssh
+	;;
+stop)
+	stop_ssh
+	;;
+--help | -h)
+	echo -e "
+termux-ssh start    to start ssh\n
+termux-ssh stop     to stop ssh\n
+termux-ssh          to set passwd and start ssh\n
+"
+	;;
+*)
+	echo "${G}Enter your ssh password${RESET}"
+	passwd
+	touch "$MARKER_FILE"
+	start_ssh
+	;;
+esac

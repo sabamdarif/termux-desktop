@@ -118,72 +118,72 @@ function setup_chroot_distro() {
 		fi
 	done
 	print_msg "Creating a chroot-distro launcher..."
-	cat <<'EOF' >"$PREFIX/bin/chroot-distro"
-#!/data/data/com.termux/files/usr/bin/bash
+	cat <<-'EOF' >"$TERMUX_PREFIX/bin/chroot-distro"
+		#!/data/data/com.termux/files/usr/bin/bash
 
-function check_su_access() {
-    if command -v su >/dev/null 2>&1; then
-        if su -c true >/dev/null 2>&1; then
-            return 0
-        fi
-    fi
-    return 1
-}
+		function check_su_access() {
+		    if command -v su >/dev/null 2>&1; then
+		        if su -c true >/dev/null 2>&1; then
+		            return 0
+		        fi
+		    fi
+		    return 1
+		}
 
-function check_chroot_file() {
-    if ! check_su_access; then
-        return 1
-    fi
+		function check_chroot_file() {
+		    if ! check_su_access; then
+		        return 1
+		    fi
 
-    if su -c 'ls /system/bin/chroot-distro' >/dev/null 2>&1; then
-        return 0
-    fi
-    return 1
-}
+		    if su -c 'ls /system/bin/chroot-distro' >/dev/null 2>&1; then
+		        return 0
+		    fi
+		    return 1
+		}
 
 
-function wait_for_keypress() {
-    read -n1 -s -r -p " Press any key to continue, CTRL+c to cancel..."
-    echo
-}
+		function wait_for_keypress() {
+		    read -n1 -s -r -p " Press any key to continue, CTRL+c to cancel..."
+		    echo
+		}
 
-function checkup() {
-    local retry_count
-    local max_retries
-    retry_count=0
-    max_retries=3
-    while [ $retry_count -lt $max_retries ]; do
-        if check_chroot_file; then
-            break
-        else
-            ((retry_count++))
-            if [ $retry_count -lt $max_retries ]; then
-                echo "Cannot access /system/bin/chroot-distro file"
-                echo "Please flash:- ${B}https://github.com/sabamdarif/chroot-distro${NC}"
-                echo "Want to check again (Attempt $retry_count/$max_retries)"
-                wait_for_keypress
-            else
-                echo "Failed to access chroot-distro after $max_retries attempts"
-                echo "Exiting..."
-                exit 1
-            fi
-        fi
-    done
-}
+		function checkup() {
+		    local retry_count
+		    local max_retries
+		    retry_count=0
+		    max_retries=3
+		    while [ $retry_count -lt $max_retries ]; do
+		        if check_chroot_file; then
+		            break
+		        else
+		            ((retry_count++))
+		            if [ $retry_count -lt $max_retries ]; then
+		                echo "Cannot access /system/bin/chroot-distro file"
+		                echo "Please flash:- ${B}https://github.com/sabamdarif/chroot-distro${NC}"
+		                echo "Want to check again (Attempt $retry_count/$max_retries)"
+		                wait_for_keypress
+		            else
+		                echo "Failed to access chroot-distro after $max_retries attempts"
+		                echo "Exiting..."
+		                exit 1
+		            fi
+		        fi
+		    done
+		}
 
-checkup
+		checkup
 
-# Fix: Use printf to properly escape arguments and pass them to su
-args=""
-for arg in "$@"; do
-    # Escape single quotes in arguments and wrap each argument in single quotes
-    escaped_arg=$(printf '%s' "$arg" | sed "s/'/'\\\\''/g")
-    args="$args '$escaped_arg'"
-done
+		# Fix: Use printf to properly escape arguments and pass them to su
+		args=""
+		for arg in "$@"; do
+		    # Escape single quotes in arguments and wrap each argument in single quotes
+		    escaped_arg=$(printf '%s' "$arg" | sed "s/'/'\\\\''/g")
+		    args="$args '$escaped_arg'"
+		done
 
-su -c "/system/bin/chroot-distro $args"
-EOF
-	chmod +x "$PREFIX/bin/chroot-distro"
+		su -c "/system/bin/chroot-distro $args"
+	EOF
+	chmod +x "$TERMUX_PREFIX/bin/chroot-distro"
 	chroot-distro install "$selected_distro"
 	print_to_config "selected_distro"
 }
@@ -192,14 +192,14 @@ function set_distro_paths {
 	banner
 	print_msg "Setiing up distro related paths"
 	if [[ "$selected_distro_type" == "proot" ]]; then
-		distro_path="$PREFIX/var/lib/proot-distro/installed-rootfs/$selected_distro"
+		distro_path="$TERMUX_PREFIX/var/lib/proot-distro/installed-rootfs/$selected_distro"
 	elif [[ "$selected_distro_type" == "chroot" ]]; then
 		distro_path="/data/local/chroot-distro/installed-rootfs/$selected_distro"
 	else
 		print_failed "Unable to determine what distro type to use"
 		print_msg "Fallback to:- proot-distro"
 		selected_distro_type=proot
-		distro_path="$PREFIX/var/lib/proot-distro/installed-rootfs/$selected_distro"
+		distro_path="$TERMUX_PREFIX/var/lib/proot-distro/installed-rootfs/$selected_distro"
 	fi
 	save_path="$distro_path/root"
 }
@@ -341,7 +341,7 @@ function pd_package_install_and_check() {
 			if dpkg -s "$package_name" >/dev/null 2>&1; then
 				print_success "$package_name ${G}installed successfully"
 			else
-				if command -v wget &>/dev/null || ls "$PREFIX/bin/"*"$package_name"* >/dev/null 2>&1; then
+				if command -v wget &>/dev/null || ls "$TERMUX_PREFIX/bin/"*"$package_name"* >/dev/null 2>&1; then
 					print_success "$package_name ${G}installed successfully"
 				fi
 			fi
@@ -349,7 +349,7 @@ function pd_package_install_and_check() {
 			if pacman -Qi "$package_name" >/dev/null 2>&1; then
 				print_success "$package_name ${G}installed successfully"
 			else
-				if command -v wget &>/dev/null || ls "$PREFIX/bin/"*"$package_name"* >/dev/null 2>&1; then
+				if command -v wget &>/dev/null || ls "$TERMUX_PREFIX/bin/"*"$package_name"* >/dev/null 2>&1; then
 					print_success "$package_name ${G}installed successfully"
 				fi
 			fi
@@ -357,7 +357,7 @@ function pd_package_install_and_check() {
 			if rpm -q "$package_name" >/dev/null 2>&1; then
 				print_success "$package_name ${G}installed successfully"
 			else
-				if command -v wget &>/dev/null || ls "$PREFIX/bin/"*"$package_name"* >/dev/null 2>&1; then
+				if command -v wget &>/dev/null || ls "$TERMUX_PREFIX/bin/"*"$package_name"* >/dev/null 2>&1; then
 					print_success "$package_name ${G}installed successfully"
 				fi
 			fi
@@ -381,63 +381,93 @@ function create_shell_script() {
 	fi
 
 	if [[ "$selected_distro_type" == "chroot" ]]; then
-		sudo tee "$script_path" >/dev/null <<'EOF'
-#!/bin/bash
+		sudo tee "$script_path" >/dev/null <<-EOF
+			#!/data/data/com.termux/files/usr/bin/bash
 
-if [ -t 1 ] && [ -n "${TERM:-}" ]; then
-    R="$(printf '\033[0m\033[1m\033[31m')" # RST + bold + red
-    G="$(printf '\033[0m\033[32m')"        # RST + green
-    Y="$(printf '\033[0m\033[33m')"        # RST + yellow
-    B="$(printf '\033[0m\033[34m')"        # RST + blue
-    C="$(printf '\033[0m\033[36m')"        # RST + cyan
-    NC="$(printf '\033[0m')"               # RST
-    BOLD="$(printf '\033[1m')"             # bold
-else
-    R=""
-    G=""
-    Y=""
-    B=""
-    C=""
-    NC=""
-    BOLD=""
-fi
+			# Repository URLs
+			readonly REPO_OWNER="$REPO_OWNER"
+			readonly REPO_NAME="$REPO_NAME"
+			readonly REPO_BRANCH_MAIN="$REPO_BRANCH_MAIN"
+			readonly REPO_SETUP_FILE_BRANCH="$REPO_SETUP_FILE_BRANCH"
+			readonly REPO_SETUP_FILES_FOLDER="$REPO_SETUP_FILES_FOLDER"
+			readonly REPO_RAW_URL="$REPO_RAW_URL"
+			readonly TERMUX_HOME="$TERMUX_HOME"
+			readonly TERMUX_PREFIX="$TERMUX_PREFIX"
+			# Retry configuration
+			readonly MAX_DOWNLOAD_RETRIES="$MAX_DOWNLOAD_RETRIES"
+			readonly MAX_INSTALL_RETRIES="$MAX_INSTALL_RETRIES"
+			readonly DOWNLOAD_TIMEOUT="$DOWNLOAD_TIMEOUT"
 
-TERMUX_DESKTOP_PATH="/data/data/com.termux/files/usr/etc/termux-desktop"
-CONFIG_FILE="$TERMUX_DESKTOP_PATH/configuration.conf"
-LOG_FILE="/data/data/com.termux/files/home/termux-desktop.log"
-EOF
+			#########################################################################
+			#
+			# Initial Values
+			#
+			#########################################################################
+			readonly TERMUX_DESKTOP_PATH="$TERMUX_DESKTOP_PATH"
+			readonly CONFIG_FILE="$CONFIG_FILE"
+			readonly LOG_FILE="$LOG_FILE"
+			LITE_MODE="$LITE_MODE"
+			#########################################################################
+			#
+			# Color Setup
+			#
+			#########################################################################
+			# shellcheck disable=SC2154
+			R="$R"
+			G="$G"
+			Y="$Y"
+			B="$B"
+			C="$C"
+			NC="$NC"
+			BOLD="$BOLD"
+		EOF
 	else
-		cat <<'EOF' >"$script_path"
-#!/bin/bash
+		cat <<-EOF >"$script_path"
+			#!/data/data/com.termux/files/usr/bin/bash
 
-if [ -t 1 ] && [ -n "${TERM:-}" ]; then
-    R="$(printf '\033[0m\033[1m\033[31m')" # RST + bold + red
-    G="$(printf '\033[0m\033[32m')"        # RST + green
-    Y="$(printf '\033[0m\033[33m')"        # RST + yellow
-    B="$(printf '\033[0m\033[34m')"        # RST + blue
-    C="$(printf '\033[0m\033[36m')"        # RST + cyan
-    NC="$(printf '\033[0m')"               # RST
-    BOLD="$(printf '\033[1m')"             # bold
-else
-    R=""
-    G=""
-    Y=""
-    B=""
-    C=""
-    NC=""
-    BOLD=""
-fi
+			# Repository URLs
+			readonly REPO_OWNER="$REPO_OWNER"
+			readonly REPO_NAME="$REPO_NAME"
+			readonly REPO_BRANCH_MAIN="$REPO_BRANCH_MAIN"
+			readonly REPO_SETUP_FILE_BRANCH="$REPO_SETUP_FILE_BRANCH"
+			readonly REPO_SETUP_FILES_FOLDER="$REPO_SETUP_FILES_FOLDER"
+			readonly REPO_RAW_URL="$REPO_RAW_URL"
+			readonly TERMUX_HOME="$TERMUX_HOME"
+			readonly TERMUX_PREFIX="$TERMUX_PREFIX"
+			# Retry configuration
+			readonly MAX_DOWNLOAD_RETRIES="$MAX_DOWNLOAD_RETRIES"
+			readonly MAX_INSTALL_RETRIES="$MAX_INSTALL_RETRIES"
+			readonly DOWNLOAD_TIMEOUT="$DOWNLOAD_TIMEOUT"
 
-TERMUX_DESKTOP_PATH="/data/data/com.termux/files/usr/etc/termux-desktop"
-CONFIG_FILE="$TERMUX_DESKTOP_PATH/configuration.conf"
-LOG_FILE="/data/data/com.termux/files/home/termux-desktop.log"
-EOF
+			#########################################################################
+			#
+			# Initial Values
+			#
+			#########################################################################
+			readonly TERMUX_DESKTOP_PATH="$TERMUX_DESKTOP_PATH"
+			readonly CONFIG_FILE="$CONFIG_FILE"
+			readonly LOG_FILE="$LOG_FILE"
+			LITE_MODE="$LITE_MODE"
+			#########################################################################
+			#
+			# Color Setup
+			#
+			#########################################################################
+			# shellcheck disable=SC2154
+			R="$R"
+			G="$G"
+			Y="$Y"
+			B="$B"
+			C="$C"
+			NC="$NC"
+			BOLD="$BOLD"
+		EOF
 	fi
 	if [[ "$selected_distro_type" == "chroot" ]]; then
-		typeset -f banner log_debug print_msg print_success print_failed check_and_delete get_latest_release pd_package_install_and_check | sudo tee -a "$script_path" >/dev/null
+		typeset -f check_termux log_debug print_success print_failed print_warn print_msg wait_for_keypress check_and_create_directory check_and_delete check_and_backup download_file check_and_restore detect_package_manager package_install_and_check package_check_and_remove get_file_name_number extract_zip_with_progress extract_archive download_and_extract count_subfolders confirmation_y_or_n get_latest_release install_font_for_style select_an_option read_conf print_to_config pd_package_install_and_check set_distro_paths setup_distro | sudo tee -a "$script_path" >/dev/null
 		echo "$shell_setup_content" | sudo tee -a "$script_path" >/dev/null
 	else
-		typeset -f banner log_debug print_msg print_success print_failed check_and_delete get_latest_release pd_package_install_and_check >>"$script_path"
+		typeset -f check_termux log_debug print_success print_failed print_warn print_msg wait_for_keypress check_and_create_directory check_and_delete check_and_backup download_file check_and_restore detect_package_manager package_install_and_check package_check_and_remove get_file_name_number extract_zip_with_progress extract_archive download_and_extract count_subfolders confirmation_y_or_n get_latest_release install_font_for_style select_an_option read_conf print_to_config pd_package_install_and_check set_distro_paths setup_distro >>"$script_path"
 		echo "$shell_setup_content" >>"$script_path"
 	fi
 	# Make script executable
@@ -501,10 +531,10 @@ function distro_fix_sound_issue() {
 	echo
 	audio_related_packs="pulseaudio"
 	install_audio_related_packs=$(
-		cat <<EOF
-pd_package_install_and_check "$audio_related_packs"
-check_and_delete "install_audio_related_packs.sh"
-EOF
+		cat <<-EOF
+			pd_package_install_and_check "$audio_related_packs"
+			check_and_delete "install_audio_related_packs.sh"
+		EOF
 	)
 	create_shell_script "$save_path/install_audio_related_packs.sh" "$install_audio_related_packs"
 	"${selected_distro_type}"-distro login "$selected_distro" -- /bin/bash -c 'bash /root/install_audio_related_packs.sh'
@@ -584,16 +614,16 @@ function distro_basic_task() {
 function distro_zsh_setup() {
 	if [[ "$chosen_shell_name" == "zsh" ]]; then
 		zsh_setup_content=$(
-			cat <<EOF
-pd_package_install_and_check "git zsh wget"
+			cat <<-EOF
+				pd_package_install_and_check "git zsh wget"
 
-if [[ "$selected_distro" == "debian" ]] || [[ "$selected_distro" == "ubuntu" ]]; then
-chsh -s /usr/bin/zsh ${final_user_name}
-else
-chsh -s /bin/zsh ${final_user_name}
-fi
-check_and_delete "pd_zsh_install.sh"
-EOF
+				if [[ "$selected_distro" == "debian" ]] || [[ "$selected_distro" == "ubuntu" ]]; then
+				chsh -s /usr/bin/zsh ${final_user_name}
+				else
+				chsh -s /bin/zsh ${final_user_name}
+				fi
+				check_and_delete "pd_zsh_install.sh"
+			EOF
 		)
 		create_shell_script "$distro_path/root/pd_zsh_install.sh" "$zsh_setup_content"
 		banner
@@ -611,17 +641,17 @@ function distro_terminal_utility_setup() {
 
 		if [[ "$selected_distro" == "debian" ]] || [[ "$selected_distro" == "ubuntu" ]]; then
 			terminal_utility_content=$(
-				cat <<'EOF'
-pd_package_install_and_check "zoxide bat wget gpg fzf eza fastfetch nala"
-check_and_delete "pd_setup.sh"
-EOF
+				cat <<-'EOF'
+					pd_package_install_and_check "zoxide bat wget gpg fzf eza fastfetch nala"
+					check_and_delete "pd_setup.sh"
+				EOF
 			)
 		else
 			terminal_utility_content=$(
-				cat <<'EOF'
-pd_package_install_and_check "zoxide bat wget gpg eza fastfetch fzf"
-check_and_delete "pd_setup.sh"
-EOF
+				cat <<-'EOF'
+					pd_package_install_and_check "zoxide bat wget gpg eza fastfetch fzf"
+					check_and_delete "pd_setup.sh"
+				EOF
 			)
 		fi
 		create_shell_script "$save_path/pd_setup.sh" "$terminal_utility_content"
@@ -639,80 +669,80 @@ EOF
 #########################################################################
 function add_installer_common() {
 
-	cat <<EOF >"$PREFIX/bin/$selected_distro"
-#!/data/data/com.termux/files/usr/bin/bash
+	cat <<-EOF >"$TERMUX_PREFIX/bin/$selected_distro"
+		#!/data/data/com.termux/files/usr/bin/bash
 
-source $PREFIX/etc/termux-desktop/common_functions
+		source $TERMUX_PREFIX/etc/termux-desktop/common_functions
 
-xhost + >/dev/null 2>&1
-# --- USB auto-bind helpers ---
-usb_mounts() {
-  # Candidate external filesystems under /mnt/media_rw/<UUID>
-  local candidates seen="" media uuid acc
-  candidates=\$(awk '(\$2 ~ "^/mnt/media_rw/[0-9A-Fa-f-]+\$") && (\$3 ~ /vfat|exfat|ntfs|fuseblk/) {print \$2}' /proc/mounts | sort -u)
-  while IFS= read -r media; do
-    [ -d "\$media" ] || continue
-    uuid="\${media##*/}"
-    acc="/storage/\${uuid}"; [ -r "\$acc" ] || acc="\$media"
-    [ -r "\$acc" ] || continue
-    case ",\$seen," in *",\$uuid,"*) ;; *) printf '%s\n' "\$acc"; seen="\${seen},\${uuid}";; esac
-  done <<< "\$candidates"
-}
+		xhost + >/dev/null 2>&1
+		# --- USB auto-bind helpers ---
+		usb_mounts() {
+		  # Candidate external filesystems under /mnt/media_rw/<UUID>
+		  local candidates seen="" media uuid acc
+		  candidates=\$(awk '(\$2 ~ "^/mnt/media_rw/[0-9A-Fa-f-]+\$") && (\$3 ~ /vfat|exfat|ntfs|fuseblk/) {print \$2}' /proc/mounts | sort -u)
+		  while IFS= read -r media; do
+		    [ -d "\$media" ] || continue
+		    uuid="\${media##*/}"
+		    acc="/storage/\${uuid}"; [ -r "\$acc" ] || acc="\$media"
+		    [ -r "\$acc" ] || continue
+		    case ",\$seen," in *",\$uuid,"*) ;; *) printf '%s\n' "\$acc"; seen="\${seen},\${uuid}";; esac
+		  done <<< "\$candidates"
+		}
 
-urldecode() { local s="\${1//+/ }"; printf '%b' "\${s//%/\\x}"; }
+		urldecode() { local s="\${1//+/ }"; printf '%b' "\${s//%/\\x}"; }
 
-normalize_arg() {
-  # Decode file:// and %XX to the real path (do not rewrite the path itself)
-  local a="$1"
-  case "\$a" in file://*) a="\${a#file://}";; esac
-  if [[ "\$a" == *%* || "\$a" == *+* ]]; then a="\$(urldecode "\$a")"; fi
-  echo "\$a"
-}
+		normalize_arg() {
+		  # Decode file:// and %XX to the real path (do not rewrite the path itself)
+		  local a="$1"
+		  case "\$a" in file://*) a="\${a#file://}";; esac
+		  if [[ "\$a" == *%* || "\$a" == *+* ]]; then a="\$(urldecode "\$a")"; fi
+		  echo "\$a"
+		}
 
-enum_media=0
+		enum_media=0
 
-usb_bind_args() {
-  if [ -n "\${PDRUN_DISABLE_USB_BIND:-}" ]; then printf ''; return 0; fi
-  local args="--bind /storage:/storage --bind /mnt/media_rw:/mnt/media_rw"
+		usb_bind_args() {
+		  if [ -n "\${PDRUN_DISABLE_USB_BIND:-}" ]; then printf ''; return 0; fi
+		  local args="--bind /storage:/storage --bind /mnt/media_rw:/mnt/media_rw"
 
-  # Convenience bind (/mnt/usb/<UUID>)
-  local list; if [ -n "\${PDRUN_USB_BIND_PATH:-}" ]; then list="\${PDRUN_USB_BIND_PATH}"; else list="\$(usb_mounts 2>/dev/null)"; fi
-  if [ -n "\$list" ]; then
-    local include="\${PDRUN_USB_INCLUDE:-}"; local exclude="\${PDRUN_USB_EXCLUDE:-}"; local limit="\${PDRUN_USB_LIMIT:-0}"
-    local count=0
-    while IFS= read -r p; do
-      [ -n "\$p" ] || continue
-      local uuid="\${p##*/}"
-      if [ -n "\$include" ]; then case ",\$include," in *",\$uuid,"*) ;; *) continue;; esac; fi
-      if [ -n "\$exclude" ]; then case ",\$exclude," in *",\$uuid,"*) continue;; esac; fi
-      if [ "\$limit" -gt 0 ] && [ "\$count" -ge "\$limit" ]; then break; fi
-      args="\${args} --bind \${p}:/mnt/usb/\${uuid}"
-      count=\$((count+1))
-    done <<< "\$list"
-  fi
+		  # Convenience bind (/mnt/usb/<UUID>)
+		  local list; if [ -n "\${PDRUN_USB_BIND_PATH:-}" ]; then list="\${PDRUN_USB_BIND_PATH}"; else list="\$(usb_mounts 2>/dev/null)"; fi
+		  if [ -n "\$list" ]; then
+		    local include="\${PDRUN_USB_INCLUDE:-}"; local exclude="\${PDRUN_USB_EXCLUDE:-}"; local limit="\${PDRUN_USB_LIMIT:-0}"
+		    local count=0
+		    while IFS= read -r p; do
+		      [ -n "\$p" ] || continue
+		      local uuid="\${p##*/}"
+		      if [ -n "\$include" ]; then case ",\$include," in *",\$uuid,"*) ;; *) continue;; esac; fi
+		      if [ -n "\$exclude" ]; then case ",\$exclude," in *",\$uuid,"*) continue;; esac; fi
+		      if [ "\$limit" -gt 0 ] && [ "\$count" -ge "\$limit" ]; then break; fi
+		      args="\${args} --bind \${p}:/mnt/usb/\${uuid}"
+		      count=\$((count+1))
+		    done <<< "\$list"
+		  fi
 
-  # If needed: self-bind individual paths (to prevent /mnt/media_rw from being omitted in file dialogs)
-  if [ "\${enum_media:-0}" -eq 1 ] || [[ "\${PDRUN_MEDIA_RW_ENUM:-}" =~ ^(1|true|yes)$ ]]; then
-    while IFS= read -r p; do
-      [ -n "\$p" ] || continue
-      args="\${args} --bind \${p}:\${p}"                    # /mnt/media_rw/<UUID>
-      uuid="\${p##*/}"; st="/storage/\${uuid}"
-      [ -r "\$st" ] && args="\${args} --bind \${st}:\${st}"  # /storage/<UUID>
-    done <<<"\$(usb_mounts 2>/dev/null | sed -E 's|^/storage/([0-9A-Fa-f-]+)$|/mnt/media_rw/\\1|')"
-  fi
+		  # If needed: self-bind individual paths (to prevent /mnt/media_rw from being omitted in file dialogs)
+		  if [ "\${enum_media:-0}" -eq 1 ] || [[ "\${PDRUN_MEDIA_RW_ENUM:-}" =~ ^(1|true|yes)$ ]]; then
+		    while IFS= read -r p; do
+		      [ -n "\$p" ] || continue
+		      args="\${args} --bind \${p}:\${p}"                    # /mnt/media_rw/<UUID>
+		      uuid="\${p##*/}"; st="/storage/\${uuid}"
+		      [ -r "\$st" ] && args="\${args} --bind \${st}:\${st}"  # /storage/<UUID>
+		    done <<<"\$(usb_mounts 2>/dev/null | sed -E 's|^/storage/([0-9A-Fa-f-]+)$|/mnt/media_rw/\\1|')"
+		  fi
 
-  printf '%s' "\$args"
-}
-if [ "\$#" -eq 0 ]; then
-    if [ "\$PWD" = "$HOME" ]; then
-        ${selected_distro_type}-distro login \$(usb_bind_args) --user "$final_user_name" "$selected_distro" --shared-tmp $termux_home_link
-    else
-        ${selected_distro_type}-distro login \$(usb_bind_args) --user "$final_user_name" "$selected_distro" --shared-tmp --work-dir "\$PWD" $termux_home_link
-    fi
+		  printf '%s' "\$args"
+		}
+		if [ "\$#" -eq 0 ]; then
+		    if [ "\$PWD" = "$TERMUX_HOME" ]; then
+		        ${selected_distro_type}-distro login \$(usb_bind_args) --user "$final_user_name" "$selected_distro" --shared-tmp $termux_home_link
+		    else
+		        ${selected_distro_type}-distro login \$(usb_bind_args) --user "$final_user_name" "$selected_distro" --shared-tmp --work-dir "\$PWD" $termux_home_link
+		    fi
 
-    check_and_create_directory "/data/data/com.termux/files/usr/share/applications/pd_added"
-fi
-EOF
+		    check_and_create_directory "$TERMUX_PREFIX/share/applications/pd_added"
+		fi
+	EOF
 }
 
 #######################################################
@@ -721,304 +751,304 @@ EOF
 
 function proot_distro_debian_based_app_installer() {
 
-	cat <<TOP_EOF >>"$PREFIX/bin/$selected_distro"
-package_install_and_add_to_menu() {
-    #################################################
-    ## Handle install package and add to menu part ##
-    #################################################
+	cat <<-TOP_EOF >>"$TERMUX_PREFIX/bin/$selected_distro"
+		package_install_and_add_to_menu() {
+		    #################################################
+		    ## Handle install package and add to menu part ##
+		    #################################################
 
-    # Create the packinstall.sh script
-    cat <<'EOF' >"${save_root_path}/packinstall.sh"
-#!/bin/bash
+		    # Create the packinstall.sh script
+		    cat <<'EOF' >"${save_root_path}/packinstall.sh"
+		#!/bin/bash
 
-source /data/data/com.termux/files/usr/etc/termux-desktop/common_functions
+		source $TERMUX_PREFIX/etc/termux-desktop/common_functions
 
-# First configure dpkg and update apt
-dpkg --configure -a
-apt update
-apt-file update
+		# First configure dpkg and update apt
+		dpkg --configure -a
+		apt update
+		apt-file update
 
-# Install the packages - get arguments directly
-apt install "\$@"
+		# Install the packages - get arguments directly
+		apt install "\$@"
 
-# Process desktop files for non-option arguments
-for arg in "\$@"; do
-    # Skip options (starting with -)
-    if [[ "\$arg" != -* ]]; then
-        package_name="\$arg"
+		# Process desktop files for non-option arguments
+		for arg in "\$@"; do
+		    # Skip options (starting with -)
+		    if [[ "\$arg" != -* ]]; then
+		        package_name="\$arg"
 
-        # Find desktop files for this package
-        echo "\${R}[\${C}-\${R}]\${G} Searchling for .desktop file… \${W}"
-        echo
-        desktop_files=\$(dpkg-query -W -f='\${binary:Package}\n' | grep "^\$package_name\(-.*\)\?\$" | xargs dpkg-query -L | grep "^/usr/share/applications/.*\.desktop\$")
-        # If not found
-        if [ -z "\$desktop_files" ]; then
-            if ! apt-file list "\$package_name" >/dev/null 2>&1; then
-                echo "\${R}[\${C}-\${R}]\${G} Updating apt-file cache… \${W}"
-                apt-file update
-            fi
+		        # Find desktop files for this package
+		        echo "\${R}[\${C}-\${R}]\${G} Searchling for .desktop file… \${W}"
+		        echo
+		        desktop_files=\$(dpkg-query -W -f='\${binary:Package}\n' | grep "^\$package_name\(-.*\)\?\$" | xargs dpkg-query -L | grep "^/usr/share/applications/.*\.desktop\$")
+		        # If not found
+		        if [ -z "\$desktop_files" ]; then
+		            if ! apt-file list "\$package_name" >/dev/null 2>&1; then
+		                echo "\${R}[\${C}-\${R}]\${G} Updating apt-file cache… \${W}"
+		                apt-file update
+		            fi
 
-            if command -v apt-file >/dev/null; then
-                desktop_files=\$(apt-file list "\$package_name" | awk -F': ' -v pkg="\$package_name" '\$1 == pkg && \$2 ~ /\.desktop\$/ { print \$2 }')
-            fi
-            if [ -z "\$desktop_files" ]; then
-                print_failed "No .desktop files found for package \${C} \$package_name \${R}/usr/share/applications."
-            fi
-        else
-            for desktop_files_name in \$desktop_files; do
-                desktop_files_with_ext=\$(basename "\$desktop_files_name")
-                desktop_files_without_ext="\${desktop_files_with_ext%.desktop}"
-                if dpkg -s "\$package_name" >/dev/null 2>&1; then
-                    print_success "Adding \${C}\${desktop_files_without_ext} \${G}To Termux Menu"
-                    cp "/usr/share/applications/\${desktop_files_with_ext}" "/data/data/com.termux/files/usr/share/applications/pd_added/"
-                    sed -i 's/Exec=/Exec=pdrun /g' "/data/data/com.termux/files/usr/share/applications/pd_added/\${desktop_files_with_ext}"
-                fi
-            done
-        fi
-    fi
-done
-check_and_delete 'packinstall.sh'
-EOF
-    # Make the script executable
-    proot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "chmod +x /root/packinstall.sh"
-    # Execute the script with all arguments
-    proot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "export DISPLAY=:${display_number}; export XDG_RUNTIME_DIR=${TMPDIR}; bash /root/packinstall.sh \$*"
-}
+		            if command -v apt-file >/dev/null; then
+		                desktop_files=\$(apt-file list "\$package_name" | awk -F': ' -v pkg="\$package_name" '\$1 == pkg && \$2 ~ /\.desktop\$/ { print \$2 }')
+		            fi
+		            if [ -z "\$desktop_files" ]; then
+		                print_failed "No .desktop files found for package \${C} \$package_name \${R}/usr/share/applications."
+		            fi
+		        else
+		            for desktop_files_name in \$desktop_files; do
+		                desktop_files_with_ext=\$(basename "\$desktop_files_name")
+		                desktop_files_without_ext="\${desktop_files_with_ext%.desktop}"
+		                if dpkg -s "\$package_name" >/dev/null 2>&1; then
+		                    print_success "Adding \${C}\${desktop_files_without_ext} \${G}To Termux Menu"
+		                    cp "/usr/share/applications/\${desktop_files_with_ext}" "$TERMUX_PREFIX/share/applications/pd_added/"
+		                    sed -i 's/Exec=/Exec=pdrun /g' "$TERMUX_PREFIX/share/applications/pd_added/\${desktop_files_with_ext}"
+		                fi
+		            done
+		        fi
+		    fi
+		done
+		check_and_delete 'packinstall.sh'
+		EOF
+		    # Make the script executable
+		    proot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "chmod +x /root/packinstall.sh"
+		    # Execute the script with all arguments
+		    proot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "export DISPLAY=:${display_number}; export XDG_RUNTIME_DIR=${TMPDIR}; bash /root/packinstall.sh \$*"
+		}
 
-package_uninstall_and_remove_from_menu() {
-    ###################################################
-    # Handle remove package and remove from menu part #
-    ###################################################
-    # Create the packremove.sh script
-    cat <<'EOF' >"${save_root_path}/packremove.sh"
-#!/bin/bash
+		package_uninstall_and_remove_from_menu() {
+		    ###################################################
+		    # Handle remove package and remove from menu part #
+		    ###################################################
+		    # Create the packremove.sh script
+		    cat <<'EOF' >"${save_root_path}/packremove.sh"
+		#!/bin/bash
 
-source /data/data/com.termux/files/usr/etc/termux-desktop/common_functions
+		source $TERMUX_PREFIX/etc/termux-desktop/common_functions
 
-# Get the removal command (remove or autoremove)
-removal_command="\$1"
-shift
+		# Get the removal command (remove or autoremove)
+		removal_command="\$1"
+		shift
 
-# Process each non-option argument (package)
-for arg in "\$@"; do
-    # Skip options
-    if [[ "\$arg" == -* ]]; then
-        continue
-    fi
+		# Process each non-option argument (package)
+		for arg in "\$@"; do
+		    # Skip options
+		    if [[ "\$arg" == -* ]]; then
+		        continue
+		    fi
 
-    package_name="\$arg"
-    desktop_files=""
+		    package_name="\$arg"
+		    desktop_files=""
 
-    # Find desktop files for this package
-    echo "\${R}[\${C}-\${R}]\${G} Searchling for .desktop file… \${W}"
-    echo
-     desktop_files=\$(dpkg-query -W -f='\${binary:Package}\n' | grep "^\$package_name\(-.*\)\?\$" | xargs dpkg-query -L | grep "^/usr/share/applications/.*\.desktop\$" || true)
-    # If not found
-    if [[ -z "\$desktop_files" ]]; then
-        if command -v apt-file >/dev/null; then
-            if ! apt-file list "\$package_name" >/dev/null 2>&1; then
-                echo "\${R}[\${C}-\${R}]\${G} Updating apt-file cache… \${W}"
-                apt-file update
-            fi
-        desktop_files=\$(apt-file list "\$package_name" | awk -F': ' -v pkg="\$package_name" '\$1 == pkg && \$2 ~ /\.desktop\$/ { print \$2 }')
-        fi
-    fi
+		    # Find desktop files for this package
+		    echo "\${R}[\${C}-\${R}]\${G} Searchling for .desktop file… \${W}"
+		    echo
+		     desktop_files=\$(dpkg-query -W -f='\${binary:Package}\n' | grep "^\$package_name\(-.*\)\?\$" | xargs dpkg-query -L | grep "^/usr/share/applications/.*\.desktop\$" || true)
+		    # If not found
+		    if [[ -z "\$desktop_files" ]]; then
+		        if command -v apt-file >/dev/null; then
+		            if ! apt-file list "\$package_name" >/dev/null 2>&1; then
+		                echo "\${R}[\${C}-\${R}]\${G} Updating apt-file cache… \${W}"
+		                apt-file update
+		            fi
+		        desktop_files=\$(apt-file list "\$package_name" | awk -F': ' -v pkg="\$package_name" '\$1 == pkg && \$2 ~ /\.desktop\$/ { print \$2 }')
+		        fi
+		    fi
 
-    # Remove the package
-    echo "\${R}[\${C}-\${R}]\${G} Removing packages...\${W}"
-    echo
-    apt "\$removal_command" "\$package_name"
+		    # Remove the package
+		    echo "\${R}[\${C}-\${R}]\${G} Removing packages...\${W}"
+		    echo
+		    apt "\$removal_command" "\$package_name"
 
-    # Handle desktop files
-    if [[ -z "\$desktop_files" ]]; then
-        print_failed "No .desktop files found for package \${C}\$package_name\${R} /usr/share/applications"
-    else
-        for desktop_files_name in \$desktop_files; do
-            desktop_files_with_ext=\$(basename "\$desktop_files_name")
-            desktop_files_without_ext="\${desktop_files_with_ext%.desktop}"
+		    # Handle desktop files
+		    if [[ -z "\$desktop_files" ]]; then
+		        print_failed "No .desktop files found for package \${C}\$package_name\${R} /usr/share/applications"
+		    else
+		        for desktop_files_name in \$desktop_files; do
+		            desktop_files_with_ext=\$(basename "\$desktop_files_name")
+		            desktop_files_without_ext="\${desktop_files_with_ext%.desktop}"
 
-            # Check if package is really uninstalled
-            if ! dpkg -s "\$package_name" >/dev/null 2>&1; then
-                print_success "Removing \${C}\${desktop_files_without_ext} \${G}From Termux Menu"
-                check_and_delete "/data/data/com.termux/files/usr/share/applications/pd_added/\${desktop_files_with_ext}"
-            else
-                print_failed "Package \${C}\$package_name\${R} is still installed; skipping desktop removal."
-            fi
-        done
-    fi
+		            # Check if package is really uninstalled
+		            if ! dpkg -s "\$package_name" >/dev/null 2>&1; then
+		                print_success "Removing \${C}\${desktop_files_without_ext} \${G}From Termux Menu"
+		                check_and_delete "$TERMUX_PREFIX/share/applications/pd_added/\${desktop_files_with_ext}"
+		            else
+		                print_failed "Package \${C}\$package_name\${R} is still installed; skipping desktop removal."
+		            fi
+		        done
+		    fi
 
-done
+		done
 
-check_and_delete 'packremove.sh'
-EOF
+		check_and_delete 'packremove.sh'
+		EOF
 
-    # Make the script executable
-    proot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "chmod +x /root/packremove.sh"
+		    # Make the script executable
+		    proot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "chmod +x /root/packremove.sh"
 
-    # Execute the script with all arguments
-    proot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "export DISPLAY=:${display_number}; export XDG_RUNTIME_DIR=/data/data/com.termux/files/usr/tmp; bash /root/packremove.sh \$1 \${*:2}"
+		    # Execute the script with all arguments
+		    proot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "export DISPLAY=:${display_number}; export XDG_RUNTIME_DIR=$TERMUX_PREFIX/tmp; bash /root/packremove.sh \$1 \${*:2}"
 
-}
+		}
 
-update_distro() {
-    #################################################
-    ############### Handle update part ##############
-    #################################################
-    proot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp --termux-home -- env DISPLAY=:"$display_number" sudo apt update
-    proot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp --termux-home -- env DISPLAY=:"$display_number" sudo apt-file update
-}
-TOP_EOF
+		update_distro() {
+		    #################################################
+		    ############### Handle update part ##############
+		    #################################################
+		    proot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp --termux-home -- env DISPLAY=:"$display_number" sudo apt update
+		    proot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp --termux-home -- env DISPLAY=:"$display_number" sudo apt-file update
+		}
+	TOP_EOF
 }
 
 function chroot_distro_debian_based_app_installer() {
-	cat <<TOP_EOF >>"$PREFIX/bin/$selected_distro"
-package_install_and_add_to_menu() {
-    #################################################
-    ## Handle install package and add to menu part ##
-    #################################################
+	cat <<-TOP_EOF >>"$TERMUX_PREFIX/bin/$selected_distro"
+		package_install_and_add_to_menu() {
+		    #################################################
+		    ## Handle install package and add to menu part ##
+		    #################################################
 
-    # Create the packinstall.sh script
-    sudo tee "${save_root_path}/packinstall.sh" >/dev/null <<'EOF'
-#!/bin/bash
+		    # Create the packinstall.sh script
+		    sudo tee "${save_root_path}/packinstall.sh" >/dev/null <<'EOF'
+		#!/bin/bash
 
-source /data/data/com.termux/files/usr/etc/termux-desktop/common_functions
+		source $TERMUX_PREFIX/etc/termux-desktop/common_functions
 
-# First configure dpkg and update apt
-dpkg --configure -a
-apt update
-apt-file update
+		# First configure dpkg and update apt
+		dpkg --configure -a
+		apt update
+		apt-file update
 
-# Install the packages - get arguments directly
-apt install "\$@"
+		# Install the packages - get arguments directly
+		apt install "\$@"
 
-# Process desktop files for non-option arguments
-for arg in "\$@"; do
-    # Skip options (starting with -)
-    if [[ "\$arg" != -* ]]; then
-        package_name="\$arg"
+		# Process desktop files for non-option arguments
+		for arg in "\$@"; do
+		    # Skip options (starting with -)
+		    if [[ "\$arg" != -* ]]; then
+		        package_name="\$arg"
 
-        # Find desktop files for this package
-        echo "\${R}[\${C}-\${R}]\${G} Searchling for .desktop file… \${W}"
-        echo
-        desktop_files=\$(dpkg-query -W -f='\${binary:Package}\n' | grep "^\$package_name\(-.*\)\?\$" | xargs dpkg-query -L | grep "^/usr/share/applications/.*\.desktop\$")
-        # If not found
-        if [ -z "\$desktop_files" ]; then
-            if ! apt-file list "\$package_name" >/dev/null 2>&1; then
-                echo "\${R}[\${C}-\${R}]\${G} Updating apt-file cache… \${W}"
-                apt-file update
-            fi
+		        # Find desktop files for this package
+		        echo "\${R}[\${C}-\${R}]\${G} Searchling for .desktop file… \${W}"
+		        echo
+		        desktop_files=\$(dpkg-query -W -f='\${binary:Package}\n' | grep "^\$package_name\(-.*\)\?\$" | xargs dpkg-query -L | grep "^/usr/share/applications/.*\.desktop\$")
+		        # If not found
+		        if [ -z "\$desktop_files" ]; then
+		            if ! apt-file list "\$package_name" >/dev/null 2>&1; then
+		                echo "\${R}[\${C}-\${R}]\${G} Updating apt-file cache… \${W}"
+		                apt-file update
+		            fi
 
-            if command -v apt-file >/dev/null; then
-                desktop_files=\$(apt-file list "\$package_name" | awk -F': ' -v pkg="\$package_name" '\$1 == pkg && \$2 ~ /\.desktop\$/ { print \$2 }')
-            fi
-            if [ -z "\$desktop_files" ]; then
-                print_failed "No .desktop files found for package \${C} \$package_name \${R}/usr/share/applications."
-            fi
-        else
-            for desktop_files_name in \$desktop_files; do
-                desktop_files_with_ext=\$(basename "\$desktop_files_name")
-                desktop_files_without_ext="\${desktop_files_with_ext%.desktop}"
-                if dpkg -s "\$package_name" >/dev/null 2>&1; then
-                    print_success "Adding \${C}\${desktop_files_without_ext} \${G}To Termux Menu"
-                    cp "/usr/share/applications/\${desktop_files_with_ext}" "/data/data/com.termux/files/usr/share/applications/pd_added/"
-                    sed -i 's/Exec=/Exec=pdrun /g' "/data/data/com.termux/files/usr/share/applications/pd_added/\${desktop_files_with_ext}"
-                fi
-            done
-        fi
-    fi
-done
-check_and_delete 'packinstall.sh'
-EOF
-    # Make the script executable
-    chroot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "chmod +x /root/packinstall.sh"
-    # Execute the script with all arguments
-    chroot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "export DISPLAY=:${display_number}; export XDG_RUNTIME_DIR=${TMPDIR}; bash /root/packinstall.sh \$*"
+		            if command -v apt-file >/dev/null; then
+		                desktop_files=\$(apt-file list "\$package_name" | awk -F': ' -v pkg="\$package_name" '\$1 == pkg && \$2 ~ /\.desktop\$/ { print \$2 }')
+		            fi
+		            if [ -z "\$desktop_files" ]; then
+		                print_failed "No .desktop files found for package \${C} \$package_name \${R}/usr/share/applications."
+		            fi
+		        else
+		            for desktop_files_name in \$desktop_files; do
+		                desktop_files_with_ext=\$(basename "\$desktop_files_name")
+		                desktop_files_without_ext="\${desktop_files_with_ext%.desktop}"
+		                if dpkg -s "\$package_name" >/dev/null 2>&1; then
+		                    print_success "Adding \${C}\${desktop_files_without_ext} \${G}To Termux Menu"
+		                    cp "/usr/share/applications/\${desktop_files_with_ext}" "$TERMUX_PREFIX/share/applications/pd_added/"
+		                    sed -i 's/Exec=/Exec=pdrun /g' "$TERMUX_PREFIX/share/applications/pd_added/\${desktop_files_with_ext}"
+		                fi
+		            done
+		        fi
+		    fi
+		done
+		check_and_delete 'packinstall.sh'
+		EOF
+		    # Make the script executable
+		    chroot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "chmod +x /root/packinstall.sh"
+		    # Execute the script with all arguments
+		    chroot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "export DISPLAY=:${display_number}; export XDG_RUNTIME_DIR=${TMPDIR}; bash /root/packinstall.sh \$*"
 
-}
+		}
 
-package_uninstall_and_remove_from_menu() {
-    ###################################################
-    # Handle remove package and remove from menu part #
-    ###################################################
-    # Create the packremove.sh script
-    sudo tee "${save_root_path}/packremove.sh" >/dev/null <<'EOF'
-#!/bin/bash
+		package_uninstall_and_remove_from_menu() {
+		    ###################################################
+		    # Handle remove package and remove from menu part #
+		    ###################################################
+		    # Create the packremove.sh script
+		    sudo tee "${save_root_path}/packremove.sh" >/dev/null <<'EOF'
+		#!/bin/bash
 
-source /data/data/com.termux/files/usr/etc/termux-desktop/common_functions
+		source $TERMUX_PREFIX/etc/termux-desktop/common_functions
 
-# Get the removal command (remove or autoremove)
-removal_command="\$1"
-shift
+		# Get the removal command (remove or autoremove)
+		removal_command="\$1"
+		shift
 
-# Process each non-option argument (package)
-for arg in "\$@"; do
-    # Skip options
-    if [[ "\$arg" == -* ]]; then
-        continue
-    fi
+		# Process each non-option argument (package)
+		for arg in "\$@"; do
+		    # Skip options
+		    if [[ "\$arg" == -* ]]; then
+		        continue
+		    fi
 
-    package_name="\$arg"
-    desktop_files=""
+		    package_name="\$arg"
+		    desktop_files=""
 
-    # Find desktop files for this package
-    echo "\${R}[\${C}-\${R}]\${G} Searchling for .desktop file… \${W}"
-    echo
-     desktop_files=\$(dpkg-query -W -f='\${binary:Package}\n' | grep "^\$package_name\(-.*\)\?\$" | xargs dpkg-query -L | grep "^/usr/share/applications/.*\.desktop\$" || true)
-    # If not found
-    if [[ -z "\$desktop_files" ]]; then
-        if command -v apt-file >/dev/null; then
-            if ! apt-file list "\$package_name" >/dev/null 2>&1; then
-                echo "\${R}[\${C}-\${R}]\${G} Updating apt-file cache… \${W}"
-                apt-file update
-            fi
-        desktop_files=\$(apt-file list "\$package_name" | awk -F': ' -v pkg="\$package_name" '\$1 == pkg && \$2 ~ /\.desktop\$/ { print \$2 }')
-        fi
-    fi
+		    # Find desktop files for this package
+		    echo "\${R}[\${C}-\${R}]\${G} Searchling for .desktop file… \${W}"
+		    echo
+		     desktop_files=\$(dpkg-query -W -f='\${binary:Package}\n' | grep "^\$package_name\(-.*\)\?\$" | xargs dpkg-query -L | grep "^/usr/share/applications/.*\.desktop\$" || true)
+		    # If not found
+		    if [[ -z "\$desktop_files" ]]; then
+		        if command -v apt-file >/dev/null; then
+		            if ! apt-file list "\$package_name" >/dev/null 2>&1; then
+		                echo "\${R}[\${C}-\${R}]\${G} Updating apt-file cache… \${W}"
+		                apt-file update
+		            fi
+		        desktop_files=\$(apt-file list "\$package_name" | awk -F': ' -v pkg="\$package_name" '\$1 == pkg && \$2 ~ /\.desktop\$/ { print \$2 }')
+		        fi
+		    fi
 
-    # Remove the package
-    echo "\${R}[\${C}-\${R}]\${G} Removing packages...\${W}"
-    echo
-    apt "\$removal_command" "\$package_name"
+		    # Remove the package
+		    echo "\${R}[\${C}-\${R}]\${G} Removing packages...\${W}"
+		    echo
+		    apt "\$removal_command" "\$package_name"
 
-    # Handle desktop files
-    if [[ -z "\$desktop_files" ]]; then
-        print_failed "No .desktop files found for package \${C}\$package_name\${R} /usr/share/applications"
-    else
-        for desktop_files_name in \$desktop_files; do
-            desktop_files_with_ext=\$(basename "\$desktop_files_name")
-            desktop_files_without_ext="\${desktop_files_with_ext%.desktop}"
+		    # Handle desktop files
+		    if [[ -z "\$desktop_files" ]]; then
+		        print_failed "No .desktop files found for package \${C}\$package_name\${R} /usr/share/applications"
+		    else
+		        for desktop_files_name in \$desktop_files; do
+		            desktop_files_with_ext=\$(basename "\$desktop_files_name")
+		            desktop_files_without_ext="\${desktop_files_with_ext%.desktop}"
 
-            # Check if package is really uninstalled
-            if ! dpkg -s "\$package_name" >/dev/null 2>&1; then
-                print_success "Removing \${C}\${desktop_files_without_ext} \${G}From Termux Menu"
-                check_and_delete "/data/data/com.termux/files/usr/share/applications/pd_added/\${desktop_files_with_ext}"
-            else
-                print_failed "Package \${C}\$package_name\${R} is still installed; skipping desktop removal."
-            fi
-        done
-    fi
+		            # Check if package is really uninstalled
+		            if ! dpkg -s "\$package_name" >/dev/null 2>&1; then
+		                print_success "Removing \${C}\${desktop_files_without_ext} \${G}From Termux Menu"
+		                check_and_delete "$TERMUX_PREFIX/share/applications/pd_added/\${desktop_files_with_ext}"
+		            else
+		                print_failed "Package \${C}\$package_name\${R} is still installed; skipping desktop removal."
+		            fi
+		        done
+		    fi
 
-done
+		done
 
-check_and_delete 'packremove.sh'
-EOF
+		check_and_delete 'packremove.sh'
+		EOF
 
-    # Make the script executable
-    chroot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "chmod +x /root/packremove.sh"
-    # Execute the script with all arguments
-    chroot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "export DISPLAY=:${display_number}; export XDG_RUNTIME_DIR=/data/data/com.termux/files/usr/tmp; bash /root/packremove.sh \$1 \${*:2}"
+		    # Make the script executable
+		    chroot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "chmod +x /root/packremove.sh"
+		    # Execute the script with all arguments
+		    chroot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "export DISPLAY=:${display_number}; export XDG_RUNTIME_DIR=$TERMUX_PREFIX/tmp; bash /root/packremove.sh \$1 \${*:2}"
 
-}
+		}
 
-update_distro() {
-    #################################################
-    ############### Handle update part ##############
-    #################################################
-    chroot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp -- env DISPLAY=:"$display_number" sudo apt update
-    chroot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp -- env DISPLAY=:"$display_number" sudo apt-file update
+		update_distro() {
+		    #################################################
+		    ############### Handle update part ##############
+		    #################################################
+		    chroot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp -- env DISPLAY=:"$display_number" sudo apt update
+		    chroot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp -- env DISPLAY=:"$display_number" sudo apt-file update
 
-}
-TOP_EOF
+		}
+	TOP_EOF
 
 }
 
@@ -1035,245 +1065,245 @@ function debian_based_app_installer() {
 #######################################################
 function proot_distro_arch_based_app_installer() {
 
-	cat <<TOP_EOF >>"$PREFIX/bin/$selected_distro"
+	cat <<-TOP_EOF >>"$TERMUX_PREFIX/bin/$selected_distro"
 
-package_install_and_add_to_menu() {
-    #################################################
-    ## Handle install package and add to menu part ##
-    #################################################
+		package_install_and_add_to_menu() {
+		    #################################################
+		    ## Handle install package and add to menu part ##
+		    #################################################
 
-    if [[ ! -d "/data/data/com.termux/files/usr/share/applications/pd_added" ]]; then
-        mkdir -p "/data/data/com.termux/files/usr/share/applications/pd_added"
-    fi
+		    if [[ ! -d "$TERMUX_PREFIX/share/applications/pd_added" ]]; then
+		        mkdir -p "$TERMUX_PREFIX/share/applications/pd_added"
+		    fi
 
-    # Separate options and package names
-    options=()
-    packages=()
-    for arg in "\$@"; do
-        if [[ "\$arg" == -* ]]; then
-            options+=("\$arg") # Add to options if it starts with '-'
-        else
-            packages+=("\$arg") # Add to packages otherwise
-        fi
-    done
+		    # Separate options and package names
+		    options=()
+		    packages=()
+		    for arg in "\$@"; do
+		        if [[ "\$arg" == -* ]]; then
+		            options+=("\$arg") # Add to options if it starts with '-'
+		        else
+		            packages+=("\$arg") # Add to packages otherwise
+		        fi
+		    done
 
-    # Install the packages using the package manager
-    proot-distro login "${selected_distro}" --shared-tmp -- env DISPLAY=:${display_number} sudo pacman -S"\${options[@]}" --noconfirm "\${packages[@]}"
+		    # Install the packages using the package manager
+		    proot-distro login "${selected_distro}" --shared-tmp -- env DISPLAY=:${display_number} sudo pacman -S"\${options[@]}" --noconfirm "\${packages[@]}"
 
-    # Create the packinstall.sh script
-    cat <<EOF >"${save_root_path}/packinstall.sh"
-#!/bin/bash
+		    # Create the packinstall.sh script
+		    cat <<EOF >"${save_root_path}/packinstall.sh"
+		#!/bin/bash
 
-source /data/data/com.termux/files/usr/etc/termux-desktop/common_functions
-packages=(\${packages[@]})
-EOF
+		source $TERMUX_PREFIX/etc/termux-desktop/common_functions
+		packages=(\${packages[@]})
+		EOF
 
-    cat <<'EOF' >>"${save_root_path}/packinstall.sh"
-for package_name in "\${packages[@]}"; do
-    desktop_files=\$(pacman -Ql \$package_name | grep -oP "/usr/share/applications/.*\.desktop$")
-    if [ -z "\$desktop_files" ]; then
-        print_failed "No .desktop files found for package \${C} \$package_name \${R}in /usr/share/applications."
-    else
-        for desktop_files_name in \$desktop_files; do
-            desktop_files_with_ext=\$(basename "\$desktop_files_name")
-            desktop_files_without_ext="\${desktop_files_with_ext%.desktop}"
-            print_success "Adding \${C}\${desktop_files_without_ext} \${G}To Termux Menu"
-            cp "/usr/share/applications/\${desktop_files_with_ext}" "/data/data/com.termux/files/usr/share/applications/pd_added/"
-            sed -i 's/Exec=/Exec=pdrun /g' "/data/data/com.termux/files/usr/share/applications/pd_added/\${desktop_files_with_ext}"
-        done
-    fi
-done
-check_and_delete 'packinstall.sh'
-EOF
+		    cat <<'EOF' >>"${save_root_path}/packinstall.sh"
+		for package_name in "\${packages[@]}"; do
+		    desktop_files=\$(pacman -Ql \$package_name | grep -oP "/usr/share/applications/.*\.desktop$")
+		    if [ -z "\$desktop_files" ]; then
+		        print_failed "No .desktop files found for package \${C} \$package_name \${R}in /usr/share/applications."
+		    else
+		        for desktop_files_name in \$desktop_files; do
+		            desktop_files_with_ext=\$(basename "\$desktop_files_name")
+		            desktop_files_without_ext="\${desktop_files_with_ext%.desktop}"
+		            print_success "Adding \${C}\${desktop_files_without_ext} \${G}To Termux Menu"
+		            cp "/usr/share/applications/\${desktop_files_with_ext}" "$TERMUX_PREFIX/share/applications/pd_added/"
+		            sed -i 's/Exec=/Exec=pdrun /g' "$TERMUX_PREFIX/share/applications/pd_added/\${desktop_files_with_ext}"
+		        done
+		    fi
+		done
+		check_and_delete 'packinstall.sh'
+		EOF
 
-    # Execute the script with all arguments
-    proot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "export DISPLAY=:${display_number}; export XDG_RUNTIME_DIR=${TMPDIR}; bash /root/packinstall.sh"
+		    # Execute the script with all arguments
+		    proot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "export DISPLAY=:${display_number}; export XDG_RUNTIME_DIR=${TMPDIR}; bash /root/packinstall.sh"
 
-    # Update icon cache and desktop database
-    gtk-update-icon-cache
-    update-desktop-database -q "$PREFIX/share/applications/pd_added"
-}
+		    # Update icon cache and desktop database
+		    gtk-update-icon-cache
+		    update-desktop-database -q "$TERMUX_PREFIX/share/applications/pd_added"
+		}
 
-package_uninstall_and_remove_from_menu() {
-    ###################################################
-    # Handle remove package and remove from menu part #
-    ###################################################
+		package_uninstall_and_remove_from_menu() {
+		    ###################################################
+		    # Handle remove package and remove from menu part #
+		    ###################################################
 
-    # Separate options and package names
-    options=()
-    packages=()
-    for arg in "\${@:2}"; do
-        if [[ "\$arg" == -* ]]; then
-            options+=("\$arg") # Add to options if it starts with '-'
-        else
-            packages+=("\$arg") # Add to packages otherwise
-        fi
-    done
+		    # Separate options and package names
+		    options=()
+		    packages=()
+		    for arg in "\${@:2}"; do
+		        if [[ "\$arg" == -* ]]; then
+		            options+=("\$arg") # Add to options if it starts with '-'
+		        else
+		            packages+=("\$arg") # Add to packages otherwise
+		        fi
+		    done
 
-    # Create the packremove.sh script
-    cat <<EOF >"${save_root_path}/packremove.sh"
-#!/bin/bash
+		    # Create the packremove.sh script
+		    cat <<EOF >"${save_root_path}/packremove.sh"
+		#!/bin/bash
 
-source /data/data/com.termux/files/usr/etc/termux-desktop/common_functions
-packages=(\${packages[@]})
-EOF
+		source $TERMUX_PREFIX/etc/termux-desktop/common_functions
+		packages=(\${packages[@]})
+		EOF
 
-    cat <<'EOF' >>"${save_root_path}/packremove.sh"
-for package_name in "\${packages[@]}"; do
-    desktop_files=\$(pacman -Ql \$package_name | grep -oP "/usr/share/applications/.*\.desktop$")
-    if [ -z "\$desktop_files" ]; then
-        print_failed "No .desktop files found for package \${C} \$package_name \${R}in /usr/share/applications."
-    else
-        for desktop_files_name in \$desktop_files; do
-            desktop_files_with_ext=\$(basename "\$desktop_files_name")
-            desktop_files_without_ext="\${desktop_files_with_ext%.desktop}"
-            print_success "Removing \${C}\${desktop_files_without_ext} \${G}From Termux Menu"
-            check_and_delete /data/data/com.termux/files/usr/share/applications/pd_added/\${desktop_files_with_ext}
-        done
-    fi
-done
-check_and_delete 'packremove.sh'
-EOF
+		    cat <<'EOF' >>"${save_root_path}/packremove.sh"
+		for package_name in "\${packages[@]}"; do
+		    desktop_files=\$(pacman -Ql \$package_name | grep -oP "/usr/share/applications/.*\.desktop$")
+		    if [ -z "\$desktop_files" ]; then
+		        print_failed "No .desktop files found for package \${C} \$package_name \${R}in /usr/share/applications."
+		    else
+		        for desktop_files_name in \$desktop_files; do
+		            desktop_files_with_ext=\$(basename "\$desktop_files_name")
+		            desktop_files_without_ext="\${desktop_files_with_ext%.desktop}"
+		            print_success "Removing \${C}\${desktop_files_without_ext} \${G}From Termux Menu"
+		            check_and_delete $TERMUX_PREFIX/share/applications/pd_added/\${desktop_files_with_ext}
+		        done
+		    fi
+		done
+		check_and_delete 'packremove.sh'
+		EOF
 
-    # Execute the script with all arguments
-    proot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "export DISPLAY=:${display_number}; export XDG_RUNTIME_DIR=${TMPDIR}; bash /root/packremove.sh"
+		    # Execute the script with all arguments
+		    proot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "export DISPLAY=:${display_number}; export XDG_RUNTIME_DIR=${TMPDIR}; bash /root/packremove.sh"
 
-    # Remove the packages using the package manager
-    proot-distro login "${selected_distro}" --shared-tmp -- env DISPLAY=:${display_number} sudo pacman -R"\${options[@]}" --noconfirm "\${packages[@]}"
+		    # Remove the packages using the package manager
+		    proot-distro login "${selected_distro}" --shared-tmp -- env DISPLAY=:${display_number} sudo pacman -R"\${options[@]}" --noconfirm "\${packages[@]}"
 
-    # Update icon cache and desktop database
-    gtk-update-icon-cache
-    update-desktop-database -q "$PREFIX/share/applications/pd_added"
-}
+		    # Update icon cache and desktop database
+		    gtk-update-icon-cache
+		    update-desktop-database -q "$TERMUX_PREFIX/share/applications/pd_added"
+		}
 
-update_distro() {
-    #################################################
-    ############### Handle update part ##############
-    #################################################
-    proot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp --termux-home -- env DISPLAY=:"$display_number" sudo pacman -Su
-}
-TOP_EOF
+		update_distro() {
+		    #################################################
+		    ############### Handle update part ##############
+		    #################################################
+		    proot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp --termux-home -- env DISPLAY=:"$display_number" sudo pacman -Su
+		}
+	TOP_EOF
 }
 
 function chroot_distro_arch_based_app_installer() {
-	cat <<TOP_EOF >>"$PREFIX/bin/$selected_distro"
+	cat <<-TOP_EOF >>"$TERMUX_PREFIX/bin/$selected_distro"
 
-package_install_and_add_to_menu() {
-    #################################################
-    ## Handle install package and add to menu part ##
-    #################################################
+		package_install_and_add_to_menu() {
+		    #################################################
+		    ## Handle install package and add to menu part ##
+		    #################################################
 
-    if [[ ! -d "/data/data/com.termux/files/usr/share/applications/pd_added" ]]; then
-        mkdir -p "/data/data/com.termux/files/usr/share/applications/pd_added"
-    fi
+		    if [[ ! -d "$TERMUX_PREFIX/share/applications/pd_added" ]]; then
+		        mkdir -p "$TERMUX_PREFIX/share/applications/pd_added"
+		    fi
 
-    # Separate options and package names
-    options=()
-    packages=()
-    for arg in "\$@"; do
-        if [[ "\$arg" == -* ]]; then
-            options+=("\$arg") # Add to options if it starts with '-'
-        else
-            packages+=("\$arg") # Add to packages otherwise
-        fi
-    done
+		    # Separate options and package names
+		    options=()
+		    packages=()
+		    for arg in "\$@"; do
+		        if [[ "\$arg" == -* ]]; then
+		            options+=("\$arg") # Add to options if it starts with '-'
+		        else
+		            packages+=("\$arg") # Add to packages otherwise
+		        fi
+		    done
 
-    # Install the packages using the package manager
-    chroot-distro login "${selected_distro}" --shared-tmp -- env DISPLAY=:${display_number} sudo pacman -S"\${options[@]}" --noconfirm "\${packages[@]}"
+		    # Install the packages using the package manager
+		    chroot-distro login "${selected_distro}" --shared-tmp -- env DISPLAY=:${display_number} sudo pacman -S"\${options[@]}" --noconfirm "\${packages[@]}"
 
-    # Create the packinstall.sh script
-    sudo tee "${save_root_path}/packinstall.sh" >/dev/null <<'EOF'
-#!/bin/bash
+		    # Create the packinstall.sh script
+		    sudo tee "${save_root_path}/packinstall.sh" >/dev/null <<'EOF'
+		#!/bin/bash
 
-source /data/data/com.termux/files/usr/etc/termux-desktop/common_functions
-packages=(\${packages[@]})
-EOF
+		source $TERMUX_PREFIX/etc/termux-desktop/common_functions
+		packages=(\${packages[@]})
+		EOF
 
-    cat <<'EOF' >>"${save_root_path}/packinstall.sh"
-for package_name in "\${packages[@]}"; do
-    desktop_files=\$(pacman -Ql \$package_name | grep -oP "/usr/share/applications/.*\.desktop$")
-    if [ -z "\$desktop_files" ]; then
-        print_failed "No .desktop files found for package \${C} \$package_name \${R}in /usr/share/applications."
-    else
-        for desktop_files_name in \$desktop_files; do
-            desktop_files_with_ext=\$(basename "\$desktop_files_name")
-            desktop_files_without_ext="\${desktop_files_with_ext%.desktop}"
-            print_success "Adding \${C}\${desktop_files_without_ext} \${G}To Termux Menu"
-            cp "/usr/share/applications/\${desktop_files_with_ext}" "/data/data/com.termux/files/usr/share/applications/pd_added/"
-            sed -i 's/Exec=/Exec=pdrun /g' "/data/data/com.termux/files/usr/share/applications/pd_added/\${desktop_files_with_ext}"
-        done
-    fi
-done
-check_and_delete 'packinstall.sh'
-EOF
+		    cat <<'EOF' >>"${save_root_path}/packinstall.sh"
+		for package_name in "\${packages[@]}"; do
+		    desktop_files=\$(pacman -Ql \$package_name | grep -oP "/usr/share/applications/.*\.desktop$")
+		    if [ -z "\$desktop_files" ]; then
+		        print_failed "No .desktop files found for package \${C} \$package_name \${R}in /usr/share/applications."
+		    else
+		        for desktop_files_name in \$desktop_files; do
+		            desktop_files_with_ext=\$(basename "\$desktop_files_name")
+		            desktop_files_without_ext="\${desktop_files_with_ext%.desktop}"
+		            print_success "Adding \${C}\${desktop_files_without_ext} \${G}To Termux Menu"
+		            cp "/usr/share/applications/\${desktop_files_with_ext}" "$TERMUX_PREFIX/share/applications/pd_added/"
+		            sed -i 's/Exec=/Exec=pdrun /g' "$TERMUX_PREFIX/share/applications/pd_added/\${desktop_files_with_ext}"
+		        done
+		    fi
+		done
+		check_and_delete 'packinstall.sh'
+		EOF
 
-    # Execute the script with all arguments
-    chroot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "export DISPLAY=:${display_number}; export XDG_RUNTIME_DIR=${TMPDIR}; bash /root/packinstall.sh"
+		    # Execute the script with all arguments
+		    chroot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "export DISPLAY=:${display_number}; export XDG_RUNTIME_DIR=${TMPDIR}; bash /root/packinstall.sh"
 
-    # Update icon cache and desktop database
-    gtk-update-icon-cache
-    update-desktop-database -q "$PREFIX/share/applications/pd_added"
-}
+		    # Update icon cache and desktop database
+		    gtk-update-icon-cache
+		    update-desktop-database -q "$TERMUX_PREFIX/share/applications/pd_added"
+		}
 
-package_uninstall_and_remove_from_menu() {
-    ###################################################
-    # Handle remove package and remove from menu part #
-    ###################################################
+		package_uninstall_and_remove_from_menu() {
+		    ###################################################
+		    # Handle remove package and remove from menu part #
+		    ###################################################
 
-    # Separate options and package names
-    options=()
-    packages=()
-    for arg in "\${@:2}"; do
-        if [[ "\$arg" == -* ]]; then
-            options+=("\$arg") # Add to options if it starts with '-'
-        else
-            packages+=("\$arg") # Add to packages otherwise
-        fi
-    done
+		    # Separate options and package names
+		    options=()
+		    packages=()
+		    for arg in "\${@:2}"; do
+		        if [[ "\$arg" == -* ]]; then
+		            options+=("\$arg") # Add to options if it starts with '-'
+		        else
+		            packages+=("\$arg") # Add to packages otherwise
+		        fi
+		    done
 
-    # Create the packremove.sh script
-    sudo tee "${save_root_path}/packremove.sh" >/dev/null <<'EOF'
-#!/bin/bash
+		    # Create the packremove.sh script
+		    sudo tee "${save_root_path}/packremove.sh" >/dev/null <<'EOF'
+		#!/bin/bash
 
-source /data/data/com.termux/files/usr/etc/termux-desktop/common_functions
-packages=(\${packages[@]})
-EOF
+		source $TERMUX_PREFIX/etc/termux-desktop/common_functions
+		packages=(\${packages[@]})
+		EOF
 
-    cat <<'EOF' >>"${save_root_path}/packremove.sh"
-for package_name in "\${packages[@]}"; do
-    desktop_files=\$(pacman -Ql \$package_name | grep -oP "/usr/share/applications/.*\.desktop$")
-    if [ -z "\$desktop_files" ]; then
-        print_failed "No .desktop files found for package \${C} \$package_name \${R}in /usr/share/applications."
-    else
-        for desktop_files_name in \$desktop_files; do
-            desktop_files_with_ext=\$(basename "\$desktop_files_name")
-            desktop_files_without_ext="\${desktop_files_with_ext%.desktop}"
-            print_success "Removing \${C}\${desktop_files_without_ext} \${G}From Termux Menu"
-            check_and_delete /data/data/com.termux/files/usr/share/applications/pd_added/\${desktop_files_with_ext}
-        done
-    fi
-done
-check_and_delete 'packremove.sh'
-EOF
+		    cat <<'EOF' >>"${save_root_path}/packremove.sh"
+		for package_name in "\${packages[@]}"; do
+		    desktop_files=\$(pacman -Ql \$package_name | grep -oP "/usr/share/applications/.*\.desktop$")
+		    if [ -z "\$desktop_files" ]; then
+		        print_failed "No .desktop files found for package \${C} \$package_name \${R}in /usr/share/applications."
+		    else
+		        for desktop_files_name in \$desktop_files; do
+		            desktop_files_with_ext=\$(basename "\$desktop_files_name")
+		            desktop_files_without_ext="\${desktop_files_with_ext%.desktop}"
+		            print_success "Removing \${C}\${desktop_files_without_ext} \${G}From Termux Menu"
+		            check_and_delete $TERMUX_PREFIX/share/applications/pd_added/\${desktop_files_with_ext}
+		        done
+		    fi
+		done
+		check_and_delete 'packremove.sh'
+		EOF
 
-    # Execute the script with all arguments
-    chroot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "export DISPLAY=:${display_number}; export XDG_RUNTIME_DIR=${TMPDIR}; bash /root/packremove.sh"
+		    # Execute the script with all arguments
+		    chroot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "export DISPLAY=:${display_number}; export XDG_RUNTIME_DIR=${TMPDIR}; bash /root/packremove.sh"
 
-    # Remove the packages using the package manager
-    chroot-distro login "${selected_distro}" --shared-tmp -- env DISPLAY=:${display_number} sudo pacman -R"\${options[@]}" --noconfirm "\${packages[@]}"
+		    # Remove the packages using the package manager
+		    chroot-distro login "${selected_distro}" --shared-tmp -- env DISPLAY=:${display_number} sudo pacman -R"\${options[@]}" --noconfirm "\${packages[@]}"
 
-    # Update icon cache and desktop database
-    gtk-update-icon-cache
-    update-desktop-database -q "$PREFIX/share/applications/pd_added"
-}
+		    # Update icon cache and desktop database
+		    gtk-update-icon-cache
+		    update-desktop-database -q "$TERMUX_PREFIX/share/applications/pd_added"
+		}
 
-update_distro() {
-    #################################################
-    ############### Handle update part ##############
-    #################################################
-    chroot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp -- env DISPLAY=:"$display_number" sudo pacman -Su
-}
-TOP_EOF
+		update_distro() {
+		    #################################################
+		    ############### Handle update part ##############
+		    #################################################
+		    chroot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp -- env DISPLAY=:"$display_number" sudo pacman -Su
+		}
+	TOP_EOF
 
 }
 
@@ -1291,295 +1321,295 @@ function arch_based_app_installer() {
 #######################################################
 function proot_distro_fedora_based_app_installer() {
 
-	cat <<TOP_EOF >>"$PREFIX/bin/$selected_distro"
-package_install_and_add_to_menu() {
-    #################################################
-    ## Handle install package and add to menu part ##
-    #################################################
+	cat <<-TOP_EOF >>"$TERMUX_PREFIX/bin/$selected_distro"
+		package_install_and_add_to_menu() {
+		    #################################################
+		    ## Handle install package and add to menu part ##
+		    #################################################
 
-    # Create the packinstall.sh script
-    cat <<'EOF' >"${save_root_path}/packinstall.sh"
-#!/bin/bash
+		    # Create the packinstall.sh script
+		    cat <<'EOF' >"${save_root_path}/packinstall.sh"
+		#!/bin/bash
 
-source /data/data/com.termux/files/usr/etc/termux-desktop/common_functions
+		source $TERMUX_PREFIX/etc/termux-desktop/common_functions
 
-# First ensure dnf is up to date
-sudo dnf makecache --refresh
+		# First ensure dnf is up to date
+		sudo dnf makecache --refresh
 
-# Install packages - pass arguments directly
-sudo dnf install "\$@"
+		# Install packages - pass arguments directly
+		sudo dnf install "\$@"
 
-# Process each argument for desktop integration
-for arg in "\$@"; do
-    # Skip options
-    if [[ "\$arg" == -* ]]; then
-        continue
-    fi
-    package_name="\$arg"
+		# Process each argument for desktop integration
+		for arg in "\$@"; do
+		    # Skip options
+		    if [[ "\$arg" == -* ]]; then
+		        continue
+		    fi
+		    package_name="\$arg"
 
-    # Use repoquery to list desktop files for this package
-    echo "\${R}[\${C}-\${R}]\${G} Searchling for .desktop file… \${W}"
-    echo
-    desktop_files=\$(dnf repoquery --list "\$package_name" 2>/dev/null | \
-        grep "^/usr/share/applications/.*\.desktop\$" || true)
+		    # Use repoquery to list desktop files for this package
+		    echo "\${R}[\${C}-\${R}]\${G} Searchling for .desktop file… \${W}"
+		    echo
+		    desktop_files=\$(dnf repoquery --list "\$package_name" 2>/dev/null | \
+		        grep "^/usr/share/applications/.*\.desktop\$" || true)
 
-    # If no desktop files found, try rpm -ql fallback
-    if [[ -z "\$desktop_files" ]]; then
-        desktop_files=\$(rpm -ql "\$package_name" 2>/dev/null | \
-            grep "/usr/share/applications/.*\.desktop\$" || true)
-    fi
+		    # If no desktop files found, try rpm -ql fallback
+		    if [[ -z "\$desktop_files" ]]; then
+		        desktop_files=\$(rpm -ql "\$package_name" 2>/dev/null | \
+		            grep "/usr/share/applications/.*\.desktop\$" || true)
+		    fi
 
-    if [[ -n "\$desktop_files" ]]; then
-        for desktop_path in \$desktop_files; do
-            desktop_file=\$(basename "\$desktop_path")
-            print_success "Adding \${C}\${desktop_file%.desktop} \${G}to Termux Menu"
-            cp "/usr/share/applications/\$desktop_file" "/data/data/com.termux/files/usr/share/applications/pd_added/"
-            sed -i 's|Exec=|Exec=pdrun |g' "/data/data/com.termux/files/usr/share/applications/pd_added/\$desktop_file"
-        done
-    else
-        print_failed "No .desktop files found for package \${C}\$package_name\${R} in /usr/share/applications."
-    fi
-done
+		    if [[ -n "\$desktop_files" ]]; then
+		        for desktop_path in \$desktop_files; do
+		            desktop_file=\$(basename "\$desktop_path")
+		            print_success "Adding \${C}\${desktop_file%.desktop} \${G}to Termux Menu"
+		            cp "/usr/share/applications/\$desktop_file" "$TERMUX_PREFIX/share/applications/pd_added/"
+		            sed -i 's|Exec=|Exec=pdrun |g' "$TERMUX_PREFIX/share/applications/pd_added/\$desktop_file"
+		        done
+		    else
+		        print_failed "No .desktop files found for package \${C}\$package_name\${R} in /usr/share/applications."
+		    fi
+		done
 
-check_and_delete 'packinstall.sh'
-EOF
-    # Make the script executable
-    proot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "chmod +x /root/packinstall.sh"
-    # Execute the script with all arguments
-    proot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "export DISPLAY=:${display_number}; export XDG_RUNTIME_DIR=${TMPDIR}; bash /root/packinstall.sh \$*"
+		check_and_delete 'packinstall.sh'
+		EOF
+		    # Make the script executable
+		    proot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "chmod +x /root/packinstall.sh"
+		    # Execute the script with all arguments
+		    proot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "export DISPLAY=:${display_number}; export XDG_RUNTIME_DIR=${TMPDIR}; bash /root/packinstall.sh \$*"
 
-    # Update icon cache and desktop database
-    gtk-update-icon-cache
-    update-desktop-database -q "$PREFIX/share/applications/pd_added"
-}
+		    # Update icon cache and desktop database
+		    gtk-update-icon-cache
+		    update-desktop-database -q "$TERMUX_PREFIX/share/applications/pd_added"
+		}
 
-package_uninstall_and_remove_from_menu() {
-    ###################################################
-    # Handle remove package and remove from menu part #
-    ###################################################
-    # Create the packremove.sh script
-    cat <<'EOF' >"${save_root_path}/packremove.sh"
-#!/bin/bash
+		package_uninstall_and_remove_from_menu() {
+		    ###################################################
+		    # Handle remove package and remove from menu part #
+		    ###################################################
+		    # Create the packremove.sh script
+		    cat <<'EOF' >"${save_root_path}/packremove.sh"
+		#!/bin/bash
 
-source /data/data/com.termux/files/usr/etc/termux-desktop/common_functions
+		source $TERMUX_PREFIX/etc/termux-desktop/common_functions
 
-# Get the removal command (remove or autoremove)
-removal_command="\$1"
-shift
+		# Get the removal command (remove or autoremove)
+		removal_command="\$1"
+		shift
 
-# Process each non-option argument (package)
-for arg in "\$@"; do
-    # Skip options
-    if [[ "\$arg" == -* ]]; then
-        continue
-    fi
+		# Process each non-option argument (package)
+		for arg in "\$@"; do
+		    # Skip options
+		    if [[ "\$arg" == -* ]]; then
+		        continue
+		    fi
 
-    package_name="\$arg"
-    desktop_files=""
+		    package_name="\$arg"
+		    desktop_files=""
 
-    # Use repoquery to list desktop files for this package
-    echo "\${R}[\${C}-\${R}]\${G} Searchling for .desktop file… \${W}"
-    echo
-    desktop_files=\$(dnf repoquery --list "\$package_name" 2>/dev/null | \
-        grep "^/usr/share/applications/.*\.desktop\$" || true)
+		    # Use repoquery to list desktop files for this package
+		    echo "\${R}[\${C}-\${R}]\${G} Searchling for .desktop file… \${W}"
+		    echo
+		    desktop_files=\$(dnf repoquery --list "\$package_name" 2>/dev/null | \
+		        grep "^/usr/share/applications/.*\.desktop\$" || true)
 
-    # If no desktop files found, try rpm -ql fallback
-    if [[ -z "\$desktop_files" ]]; then
-        desktop_files=\$(rpm -ql "\$package_name" 2>/dev/null | \
-            grep "/usr/share/applications/.*\.desktop\$" || true)
-    fi
+		    # If no desktop files found, try rpm -ql fallback
+		    if [[ -z "\$desktop_files" ]]; then
+		        desktop_files=\$(rpm -ql "\$package_name" 2>/dev/null | \
+		            grep "/usr/share/applications/.*\.desktop\$" || true)
+		    fi
 
-    # Remove the package
-    echo "\${R}[\${C}-\${R}]\${G} Removing packages...\${W}"
-    echo
-    sudo dnf remove "\$package_name"
+		    # Remove the package
+		    echo "\${R}[\${C}-\${R}]\${G} Removing packages...\${W}"
+		    echo
+		    sudo dnf remove "\$package_name"
 
-    # Handle desktop files
-    if [[ -z "\$desktop_files" ]]; then
-        print_failed "No .desktop files found for package \${C}\$package_name\${R} /usr/share/applications"
-    else
-        for desktop_files_name in \$desktop_files; do
-            desktop_files_with_ext=\$(basename "\$desktop_files_name")
-            desktop_files_without_ext="\${desktop_files_with_ext%.desktop}"
+		    # Handle desktop files
+		    if [[ -z "\$desktop_files" ]]; then
+		        print_failed "No .desktop files found for package \${C}\$package_name\${R} /usr/share/applications"
+		    else
+		        for desktop_files_name in \$desktop_files; do
+		            desktop_files_with_ext=\$(basename "\$desktop_files_name")
+		            desktop_files_without_ext="\${desktop_files_with_ext%.desktop}"
 
-            # Check if package is really uninstalled
-            if ! rpm -q "\$package_name" >/dev/null 2>&1; then
-                print_success "Removing \${C}\${desktop_files_without_ext} \${G}From Termux Menu"
-                check_and_delete "/data/data/com.termux/files/usr/share/applications/pd_added/\${desktop_files_with_ext}"
-            else
-                print_failed "Package \${C}\$package_name\${R} is still installed; skipping desktop removal."
-            fi
-        done
-    fi
-done
+		            # Check if package is really uninstalled
+		            if ! rpm -q "\$package_name" >/dev/null 2>&1; then
+		                print_success "Removing \${C}\${desktop_files_without_ext} \${G}From Termux Menu"
+		                check_and_delete "$TERMUX_PREFIX/share/applications/pd_added/\${desktop_files_with_ext}"
+		            else
+		                print_failed "Package \${C}\$package_name\${R} is still installed; skipping desktop removal."
+		            fi
+		        done
+		    fi
+		done
 
-check_and_delete 'packremove.sh'
-EOF
+		check_and_delete 'packremove.sh'
+		EOF
 
-    # Make the script executable
-    proot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "chmod +x /root/packremove.sh"
+		    # Make the script executable
+		    proot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "chmod +x /root/packremove.sh"
 
-    # Execute the script with all arguments
-    proot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "export DISPLAY=:${display_number}; export XDG_RUNTIME_DIR=/data/data/com.termux/files/usr/tmp; bash /root/packremove.sh \$1 \${*:2}"
+		    # Execute the script with all arguments
+		    proot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "export DISPLAY=:${display_number}; export XDG_RUNTIME_DIR=$TERMUX_PREFIX/tmp; bash /root/packremove.sh \$1 \${*:2}"
 
-    # Update icon cache and desktop database
-    gtk-update-icon-cache
-    update-desktop-database -q "$PREFIX/share/applications/pd_added"
-}
+		    # Update icon cache and desktop database
+		    gtk-update-icon-cache
+		    update-desktop-database -q "$TERMUX_PREFIX/share/applications/pd_added"
+		}
 
-update_distro() {
-    #################################################
-    ############### Handle update part ##############
-    #################################################
-    proot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp --termux-home -- env DISPLAY=:"$display_number" sudo dnf update
-}
-TOP_EOF
+		update_distro() {
+		    #################################################
+		    ############### Handle update part ##############
+		    #################################################
+		    proot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp --termux-home -- env DISPLAY=:"$display_number" sudo dnf update
+		}
+	TOP_EOF
 }
 
 function chroot_distro_fedora_based_app_installer() {
-	cat <<TOP_EOF >>"$PREFIX/bin/$selected_distro"
-package_install_and_add_to_menu() {
-    #################################################
-    ## Handle install package and add to menu part ##
-    #################################################
+	cat <<-TOP_EOF >>"$TERMUX_PREFIX/bin/$selected_distro"
+		package_install_and_add_to_menu() {
+		    #################################################
+		    ## Handle install package and add to menu part ##
+		    #################################################
 
-    # Create the packinstall.sh script
-    sudo tee "${save_root_path}/packinstall.sh" >/dev/null <<'EOF'
-#!/bin/bash
+		    # Create the packinstall.sh script
+		    sudo tee "${save_root_path}/packinstall.sh" >/dev/null <<'EOF'
+		#!/bin/bash
 
-source /data/data/com.termux/files/usr/etc/termux-desktop/common_functions
+		source $TERMUX_PREFIX/etc/termux-desktop/common_functions
 
-# First ensure dnf is up to date
-sudo dnf makecache --refresh
+		# First ensure dnf is up to date
+		sudo dnf makecache --refresh
 
-# Install packages - pass arguments directly
-sudo dnf install "\$@"
+		# Install packages - pass arguments directly
+		sudo dnf install "\$@"
 
-# Process each argument for desktop integration
-for arg in "\$@"; do
-    # Skip options
-    if [[ "\$arg" == -* ]]; then
-        continue
-    fi
-    package_name="\$arg"
+		# Process each argument for desktop integration
+		for arg in "\$@"; do
+		    # Skip options
+		    if [[ "\$arg" == -* ]]; then
+		        continue
+		    fi
+		    package_name="\$arg"
 
-    # Use repoquery to list desktop files for this package
-    echo "\${R}[\${C}-\${R}]\${G} Searchling for .desktop file… \${W}"
-    echo
-    desktop_files=\$(dnf repoquery --list "\$package_name" 2>/dev/null | \
-        grep "^/usr/share/applications/.*\.desktop\$" || true)
+		    # Use repoquery to list desktop files for this package
+		    echo "\${R}[\${C}-\${R}]\${G} Searchling for .desktop file… \${W}"
+		    echo
+		    desktop_files=\$(dnf repoquery --list "\$package_name" 2>/dev/null | \
+		        grep "^/usr/share/applications/.*\.desktop\$" || true)
 
-    # If no desktop files found, try rpm -ql fallback
-    if [[ -z "\$desktop_files" ]]; then
-        desktop_files=\$(rpm -ql "\$package_name" 2>/dev/null | \
-            grep "/usr/share/applications/.*\.desktop\$" || true)
-    fi
+		    # If no desktop files found, try rpm -ql fallback
+		    if [[ -z "\$desktop_files" ]]; then
+		        desktop_files=\$(rpm -ql "\$package_name" 2>/dev/null | \
+		            grep "/usr/share/applications/.*\.desktop\$" || true)
+		    fi
 
-    if [[ -n "\$desktop_files" ]]; then
-        for desktop_path in \$desktop_files; do
-            desktop_file=\$(basename "\$desktop_path")
-            print_success "Adding \${C}\${desktop_file%.desktop} \${G}to Termux Menu"
-            cp "/usr/share/applications/\$desktop_file" "/data/data/com.termux/files/usr/share/applications/pd_added/"
-            sed -i 's|Exec=|Exec=pdrun |g' "/data/data/com.termux/files/usr/share/applications/pd_added/\$desktop_file"
-        done
-    else
-        print_failed "No .desktop files found for package \${C}\$package_name\${R} in /usr/share/applications."
-    fi
-done
+		    if [[ -n "\$desktop_files" ]]; then
+		        for desktop_path in \$desktop_files; do
+		            desktop_file=\$(basename "\$desktop_path")
+		            print_success "Adding \${C}\${desktop_file%.desktop} \${G}to Termux Menu"
+		            cp "/usr/share/applications/\$desktop_file" "$TERMUX_PREFIX/share/applications/pd_added/"
+		            sed -i 's|Exec=|Exec=pdrun |g' "$TERMUX_PREFIX/share/applications/pd_added/\$desktop_file"
+		        done
+		    else
+		        print_failed "No .desktop files found for package \${C}\$package_name\${R} in /usr/share/applications."
+		    fi
+		done
 
-check_and_delete 'packinstall.sh'
-EOF
-    # Make the script executable
-    chroot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "chmod +x /root/packinstall.sh"
-    # Execute the script with all arguments
-    chroot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "export DISPLAY=:${display_number}; export XDG_RUNTIME_DIR=${TMPDIR}; bash /root/packinstall.sh \$*"
+		check_and_delete 'packinstall.sh'
+		EOF
+		    # Make the script executable
+		    chroot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "chmod +x /root/packinstall.sh"
+		    # Execute the script with all arguments
+		    chroot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "export DISPLAY=:${display_number}; export XDG_RUNTIME_DIR=${TMPDIR}; bash /root/packinstall.sh \$*"
 
-    # Update icon cache and desktop database
-    gtk-update-icon-cache
-    update-desktop-database -q "$PREFIX/share/applications/pd_added"
-}
+		    # Update icon cache and desktop database
+		    gtk-update-icon-cache
+		    update-desktop-database -q "$TERMUX_PREFIX/share/applications/pd_added"
+		}
 
-package_uninstall_and_remove_from_menu() {
-    ###################################################
-    # Handle remove package and remove from menu part #
-    ###################################################
-    # Create the packremove.sh script
-    sudo tee "${save_root_path}/packremove.sh" >/dev/null <<'EOF'
-#!/bin/bash
+		package_uninstall_and_remove_from_menu() {
+		    ###################################################
+		    # Handle remove package and remove from menu part #
+		    ###################################################
+		    # Create the packremove.sh script
+		    sudo tee "${save_root_path}/packremove.sh" >/dev/null <<'EOF'
+		#!/bin/bash
 
-source /data/data/com.termux/files/usr/etc/termux-desktop/common_functions
+		source $TERMUX_PREFIX/etc/termux-desktop/common_functions
 
-# Get the removal command (remove or autoremove)
-removal_command="\$1"
-shift
+		# Get the removal command (remove or autoremove)
+		removal_command="\$1"
+		shift
 
-# Process each non-option argument (package)
-for arg in "\$@"; do
-    # Skip options
-    if [[ "\$arg" == -* ]]; then
-        continue
-    fi
+		# Process each non-option argument (package)
+		for arg in "\$@"; do
+		    # Skip options
+		    if [[ "\$arg" == -* ]]; then
+		        continue
+		    fi
 
-    package_name="\$arg"
-    desktop_files=""
+		    package_name="\$arg"
+		    desktop_files=""
 
-    # Use repoquery to list desktop files for this package
-    echo "\${R}[\${C}-\${R}]\${G} Searchling for .desktop file… \${W}"
-    echo
-    desktop_files=\$(dnf repoquery --list "\$package_name" 2>/dev/null | \
-        grep "^/usr/share/applications/.*\.desktop\$" || true)
+		    # Use repoquery to list desktop files for this package
+		    echo "\${R}[\${C}-\${R}]\${G} Searchling for .desktop file… \${W}"
+		    echo
+		    desktop_files=\$(dnf repoquery --list "\$package_name" 2>/dev/null | \
+		        grep "^/usr/share/applications/.*\.desktop\$" || true)
 
-    # If no desktop files found, try rpm -ql fallback
-    if [[ -z "\$desktop_files" ]]; then
-        desktop_files=\$(rpm -ql "\$package_name" 2>/dev/null | \
-            grep "/usr/share/applications/.*\.desktop\$" || true)
-    fi
+		    # If no desktop files found, try rpm -ql fallback
+		    if [[ -z "\$desktop_files" ]]; then
+		        desktop_files=\$(rpm -ql "\$package_name" 2>/dev/null | \
+		            grep "/usr/share/applications/.*\.desktop\$" || true)
+		    fi
 
-    # Remove the package
-    echo "\${R}[\${C}-\${R}]\${G} Removing packages...\${W}"
-    echo
-    sudo dnf remove "\$package_name"
+		    # Remove the package
+		    echo "\${R}[\${C}-\${R}]\${G} Removing packages...\${W}"
+		    echo
+		    sudo dnf remove "\$package_name"
 
-    # Handle desktop files
-    if [[ -z "\$desktop_files" ]]; then
-        print_failed "No .desktop files found for package \${C}\$package_name\${R} /usr/share/applications"
-    else
-        for desktop_files_name in \$desktop_files; do
-            desktop_files_with_ext=\$(basename "\$desktop_files_name")
-            desktop_files_without_ext="\${desktop_files_with_ext%.desktop}"
+		    # Handle desktop files
+		    if [[ -z "\$desktop_files" ]]; then
+		        print_failed "No .desktop files found for package \${C}\$package_name\${R} /usr/share/applications"
+		    else
+		        for desktop_files_name in \$desktop_files; do
+		            desktop_files_with_ext=\$(basename "\$desktop_files_name")
+		            desktop_files_without_ext="\${desktop_files_with_ext%.desktop}"
 
-            # Check if package is really uninstalled
-            if ! rpm -q "\$package_name" >/dev/null 2>&1; then
-                print_success "Removing \${C}\${desktop_files_without_ext} \${G}From Termux Menu"
-                check_and_delete "/data/data/com.termux/files/usr/share/applications/pd_added/\${desktop_files_with_ext}"
-            else
-                print_failed "Package \${C}\$package_name\${R} is still installed; skipping desktop removal."
-            fi
-        done
-    fi
-done
+		            # Check if package is really uninstalled
+		            if ! rpm -q "\$package_name" >/dev/null 2>&1; then
+		                print_success "Removing \${C}\${desktop_files_without_ext} \${G}From Termux Menu"
+		                check_and_delete "$TERMUX_PREFIX/share/applications/pd_added/\${desktop_files_with_ext}"
+		            else
+		                print_failed "Package \${C}\$package_name\${R} is still installed; skipping desktop removal."
+		            fi
+		        done
+		    fi
+		done
 
-check_and_delete 'packremove.sh'
-EOF
+		check_and_delete 'packremove.sh'
+		EOF
 
-    # Make the script executable
-    chroot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "chmod +x /root/packremove.sh"
+		    # Make the script executable
+		    chroot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "chmod +x /root/packremove.sh"
 
-    # Execute the script with all arguments
-    chroot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "export DISPLAY=:${display_number}; export XDG_RUNTIME_DIR=/data/data/com.termux/files/usr/tmp; bash /root/packremove.sh \$1 \${*:2}"
+		    # Execute the script with all arguments
+		    chroot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "export DISPLAY=:${display_number}; export XDG_RUNTIME_DIR=$TERMUX_PREFIX/tmp; bash /root/packremove.sh \$1 \${*:2}"
 
-    # Update icon cache and desktop database
-    gtk-update-icon-cache
-    update-desktop-database -q "$PREFIX/share/applications/pd_added"
-}
+		    # Update icon cache and desktop database
+		    gtk-update-icon-cache
+		    update-desktop-database -q "$TERMUX_PREFIX/share/applications/pd_added"
+		}
 
-update_distro() {
-    #################################################
-    ############### Handle update part ##############
-    #################################################
-    chroot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp -- env DISPLAY=:"$display_number" sudo dnf update
-}
-TOP_EOF
+		update_distro() {
+		    #################################################
+		    ############### Handle update part ##############
+		    #################################################
+		    chroot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp -- env DISPLAY=:"$display_number" sudo dnf update
+		}
+	TOP_EOF
 
 }
 
@@ -1593,153 +1623,161 @@ function fedora_based_app_installer() {
 }
 
 function add_chroot_distro_function_caller() {
-	cat <<EOF >>"$PREFIX/bin/$selected_distro"
-remove_distro_container() {
-    confirmation_y_or_n "Do you want to remove the distro\${R}it can't be undone" ans_remove_distro
-    case \$ans_remove_distro in
-        [yY]* )
-            print_success "Continuing with answer: \$ans_remove_distro"
-            sleep 0.2
-            if ! su -c "ls '$distro_path'" >/dev/null 2>&1; then
-                chroot-distro uninstall "$selected_distro"
-                distro_file_list=(
-                    "$PREFIX/bin/pdrun"
-                    "$PREFIX/share/applications/pd_added"
-                    "$PREFIX/bin/add2menu"
-                    "$PREFIX/share/applications/add2menu.desktop"
-                    "$PREFIX/bin/$selected_distro"
-                )
-                for distro_file in "\${distro_file_list[@]}"; do
-                    if [[ -e "\$distro_file" ]]; then
-                        check_and_delete "\$distro_file"
-                    else
-                        print_failed "File does not exist: \$distro_file"
-                    fi
-                done
-                print_success "$selected_distro removed successfully"
-                print_to_config "distro_add_answer" "n"
-            else
-                print_failed "$selected_distro does not exist"
-            fi
-            ;;
-        [nN]* )
-            echo "\${R}[\${C}-\${R}]\${C} Skipping distro remove\${W}"
-            sleep 0.2
-            ;;
-        * )
-            print_failed "Invalid input, Please enter y or n"
-            ;;
-    esac
-}
+	cat <<-EOF >>"$TERMUX_PREFIX/bin/$selected_distro"
+		remove_distro_container() {
+		    confirmation_y_or_n "Do you want to remove the distro\${R}it can't be undone" ans_remove_distro
+		    case \$ans_remove_distro in
+		        [yY]* )
+		            print_success "Continuing with answer: \$ans_remove_distro"
+		            sleep 0.2
+		            if ! su -c "ls '$distro_path'" >/dev/null 2>&1; then
+		                chroot-distro uninstall "$selected_distro"
+		                distro_file_list=(
+		                    "$TERMUX_PREFIX/bin/pdrun"
+		                    "$TERMUX_PREFIX/share/applications/pd_added"
+		                    "$TERMUX_PREFIX/bin/add2menu"
+		                    "$TERMUX_PREFIX/share/applications/add2menu.desktop"
+		                    "$TERMUX_PREFIX/bin/$selected_distro"
+		                )
+		                for distro_file in "\${distro_file_list[@]}"; do
+		                    if [[ -e "\$distro_file" ]]; then
+		                        check_and_delete "\$distro_file"
+		                    else
+		                        print_failed "File does not exist: \$distro_file"
+		                    fi
+		                done
+		                print_success "$selected_distro removed successfully"
+		                print_to_config "distro_add_answer" "n"
+		            else
+		                print_failed "$selected_distro does not exist"
+		            fi
+		            ;;
+		        [nN]* )
+		            echo "\${R}[\${C}-\${R}]\${C} Skipping distro remove\${W}"
+		            sleep 0.2
+		            ;;
+		        * )
+		            print_failed "Invalid input, Please enter y or n"
+		            ;;
+		    esac
+		}
 
-function help_distro_container() {
-echo -e "
-$selected_distro install packagename     to install packages and add them to termux desktop\n
-$selected_distro remove packagename      to remove packages and also remove them to termux desktop\n
-$selected_distro update                  to update the Linux distro\n
-$selected_distro -r                      to login as root\n
-$selected_distro --remove                to complitely remove the Linux distro and delete all files and data related to it\n
-"
-}
-case \$1 in
---root|-r)
-    chroot-distro login \$(usb_bind_args) "${selected_distro}" $termux_home_link
-    ;;
---remove | --uninstall)
-    remove_distro_container
-    ;;
-install | in | ins)
-    shift
-    package_install_and_add_to_menu "\$@"
-    ;;
-remove | autoremove | rm)
-    command="\$1"
-    shift
-    package_uninstall_and_remove_from_menu "\$command" "\$@"
-    ;;
-update | up)
-    update_distro
-    ;;
---help|-h)
-    help_distro_container
-    ;;
-esac
-EOF
+		function help_distro_container() {
+			cat <<HELP_EOF
+			Usage: $selected_distro [OPTION] [ARGUMENT]
+
+			Options:
+			install <packagename>    - install packages and add them to termux desktop
+			remove <packagename>     - remove packages and also remove them to termux desktop
+			update                   - update the Linux distro
+			-r                       - login as root
+			--remove                 - complitely remove the Linux distro and delete all files and data related to it
+			HELP_EOF
+		}
+
+		case \$1 in
+		--root|-r)
+		    chroot-distro login \$(usb_bind_args) "${selected_distro}" $termux_home_link
+		    ;;
+		--remove | --uninstall)
+		    remove_distro_container
+		    ;;
+		install | in | ins)
+		    shift
+		    package_install_and_add_to_menu "\$@"
+		    ;;
+		remove | autoremove | rm)
+		    command="\$1"
+		    shift
+		    package_uninstall_and_remove_from_menu "\$command" "\$@"
+		    ;;
+		update | up)
+		    update_distro
+		    ;;
+		--help|-h)
+		    help_distro_container
+		    ;;
+		esac
+	EOF
 }
 
 function add_proot_distro_function_caller() {
-	cat <<EOF >>"$PREFIX/bin/$selected_distro"
-remove_distro_container() {
-    confirmation_y_or_n "Do you want to remove the distro\${R}it can't be undone" ans_remove_distro
-    case \$ans_remove_distro in
-        [yY]* )
-            print_success "Continuing with answer: \$ans_remove_distro"
-            sleep 0.2
-            if [[ -d $distro_path ]]; then
-                proot-distro remove "$selected_distro"
-                distro_file_list=(
-                    "$PREFIX/bin/pdrun"
-                    "$PREFIX/share/applications/pd_added"
-                    "$PREFIX/bin/add2menu"
-                    "$PREFIX/share/applications/add2menu.desktop"
-                    "$PREFIX/bin/$selected_distro"
-                )
-                for distro_file in "\${distro_file_list[@]}"; do
-                    if [[ -e "\$distro_file" ]]; then
-                        check_and_delete "\$distro_file"
-                    else
-                        print_failed "File does not exist: \$distro_file"
-                    fi
-                done
-                print_success "$selected_distro removed successfully"
-                print_to_config "distro_add_answer" "n"
-            else
-                print_failed "$selected_distro does not exist"
-            fi
-            ;;
-        [nN]* )
-            echo "\${R}[\${C}-\${R}]\${C} Skipping distro remove\${W}"
-            sleep 0.2
-            ;;
-        * )
-            print_failed "Invalid input, Please enter y or n"
-            ;;
-    esac
-}
+	cat <<-EOF >>"$TERMUX_PREFIX/bin/$selected_distro"
+		remove_distro_container() {
+		    confirmation_y_or_n "Do you want to remove the distro\${R}it can't be undone" ans_remove_distro
+		    case \$ans_remove_distro in
+		        [yY]* )
+		            print_success "Continuing with answer: \$ans_remove_distro"
+		            sleep 0.2
+		            if [[ -d $distro_path ]]; then
+		                proot-distro remove "$selected_distro"
+		                distro_file_list=(
+		                    "$TERMUX_PREFIX/bin/pdrun"
+		                    "$TERMUX_PREFIX/share/applications/pd_added"
+		                    "$TERMUX_PREFIX/bin/add2menu"
+		                    "$TERMUX_PREFIX/share/applications/add2menu.desktop"
+		                    "$TERMUX_PREFIX/bin/$selected_distro"
+		                )
+		                for distro_file in "\${distro_file_list[@]}"; do
+		                    if [[ -e "\$distro_file" ]]; then
+		                        check_and_delete "\$distro_file"
+		                    else
+		                        print_failed "File does not exist: \$distro_file"
+		                    fi
+		                done
+		                print_success "$selected_distro removed successfully"
+		                print_to_config "distro_add_answer" "n"
+		            else
+		                print_failed "$selected_distro does not exist"
+		            fi
+		            ;;
+		        [nN]* )
+		            echo "\${R}[\${C}-\${R}]\${C} Skipping distro remove\${W}"
+		            sleep 0.2
+		            ;;
+		        * )
+		            print_failed "Invalid input, Please enter y or n"
+		            ;;
+		    esac
+		}
 
-function help_distro_container() {
-echo -e "
-$selected_distro install packagename     to install packages and add them to termux desktop\n
-$selected_distro remove packagename      to remove packages and also remove them to termux desktop\n
-$selected_distro update                  to update the Linux distro\n
-$selected_distro -r                      to login as root\n
-$selected_distro --remove                to complitely remove the Linux distro and delete all files and data related to it\n
-"
-}
-case \$1 in
---root|-r)
-    proot-distro login \$(usb_bind_args) "$selected_distro" $termux_home_link
-    ;;
---remove | --uninstall)
-    remove_distro_container
-    ;;
-install | in | ins)
-    shift
-    package_install_and_add_to_menu "\$@"
-    ;;
-remove | autoremove | rm)
-    command="\$1"
-    shift
-    package_uninstall_and_remove_from_menu "\$command" "\$@"
-    ;;
-update | up)
-    update_distro
-    ;;
---help|-h)
-    help_distro_container
-    ;;
-esac
-EOF
+		function help_distro_container() {
+			cat <<HELP_EOF
+			Usage: $selected_distro [OPTION] [ARGUMENT]
+
+			Options:
+			install <packagename>    - install packages and add them to termux desktop
+			remove <packagename>     - remove packages and also remove them to termux desktop
+			update                   - update the Linux distro
+			-r                       - login as root
+			--remove                 - complitely remove the Linux distro and delete all files and data related to it
+			HELP_EOF
+		}
+
+		case \$1 in
+		--root|-r)
+		    proot-distro login \$(usb_bind_args) "$selected_distro" $termux_home_link
+		    ;;
+		--remove | --uninstall)
+		    remove_distro_container
+		    ;;
+		install | in | ins)
+		    shift
+		    package_install_and_add_to_menu "\$@"
+		    ;;
+		remove | autoremove | rm)
+		    command="\$1"
+		    shift
+		    package_uninstall_and_remove_from_menu "\$command" "\$@"
+		    ;;
+		update | up)
+		    update_distro
+		    ;;
+		--help|-h)
+		    help_distro_container
+		    ;;
+		esac
+	EOF
 }
 
 function add_distro_function_caller() {
@@ -1764,7 +1802,7 @@ function distro_create_app_installer() {
 		fedora_based_app_installer
 	fi
 	add_distro_function_caller
-	chmod +x "$PREFIX/bin/$selected_distro"
+	chmod +x "$TERMUX_PREFIX/bin/$selected_distro"
 
 }
 
@@ -1775,45 +1813,48 @@ function add_add_to_menu() {
 	banner
 	package_install_and_check "zenity"
 
-	check_and_create_directory "$PREFIX/share/applications/pd_added"
+	check_and_create_directory "$TERMUX_PREFIX/share/applications/pd_added"
 
-	check_and_create_directory "$PREFIX/share/applications/"
-	check_and_delete "$PREFIX/share/applications/add2menu.desktop"
-	check_and_delete "$HOME/Desktop/add2menu.desktop"
-	check_and_create_directory "$PREFIX/opt/add2menu"
-	download_file "$PREFIX/opt/add2menu/add2menu.py" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/add2menu/add2menu.py"
-	download_file "$PREFIX/opt/add2menu/add2menu_legacy" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/add2menu/add2menu_legacy"
-	download_file "$PREFIX/share/applications/org.sabamdarif.termux.add2menu.desktop" "https://raw.githubusercontent.com/sabamdarif/termux-desktop/refs/heads/main/add2menu/org.sabamdarif.termux.add2menu.desktop"
-	cp "$PREFIX/share/applications/org.sabamdarif.termux.add2menu.desktop" "$HOME/Desktop/"
-	chmod +x "$HOME/Desktop/org.sabamdarif.termux.add2menu.desktop"
-	chmod +x "$PREFIX/opt/add2menu/add2menu_legacy"
+	check_and_create_directory "$TERMUX_PREFIX/share/applications/"
+	check_and_delete "$TERMUX_PREFIX/share/applications/add2menu.desktop"
+	check_and_delete "$TERMUX_HOME/Desktop/add2menu.desktop"
+	check_and_create_directory "$TERMUX_PREFIX/opt/add2menu"
+	download_file "$TERMUX_PREFIX/opt/add2menu/add2menu.py" "$REPO_RAW_URL/refs/heads/$REPO_BRANCH_MAIN/add2menu/add2menu.py"
+	download_file "$TERMUX_PREFIX/opt/add2menu/add2menu_legacy" "$REPO_RAW_URL/refs/heads/$REPO_BRANCH_MAIN/add2menu/add2menu_legacy"
+	download_file "$TERMUX_PREFIX/share/applications/org.sabamdarif.termux.add2menu.desktop" "$REPO_RAW_URL/refs/heads/$REPO_BRANCH_MAIN/add2menu/org.sabamdarif.termux.add2menu.desktop"
+	cp "$TERMUX_PREFIX/share/applications/org.sabamdarif.termux.add2menu.desktop" "$TERMUX_HOME/Desktop/"
+	chmod +x "$TERMUX_HOME/Desktop/org.sabamdarif.termux.add2menu.desktop"
+	chmod +x "$TERMUX_PREFIX/opt/add2menu/add2menu_legacy"
 
-	cat <<EOF >"$PREFIX/bin/add2menu"
-#!/data/data/com.termux/files/usr/bin/bash
+	cat <<-EOF >"$TERMUX_PREFIX/bin/add2menu"
+		#!/data/data/com.termux/files/usr/bin/bash
 
-export distro_name="${selected_distro}"
-case \$1 in
-    --legacy)
-    ./data/data/com.termux/files/usr/opt/add2menu/add2menu_legacy
-    ;;
-    --legacy-nogpu)
-    /data/data/com.termux/files/usr/opt/add2menu/add2menu_legacy --nogpu
-    ;;
-    --help|-h)
-echo -e "
---legacy            To launch the old add2menu (uses zenity)
---legacy-nogpu      To launch the old add2menu without gpu acceleration (uses zenity)
---help,-h           To show help
-"
-    ;;
-    *)
-    python /data/data/com.termux/files/usr/opt/add2menu/add2menu.py
-    ;;
-esac
+		export distro_name="${selected_distro}"
+		case \$1 in
+		    --legacy)
+		    .$TERMUX_PREFIX/opt/add2menu/add2menu_legacy
+		    ;;
+		    --legacy-nogpu)
+		    $TERMUX_PREFIX/opt/add2menu/add2menu_legacy --nogpu
+		    ;;
+		    --help|-h)
+				cat <<HELP_EOF
+				Usage: add2menu [OPTION]
 
-EOF
+				Options:
+				--legacy           - launch the old add2menu (uses zenity)
+				--legacy-nogpu     - launch the old add2menu without gpu acceleration (uses zenity)
+				--help, -h         - show help
+				HELP_EOF
+			;;
+		    *)
+		    python $TERMUX_PREFIX/opt/add2menu/add2menu.py
+		    ;;
+		esac
 
-	chmod +x "$PREFIX/bin/add2menu"
+	EOF
+
+	chmod +x "$TERMUX_PREFIX/bin/add2menu"
 }
 
 #########################################################################
@@ -1825,10 +1866,10 @@ EOF
 function distro_app_launch_setup() {
 	if [[ "$enable_hw_acc" == "y" ]]; then
 
-		cat <<-EOF >"$PREFIX/bin/pdrun"
+		cat <<-EOF >"$TERMUX_PREFIX/bin/pdrun"
 			#!/data/data/com.termux/files/usr/bin/bash
 
-			source /data/data/com.termux/files/usr/etc/termux-desktop/common_functions
+			source $TERMUX_PREFIX/etc/termux-desktop/common_functions
 
 			usb_mounts() {
 			  local candidates seen="" media uuid acc
@@ -1904,7 +1945,7 @@ function distro_app_launch_setup() {
 		EOF
 
 		if [[ "$pd_useradd_answer" == "n" ]]; then
-			cat <<-EOF >>"$PREFIX/bin/pdrun"
+			cat <<-EOF >>"$TERMUX_PREFIX/bin/pdrun"
 				xhost + > /dev/null 2>&1
 
 				use_nogpu=false
@@ -1917,10 +1958,14 @@ function distro_app_launch_setup() {
 				      shift
 				      ;;
 				    --help|-h)
-				      echo "${G}Usage: pdrun [--nogpu] COMMAND${NC}"
-				      echo "${G}  --nogpu  Disable GPU acceleration${NC}"
-				      exit 0
-				      ;;
+						cat <<HELP_EOF
+						Usage: pdrun [--nogpu] COMMAND
+
+						Options:
+						--nogpu    - disable GPU acceleration
+						HELP_EOF
+						exit 0
+						;;
 				    *)
 				      args+=("\$1")
 				      shift
@@ -1939,7 +1984,7 @@ function distro_app_launch_setup() {
 				"${selected_distro_type}"-distro login \$(usb_bind_args) \$user_arg "$selected_distro" --shared-tmp $termux_home_link -- env DISPLAY=\$(echo \$DISPLAY) XDG_RUNTIME_DIR=\${TMPDIR} \$gpu_env sh -lc 'umask 022; exec "\$@"' _ "\${args[@]}"
 			EOF
 		else
-			cat <<-EOF >>"$PREFIX/bin/pdrun"
+			cat <<-EOF >>"$TERMUX_PREFIX/bin/pdrun"
 				xhost + > /dev/null 2>&1
 
 				use_root=false
@@ -1957,11 +2002,15 @@ function distro_app_launch_setup() {
 				      shift
 				      ;;
 				    --help|-h)
-				      echo "${G}Usage: pdrun [--root] [--nogpu] COMMAND${NC}"
-				      echo "${G}  --root   Run as root user${NC}"
-				      echo "${G}  --nogpu  Disable GPU acceleration${NC}"
-				      exit 0
-				      ;;
+						cat <<HELP_EOF
+						Usage: pdrun [--root] [--nogpu] COMMAND
+
+						Options:
+						--root     - run as root user
+						--nogpu    - disable GPU acceleration
+						HELP_EOF
+						exit 0
+					;;
 				    *)
 				      args+=("\$1")
 				      shift
@@ -1987,10 +2036,10 @@ function distro_app_launch_setup() {
 
 	elif [[ "$enable_hw_acc" == "n" ]]; then
 
-		cat <<-EOF >"$PREFIX/bin/pdrun"
+		cat <<-EOF >"$TERMUX_PREFIX/bin/pdrun"
 			#!/data/data/com.termux/files/usr/bin/bash
 
-			source /data/data/com.termux/files/usr/etc/termux-desktop/common_functions
+			source $TERMUX_PREFIX/etc/termux-desktop/common_functions
 
 			usb_mounts() {
 			  local candidates seen="" media uuid acc
@@ -2066,7 +2115,7 @@ function distro_app_launch_setup() {
 		EOF
 
 		if [[ "$pd_useradd_answer" == "n" ]]; then
-			cat <<-EOF >>"$PREFIX/bin/pdrun"
+			cat <<-EOF >>"$TERMUX_PREFIX/bin/pdrun"
 				xhost + > /dev/null 2>&1
 				case \$1 in
 				--help|-h)
@@ -2078,15 +2127,19 @@ function distro_app_launch_setup() {
 				esac
 			EOF
 		else
-			cat <<-EOF >>"$PREFIX/bin/pdrun"
+			cat <<-EOF >>"$TERMUX_PREFIX/bin/pdrun"
 				xhost + > /dev/null 2>&1
 				case \$1 in
 				--root)
 				"${selected_distro_type}"-distro login \$(usb_bind_args) --user root "$selected_distro" --shared-tmp $termux_home_link -- env DISPLAY=\$(echo \$DISPLAY) XDG_RUNTIME_DIR=\${TMPDIR} sh -lc 'umask 022; exec "\$@"' _ "\${@:2}"
 				;;
 				--help|-h)
-					echo "${G}Usage: pdrun [--root] COMMAND${NC}"
-					echo "${G}  --root   Run as root user${NC}"
+					cat <<HELP_EOF
+					Usage: pdrun [--root] COMMAND
+
+					Options:
+					--root    - run as root user
+					HELP_EOF
 				;;
 				*)
 				"${selected_distro_type}"-distro login \$(usb_bind_args) --user "$final_user_name" "$selected_distro" --shared-tmp $termux_home_link -- env DISPLAY=\$(echo \$DISPLAY) XDG_RUNTIME_DIR=\${TMPDIR} sh -lc 'umask 022; exec "\$@"' _ "\$@"
@@ -2096,7 +2149,7 @@ function distro_app_launch_setup() {
 		fi
 	fi
 
-	chmod +x "$PREFIX/bin/pdrun"
+	chmod +x "$TERMUX_PREFIX/bin/pdrun"
 }
 
 #########################################################################
@@ -2175,10 +2228,10 @@ libdrm mesa-libgbm libxcomposite libxdamage libxcb libxshmfence"
 	banner
 	print_msg "Installing some distro specfic required packages"
 	pd_setup_some_required_pack=$(
-		cat <<EOF
-pd_package_install_and_check "$some_required_pack_list"
-check_and_delete "some_required_pack.sh"
-EOF
+		cat <<-EOF
+			pd_package_install_and_check "$some_required_pack_list"
+			check_and_delete "some_required_pack.sh"
+		EOF
 	)
 	create_shell_script "$save_path/some_required_pack.sh" "$pd_setup_some_required_pack"
 	"${selected_distro_type}"-distro login "$selected_distro" -- /bin/bash -c 'bash /root/some_required_pack.sh'
@@ -2216,7 +2269,7 @@ function install_distro_container() {
 #########################################################################
 
 function chroot_disro_container_install_check() {
-	if [[ -f "$PREFIX/bin/$selected_distro" ]] && su -c "ls /data/local/chroot-distro/installed-rootfs/$selected_distro" &>/dev/null; then
+	if [[ -f "$TERMUX_PREFIX/bin/$selected_distro" ]] && su -c "ls /data/local/chroot-distro/installed-rootfs/$selected_distro" &>/dev/null; then
 		echo
 		print_success "${BOLD} $selected_distro container setup successfully"
 	else
@@ -2227,7 +2280,7 @@ function chroot_disro_container_install_check() {
 			echo
 			print_msg "Trying again... (Attempt $((retry_count + 1)) of $max_retries)"
 			install_distro_container
-			if [[ -f "$PREFIX/bin/$selected_distro" ]] && su -c "ls /data/local/chroot-distro/installed-rootfs/$selected_distro" &>/dev/null; then
+			if [[ -f "$TERMUX_PREFIX/bin/$selected_distro" ]] && su -c "ls /data/local/chroot-distro/installed-rootfs/$selected_distro" &>/dev/null; then
 				echo
 				print_success "${BOLD} $selected_distro container setup successfully"
 				break
@@ -2242,7 +2295,7 @@ function chroot_disro_container_install_check() {
 }
 
 function proot_disro_container_install_check() {
-	if [[ -f "$PREFIX/bin/$selected_distro" ]] && [[ -d "$PREFIX/var/lib/proot-distro/installed-rootfs/$selected_distro" ]]; then
+	if [[ -f "$TERMUX_PREFIX/bin/$selected_distro" ]] && [[ -d "$TERMUX_PREFIX/var/lib/proot-distro/installed-rootfs/$selected_distro" ]]; then
 		echo
 		print_success "${BOLD} $selected_distro container setup successfully"
 	else
@@ -2253,7 +2306,7 @@ function proot_disro_container_install_check() {
 			echo
 			print_msg "Trying again... (Attempt $((retry_count + 1)) of $max_retries)"
 			install_distro_container
-			if [[ -f "$PREFIX/bin/$selected_distro" ]] && [[ -d "$PREFIX/var/lib/proot-distro/installed-rootfs/$selected_distro" ]]; then
+			if [[ -f "$TERMUX_PREFIX/bin/$selected_distro" ]] && [[ -d "$TERMUX_PREFIX/var/lib/proot-distro/installed-rootfs/$selected_distro" ]]; then
 				echo
 				print_success "${BOLD} $selected_distro container setup successfully"
 				break

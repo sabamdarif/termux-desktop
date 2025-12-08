@@ -23,8 +23,10 @@
 # Repository : https://github.com/sabamdarif/termux-desktop
 # Thanks to  : https://github.com/Gogh-Co/Gogh
 
-COLORS_FILE="$HOME/.termux/colors.properties"
-BACKUP_FILE="$HOME/.termux/colors.properties.backup.$(date +%Y%m%d_%H%M%S)"
+readonly TERMUX_HOME=${HOME:-/data/data/com.termux/files/home}
+
+COLORS_FILE="$TERMUX_HOME/.termux/colors.properties"
+BACKUP_FILE="$TERMUX_HOME/.termux/colors.properties.backup.$(date +%Y%m%d_%H%M%S)"
 
 # Create backup of current colors
 backup_colors() {
@@ -9674,7 +9676,7 @@ main() {
 	fi
 
 	# Create .termux directory if needed
-	[[ ! -d "$HOME/.termux" ]] && mkdir -p "$HOME/.termux"
+	[[ ! -d "$TERMUX_HOME/.termux" ]] && mkdir -p "$TERMUX_HOME/.termux"
 
 	# Backup and set trap
 	backup_colors

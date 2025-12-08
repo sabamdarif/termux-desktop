@@ -32,9 +32,9 @@ function check_termux() {
 function hw_install_required_packages() {
 	banner
 	print_msg "Remove old driver packages and files if installed..."
-	check_and_delete "/data/data/com.termux/files/usr/opt/angle-android/vulkan/libEGL.so.1"
-	check_and_delete "/data/data/com.termux/files/usr/opt/angle-android/vulkan/libGLESv1_CM.so.1"
-	check_and_delete "/data/data/com.termux/files/usr/opt/angle-android/vulkan/libGLESv2.so.2"
+	check_and_delete "$TERMUX_PREFIX/opt/angle-android/vulkan/libEGL.so.1"
+	check_and_delete "$TERMUX_PREFIX/opt/angle-android/vulkan/libGLESv1_CM.so.1"
+	check_and_delete "$TERMUX_PREFIX/opt/angle-android/vulkan/libGLESv2.so.2"
 	package_check_and_remove "mesa-vulkan-icd-wrapper virglrenderer virglrenderer-android angle-android mesa-vulkan-icd-freedreno mesa-zink-vulkan-icd-freedreno mesa-vulkan-icd-freedreno-dri3"
 
 	case "$exp_termux_vulkan_hw_answer" in
@@ -42,12 +42,12 @@ function hw_install_required_packages() {
 		if [[ "$termux_arch" == "aarch64" || "$termux_arch" == "arm" ]]; then
 			print_msg "${BOLD}Installing vulkan-wrapper-android Driver..."
 			if [[ "$PACKAGE_MANAGER" == "pacman" ]]; then
-				download_file "vulkan-wrapper-android.pkg.tar.xz" "https://github.com/sabamdarif/termux-desktop/releases/download/vulkan-wrapper-android_25.0.0-2/vulkan-wrapper-android-25.0.0-2-${termux_arch}.pkg.tar.xz"
+				download_file "vulkan-wrapper-android.pkg.tar.xz" "https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/download/vulkan-wrapper-android_25.0.0-2/vulkan-wrapper-android-25.0.0-2-${termux_arch}.pkg.tar.xz"
 				pacman -Syu --needed
 				pacman -U --noconfirm vulkan-wrapper-android.pkg.tar.xz
 				check_and_delete "vulkan-wrapper-android.pkg.tar.xz"
 			else
-				download_file "vulkan-wrapper-android.deb" "https://github.com/sabamdarif/termux-desktop/releases/download/vulkan-wrapper-android_25.0.0-2/vulkan-wrapper-android_25.0.0-2_${termux_arch}.deb"
+				download_file "vulkan-wrapper-android.deb" "https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/download/vulkan-wrapper-android_25.0.0-2/vulkan-wrapper-android_25.0.0-2_${termux_arch}.deb"
 				dpkg --configure -a
 				apt --fix-broken install -y
 				apt install ./vulkan-wrapper-android.deb -y
@@ -62,8 +62,8 @@ function hw_install_required_packages() {
 		if [[ "$termux_arch" == "aarch64" ]]; then
 			print_msg "${BOLD}Installing vulkan-wrapper-android (leegao's fork) Driver..."
 			package_install_and_check "libandroid-shmem libc++ libdrm libx11 libxcb libxshmfence libwayland vulkan-loader-generic zlib zstd"
-			download_file "bionic-vulkan-wrapper.zip" "https://github.com/sabamdarif/termux-desktop/releases/download/bionic-vulkan-wrapper-0.0.5r5/vulkan-wrapper-android-leegaos-fork-${termux_arch}.zip"
-			unzip -o bionic-vulkan-wrapper.zip -d "$PREFIX/"
+			download_file "bionic-vulkan-wrapper.zip" "https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/download/bionic-vulkan-wrapper-0.0.5r5/vulkan-wrapper-android-leegaos-fork-${termux_arch}.zip"
+			unzip -o bionic-vulkan-wrapper.zip -d "$TERMUX_PREFIX/"
 			check_and_delete "bionic-vulkan-wrapper.zip"
 		else
 			print_failed "vulkan-wrapper-android Driver isn't supported on your device"
@@ -79,12 +79,12 @@ function hw_install_required_packages() {
 		if [[ "$termux_arch" == "aarch64" || "$termux_arch" == "arm" ]]; then
 			print_msg "${BOLD}Installing freedreno kgsl..."
 			if [[ "$PACKAGE_MANAGER" == "pacman" ]]; then
-				download_file "mesa-vulkan-icd-freedreno.pkg.tar.xz" "https://github.com/sabamdarif/termux-desktop/releases/download/freedreno-kgsl-25.1/mesa-vulkan-icd-freedreno_25.1.1-2_${termux_arch}.pkg.tar.xz"
+				download_file "mesa-vulkan-icd-freedreno.pkg.tar.xz" "https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/download/freedreno-kgsl-25.1/mesa-vulkan-icd-freedreno_25.1.1-2_${termux_arch}.pkg.tar.xz"
 				pacman -Syu --needed
 				pacman -U --noconfirm mesa-vulkan-icd-freedreno.pkg.tar.xz
 				check_and_delete "mesa-vulkan-icd-freedreno.pkg.tar.xz"
 			else
-				download_file "mesa-vulkan-icd-freedreno.deb" "https://github.com/sabamdarif/termux-desktop/releases/download/freedreno-kgsl-25.1/mesa-vulkan-icd-freedreno_25.1.1-2_${termux_arch}.deb"
+				download_file "mesa-vulkan-icd-freedreno.deb" "https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/download/freedreno-kgsl-25.1/mesa-vulkan-icd-freedreno_25.1.1-2_${termux_arch}.deb"
 				dpkg --configure -a
 				apt --fix-broken install -y
 				apt install ./mesa-vulkan-icd-freedreno.deb -y
@@ -120,16 +120,16 @@ function hw_install_required_packages() {
 	fi
 
 	if [[ "$termux_hw_answer" == "virgl_vulkan" ]]; then
-		if [[ ! -f /data/data/com.termux/files/usr/opt/angle-android/vulkan/libEGL.so.1 ]]; then
-			ln -s /data/data/com.termux/files/usr/opt/angle-android/vulkan/libEGL_angle.so /data/data/com.termux/files/usr/opt/angle-android/vulkan/libEGL.so.1
+		if [[ ! -f $TERMUX_PREFIX/opt/angle-android/vulkan/libEGL.so.1 ]]; then
+			ln -s "$TERMUX_PREFIX/opt/angle-android/vulkan/libEGL_angle.so" "$TERMUX_PREFIX/opt/angle-android/vulkan/libEGL.so.1"
 		fi
 
-		if [[ ! -f /data/data/com.termux/files/usr/opt/angle-android/vulkan/libGLESv1_CM.so.1 ]]; then
-			ln -s /data/data/com.termux/files/usr/opt/angle-android/vulkan/libGLESv1_CM_angle.so /data/data/com.termux/files/usr/opt/angle-android/vulkan/libGLESv1_CM.so.1
+		if [[ ! -f $TERMUX_PREFIX/opt/angle-android/vulkan/libGLESv1_CM.so.1 ]]; then
+			ln -s "$TERMUX_PREFIX/opt/angle-android/vulkan/libGLESv1_CM_angle.so" "$TERMUX_PREFIX/opt/angle-android/vulkan/libGLESv1_CM.so.1"
 		fi
 
-		if [[ ! -f /data/data/com.termux/files/usr/opt/angle-android/vulkan/libGLESv2.so.2 ]]; then
-			ln -s /data/data/com.termux/files/usr/opt/angle-android/vulkan/libGLESv2_angle.so /data/data/com.termux/files/usr/opt/angle-android/vulkan/libGLESv2.so.2
+		if [[ ! -f $TERMUX_PREFIX/opt/angle-android/vulkan/libGLESv2.so.2 ]]; then
+			ln -s "$TERMUX_PREFIX/opt/angle-android/vulkan/libGLESv2_angle.so" "$TERMUX_PREFIX/opt/angle-android/vulkan/libGLESv2.so.2"
 		fi
 	fi
 }
@@ -161,7 +161,7 @@ function setup_hw_environment_variables() {
 		pd_hw_method="${hw_method}"
 		;;
 	"virgl_vulkan")
-		set_to_export="MESA_NO_ERROR=1 MESA_GL_VERSION_OVERRIDE=4.1COMPAT MESA_GLES_VERSION_OVERRIDE=3.2 MESA_GLSL_VERSION_OVERRIDE=410 LIBGL_DRI3_DISABLE=1 EPOXY_USE_ANGLE=1 LD_LIBRARY_PATH=/data/data/com.termux/files/usr/opt/angle-android/vulkan"
+		set_to_export="MESA_NO_ERROR=1 MESA_GL_VERSION_OVERRIDE=4.1COMPAT MESA_GLES_VERSION_OVERRIDE=3.2 MESA_GLSL_VERSION_OVERRIDE=410 LIBGL_DRI3_DISABLE=1 EPOXY_USE_ANGLE=1 LD_LIBRARY_PATH=$TERMUX_PREFIX/opt/angle-android/vulkan"
 		hw_method="GALLIUM_DRIVER=virpipe"
 		initialize_server_method="virgl_test_server --use-egl-surfaceless --use-gles"
 		pd_hw_method="${hw_method}"
@@ -243,14 +243,14 @@ function setup_gpu_specific_environment_variables() {
 			icd_cpu_arch="armv7"
 		fi
 		if [[ "$GPU_NAME" == "adreno" ]]; then
-			gpu_environment_variable="VK_ICD_FILENAMES=$PREFIX/share/vulkan/icd.d/wrapper_icd.${icd_cpu_arch}.json MESA_SHADER_CACHE=512MB MESA_SHADER_CACHE_DISABLE=false vblank_mode=0"
+			gpu_environment_variable="VK_ICD_FILENAMES=$TERMUX_PREFIX/share/vulkan/icd.d/wrapper_icd.${icd_cpu_arch}.json MESA_SHADER_CACHE=512MB MESA_SHADER_CACHE_DISABLE=false vblank_mode=0"
 		elif [[ "$GPU_NAME" == "mali" ]]; then
-			gpu_environment_variable="VK_ICD_FILENAMES=$PREFIX/share/vulkan/icd.d/wrapper_icd.${icd_cpu_arch}.json MESA_VK_WSI_PRESENT_MODE=mailbox MESA_VK_WSI_DEBUG=blit MESA_SHADER_CACHE=512MB MESA_SHADER_CACHE_DISABLE=false vblank_mode=0"
+			gpu_environment_variable="VK_ICD_FILENAMES=$TERMUX_PREFIX/share/vulkan/icd.d/wrapper_icd.${icd_cpu_arch}.json MESA_VK_WSI_PRESENT_MODE=mailbox MESA_VK_WSI_DEBUG=blit MESA_SHADER_CACHE=512MB MESA_SHADER_CACHE_DISABLE=false vblank_mode=0"
 		elif [[ "$GPU_NAME" == "xclipse" ]]; then
-			gpu_environment_variable="VK_ICD_FILENAMES=$PREFIX/share/vulkan/icd.d/wrapper_icd.${icd_cpu_arch}.json vblank_mode=0"
+			gpu_environment_variable="VK_ICD_FILENAMES=$TERMUX_PREFIX/share/vulkan/icd.d/wrapper_icd.${icd_cpu_arch}.json vblank_mode=0"
 		else
 			# shellcheck disable=SC2034
-			gpu_environment_variable="VK_ICD_FILENAMES=$PREFIX/share/vulkan/icd.d/wrapper_icd.${icd_cpu_arch}.json MESA_SHADER_CACHE=512MB MESA_SHADER_CACHE_DISABLE=false vblank_mode=0"
+			gpu_environment_variable="VK_ICD_FILENAMES=$TERMUX_PREFIX/share/vulkan/icd.d/wrapper_icd.${icd_cpu_arch}.json MESA_SHADER_CACHE=512MB MESA_SHADER_CACHE_DISABLE=false vblank_mode=0"
 		fi
 	fi
 
@@ -280,17 +280,17 @@ function setup_turnip_proot() {
 	TURNIP_MESA_VERSION="25.3.1"
 
 	install_turnip_related_packs=$(
-		cat <<EOF
-pd_package_install_and_check "$turnip_related_packs"
-check_and_delete "install_turnip_related_packs.sh"
-EOF
+		cat <<-EOF
+			pd_package_install_and_check "$turnip_related_packs"
+			check_and_delete "install_turnip_related_packs.sh"
+		EOF
 	)
 	create_shell_script "$save_path/install_turnip_related_packs.sh" "$install_turnip_related_packs"
 	"${selected_distro_type}"-distro login "$selected_distro" -- /bin/bash -c 'bash install_turnip_related_packs.sh'
 
-	download_file "$HOME/turnip.zip" "https://github.com/sabamdarif/termux-desktop/releases/download/turnip-${TURNIP_MESA_VERSION}/turnip-${TURNIP_MESA_VERSION}-${termux_arch}.zip"
-	"${selected_distro_type}"-distro login "$selected_distro" -- /bin/bash -c "unzip -o $HOME/turnip.zip -d /usr"
-	check_and_delete "$HOME/turnip.zip"
+	download_file "$TERMUX_HOME/turnip.zip" "https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/download/turnip-${TURNIP_MESA_VERSION}/turnip-${TURNIP_MESA_VERSION}-${termux_arch}.zip"
+	"${selected_distro_type}"-distro login "$selected_distro" -- /bin/bash -c "unzip -o $TERMUX_HOME/turnip.zip -d /usr"
+	check_and_delete "$TERMUX_HOME/turnip.zip"
 }
 
 check_termux

@@ -85,12 +85,11 @@
 > **If you are in android 12 or higher then first disable Phantom Process Killer Guide:-** [Here](https://github.com/atamshkai/Phantom-Process-Killer)
 
 ```bash
-curl -Lf https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop -o setup-termux-desktop && chmod +x setup-termux-desktop && ./setup-termux-desktop
+bash <(curl -Lf https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop)
 ```
 
 > [!TIP]
-> You can also do a lite install which will not install all the optional packages.
-> To do that run the installer like this `LITE=true ./setup-termux-desktop` / `LITE=1  ./setup-termux-desktop`.
+> You can also do a lite install which will not install all the optional packages. To do that first run `export LITE=true` / `export LITE=1` then run the installer
 
 ##### 4. Usage Instructions:
 

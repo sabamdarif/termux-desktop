@@ -29,6 +29,7 @@ C="$(printf '\033[1;36m')"
 NC="$(printf '\033[0m')"
 
 FONT_TO_DOWNLOAD=$1
+readonly TERMUX_HOME=${HOME:-/data/data/com.termux/files/home}
 
 function print_msg() {
 	local msg
@@ -249,7 +250,7 @@ function get_latest_release() {
 		sed -E 's/.*"([^"]+)".*/\1/'
 }
 
-cd "$HOME" || exit 1
+cd "$TERMUX_HOME" || exit 1
 clear
 
 function create_font_select_menu() {
@@ -305,22 +306,22 @@ function download_and_install_font() {
 		sel_base_name="$FONT_TO_DOWNLOAD"
 	fi
 	print_msg "Installing $sel_base_name Font..."
-	download_and_extract "https://github.com/ryanoasis/nerd-fonts/releases/download/${latest_nf_version}/${sel_base_name}.tar.xz" "$HOME/.fonts"
+	download_and_extract "https://github.com/ryanoasis/nerd-fonts/releases/download/${latest_nf_version}/${sel_base_name}.tar.xz" "$TERMUX_HOME/.fonts"
 
-	nerd_font_file=$(find "$HOME/.fonts" -type f \( -iname "${sel_base_name}*NerdFont-Regular.ttf" -o -iname "${sel_base_name}*NerdFont-Regular.otf" \) | head -n1)
+	nerd_font_file=$(find "$TERMUX_HOME/.fonts" -type f \( -iname "${sel_base_name}*NerdFont-Regular.ttf" -o -iname "${sel_base_name}*NerdFont-Regular.otf" \) | head -n1)
 
 	if [[ -z "$nerd_font_file" ]]; then
-		nerd_font_file=$(find "$HOME/.fonts" -type f -iname "*NerdFont*" | head -n1)
+		nerd_font_file=$(find "$TERMUX_HOME/.fonts" -type f -iname "*NerdFont*" | head -n1)
 	fi
 
-	check_and_delete "$HOME/.fonts/README.md"
-	check_and_delete "$HOME/.fonts/LICENSE"
-	check_and_delete "$HOME/.fonts/LICENSE.txt"
+	check_and_delete "$TERMUX_HOME/.fonts/README.md"
+	check_and_delete "$TERMUX_HOME/.fonts/LICENSE"
+	check_and_delete "$TERMUX_HOME/.fonts/LICENSE.txt"
 
 	if [[ -n "$nerd_font_file" ]]; then
-		check_and_create_directory "$HOME/.termux"
-		check_and_delete "$HOME/.termux/font.ttf"
-		cp "$nerd_font_file" "$HOME/.termux/font.ttf"
+		check_and_create_directory "$TERMUX_HOME/.termux"
+		check_and_delete "$TERMUX_HOME/.termux/font.ttf"
+		cp "$nerd_font_file" "$TERMUX_HOME/.termux/font.ttf"
 		fc-cache -f
 	else
 		print_failed "Could not locate a NerdFont-Regular file for ${sel_base_name}."
