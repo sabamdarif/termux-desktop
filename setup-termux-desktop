@@ -3179,6 +3179,8 @@ function setup_vncstart_cmd() {
 
 			source $TERMUX_PREFIX/etc/termux-desktop/common_functions
 
+			initialize_server_cmd="${initialize_server_method}"
+
 			# This code block is taken from:- https://github.com/termux/proot-distro/blob/master/proot-distro.sh#L172C1-L184C1
 			TRACER_PID=\$(grep TracerPid "/proc/\$\$/status" | cut -d \$'\t' -f 2)
 			if [ "\$TRACER_PID" != 0 ]; then
@@ -3242,9 +3244,11 @@ function setup_vncstart_cmd() {
 			            echo "[☓] Invalid option: \$1"
 			            show_vncstart_help
 			        else
-			            export ${set_to_export}
-			            ${initialize_server_method} &
-			            env XDG_CONFIG_DIRS=$TERMUX_PREFIX/etc/xdg $hw_method vncserver
+			            export ${set_to_export} ${hw_method}
+			            if [[ -n "\${initialize_server_cmd// /}" ]]; then
+							eval "\$initialize_server_cmd" &
+						fi
+			            env XDG_CONFIG_DIRS=$TERMUX_PREFIX/etc/xdg vncserver
 			        fi
 			        ;;
 			esac
@@ -3439,6 +3443,8 @@ function setup_tx11start_cmd() {
 
 			source $TERMUX_PREFIX/etc/termux-desktop/common_functions
 
+			initialize_server_cmd="${initialize_server_method}"
+
 			# This code block is taken from:- https://github.com/termux/proot-distro/blob/master/proot-distro.sh#L172C1-L184C1
 			TRACER_PID=\$(grep TracerPid "/proc/\$\$/status" | cut -d \$'\t' -f 2)
 			if [ "\$TRACER_PID" != 0 ]; then
@@ -3536,10 +3542,12 @@ function setup_tx11start_cmd() {
 			    # Set environment variables if NOT using --nogpu
 			    if ! \$use_nogpu; then
 			      export ${set_to_export}
-			      if \$use_debug; then
-			        ${initialize_server_method} &
-			      else
-			        ${initialize_server_method} >/dev/null 2>&1 &
+			      if [[ -n "\${initialize_server_cmd// /}" ]]; then
+			        if \$use_debug; then
+			          eval "\$initialize_server_cmd" &
+			        else
+			          eval "\$initialize_server_cmd" >/dev/null 2>&1 &
+			        fi
 			      fi
 			      export ${gpu_environment_variable} ${hw_method}
 			  else
@@ -5596,11 +5604,6 @@ function some_fixes() {
 	fi
 	# fix blank export in tx11start
 	sed -i '/^export\s*$/d' "$TERMUX_PREFIX/bin/tx11start"
-	# tx11start and vncstart
-	if [[ "$termux_hw_answer" == "mesa_freedreno" ]] || [[ "$termux_hw_answer" == "mesa_zink_freedreno" ]] || [[ "$termux_hw_answer" == "freedreno_kgsl" ]] || [[ $termux_hw_answer == "zink_with_mesa" ]] || [[ $termux_hw_answer == "zink_with_mesa_zink" ]]; then
-		sed -i "/if ! \$use_nogpu; then/,/fi/ {/if \$use_debug; then/,/fi/d}" "$TERMUX_PREFIX/bin/tx11start"
-		sed -i "s/^[[:space:]]*&[[:space:]]*$/ /" "$TERMUX_PREFIX/bin/vncstart"
-	fi
 
 	if [[ "$exp_termux_vulkan_hw_answer" != "skip" ]]; then
 		disable_vblank_mode
