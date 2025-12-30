@@ -53,6 +53,17 @@
 - **termux-nf**: A simple script to install nerd font in termux.
     - Ex. just run `termux-nf` and chose from the menu or run `termux-nf FONT_NAME` and it will install that font.
 
+#### :magic_wand:4.Other tweaks:-
+
+- Undo/Redo in ZSH:- `CTRL + Z` to undo & `CTRL + y` to redo
+- Open the current buffer in your `$EDITOR` (e.g., neovim) Press `Ctrl+X followed by `Ctrl+E` to trigger
+- Magic Space:- Expands history expressions like `!!` or `!$` when you press space
+- enable zmv (Advanced Batch Rename/Move):-
+    - `zmv '(*).log' '$1.txt'` Rename all .log to .txt
+    - `zmv -w '*.log' '*.txt'` Same thing, simpler syntax
+    - `zmv -n '(*).log' '$1.txt'` Dry run (preview changes)
+    - `zmv -i '(*).log' '$1.txt'` Interactive mode (confirm each)
+
 ---
 
 ## :hammer_and_wrench: Openbox Keybindings Cheat Sheet

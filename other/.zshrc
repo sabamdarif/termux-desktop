@@ -9,6 +9,54 @@ setopt AUTO_CD
 # Turn off "no match" errors
 setopt nonomatch
 
+# -------------------------------------------
+# Edit Command Buffer
+# -------------------------------------------
+# Open the current command in your $EDITOR (e.g., neovim)
+# Press Ctrl+X followed by Ctrl+E to trigger
+autoload -Uz edit-command-line
+zle -N edit-command-line
+bindkey '^X^E' edit-command-line
+
+# -------------------------------------------
+# Undo in ZSH
+# -------------------------------------------
+# Press Ctrl+z to undo
+bindkey '^Z' undo
+# Redo widget exists but has no default binding:
+bindkey '^Y' redo
+
+# -------------------------------------------
+# Magic Space - Expand History
+# -------------------------------------------
+# Expands history expressions like !! or !$ when you press space
+bindkey ' ' magic-space
+
+# -------------------------------------------
+# zmv - Advanced Batch Rename/Move
+# -------------------------------------------
+# Enable zmv
+autoload -Uz zmv
+
+# Usage examples:
+# zmv '(*).log' '$1.txt'           # Rename .log to .txt
+# zmv -w '*.log' '*.txt'           # Same thing, simpler syntax
+# zmv -n '(*).log' '$1.txt'        # Dry run (preview changes)
+# zmv -i '(*).log' '$1.txt'        # Interactive mode (confirm each)
+
+# -------------------------------------------
+# Custom Widgets
+# -------------------------------------------
+
+# # Copy current command buffer to clipboard
+# function copy-buffer-to-clipboard() {
+#   echo -n "$BUFFER" | xclip
+#   zle -M "Copied to clipboard"
+# }
+#
+# zle -N copy-buffer-to-clipboard
+# bindkey '^X^C' copy-buffer-to-clipboard
+
 # -----------------------------------------------------------------------------
 # ZINIT PLUGIN MANAGER INSTALLATION
 # -----------------------------------------------------------------------------
