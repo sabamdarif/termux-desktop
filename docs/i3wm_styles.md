@@ -6,9 +6,9 @@
 
 ## 1. Gruvbox Minimal:
 
-### Keybord shortcuts:- [Here](https://github.com/sabamdarif/termux-desktop/blob/main/docs/see-more.md#i3-keybindings-cheat-sheet)
+### Keyboard shortcuts: [Here](https://github.com/sabamdarif/termux-desktop/blob/main/docs/see-more.md#i3-keybindings-cheat-sheet)
 
-> Inspired from [nurmuhammedjoy/.dotfile](https://github.com/nurmuhammedjoy/.dotfile)
+> Inspired by [nurmuhammedjoy/.dotfile](https://github.com/nurmuhammedjoy/.dotfile)
 
 > My modifications to his style
 
@@ -17,7 +17,7 @@
 Theme Used:
 <br>
 
-- GTK Theme:- [Gruvbox-GTK-Theme](https://github.com/Fausto-Korpsvart/Gruvbox-GTK-Theme)
+- GTK Theme: [Gruvbox-GTK-Theme](https://github.com/Fausto-Korpsvart/Gruvbox-GTK-Theme)
 
 </b>
 </details>

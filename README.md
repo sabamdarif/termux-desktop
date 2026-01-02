@@ -26,9 +26,9 @@
 - :package: **Package Management:**
     - APT (Termux's default and recommended)
     - [PACMAN](https://youtu.be/ditNvG5Nxj0) (pacman may be buggy, not well tested)
-- :shopping: **App Store:** A appstore to install apps
+- :shopping: **App Store:** An appstore to install apps
 - :package: **Container** It lets you use a proot/chroot distro as a container to install more apps than Termux normally supports
-- And a lot more, just chose the custom install option during the setup and see what you can do
+- And a lot more, just choose the custom install option during the setup and see what you can do
 
 ---
 
@@ -36,7 +36,7 @@
 
 <div align="center">
 
-**:package: [Distro Containers](/docs/proot-container.md) • :mechanical_arm: [Hardware Acceleration](/docs/hw-acceleration.md) • :wine_glass:[Wine](/docs/wine.md#wine_glasslearn-about-wine) • :bulb: [Others](/docs/see-more.md)**
+**:package: [Distro Containers](/docs/proot-container.md) • :mechanical_arm: [Hardware Acceleration](/docs/hw-acceleration.md) • :wine_glass: [Wine](/docs/wine.md#wine_glasslearn-about-wine) • :bulb: [Others](/docs/see-more.md)**
 
 </div>
 
@@ -47,7 +47,7 @@
 ##### 1. Ensure Requirements Are Met:
 
 > [!NOTE]
-> **This Only Works On Termux From Github Or Fdroid.**
+> **This Only Works On Termux From GitHub Or F-Droid.**
 > **Avoid using Termux from Google Play that doesn't work due to API limitations.**
 
 - Android 8+ device
@@ -82,14 +82,14 @@
 
 > [!IMPORTANT]
 > **Fresh installations are recommended for best results.**
-> **If you are in android 12 or higher then first disable Phantom Process Killer Guide:-** [Here](https://github.com/atamshkai/Phantom-Process-Killer)
+> **If you are on Android 12 or higher, first disable Phantom Process Killer Guide:-** [Here](https://github.com/atamshkai/Phantom-Process-Killer)
 
 ```bash
 bash <(curl -Lf https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop)
 ```
 
 > [!TIP]
-> You can also do a lite install which will not install all the optional packages. To do that first run `export LITE=true` / `export LITE=1` then run the installer
+> You can also do a lite install which will not install all the optional packages. To do that, first run `export LITE=true` or `export LITE=1`, then run the installer
 
 ##### 4. Usage Instructions:
 
@@ -107,27 +107,27 @@ tx11start [options]
 
 Options:
 
-- `--xstartup`: Start the user specified xstartup.
+- `--xstartup`: Start the user-specified xstartup.
 - `--nogpu`: Disable GPU acceleration.
 - `--legacy`: Enable legacy drawing.
-- `--nodbus`: Without using dbus-launch.
+- `--nodbus`: Start without using dbus-launch.
 - Combine options for specific configurations (e.g., `tx11start --nogpu --legacy`).
-- `--help`: To show help.
+- `--help`: Show help.
 
 <details>
 <summary>Full Example:</summary>
 
-- `tx11start` _to star Termux:11 with gpu acceleration_
+- `tx11start` _to start Termux:X11 with gpu acceleration_
 - `tx11start --xstartup cinnamon-session` _to start cinnamon even if you setup with xfce or anything else_
-- `tx11start --nogpu` _to star Termux:11 without gpu acceleration_
-- `tx11start --nogpu --legacy` _to star Termux:11 without gpu acceleration and *-legacy-drawing*_
-- `tx11start --nodbus` _to star Termux:11 without dbus-launch_
-- `tx11start --nodbus --nogpu` _to star Termux:11 without gpu acceleration and dbus_
-- `tx11start --nodbus --nogpu --legacy` _to star Termux:11 without gpu acceleration and dbus and with *-legacy-drawing*_
-- `tx11start --nodbus --legacy` _to star Termux:11 without dbus and use *-legacy-drawing* (nodbus and gpu)_
-- `tx11start --legacy` _to star Termux:11 with *-legacy-drawing* (with dbus and gpu)_
-- `tx11start --debug --OTHER-PARAMETERS` _To see log of that commmand_
-    > tx11start --debug --nogpu _To See tx11start --nogpu's log_
+- `tx11start --nogpu` _to start Termux:X11 without gpu acceleration_
+- `tx11start --nogpu --legacy` _to start Termux:X11 without gpu acceleration and *-legacy-drawing*_
+- `tx11start --nodbus` _to start Termux:X11 without dbus-launch_
+- `tx11start --nodbus --nogpu` _to start Termux:X11 without gpu acceleration and dbus_
+- `tx11start --nodbus --nogpu --legacy` _to start Termux:X11 without gpu acceleration and dbus and with *-legacy-drawing*_
+- `tx11start --nodbus --legacy` _to start Termux:X11 without dbus and use *-legacy-drawing* (nodbus and gpu)_
+- `tx11start --legacy` _to start Termux:X11 with *-legacy-drawing* (with dbus and gpu)_
+- `tx11start --debug --OTHER-PARAMETERS` _To see log of that command_
+    > tx11start --debug --nogpu _To see tx11start --nogpu's log_
 
 </details>
 
@@ -140,7 +140,7 @@ tx11stop [-f]
 Options:
 
 - `-f`: Force stop.
-- `--help`: To show help.
+- `--help`: Show help.
 
 ### Start VNC
 
@@ -151,7 +151,7 @@ vncstart [options]
 Options:
 
 - `--nogpu`: Disable GPU acceleration.
-- `--help`: To show help.
+- `--help`: Show help.
 
 ### Stop VNC
 
@@ -162,7 +162,7 @@ vncstop [-f]
 Options:
 
 - `-f`: Force stop.
-- `--help`: To show help.
+- `--help`: Show help.
 
 ### GUI Commands
 
@@ -173,10 +173,10 @@ gui [options]
 Options:
 
 - `--start`: Start GUI (use `vnc` or `tx11` as arguments).
-- `--display` To launch the current desktop environment on another x11 display server over the same network
+- `--display`: Launch the current desktop environment on another X11 display server over the same network.
 - `--stop`: Stop GUI.
 - `--kill`: Stop all GUI sessions.
-- `--help`: To show help.
+- `--help`: Show help.
 
 <details>
 <summary>Full Example:</summary>
@@ -185,7 +185,7 @@ Options:
 
 - `gui --start / gui -l` _to start Termux gui_
 - `gui --stop / gui -s` _to stop gui_
-- `gui --display / gui -d` `<IP_ADDRESS>:<DISPLAY_PORT>` _To launch the current desktop environment on another x11 display server over the same network_
+- `gui --display / gui -d` `<IP_ADDRESS>:<DISPLAY_PORT>` _To launch the current desktop environment on another X11 display server over the same network_
 
 ##### If you select both for gui access
 
@@ -194,7 +194,7 @@ Options:
 - `gui -s / --stop` `vnc` _to stop VNC_
 - `gui -s / --stop` `tx11` _to stop Termux:X11_
 - `gui -k / --kill / -kill` _to kill both vncserver and Termux:x11 At Once_
-- `gui --display / gui -d` `<IP_ADDRESS>:<DISPLAY_PORT>` _To launch the current desktop environment on another x11 display server over the same network_
+- `gui --display / gui -d` `<IP_ADDRESS>:<DISPLAY_PORT>` _To launch the current desktop environment on another X11 display server over the same network_
     - for more click :- [Here](https://github.com/sabamdarif/termux-desktop/blob/main/docs/see-more.md#hammer_and_wrenchhow-to-use-x11-display-forwarding-option)
 
 </details>
@@ -211,8 +211,8 @@ Options:
 - `--change hw`: Modify hardware acceleration settings.
 - `--reset`: Reset all changes.
 - `--remove`: Uninstall Termux Desktop.
-- `--local-config` Start the installation from pre made config file
-- `--help`: To show help.
+- `--local-config`: Start the installation from a pre-made config file.
+- `--help`: Show help.
 
 <details>
 <summary>Full Example:</summary>
@@ -222,7 +222,7 @@ Options:
 - `setup-termux-desktop --change pd` _To Change Installed Proot-Distro_
 - `setup-termux-desktop --change autostart` _To change autostart behaviour_
 - `setup-termux-desktop --change display` _To change termux:x11 display port_
-- `setup-termux-desktop --change de` _To switch between diffreent desktop environment or window manager_
+- `setup-termux-desktop --change de` _To switch between different desktop environment or window manager_
   <br>
 
 - `setup-termux-desktop --reinstall icons / themes /config` _To Reinstall Icons / Themes / Config_
@@ -235,10 +235,10 @@ Options:
 - `setup-termux-desktop --remove / -r` _To Remove Termux Desktop_
   <br>
 
-- `setup-termux-desktop --local-config / -config` _Start the installation from pre made config file_ > Each time you install the desktop environment or made some changes using the script it write all your config to the `/data/data/com.termux/files/usr/etc/termux-desktop/configuration.conf` file. Copy that somewhere else, so next time when you want to install the desktop environment with that old config all you have to do `setup-termux-desktop --local-config /path/to/configuration.conf`
+- `setup-termux-desktop --local-config / -config` _Start the installation from a pre-made config file_ > Each time you install the desktop environment or make some changes using the script it writes all your config to the `/data/data/com.termux/files/usr/etc/termux-desktop/configuration.conf` file. Copy that somewhere else, so next time when you want to install the desktop environment with that old config all you have to do is `setup-termux-desktop --local-config /path/to/configuration.conf`
   <br>
 
-- `setup-termux-desktop --debug` **(At The Start)** _To generate a log file for any of the above command_
+- `setup-termux-desktop --debug` **(At the start)** _To generate a log file for any of the above commands_
     - `setup-termux-desktop --debug --install` _To create a log of whole installation process_
 
 </details>

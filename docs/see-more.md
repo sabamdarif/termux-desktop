@@ -1,6 +1,6 @@
-## :hammer_and_wrench:Learn about terminal utilities:
+## :hammer_and_wrench: Learn about terminal utilities:
 
-#### :jigsaw:1.Additional Packages to be Installed:
+#### :jigsaw: 1. Additional Packages to be Installed:
 
 - **[nala](https://github.com/volitank/nala):** Nala is a front-end for apt
 - **[bat](https://github.com/sharkdp/bat):** Better replacement of cat
@@ -8,7 +8,7 @@
 - **[fastfetch](https://github.com/fastfetch-cli/fastfetch):** Better replacement of neofetch
 - **[zoxide](https://github.com/ajeetdsouza/zoxide):** A smarter cd command
 
-#### :nerd_face:How to use them ?
+#### :nerd_face: How to use them?
 
 - **_cd_** is replaced with **_zoxide_** (_use the cd command it will use zoxide_)
 - use **_apt_** command it will use **_nala_** (for APT only)
@@ -16,7 +16,7 @@
 - use **_neofetch_** command it will use **_fastfetch_**
 - use **_cat_** command it will use **_bat_**
 
-#### :boom:2.Special Functions
+#### :boom: 2. Special Functions
 
 - **extract:** Use extract command to extract any archive
 - **ftext:** Searches for text in all files in the current folder
@@ -43,22 +43,22 @@
 - **encrypt**: Encrypt files using OpenSSL AES-256-CBC encryption
 - **decrypt**: Decrypt files that were encrypted with the encrypt function
 - **checksum**: Calculate MD5, SHA1, and SHA256 checksums for files
-- **cp2clip**: Copy any text content from a file to my clipboard
-    ##### For more cat $HOME/.aliases
+- **cp2clip**: Copy any text content from a file to the clipboard
+    ##### For more `cat $HOME/.aliases`
 
-#### :jigsaw:3.Special Programs (scripts):-
+#### :jigsaw: 3. Special Programs (scripts):
 
-- **termux-fastest-repo**: same like termux-chnage-repo but to test and then chose the fastest repo (only for apt)
+- **termux-fastest-repo**: same as termux-change-repo but tests and chooses the fastest repo (only for apt)
 - **termux-color**: A TUI tool to switch between color schemes with live preview.
-- **termux-nf**: A simple script to install nerd font in termux.
-    - Ex. just run `termux-nf` and chose from the menu or run `termux-nf FONT_NAME` and it will install that font.
+- **termux-nf**: A simple script to install Nerd Fonts in Termux.
+    - Ex. just run `termux-nf` and choose from the menu or run `termux-nf FONT_NAME` and it will install that font.
 
-#### :magic_wand:4.Other tweaks:-
+#### :magic_wand: 4. Other tweaks:
 
 - Undo/Redo in ZSH:- `CTRL + Z` to undo & `CTRL + y` to redo
-- Open the current buffer in your `$EDITOR` (e.g., neovim) Press `Ctrl+X followed by `Ctrl+E` to trigger
+- Open the current buffer in your `$EDITOR` (e.g., neovim) Press `Ctrl+X` followed by `Ctrl+E` to trigger
 - Magic Space:- Expands history expressions like `!!` or `!$` when you press space
-- enable zmv (Advanced Batch Rename/Move):-
+- Enable zmv (Advanced Batch Rename/Move):-
     - `zmv '(*).log' '$1.txt'` Rename all .log to .txt
     - `zmv -w '*.log' '*.txt'` Same thing, simpler syntax
     - `zmv -n '(*).log' '$1.txt'` Dry run (preview changes)
@@ -284,7 +284,7 @@ This document provides a list of keybindings used in Openbox for quick reference
 
 ---
 
-## :hammer_and_wrench:How the update the icon pack or theme:
+## :hammer_and_wrench: How to update the icon pack or theme:
 
 - Stop the desktop
 - Go to the style preview section
@@ -296,11 +296,11 @@ This document provides a list of keybindings used in Openbox for quick reference
     > Ex. `mv path/to/archive_file_name $HOME`
 - Now to move the right archive to the right folder
     - <b>For XFCE</b>
-        - Themes folder :- `$HOME/.themes`
-        - Icons folder :- `$HOME/.icons`
+        - Themes folder: `$HOME/.themes`
+        - Icons folder: `$HOME/.icons`
     - <b>For LXQT And OPENBOX</b>
-        - Themes folder :- `$PREFIX/share/themes`
-        - Icons folder :- `$PREFIX/share/icons`
+        - Themes folder: `$PREFIX/share/themes`
+        - Icons folder: `$PREFIX/share/icons`
 - Backup the old themes/icons folders
     > Ex. `tar -czvf icons_backup.tar.gz folder1 folder2 .... && mv icons_backup.tar.gz $HOME/icons_backup.tar.gz`
 - Remove old folders
@@ -312,15 +312,15 @@ This document provides a list of keybindings used in Openbox for quick reference
 
 ##### or, run `setup-termux-desktop --update icon/theme /path/to/archive_file_name` (will be added soon...)
 
-## :hammer_and_wrench:How to enable Vulkan in Chromium Browswer
+## :hammer_and_wrench: How to enable Vulkan in Chromium Browser
 
 - `chrome://flags/#enable-vulkan` Enable this then relaunch chromium
 
 ---
 
-## :hammer_and_wrench:How to use x11 display forwarding option
+## :hammer_and_wrench: How to use X11 display forwarding option
 
-- Command to use:-
+- Command to use:
 
 ```bash
 gui --display IP_ADDRESS:DISPLAY_PORT
@@ -328,9 +328,9 @@ gui --display IP_ADDRESS:DISPLAY_PORT
 
 `ex: gui --display 192.0.2.1:0`
 
-#### On Windows:-
+#### On Windows:
 
-`run:- ifconfig`
+Run: `ifconfig`
 
 ```bash
 Ethernet adapter Ethernet 8:
@@ -348,9 +348,9 @@ Ethernet adapter Ethernet 8:
     2. Start no client
     3. Disable access control
 
-#### On Linux:-
+#### On Linux:
 
-`run:- ip a | grep inet`
+Run: `ip a | grep inet`
 
 ```bash
     inet 127.0.0.1/8 scope host lo
@@ -362,7 +362,7 @@ Ethernet adapter Ethernet 8:
 ```
 
 - Install `xserver-xephyr` (package name might be different on other Linux distro)
-- Then run:-
+- Then run:
 
     ```bash
     xhost +
@@ -372,7 +372,7 @@ Ethernet adapter Ethernet 8:
     Xephyr :1 -ac -screen 1920x1080 -listen tcp -nolisten unix -fullscreen
     ```
 
-    `here:- :1 will set the display port so make sure you use the right display port on gui --display command`
+    `Here: :1 will set the display port so make sure you use the right display port on gui --display command`
 
 - On termux:-
 

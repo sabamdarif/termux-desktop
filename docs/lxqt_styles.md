@@ -19,15 +19,15 @@
 Theme Used:
 <br>
 
-- GTK Theme:- [Nordic-darker](https://www.gnome-look.org/p/1267246)
-- Openbox Theme:- [Nord-Openbox](https://gitlab.com/the-zero885/nord-openbox-theme)
-- Kvantum:- [Nord-Kvantum](https://store.kde.org/p/1533594)
+- GTK Theme: [Nordic-darker](https://www.gnome-look.org/p/1267246)
+- Openbox Theme: [Nord-Openbox](https://gitlab.com/the-zero885/nord-openbox-theme)
+- Kvantum: [Nord-Kvantum](https://store.kde.org/p/1533594)
 
 Icon Used:
 <br>
 
-- Icons:- [Nordzy](https://store.kde.org/p/1686927)
-- Cursor Theme:- [Nordic-cursors](https://www.gnome-look.org/p/1662218/)
+- Icons: [Nordzy](https://store.kde.org/p/1686927)
+- Cursor Theme: [Nordic-cursors](https://www.gnome-look.org/p/1662218/)
 
 </b>
 </details>
@@ -53,15 +53,15 @@ Icon Used:
 Theme Used:
 <br>
 
-- GTK Theme:- [Redstone](https://www.gnome-look.org/p/1013482)
-- Openbox Theme:- [Win10](https://www.box-look.org/p/1319225)
-- Kvantum:- [Win10OS-kde](https://github.com/yeyushengfan258/Win10OS-kde)
+- GTK Theme: [Redstone](https://www.gnome-look.org/p/1013482)
+- Openbox Theme: [Win10](https://www.box-look.org/p/1319225)
+- Kvantum: [Win10OS-kde](https://github.com/yeyushengfan258/Win10OS-kde)
 
 Icon Used:
 <br>
 
-- Icons:- [Reversal](https://www.gnome-look.org/p/1340791)
-- Cursor Theme:- [Vimix](https://www.gnome-look.org/p/1358330)
+- Icons: [Reversal](https://www.gnome-look.org/p/1340791)
+- Cursor Theme: [Vimix](https://www.gnome-look.org/p/1358330)
 
 </b>
 </details>

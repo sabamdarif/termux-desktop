@@ -84,10 +84,10 @@ Cursor Theme:
 
 <details>
 <summary><b style ="font-size: small">Style Details: </summary>
-Theme Used, Icon Used, Cursor Theme:-
+Theme Used, Icons Used, Cursor Theme:
 
 - [kali-undercover](https://gitlab.com/kalilinux/packages/kali-undercover)
-  Kvantum:-
+  Kvantum:
 - [Win10OS-kde](https://github.com/yeyushengfan258/Win10OS-kde/tree/master/Kvantum)
   </details>
   <br>

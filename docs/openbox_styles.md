@@ -14,9 +14,9 @@
 
 ## 1. Nordic Openbox:
 
-### Keybord shortcuts:- [Here](https://github.com/sabamdarif/termux-desktop/blob/main/docs/see-more.md#openbox-keybindings-cheat-sheet)
+### Keyboard shortcuts: [Here](https://github.com/sabamdarif/termux-desktop/blob/main/docs/see-more.md#openbox-keybindings-cheat-sheet)
 
-> Inspired from [adi1090x's termux-desktop](https://github.com/adi1090x/termux-desktop)
+> Inspired by [adi1090x's termux-desktop](https://github.com/adi1090x/termux-desktop)
 
 > My modifications to his style
 
@@ -25,15 +25,15 @@
 Theme Used:
 <br>
 
-- GTK Theme:- [Nordic-darker](https://www.gnome-look.org/p/1267246)
-- Openbox Theme:- [Nord-Openbox](https://gitlab.com/the-zero885/nord-openbox-theme)
-- Kvantum:- [Nord-Kvantum](https://store.kde.org/p/1533594)
+- GTK Theme: [Nordic-darker](https://www.gnome-look.org/p/1267246)
+- Openbox Theme: [Nord-Openbox](https://gitlab.com/the-zero885/nord-openbox-theme)
+- Kvantum: [Nord-Kvantum](https://store.kde.org/p/1533594)
 
 Icon Used:
 <br>
 
-- Icons:- [Nordzy](https://store.kde.org/p/1686927)
-- Cursor Theme:- [Nordic-cursors](https://www.gnome-look.org/p/1662218/)
+- Icons: [Nordzy](https://store.kde.org/p/1686927)
+- Cursor Theme: [Nordic-cursors](https://www.gnome-look.org/p/1662218/)
 
 </b>
 </details>
@@ -56,12 +56,12 @@ Icon Used:
 
 ## 2. Dracula + material ui like:
 
-### Keybord shortcuts:- [Here](https://github.com/sabamdarif/termux-desktop/blob/main/docs/see-more.md#openbox-keybindings-cheat-sheet)
+### Keyboard shortcuts: [Here](https://github.com/sabamdarif/termux-desktop/blob/main/docs/see-more.md#openbox-keybindings-cheat-sheet)
 
 <details>
 <summary><b style ="font-size: small">Style Details: </summary>
 
-> Thanks To:-
+> Thanks TO:
 > [adi1090x's termux-desktop](https://github.com/adi1090x/termux-desktop)
 > [roficlip](https://github.com/seamus-45/roficlip)
 > [rofimoji](https://github.com/fdw/rofimoji)
@@ -69,15 +69,15 @@ Icon Used:
 Theme Used:
 <br>
 
-- GTK Theme:- [Dracula](https://github.com/dracula/gtk)
-- Openbox Theme:- [Dracula](https://github.com/dracula/openbox)
-- Kvantum:- [Dracula](https://github.com/dracula/gtk)
+- GTK Theme: [Dracula](https://github.com/dracula/gtk)
+- Openbox Theme: [Dracula](https://github.com/dracula/openbox)
+- Kvantum: [Dracula](https://github.com/dracula/gtk)
 
 Icon Used:
 <br>
 
-- Icons:- [Qogir](https://github.com/vinceliuice/Qogir-icon-theme)
-- Cursor Theme:- [Dracula-cursors](https://store.kde.org/p/1669262)
+- Icons: [Qogir](https://github.com/vinceliuice/Qogir-icon-theme)
+- Cursor Theme: [Dracula-cursors](https://store.kde.org/p/1669262)
 
 </b>
 </details>

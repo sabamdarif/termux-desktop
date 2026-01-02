@@ -1,4 +1,4 @@
-## :hammer_and_wrench:How compile box64 (termux native):
+## :hammer_and_wrench: How to compile box64 (Termux native):
 
 ```bash
 pkg install glibc-repo glibc-runner -y
@@ -56,9 +56,9 @@ make install
 
 - **Xow64-wine:-** easy to configure and fast with good compatibility using newer version of wine and box64, support most graphic drivers for both termux glibc and proot **[Install From Here](https://github.com/ar37-rs/xow64-wine)**
 
-#### There is three type of wine intallation options
+#### There are three types of Wine installation options
 
-- **Native:-** it can run apps based on your cpu architecture, like in arm based cpu you can only install windows **[arm apps](https://armrepo.ver.lt/)**
-- **Mobox:-** it can run x86_64 windows apps in aarch64 device with good performance
-    > **:warning: You need to set up Mobox after the termux-desktop installation finishes [From Here](https://github.com/olegos2/mobox)**
-- **Hangover-wine:-** do the same thing like mobox
+- **Native:** It can run apps based on your CPU architecture; for example, on an ARM-based CPU, you can only install Windows **[arm apps](https://armrepo.ver.lt/)**
+- **Mobox:** It can run x86_64 Windows apps on an aarch64 device with good performance
+    > **:warning: You need to set up Mobox after the Termux-Desktop installation finishes [From Here](https://github.com/olegos2/mobox)**
+- **Hangover-wine:** Does the same thing as Mobox
