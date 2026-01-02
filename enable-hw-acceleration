@@ -35,7 +35,7 @@ function hw_install_required_packages() {
 	check_and_delete "$TERMUX_PREFIX/opt/angle-android/vulkan/libEGL.so.1"
 	check_and_delete "$TERMUX_PREFIX/opt/angle-android/vulkan/libGLESv1_CM.so.1"
 	check_and_delete "$TERMUX_PREFIX/opt/angle-android/vulkan/libGLESv2.so.2"
-	package_check_and_remove "mesa-vulkan-icd-wrapper virglrenderer virglrenderer-android angle-android mesa-vulkan-icd-freedreno mesa-zink-vulkan-icd-freedreno mesa-vulkan-icd-freedreno-dri3"
+	package_check_and_remove "vulkan-wrapper-android virglrenderer virglrenderer-android angle-android mesa-vulkan-icd-freedreno mesa-zink-vulkan-icd-freedreno mesa-vulkan-icd-freedreno-dri3"
 
 	case "$exp_termux_vulkan_hw_answer" in
 	"vulkan_wrapper_android")
@@ -143,66 +143,56 @@ function hw_install_required_packages() {
 function setup_hw_environment_variables() {
 	case "$termux_hw_answer" in
 	"zink")
-		set_to_export="MESA_NO_ERROR=1 MESA_GL_VERSION_OVERRIDE=4.3COMPAT MESA_GLES_VERSION_OVERRIDE=3.2 ZINK_DESCRIPTORS=lazy"
-		hw_method="GALLIUM_DRIVER=zink MESA_GL_VERSION_OVERRIDE=4.0"
+		set_to_export="MESA_NO_ERROR=1 GALLIUM_DRIVER=zink MESA_GL_VERSION_OVERRIDE=4.3COMPAT MESA_GLES_VERSION_OVERRIDE=3.2 ZINK_DESCRIPTORS=lazy"
 		initialize_server_method="virgl_test_server --use-egl-surfaceless --use-gles"
-		pd_hw_method="${hw_method}"
+		pd_hw_method="${set_to_export}"
 		;;
 	"virgl")
-		set_to_export="MESA_NO_ERROR=1 MESA_GL_VERSION_OVERRIDE=4.3COMPAT MESA_GLES_VERSION_OVERRIDE=3.2 LIBGL_DRI3_DISABLE=1 "
-		hw_method="GALLIUM_DRIVER=virpipe"
+		set_to_export="MESA_NO_ERROR=1 GALLIUM_DRIVER=virpipe MESA_GL_VERSION_OVERRIDE=4.3COMPAT MESA_GLES_VERSION_OVERRIDE=3.2 LIBGL_DRI3_DISABLE=1"
 		initialize_server_method="virgl_test_server_android"
-		pd_hw_method="${hw_method}"
+		pd_hw_method="${set_to_export}"
 		;;
 	"virgl_angle")
-		set_to_export="MESA_NO_ERROR=1 MESA_GL_VERSION_OVERRIDE=4.3COMPAT MESA_GLES_VERSION_OVERRIDE=3.2 LIBGL_DRI3_DISABLE=1"
-		hw_method="GALLIUM_DRIVER=virpipe"
+		set_to_export="MESA_NO_ERROR=1 GALLIUM_DRIVER=virpipe MESA_GL_VERSION_OVERRIDE=4.3COMPAT MESA_GLES_VERSION_OVERRIDE=3.2 LIBGL_DRI3_DISABLE=1"
 		initialize_server_method="virgl_test_server_android --angle-gl"
-		pd_hw_method="${hw_method}"
+		pd_hw_method="${set_to_export}"
 		;;
 	"virgl_vulkan")
-		set_to_export="MESA_NO_ERROR=1 MESA_GL_VERSION_OVERRIDE=4.1COMPAT MESA_GLES_VERSION_OVERRIDE=3.2 MESA_GLSL_VERSION_OVERRIDE=410 LIBGL_DRI3_DISABLE=1 EPOXY_USE_ANGLE=1 LD_LIBRARY_PATH=$TERMUX_PREFIX/opt/angle-android/vulkan"
-		hw_method="GALLIUM_DRIVER=virpipe"
+		set_to_export="MESA_NO_ERROR=1 GALLIUM_DRIVER=virpipe MESA_GL_VERSION_OVERRIDE=4.1COMPAT MESA_GLES_VERSION_OVERRIDE=3.2 MESA_GLSL_VERSION_OVERRIDE=410 LIBGL_DRI3_DISABLE=1 EPOXY_USE_ANGLE=1 LD_LIBRARY_PATH=$TERMUX_PREFIX/opt/angle-android/vulkan"
 		initialize_server_method="virgl_test_server --use-egl-surfaceless --use-gles"
-		pd_hw_method="${hw_method}"
+		pd_hw_method="${set_to_export}"
 		;;
 	"zink_virgl")
-		set_to_export="MESA_NO_ERROR=1 MESA_GL_VERSION_OVERRIDE=4.3COMPAT MESA_GLES_VERSION_OVERRIDE=3.2 ZINK_DESCRIPTORS=lazy"
+		set_to_export="MESA_NO_ERROR=1 GALLIUM_DRIVER=virpipe MESA_GL_VERSION_OVERRIDE=4.3COMPAT MESA_GLES_VERSION_OVERRIDE=3.2 ZINK_DESCRIPTORS=lazy"
 		initialize_server_method="virgl_test_server --use-egl-surfaceless --use-gles"
-		hw_method="GALLIUM_DRIVER=virpipe MESA_GL_VERSION_OVERRIDE=4.0"
-		pd_hw_method="${hw_method}"
+		pd_hw_method="${set_to_export}"
 		;;
 	"zink_with_mesa")
-		set_to_export="MESA_NO_ERROR=1 MESA_GL_VERSION_OVERRIDE=4.3COMPAT MESA_GLES_VERSION_OVERRIDE=3.2"
-		hw_method="GALLIUM_DRIVER=zink"
+		set_to_export="MESA_NO_ERROR=1 GALLIUM_DRIVER=zink MESA_GL_VERSION_OVERRIDE=4.3COMPAT MESA_GLES_VERSION_OVERRIDE=3.2"
 		initialize_server_method=" "
-		pd_hw_method="${hw_method}"
+		pd_hw_method="${set_to_export}"
 		;;
 	"zink_with_mesa_zink")
-		set_to_export="MESA_NO_ERROR=1 MESA_GL_VERSION_OVERRIDE=4.3COMPAT MESA_GLES_VERSION_OVERRIDE=3.2"
-		hw_method="GALLIUM_DRIVER=zink"
+		set_to_export="MESA_NO_ERROR=1 GALLIUM_DRIVER=zink MESA_GL_VERSION_OVERRIDE=4.3COMPAT MESA_GLES_VERSION_OVERRIDE=3.2"
 		initialize_server_method=" "
-		pd_hw_method="${hw_method}"
+		pd_hw_method="${set_to_export}"
 		;;
 	"mesa_freedreno")
-		set_to_export="MESA_NO_ERROR=1 vblank_mode=0"
+		set_to_export="MESA_NO_ERROR=1 GALLIUM_DRIVER=zink vblank_mode=0"
 		initialize_server_method=" "
-		hw_method="GALLIUM_DRIVER=zink"
-		pd_hw_method="${hw_method}"
+		pd_hw_method="${set_to_export}"
 		;;
 	"mesa_zink_freedreno")
-		set_to_export="MESA_NO_ERROR=1 vblank_mode=0"
+		set_to_export="MESA_NO_ERROR=1 GALLIUM_DRIVER=zink vblank_mode=0"
 		initialize_server_method=" "
-		hw_method="GALLIUM_DRIVER=zink"
-		pd_hw_method="${hw_method}"
+		pd_hw_method="${set_to_export}"
 		;;
 	"freedreno_kgsl")
 		# shellcheck disable=SC2034
-		set_to_export="MESA_NO_ERROR=1 vblank_mode=0"
+		set_to_export="MESA_NO_ERROR=1 MESA_LOADER_DRIVER_OVERRIDE=kgsl MESA_GL_VERSION_OVERRIDE=3.3 vblank_mode=0"
 		# shellcheck disable=SC2034
 		initialize_server_method=" "
-		hw_method="MESA_LOADER_DRIVER_OVERRIDE=kgsl MESA_GL_VERSION_OVERRIDE=3.3"
-		pd_hw_method="${hw_method}"
+		pd_hw_method="${set_to_export}"
 		;;
 	esac
 

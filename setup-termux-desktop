@@ -3244,7 +3244,7 @@ function setup_vncstart_cmd() {
 			            echo "[☓] Invalid option: \$1"
 			            show_vncstart_help
 			        else
-			            export ${set_to_export} ${hw_method}
+			            export ${set_to_export}
 			            if [[ -n "\${initialize_server_cmd// /}" ]]; then
 							eval "\$initialize_server_cmd" &
 						fi
@@ -3541,7 +3541,7 @@ function setup_tx11start_cmd() {
 
 			    # Set environment variables if NOT using --nogpu
 			    if ! \$use_nogpu; then
-			      export ${set_to_export}
+			      export ${set_to_export} ${gpu_environment_variable}
 			      if [[ -n "\${initialize_server_cmd// /}" ]]; then
 			        if \$use_debug; then
 			          eval "\$initialize_server_cmd" &
@@ -3549,7 +3549,6 @@ function setup_tx11start_cmd() {
 			          eval "\$initialize_server_cmd" >/dev/null 2>&1 &
 			        fi
 			      fi
-			      export ${gpu_environment_variable} ${hw_method}
 			  else
 			        export LIBGL_ALWAYS_SOFTWARE=1 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe
 			    fi
