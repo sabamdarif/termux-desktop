@@ -1553,25 +1553,28 @@ function exp_vulkan_support() {
 		echo
 		echo "${Y}2. vulkan-wrapper-android (leegao's fork)${NC}"
 		echo
-		echo "${Y}3. mesa-vulkan-icd-freedreno (Turnip) (adreno only)${NC}"
+		echo "${Y}3. vulkan-wrapper-android (pipetto-crypto's fork)${NC}"
 		echo
-		echo "${Y}4. mesa-zink-vulkan-icd-freedreno (Turnip) (adreno only)${NC}"
+		echo "${Y}4. mesa-vulkan-icd-freedreno (Turnip) (adreno only)${NC}"
 		echo
-		echo "${Y}5. mesa-vulkan-icd-freedreno (Kgsl) (adreno only)${NC}"
+		echo "${Y}5. mesa-zink-vulkan-icd-freedreno (Turnip) (adreno only)${NC}"
 		echo
-		echo "${Y}6. will use the old virgl way${NC}"
+		echo "${Y}6. mesa-vulkan-icd-freedreno (Kgsl) (adreno only)${NC}"
 		echo
-		select_an_option 6 1 exp_termux_vulkan_hw_answer_num
+		echo "${Y}7. will use the old virgl way${NC}"
+		echo
+		select_an_option 7 1 exp_termux_vulkan_hw_answer_num
 
 		# set gpu api name
 		# shellcheck disable=SC2154
 		case "$exp_termux_vulkan_hw_answer_num" in
 		1) exp_termux_vulkan_hw_answer="vulkan_wrapper_android" ;;
 		2) exp_termux_vulkan_hw_answer="vulkan_wrapper_android_leegaos_fork" ;;
-		3) exp_termux_vulkan_hw_answer="mesa_freedreno" ;;
-		4) exp_termux_vulkan_hw_answer="mesa_zink_freedreno" ;;
-		5) exp_termux_vulkan_hw_answer="freedreno_kgsl" ;;
-		6) exp_termux_vulkan_hw_answer="skip" ;;
+		3) exp_termux_vulkan_hw_answer="vulkan_wrapper_android_pipetto_crypto" ;;
+		4) exp_termux_vulkan_hw_answer="mesa_freedreno" ;;
+		5) exp_termux_vulkan_hw_answer="mesa_zink_freedreno" ;;
+		6) exp_termux_vulkan_hw_answer="freedreno_kgsl" ;;
+		7) exp_termux_vulkan_hw_answer="skip" ;;
 		esac
 	else
 		echo "${Y}1. vulkan-wrapper-android${NC}"

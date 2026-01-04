@@ -69,6 +69,19 @@ function hw_install_required_packages() {
 			print_failed "vulkan-wrapper-android Driver isn't supported on your device"
 		fi
 		;;
+	"vulkan_wrapper_android_pipetto_crypto")
+		if [[ "$termux_arch" == "aarch64" ]]; then
+			print_msg "${BOLD}Installing vulkan-wrapper-android (pipetto-crypto's fork) Driver..."
+			download_file "pipetto-crypto-vulkan-wrapper-android.deb" "https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/download/pipetto-crypto-vulkan-wrapper-android/pipetto-crypto-vulkan-wrapper-android_25.0.0-1_${termux_arch}.deb"
+			dpkg --configure -a
+			apt --fix-broken install -y
+			apt install ./pipetto-crypto-vulkan-wrapper-android.deb -y
+			apt install --fix-missing -y
+			check_and_delete "pipetto-crypto-vulkan-wrapper-android.deb"
+		else
+			print_failed "vulkan-wrapper-android Driver isn't supported on your device"
+		fi
+		;;
 	"mesa_freedreno")
 		package_install_and_check "mesa-vulkan-icd-freedreno"
 		;;
@@ -225,7 +238,7 @@ function setup_hw_environment_variables() {
 }
 
 function setup_gpu_specific_environment_variables() {
-	if [[ "$exp_termux_vulkan_hw_answer" == "vulkan_wrapper_android" ]] || [[ "$exp_termux_vulkan_hw_answer" == "vulkan_wrapper_android_leegaos_fork" ]]; then
+	if [[ "$exp_termux_vulkan_hw_answer" == "vulkan_wrapper_android" ]] || [[ "$exp_termux_vulkan_hw_answer" == "vulkan_wrapper_android_leegaos_fork" ]] || [[ "$exp_termux_vulkan_hw_answer" == "vulkan_wrapper_android_pipetto_crypto" ]]; then
 		local icd_cpu_arch
 		if [[ "$termux_arch" == "aarch64" ]]; then
 			icd_cpu_arch="aarch64"
