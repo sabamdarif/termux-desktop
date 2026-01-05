@@ -2361,6 +2361,35 @@ function try_to_autodetect_gpu() {
 	fi
 }
 
+function check_github_rate_limit() {
+	local github_api_url responce limit remaining
+
+	github_api_url="https://api.github.com/rate_limit"
+	responce=$(curl -s "$github_api_url")
+	limit=$(echo "$responce" | grep -A 5 '"rate":' | grep '"limit":' | head -1 | grep -o '[0-9]*')
+	remaining=$(echo "$responce" | grep -A 5 '"rate":' | grep '"remaining":' | head -1 | grep -o '[0-9]*')
+
+	if [[ -z "$limit" ]] || [[ -z "$remaining" ]]; then
+		print_failed "Github Rate Limit: ${NC}Failed to parse API response"
+		echo -e "RESPONSE: $responce"
+		print_msg "Please check your internet connection, or if you are then connect to a vpn"
+		exit 1
+	fi
+
+	if [[ "$remaining" -eq 0 ]]; then
+		print_failed "Github Rate Limit: RATE LIMIT EXCEEDED!"
+		print_msg "You have hit the rate limit. Wait until reset time"
+		print_msg "Or, reset your internet connection or connect to a vpn then try again"
+		exit 1
+	elif [[ "$remaining" -le 20 ]]; then
+		print_failed "Github Rate Limit: ${NC}You only have $remaining request left, minimum is 20"
+		print_msg "please reset your internet connection or connect to a vpn then try again"
+		exit 1
+	else
+		print_success "Github Rate Limit: ${NC}Good to go you have $remaining request remaining"
+	fi
+}
+
 function check_system_requirements() {
 	while true; do
 		local errors=0
@@ -2421,6 +2450,7 @@ function check_system_requirements() {
 			((errors++))
 		fi
 		sleep 0.2
+		check_github_rate_limit
 		# Check for termux app requirements
 		if [[ -d "$TERMUX_PREFIX" ]]; then
 			print_success "Termux PREFIX: ${NC}Directory found"
