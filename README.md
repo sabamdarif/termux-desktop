@@ -22,17 +22,17 @@
 - :mechanical_arm: **Hardware Acceleration:** It will install all the drivers in order to get hardware acceleration working under termux
 - :paperclips: **GUI Access:**
     - Termux:X11 (Default)
-    - VNC (vnc is optional and only available via the custom install section)
+    - VNC (optional and only available if you chose `custom` during the setup)
 - :package: **Package Management:**
     - APT (Termux's default and recommended)
     - [PACMAN](https://youtu.be/ditNvG5Nxj0) (pacman may be buggy, not well tested)
 - :shopping: **App Store:** An appstore to install apps
 - :package: **Container** It lets you use a proot/chroot distro as a container to install more apps than Termux normally supports
-- And a lot more, just choose the custom install option during the setup and see what you can do
+- And a lot more, try it
 
 ---
 
-### Quick Navigation
+### Quick Navigation:
 
 <div align="center">
 
@@ -44,23 +44,24 @@
 
 ## Getting Started:
 
-##### 1. Ensure Requirements Are Met:
+### 1. Ensure Requirements Are Met:
 
 > [!NOTE]
 > **This Only Works On Termux From GitHub Or F-Droid.**
 > **Avoid using Termux from Google Play that doesn't work due to API limitations.**
 
-- Android 8+ device
-- **[Termux](https://termux.dev/en/)** (download from [GitHub](https://github.com/termux/termux-app/releases) or [F-Droid](https://f-droid.org/en/packages/com.termux/))
-- **[Termux:X11](https://github.com/termux/termux-x11/releases)**
-- **[Termux-API](https://github.com/termux/termux-api/releases)**
-- Minimum 2GB of RAM _(3GB recommended)_
-- 1.5-2GB of Internet data
-- 3-4GB of free storage
-- Root: Optional _(only for chroot-distro)_
-- VNC Client _(Optional)_. Use:- [RealVNC](https://play.google.com/store/apps/details?id=com.realvnc.viewer.android) / [NetHunter Kex](https://store.nethunter.com/en/packages/com.offsec.nethunter.kex/)
+|      Component      | Requirement |                                                                               Download                                                                                |
+| :-----------------: | :---------: | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
+| **Android Version** |    8.0+     |                                                                                                                                                                       |
+|     **Termux**      |   Latest    |                             [GitHub](https://github.com/termux/termux-app/releases) • [F-Droid](https://f-droid.org/packages/com.termux/)                             |
+|   **Termux:X11**    |   Latest    |                                                        [GitHub](https://github.com/termux/termux-x11/releases)                                                        |
+|   **Termux-API**    |   Latest    |                                                        [GitHub](https://github.com/termux/termux-api/releases)                                                        |
+|       **RAM**       |    3GB+     |                                                                                                                                                                       |
+|     **Storage**     |    3-4GB    |
+|    **Internet**     |   1.5-2GB   |                                                                                                                                                                       |
+|   **VNC Viewer**    |  Optional   | [RealVNC](https://play.google.com/store/apps/details?id=com.realvnc.viewer.android) • [NetHunter Kex](https://store.nethunter.com/packages/com.offsec.nethunter.kex/) |
 
-##### 2. Currently supported Desktop Environments and Window Managers:
+### 2. Currently supported Desktop Environments and Window Managers:
 
 > [!TIP]
 > Click on the Blue links to see all the available Styles for that De/Wm
@@ -76,13 +77,14 @@
 |                              | IceWM                              |
 |                              | WMaker                             |
 
-##### 3. Start Installation:
-
-> Full Installation YouTube Video Guide:- [Here](https://youtu.be/SlR9f9hl5CQ?si=7O13ZAzdAnB_wwWw)
+### 3. Start Installation:
 
 > [!IMPORTANT]
 > **Fresh installations are recommended for best results.**
 > **If you are on Android 12 or higher, first disable Phantom Process Killer Guide:-** [Here](https://github.com/atamshkai/Phantom-Process-Killer)
+
+> [!TIP]
+> **Android 12+ users:** Disable Phantom Process Killer before installation. [Learn how](https://github.com/atamshkai/Phantom-Process-Killer)
 
 ```bash
 bash <(curl -Lf https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop)
@@ -91,11 +93,15 @@ bash <(curl -Lf https://raw.githubusercontent.com/sabamdarif/termux-desktop/main
 > [!TIP]
 > You can also do a lite install which will not install all the optional packages. To do that, first run `export LITE=true` or `export LITE=1`, then run the installer
 
-##### 4. Usage Instructions:
+### 🎥 Video Tutorial
 
-- Commands for starting and stopping Termux:X11 and VNC sessions are provided below.
+**Full Installation Guide:** [Watch on YouTube](https://youtu.be/SlR9f9hl5CQ)
 
 ---
+
+### 4. Usage Instructions:
+
+- Commands for starting and stopping Termux:X11 and VNC sessions are provided below.
 
 ## Command Reference:
 
@@ -194,8 +200,7 @@ Options:
 - `gui -s / --stop` `vnc` _to stop VNC_
 - `gui -s / --stop` `tx11` _to stop Termux:X11_
 - `gui -k / --kill / -kill` _to kill both vncserver and Termux:x11 At Once_
-- `gui --display / gui -d` `<IP_ADDRESS>:<DISPLAY_PORT>` _To launch the current desktop environment on another X11 display server over the same network_
-    - for more click :- [Here](https://github.com/sabamdarif/termux-desktop/blob/main/docs/see-more.md#hammer_and_wrenchhow-to-use-x11-display-forwarding-option)
+- `gui --display / gui -d` `<IP_ADDRESS>:<DISPLAY_PORT>` _To launch the current desktop environment on another X11 display server over the same network_. For more click :- [Here](https://github.com/sabamdarif/termux-desktop/blob/main/docs/see-more.md#hammer_and_wrenchhow-to-use-x11-display-forwarding-option)
 
 </details>
 
@@ -255,9 +260,18 @@ Options:
 
 ---
 
-## License
+## 📜 License
 
-This project is licensed under the [GNU General Public License v3.0](https://choosealicense.com/licenses/gpl-3.0/).
+This project is licensed under the **[GNU General Public License v3.0](LICENSE)**
+
+```
+Copyright (C) 2024 sabamdarif
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+```
 
 ---
 
@@ -295,4 +309,4 @@ _Every contribution, no matter how small, helps keep this project alive and grow
 
 ---
 
-Join the conversation: [Telegram Chat](https://t.me/hello_android_0).
+#### Join the conversation: [Telegram Chat](https://t.me/hello_android_0).
