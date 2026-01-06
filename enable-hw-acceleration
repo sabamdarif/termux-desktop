@@ -35,6 +35,8 @@ function hw_install_required_packages() {
 	check_and_delete "$TERMUX_PREFIX/opt/angle-android/vulkan/libEGL.so.1"
 	check_and_delete "$TERMUX_PREFIX/opt/angle-android/vulkan/libGLESv1_CM.so.1"
 	check_and_delete "$TERMUX_PREFIX/opt/angle-android/vulkan/libGLESv2.so.2"
+	check_and_delete "$TERMUX_PREFIX/share/vulkan/icd.d/wrapper_icd.aarch64.json"
+	check_and_delete "$TERMUX_PREFIX/lib/libadrenotools.so $TERMUX_PREFIX/lib/libfile_redirect_hook.so $TERMUX_PREFIX/lib/libgsl_alloc_hook.so $TERMUX_PREFIX/lib/libhook_impl.so $TERMUX_PREFIX/lib/libmain_hook.so $TERMUX_PREFIX/lib/libvulkan_wrapper.so"
 	package_check_and_remove "vulkan-wrapper-android virglrenderer virglrenderer-android angle-android mesa-vulkan-icd-freedreno mesa-zink-vulkan-icd-freedreno mesa-vulkan-icd-freedreno-dri3"
 
 	case "$exp_termux_vulkan_hw_answer" in
