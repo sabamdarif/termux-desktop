@@ -2664,7 +2664,7 @@ function install_desktop() {
 	elif [[ "$de_name" == "openbox" ]]; then
 		print_msg "${BOLD}Installing Openbox WM"
 		echo
-		package_install_and_check "openbox polybar xorg-xsetroot xorg-xprop lxappearance wmctrl feh firefox rofi bmon xcompmgr gtk3 gedit xmllint kvantum"
+		package_install_and_check "openbox polybar xorg-xsetroot xorg-xprop lxappearance wmctrl feh firefox rofi bmon xcompmgr gtk3 gedit libxml2-utils kvantum"
 	elif [[ "$de_name" == "mate" ]]; then
 		print_msg "${BOLD}Installing MATE"
 		echo
@@ -2688,7 +2688,7 @@ function install_desktop() {
 	elif [[ "$de_name" == "fluxbox" ]]; then
 		print_msg "${BOLD}Installing Fluxbox WM"
 		echo
-		package_install_and_check "fluxbox xorg-xsetroot xorg-xprop lxappearance wmctrl feh firefox rofi bmon xcompmgr gtk3 gedit xmllint"
+		package_install_and_check "fluxbox xorg-xsetroot xorg-xprop lxappearance wmctrl feh firefox rofi bmon xcompmgr gtk3 gedit libxml2-utils"
 	elif [[ "$de_name" == "icewm" ]]; then
 		print_msg "${BOLD}Installing Ice WM"
 		echo
@@ -2895,7 +2895,7 @@ function additional_required_steps() {
 			package_install_and_check "xfce4-settings mpd thunar"
 			install_font_for_style "1"
 		elif [[ "$style_answer" == "2" ]]; then
-			package_install_and_check "devilspie2 xfce4-terminal thunar dunst python python3 tint2 xdotool"
+			package_install_and_check "devilspie2 xfce4-terminal thunar dunst python tint2 xdotool"
 			install_font_for_style "2"
 			print_msg "${BOLD}Installing package: ${C}pywal"
 			pip install pywal
@@ -4959,7 +4959,7 @@ function remove_desktop_environments() {
 	elif [[ "$de_name" == "awesome" ]]; then
 		package_check_and_remove "awesome"
 	elif [[ "$de_name" == "fluxbox" ]]; then
-		package_check_and_remove "fluxbox xorg-xsetroot xorg-xprop lxappearance wmctrl feh firefox rofi bmon xcompmgr gtk3 gedit xmllint"
+		package_check_and_remove "fluxbox xorg-xsetroot xorg-xprop lxappearance wmctrl feh firefox rofi bmon xcompmgr gtk3 gedit libxml2-utils"
 	elif [[ "$de_name" == "gnome" ]]; then
 		package_check_and_remove "gnome*"
 		package_check_and_remove "thunar xfce4-terminal"
@@ -5086,7 +5086,7 @@ function remove_termux_desktop() {
 				# shellcheck disable=SC2164
 				cd "$TERMUX_HOME"
 				# remove appstore
-				package_check_and_remove "aria2 python python3 cloneit"
+				package_check_and_remove "aria2 python"
 				check_and_delete "${PREFIX}/opt/appstore"
 				check_and_delete "${PREFIX}/share/applications/org.sabamdarif.termux.appstore.desktop"
 			fi
