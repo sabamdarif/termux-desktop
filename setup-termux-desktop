@@ -2895,10 +2895,8 @@ function additional_required_steps() {
 			package_install_and_check "xfce4-settings mpd thunar"
 			install_font_for_style "1"
 		elif [[ "$style_answer" == "2" ]]; then
-			package_install_and_check "devilspie2 xfce4-terminal thunar dunst python tint2 xdotool"
+			package_install_and_check "devilspie2 xfce4-terminal thunar dunst python tint2 xdotool matugen"
 			install_font_for_style "2"
-			print_msg "${BOLD}Installing package: ${C}pywal"
-			pip install pywal
 			print_msg "${BOLD}Installing package: ${C}pyyaml"
 			pip install pyyaml
 			print_msg "${BOLD}Installing package: ${C}pyxdg"
