@@ -4188,7 +4188,7 @@ function check_desktop_process() {
 		mate)
 			de_pid="$(pgrep -f "mate-session|mate-panel")"
 			;;
-		i3)
+		i3wm)
 			de_pid="$(pgrep -f "i3|i3-with-shmlog")"
 			;;
 		dwm)
