@@ -347,13 +347,12 @@ function detect_package_manager() {
 }
 
 # will check if the package is already installed or not, if it installed then reinstall and print success/failed message
-function package_install_and_check {
+function package_install_and_check() {
 	log_debug "Starting package installation for: $*"
 	local packs_list
 	# Properly splits on spaces
 	IFS=' ' read -r -a packs_list <<<"$*"
 
-	# pacman part
 	if [[ "$PACKAGE_MANAGER" == "pacman" ]]; then
 		for package_name in "${packs_list[@]}"; do
 			if [[ "$package_name" == *"*"* ]]; then
@@ -361,91 +360,71 @@ function package_install_and_check {
 				local packages
 				packages=$(pacman -Ssq 2>/dev/null | grep -E "^${package_name//\*/.*}$")
 				log_debug "matched packages: ${C}$packages"
+
 				for package in $packages; do
-					local retry_count=0
-					local max_retries=$MAX_INSTALL_RETRIES
-					local install_success=false
-					while [[ "$retry_count" -lt "$max_retries" && "$install_success" == false ]]; do
-						retry_count=$((retry_count + 1))
-						check_and_delete "$TERMUX_PREFIX/var/lib/pacman/db.lck"
-						print_msg "Installing Package : ${C}$package"
-						pacman -S --noconfirm "$package" 2>/dev/null
-						if pacman -Qi "$package" >/dev/null 2>&1; then
-							print_success "Successfully install package: ${C}$package"
-							install_success=true
-						else
-							print_warn "Failed to install package: ${C}${package}. ${Y}Trying again... ($retry_count)"
-						fi
-					done
+					install_package_with_retry "$package" "pacman"
 				done
 			else
-				local retry_count=0
-				local max_retries=$MAX_INSTALL_RETRIES
-				local install_success=false
-				while [[ "$retry_count" -lt "$max_retries" && "$install_success" == false ]]; do
-					retry_count=$((retry_count + 1))
-					check_and_delete "$TERMUX_PREFIX/var/lib/pacman/db.lck"
-					print_msg "Installing Package : ${C}$package_name"
-					pacman -S --noconfirm "$package_name" 2>/dev/null
-					if pacman -Qi "$package_name" >/dev/null 2>&1; then
-						print_success "Successfully install package: ${C}$package_name"
-						install_success=true
-					else
-						print_warn "Failed to install package: ${C}${package_name}. ${Y}Trying again... ($retry_count)"
-					fi
-				done
+				install_package_with_retry "$package_name" "pacman"
 			fi
 		done
 	else
-		#apt part
 		for package_name in "${packs_list[@]}"; do
 			if [[ "$package_name" == *"*"* ]]; then
 				log_debug "Processing wildcard pattern: $package_name"
 				local packages
 				packages=$(apt-cache pkgnames 2>/dev/null | grep -E "^${package_name//\*/.*}$" | sort -u)
 				log_debug "matched packages: $packages"
+
 				for package in $packages; do
-					local retry_count=0
-					local max_retries=$MAX_INSTALL_RETRIES
-					local install_success=false
-					while [[ "$retry_count" -lt "$max_retries" && "$install_success" == false ]]; do
-						retry_count=$((retry_count + 1))
-						print_msg "Installing package: ${C}$package"
-						apt install "$package" -y 2>/dev/null
-						if dpkg -s "$package" >/dev/null 2>&1; then
-							print_success "Successfully install package: ${C}$package"
-							install_success=true
-						else
-							print_warn "Failed to install package: ${C}${package}. ${Y}Trying again... ($retry_count)"
-							# Only run recovery commands on failure
-							dpkg --configure -a 2>/dev/null
-							apt --fix-broken install -y 2>/dev/null
-							apt install --fix-missing -y 2>/dev/null
-						fi
-					done
+					install_package_with_retry "$package" "apt"
 				done
 			else
-				local retry_count=0
-				local max_retries=$MAX_INSTALL_RETRIES
-				local install_success=false
-				while [[ "$retry_count" -lt "$max_retries" && "$install_success" == false ]]; do
-					retry_count=$((retry_count + 1))
-					print_msg "Installing package: ${C}$package_name"
-					apt install "$package_name" -y 2>/dev/null
-					if dpkg -s "$package_name" >/dev/null 2>&1; then
-						print_success "Successfully install package: ${C}$package_name"
-						install_success=true
-					else
-						print_warn "Failed to install package: ${C}${package_name}. ${Y}Trying again... ($retry_count)"
-						# Only run recovery commands on failure
-						dpkg --configure -a 2>/dev/null
-						apt --fix-broken install -y 2>/dev/null
-						apt install --fix-missing -y 2>/dev/null
-					fi
-				done
+				install_package_with_retry "$package_name" "apt"
 			fi
 		done
 	fi
+}
+
+# Helper function for package_install_and_check
+# to handle package installation with retry
+function install_package_with_retry() {
+	local package="$1"
+	local manager="$2"
+	local retry_count=0
+	local max_retries=$MAX_INSTALL_RETRIES
+	local install_success=false
+
+	while [[ "$retry_count" -lt "$max_retries" && "$install_success" == false ]]; do
+		retry_count=$((retry_count + 1))
+
+		if [[ "$manager" == "pacman" ]]; then
+			check_and_delete "$TERMUX_PREFIX/var/lib/pacman/db.lck"
+			print_msg "Installing Package : ${C}$package"
+			pacman -S --noconfirm "$package" 2>/dev/null
+
+			if pacman -Qi "$package" >/dev/null 2>&1; then
+				print_success "Successfully install package: ${C}$package"
+				install_success=true
+			else
+				print_warn "Failed to install package: ${C}${package}. ${Y}Trying again... ($retry_count)"
+			fi
+		else
+			print_msg "Installing package: ${C}$package"
+			apt install "$package" -y 2>/dev/null
+
+			if dpkg -s "$package" >/dev/null 2>&1; then
+				print_success "Successfully install package: ${C}$package"
+				install_success=true
+			else
+				print_warn "Failed to install package: ${C}${package}. ${Y}Trying again... ($retry_count)"
+				# Only run recovery commands on failure
+				dpkg --configure -a 2>/dev/null
+				apt --fix-broken install -y 2>/dev/null
+				apt install --fix-missing -y 2>/dev/null
+			fi
+		fi
+	done
 }
 
 # will check the package is installed or not then remove it
@@ -461,47 +440,22 @@ function package_check_and_remove() {
 				log_debug "Processing wildcard pattern: $package_name"
 				local packages
 				packages=$(pacman -Qsq 2>/dev/null | grep -E "^${package_name//\*/.*}$")
+
 				if [[ -z "$packages" ]]; then
 					print_success "No installed packages found matching: ${C}$package_name"
 					continue
 				fi
+
 				log_debug "matched packages: $packages"
 				for package in $packages; do
-					local retry_count=0
-					local max_retries=$MAX_INSTALL_RETRIES
-					local remove_success=false
-					while [[ "$retry_count" -lt "$max_retries" && "$remove_success" == false ]]; do
-						retry_count=$((retry_count + 1))
-						check_and_delete "$TERMUX_PREFIX/var/lib/pacman/db.lck"
-						print_msg "Removing Package : ${C}$package"
-						pacman -Rnds --noconfirm "$package" 2>/dev/null
-						if ! pacman -Qi "$package" >/dev/null 2>&1; then
-							print_success "Successfully removed package: ${C}$package"
-							remove_success=true
-						else
-							print_warn "Failed to remove package: ${C}${package}. ${Y}Trying again...($retry_count)"
-						fi
-					done
+					remove_package_with_retry "$package" "pacman"
 				done
 			else
+				# Check if package is installed before attempting removal
 				if pacman -Qi "$package_name" >/dev/null 2>&1; then
-					local retry_count=0
-					local max_retries=$MAX_INSTALL_RETRIES
-					local remove_success=false
-					while [[ "$retry_count" -lt "$max_retries" && "$remove_success" == false ]]; do
-						retry_count=$((retry_count + 1))
-						check_and_delete "$TERMUX_PREFIX/var/lib/pacman/db.lck"
-						print_msg "Removing Package : ${C}$package_name"
-						pacman -Rnds --noconfirm "$package_name" 2>/dev/null
-						if ! pacman -Qi "$package_name" >/dev/null 2>&1; then
-							print_success "Successfully removed package: ${C}$package_name"
-							remove_success=true
-						else
-							print_warn "Failed to remove package: ${C}${package_name}. ${Y}Trying again... ($retry_count)"
-						fi
-					done
+					remove_package_with_retry "$package_name" "pacman"
 				else
-					print_success "Package ${C}$package_name${G} is not installed.${NC}"
+					print_success "Package ${C}$package_name${G} is not installed. Skipping...${NC}"
 				fi
 			fi
 		done
@@ -519,45 +473,55 @@ function package_check_and_remove() {
 
 				log_debug "matched packages: $packages"
 				for package in $packages; do
-					local retry_count=0
-					local max_retries=$MAX_INSTALL_RETRIES
-					local remove_success=false
-					while [[ "$retry_count" -lt "$max_retries" && "$remove_success" == false ]]; do
-						retry_count=$((retry_count + 1))
-						print_msg "Removing package: ${C}$package"
-						dpkg --configure -a >/dev/null 2>&1
-						apt autoremove "$package" -y 2>/dev/null
-						if ! dpkg -s "$package" >/dev/null 2>&1; then
-							print_success "Successfully removed package: ${C}$package"
-							remove_success=true
-						else
-							print_warn "Failed to remove package: ${C}${package}. ${Y}Trying again...($retry_count)"
-						fi
-					done
+					remove_package_with_retry "$package" "apt"
 				done
 			else
 				if dpkg -s "$package_name" >/dev/null 2>&1; then
-					local retry_count=0
-					local max_retries=$MAX_INSTALL_RETRIES
-					local remove_success=false
-					while [[ "$retry_count" -lt "$max_retries" && "$remove_success" == false ]]; do
-						retry_count=$((retry_count + 1))
-						print_msg "Removing package: ${C}$package_name"
-						dpkg --configure -a >/dev/null 2>&1
-						apt autoremove "$package_name" -y 2>/dev/null
-						if ! dpkg -s "$package_name" >/dev/null 2>&1; then
-							print_success "Successfully removed package: ${C}$package_name"
-							remove_success=true
-						else
-							print_warn "Failed to remove package: ${C}${package_name}. ${Y}Trying again... ($retry_count)"
-						fi
-					done
+					remove_package_with_retry "$package_name" "apt"
 				else
-					print_success "Package ${C}$package_name${G} is not installed.${NC}"
+					print_success "Package ${C}$package_name${G} is not installed. Skipping...${NC}"
 				fi
 			fi
 		done
 	fi
+}
+
+# Helper function for package_check_and_remove
+# to handle package removal with retry
+function remove_package_with_retry() {
+	local package="$1"
+	local manager="$2"
+	local retry_count=0
+	local max_retries=$MAX_INSTALL_RETRIES
+	local remove_success=false
+
+	while [[ "$retry_count" -lt "$max_retries" && "$remove_success" == false ]]; do
+		retry_count=$((retry_count + 1))
+
+		if [[ "$manager" == "pacman" ]]; then
+			check_and_delete "$TERMUX_PREFIX/var/lib/pacman/db.lck"
+			print_msg "Removing Package : ${C}$package"
+			pacman -Rnds --noconfirm "$package" 2>/dev/null
+
+			if ! pacman -Qi "$package" >/dev/null 2>&1; then
+				print_success "Successfully removed package: ${C}$package"
+				remove_success=true
+			else
+				print_warn "Failed to remove package: ${C}${package}. ${Y}Trying again...($retry_count)"
+			fi
+		else
+			print_msg "Removing package: ${C}$package"
+			dpkg --configure -a >/dev/null 2>&1
+			apt autoremove "$package" -y 2>/dev/null
+
+			if ! dpkg -s "$package" >/dev/null 2>&1; then
+				print_success "Successfully removed package: ${C}$package"
+				remove_success=true
+			else
+				print_warn "Failed to remove package: ${C}${package}. ${Y}Trying again...($retry_count)"
+			fi
+		fi
+	done
 }
 
 function get_file_name_number() {
