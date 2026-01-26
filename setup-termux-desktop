@@ -4854,7 +4854,7 @@ function add_common_function() {
 		NC="$NC"
 		BOLD="$BOLD"
 	EOF
-	typeset -f check_termux log_debug print_success print_failed print_warn print_msg wait_for_keypress check_and_create_directory check_and_delete check_and_backup download_file check_and_restore detect_package_manager package_install_and_check package_check_and_remove get_file_name_number extract_zip_with_progress extract_archive download_and_extract count_subfolders confirmation_y_or_n get_latest_release install_font_for_style select_an_option read_conf print_to_config >>"$TERMUX_PREFIX/etc/termux-desktop/common_functions"
+	typeset -f check_termux log_debug print_success print_failed print_warn print_msg wait_for_keypress check_and_create_directory check_and_delete check_and_backup download_file check_and_restore detect_package_manager package_install_and_check install_package_with_retry package_check_and_remove remove_package_with_retry get_file_name_number extract_zip_with_progress extract_archive download_and_extract count_subfolders confirmation_y_or_n get_latest_release install_font_for_style select_an_option read_conf print_to_config >>"$TERMUX_PREFIX/etc/termux-desktop/common_functions"
 	chmod +x "$TERMUX_PREFIX/etc/termux-desktop/common_functions"
 }
 
