@@ -73,7 +73,7 @@
 | MATE                         | dwm                                |
 | GNOME                        | bspwm                              |
 | Cinnamon                     | Awesome                            |
-|                              | Fluxbox                            |
+| KDE Plasma                   | Fluxbox                            |
 |                              | IceWM                              |
 |                              | WMaker                             |
 
