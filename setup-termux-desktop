@@ -991,6 +991,8 @@ function ask_to_chose_de() {
 	total_custom_gnome_setup=$(count_subfolders "$owner" "$repo" "$REPO_SETUP_FILES_FOLDER/gnome" "$branch" 2>/dev/null)
 	local total_custom_cinnamon_setup
 	total_custom_cinnamon_setup=$(count_subfolders "$owner" "$repo" "$REPO_SETUP_FILES_FOLDER/cinnamon" "$branch" 2>/dev/null)
+	local total_custom_plasma_setup
+	total_custom_plasma_setup=$(count_subfolders "$owner" "$repo" "$REPO_SETUP_FILES_FOLDER/plasma" "$branch" 2>/dev/null)
 	# calculate availabe styles for all the window managers
 	local total_custom_openbox_setup
 	total_custom_openbox_setup=$(count_subfolders "$owner" "$repo" "$REPO_SETUP_FILES_FOLDER/openbox" "$branch" 2>/dev/null)
@@ -1023,21 +1025,23 @@ function ask_to_chose_de() {
 	echo
 	echo "${Y}6. Cinnamon($total_custom_cinnamon_setup)${NC}"
 	echo
-	echo "${Y}7. I3Wm($total_custom_i3wm_setup)${NC}"
+	echo "${Y}7. Plasma($total_custom_plasma_setup)${NC}"
 	echo
-	echo "${Y}8. Dwm($total_custom_dwm_setup)${NC}"
+	echo "${Y}8. I3Wm($total_custom_i3wm_setup)${NC}"
 	echo
-	echo "${Y}9. Bspwm($total_custom_bspwm_setup)${NC}"
+	echo "${Y}9. Dwm($total_custom_dwm_setup)${NC}"
 	echo
-	echo "${Y}10. Awesome($total_custom_awesome_setup)${NC}"
+	echo "${Y}10. Bspwm($total_custom_bspwm_setup)${NC}"
 	echo
-	echo "${Y}11. Fluxbox($total_custom_fluxbox_setup)${NC}"
+	echo "${Y}11. Awesome($total_custom_awesome_setup)${NC}"
 	echo
-	echo "${Y}12. IceWM($total_custom_icewm_setup)${NC}"
+	echo "${Y}12. Fluxbox($total_custom_fluxbox_setup)${NC}"
 	echo
-	echo "${Y}13. WMaker($total_custom_wmaker_setup)${NC}"
+	echo "${Y}13. IceWM($total_custom_icewm_setup)${NC}"
 	echo
-	select_an_option 13 1 desktop_answer
+	echo "${Y}14. WMaker($total_custom_wmaker_setup)${NC}"
+	echo
+	select_an_option 14 1 desktop_answer
 	# set the variables based on chosen de
 	sys_icons_folder="$TERMUX_PREFIX/share/icons"
 	sys_themes_folder="$TERMUX_PREFIX/share/themes"
@@ -1068,41 +1072,46 @@ function ask_to_chose_de() {
 		icons_folder="$TERMUX_HOME/.icons"
 		de_startup="gnome-session-minimal"
 	elif [[ "$desktop_answer" == "6" ]]; then
+		de_name="plasma"
+		themes_folder="$TERMUX_HOME/.themes"
+		icons_folder="$TERMUX_HOME/.icons"
+		de_startup="startplasma-x11"
+	elif [[ "$desktop_answer" == "7" ]]; then
 		de_name="cinnamon"
 		themes_folder="$TERMUX_HOME/.themes"
 		icons_folder="$TERMUX_HOME/.icons"
 		de_startup="cinnamon-session"
-	elif [[ "$desktop_answer" == "7" ]]; then
+	elif [[ "$desktop_answer" == "8" ]]; then
 		de_name="i3wm"
 		themes_folder="$TERMUX_HOME/.themes"
 		icons_folder="$TERMUX_HOME/.icons"
 		de_startup="i3"
-	elif [[ "$desktop_answer" == "8" ]]; then
+	elif [[ "$desktop_answer" == "9" ]]; then
 		de_name="dwm"
 		themes_folder="$TERMUX_HOME/.themes"
 		icons_folder="$TERMUX_HOME/.icons"
 		de_startup="dwm"
-	elif [[ "$desktop_answer" == "9" ]]; then
+	elif [[ "$desktop_answer" == "10" ]]; then
 		de_name="bspwm"
 		themes_folder="$TERMUX_HOME/.themes"
 		icons_folder="$TERMUX_HOME/.icons"
 		de_startup="bspwm"
-	elif [[ "$desktop_answer" == "10" ]]; then
+	elif [[ "$desktop_answer" == "11" ]]; then
 		de_name="awesome"
 		themes_folder="$TERMUX_HOME/.themes"
 		icons_folder="$TERMUX_HOME/.icons"
 		de_startup="awesome"
-	elif [[ "$desktop_answer" == "11" ]]; then
+	elif [[ "$desktop_answer" == "12" ]]; then
 		de_name="fluxbox"
 		themes_folder="$TERMUX_HOME/.themes"
 		icons_folder="$TERMUX_HOME/.icons"
 		de_startup="fluxbox"
-	elif [[ "$desktop_answer" == "12" ]]; then
+	elif [[ "$desktop_answer" == "13" ]]; then
 		de_name="icewm"
 		themes_folder="$TERMUX_HOME/.themes"
 		icons_folder="$TERMUX_HOME/.icons"
 		de_startup="icewm-session"
-	elif [[ "$desktop_answer" == "13" ]]; then
+	elif [[ "$desktop_answer" == "14" ]]; then
 		de_name="wmaker"
 		themes_folder="$TERMUX_HOME/.themes"
 		icons_folder="$TERMUX_HOME/.icons"
@@ -2685,6 +2694,26 @@ function install_desktop() {
 		print_msg "${BOLD}Installing Cinnamon"
 		echo
 		package_install_and_check "cinnamon nemo gnome-terminal gnome-screenshot eog"
+	elif [[ "$de_name" == "plasma" ]]; then
+		print_msg "${BOLD}Installing KDE Plasma"
+		echo
+		mkdir plasma_packages_files
+		cd gnome_packages_files || exit 1
+		if [[ "$PACKAGE_MANAGER" == "apt" ]]; then
+			download_and_extract "https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/download/kde-plasma/debs-${termux_arch}.zip"
+			dpkg --configure -a
+			apt --fix-broken install -y
+			apt install ./*deb -y
+			apt install --fix-missing -y
+		elif [[ "$PACKAGE_MANAGER" == "pacman" ]]; then
+			download_and_extract "https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/download/kde-plasma/pkgs-${termux_arch}.zip"
+			pacman -U --noconfirm ./*.pkg.tar.xz
+		else
+			print_failed "Unsupported package manger, you need APT / PACMAN"
+			exit 1
+		fi
+		cd ..
+		check_and_delete "plasma_packages_files"
 	fi
 	if [[ "$LITE_MODE" != "1" && "$LITE_MODE" != "true" ]]; then
 		package_install_and_check "file-roller pavucontrol gnome-font-viewer evince galculator xorg-xrdb"
@@ -4110,6 +4139,60 @@ function gui_launcher() {
 	cp "$TERMUX_PREFIX/share/applications/killgui.desktop" "$TERMUX_HOME/Desktop/"
 }
 
+function check_desktop_process_list() {
+	# check for the desktop environment related process
+	local de_pid
+	case "$de_name" in
+	xfce)
+		de_pid="$(pgrep xfce4)"
+		;;
+	lxqt)
+		de_pid="$(pgrep -f "lxqt-session|lxqt-panel")"
+		;;
+	gnome)
+		de_pid="$(pgrep -f "gnome-session-minimal|gnome-session")"
+		;;
+	cinnamon)
+		de_pid="$(pgrep -f "cinnamon-session")"
+		;;
+	plasma)
+		de_pid="$(pgrep -f "startplasma-x11")"
+		;;
+	openbox)
+		de_pid="$(pgrep -f "openbox|openbox-session")"
+		;;
+	mate)
+		de_pid="$(pgrep -f "mate-session|mate-panel")"
+		;;
+	i3wm)
+		de_pid="$(pgrep -f "i3|i3-with-shmlog")"
+		;;
+	dwm)
+		de_pid="$(pgrep dwm)"
+		;;
+	bspwm)
+		de_pid="$(pgrep bspwm)"
+		;;
+	awesome)
+		de_pid="$(pgrep -f awesome)"
+		;;
+	fluxbox)
+		de_pid="$(pgrep -f fluxbox)"
+		;;
+	icewm)
+		de_pid="$(pgrep -f icewm-session)"
+		;;
+	wmaker)
+		de_pid="$(pgrep -f "wmaker")"
+		;;
+	*)
+		print_failed "Unknown desktop environment: $de_name"
+		sleep 0.2
+		return 1
+		;;
+	esac
+}
+
 function check_desktop_process() {
 	banner
 	print_msg "Checking Termux:X11 and $de_name setup or not..."
@@ -4131,51 +4214,7 @@ function check_desktop_process() {
 			print_failed "No Termux:X11 process found"
 		fi
 
-		# check for the desktop environment related process
-		local de_pid
-		case "$de_name" in
-		xfce)
-			de_pid="$(pgrep xfce4)"
-			;;
-		lxqt)
-			de_pid="$(pgrep -f "lxqt-session|lxqt-panel")"
-			;;
-		gnome)
-			de_pid="$(pgrep -f "gnome-session-minimal|gnome-session")"
-			;;
-		cinnamon)
-			de_pid="$(pgrep -f "cinnamon-session")"
-			;;
-		openbox)
-			de_pid="$(pgrep -f "openbox|openbox-session")"
-			;;
-		mate)
-			de_pid="$(pgrep -f "mate-session|mate-panel")"
-			;;
-		i3wm)
-			de_pid="$(pgrep -f "i3|i3-with-shmlog")"
-			;;
-		dwm)
-			de_pid="$(pgrep dwm)"
-			;;
-		bspwm)
-			de_pid="$(pgrep bspwm)"
-			;;
-		awesome)
-			de_pid="$(pgrep -f awesome)"
-			;;
-		fluxbox)
-			de_pid="$(pgrep -f fluxbox)"
-			;;
-		icewm)
-			de_pid="$(pgrep -f icewm-session)"
-			;;
-		*)
-			print_failed "Unknown desktop environment: $de_name"
-			sleep 0.2
-			return 1
-			;;
-		esac
+		check_desktop_process_list
 
 		if [[ -n "$de_pid" ]]; then
 			print_success "$de_name is running fine"
@@ -4185,42 +4224,7 @@ function check_desktop_process() {
 			sleep 0.2
 			install_desktop
 
-			# Check again after installation
-			unset de_pid
-			case "$de_name" in
-			xfce)
-				de_pid="$(pgrep xfce4)"
-				;;
-			lxqt)
-				de_pid="$(pgrep -f "lxqt-session|lxqt-panel|pcmanfm-qt")"
-				;;
-			openbox)
-				de_pid="$(pgrep -f "openbox|openbox-session")"
-				;;
-			mate)
-				de_pid="$(pgrep -f "mate-session|mate-panel|caja")"
-				;;
-			i3)
-				de_pid="$(pgrep -f "i3|i3-with-shmlog")"
-				;;
-			dwm)
-				de_pid="$(pgrep dwm)"
-				;;
-			bspwm)
-				de_pid="$(pgrep bspwm)"
-				;;
-			awesome)
-				de_pid="$(pgrep -f awesome)"
-				;;
-			fluxbox)
-				de_pid="$(pgrep -f fluxbox)"
-				;;
-			*)
-				print_failed "Unknown desktop environment: $de_name"
-				sleep 0.2
-				return 1
-				;;
-			esac
+			check_desktop_process_list
 
 			if [[ -n "$de_pid" ]]; then
 				print_success "$de_name is now running after re-installation"
@@ -4927,6 +4931,8 @@ function remove_desktop_environments() {
 		package_check_and_remove "thunar xfce4-terminal"
 	elif [[ "$de_name" == "cinnamon" ]]; then
 		package_check_and_remove "cinnamon nemo gnome-terminal gnome-screenshot eog"
+	elif [[ "$de_name" == "plasma" ]]; then
+		package_check_and_remove "plasma plasma-desktop plasma-workspace plasma-workspace-wallpapers kwin-x11 breeze breeze-gtk aurorae plasma-integration plasma-browser-integration plasma-pa plasma-systemmonitor systemsettings kscreen kinfocenter kmenuedit kdeplasma-addons milou xsettingsd"
 	fi
 }
 
