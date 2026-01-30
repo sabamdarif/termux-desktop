@@ -280,8 +280,9 @@ function download_file() {
 	local url
 	local max_retries=$MAX_DOWNLOAD_RETRIES
 	local attempt=1
-	local successful_attempt=0
+	local download_success=false
 
+	# Parse arguments
 	if [[ -z "$2" ]]; then
 		url="$1"
 		dest="$(basename "$url")"
@@ -290,42 +291,60 @@ function download_file() {
 		url="$2"
 	fi
 
+	# Validate URL
 	if [[ -z "$url" ]]; then
 		print_failed "No URL provided!"
 		return 1
 	fi
 
+	# Retry loop
 	while [[ $attempt -le $max_retries ]]; do
-		print_msg "Downloading $dest..."
-		if [[ ! -s "$dest" ]]; then
+		print_msg "Downloading $dest... (Attempt $attempt/$max_retries)"
+
+		# Clean up any existing empty or partial file
+		check_and_delete "$dest"
+
+		# Perform download
+		if command -v wget &>/dev/null; then
+			if wget --tries=3 --timeout=$DOWNLOAD_TIMEOUT --retry-connrefused -O "$dest" "$url" 2>/dev/null; then
+				download_success=true
+			fi
+		else
+			if curl -f -L --connect-timeout $DOWNLOAD_TIMEOUT --max-time $((DOWNLOAD_TIMEOUT * 3)) "$url" -o "$dest" 2>/dev/null; then
+				download_success=true
+			fi
+		fi
+
+		# Validate downloaded file
+		if [[ "$download_success" == true ]] && [[ -f "$dest" ]] && [[ -s "$dest" ]]; then
+			# Additional validation: check if file is not an HTML error page
+			if file "$dest" | grep -qi "html\|xml" && grep -qi "error\|404\|403\|not found" "$dest" 2>/dev/null; then
+				print_failed "Downloaded file appears to be an error page"
+				download_success=false
+				check_and_delete "$dest"
+			else
+				if [[ $attempt -eq 1 ]]; then
+					print_success "File downloaded successfully."
+				else
+					print_success "File downloaded successfully on attempt $attempt."
+				fi
+				return 0
+			fi
+		fi
+
+		# Download failed, prepare for retry
+		if [[ $attempt -lt $max_retries ]]; then
+			print_failed "Download failed. Retrying..."
 			check_and_delete "$dest"
 		fi
 
-		if command -v wget &>/dev/null; then
-			wget --tries=5 --timeout=$DOWNLOAD_TIMEOUT --retry-connrefused -O "$dest" "$url"
-		else
-			curl -# -L "$url" -o "$dest"
-		fi
-
-		if [[ -f "$dest" && -s "$dest" ]]; then
-			successful_attempt=$attempt
-			break
-		else
-			print_failed "Download failed. Retrying... ($attempt/$max_retries)"
-		fi
+		download_success=false
 		((attempt++))
 	done
 
-	if [[ -f "$dest" ]]; then
-		if [[ $successful_attempt -eq 1 ]]; then
-			print_success "File downloaded successfully."
-		else
-			print_success "File downloaded successfully on attempt $successful_attempt."
-		fi
-		return 0
-	fi
-
-	print_failed "Failed to download the file after $max_retries attempts. Exiting."
+	# All attempts failed
+	check_and_delete "$dest"
+	print_failed "Failed to download the file after $max_retries attempts."
 	return 1
 }
 
@@ -915,12 +934,11 @@ function questions_theme_select() {
 
 	# If custom styles exist, fetch and display them
 	local styles_url="$REPO_RAW_URL/refs/heads/$REPO_BRANCH_MAIN/docs/${de_name}_styles.md"
-	if curl --head --silent --fail "$styles_url" >/dev/null; then
-		print_msg "Downloading list of available styles..."
-		check_and_delete "${current_path}/styles.md"
-		download_file "${current_path}/styles.md" "$styles_url"
-	else
-		log_debug "No custom setup is available for $de_name"
+	print_msg "Downloading list of available styles..."
+	check_and_delete "${current_path}/styles.md"
+
+	if ! download_file "${current_path}/styles.md" "$styles_url"; then
+		log_debug "No styles available or download failed for $de_name"
 		print_msg "Continuing with style 0: Stock"
 		style_answer=0
 		style_name="Stock"
@@ -2171,38 +2189,62 @@ ${NC}"
 		ask_to_chose_de
 		setup_device_gpu_model
 		# download configuration
-		download_file "$REPO_RAW_URL/refs/heads/$REPO_BRANCH_MAIN/configuration/generic/generic.conf"
+		if ! download_file "$REPO_RAW_URL/refs/heads/$REPO_BRANCH_MAIN/configuration/generic/generic.conf"; then
+			print_failed "Fialed to download generic configuration"
+			print_msg "Please check your internet connection"
+			exit 1
+		fi
 		# shellcheck disable=SC1091
 		source generic.conf
 		check_and_delete "generic.conf"
 		local device_brand_name
 		device_brand_name=$(getprop ro.product.brand | cut -d ' ' -f 1)
 		if [[ "$GPU_NAME" == "adreno" ]]; then
-			download_file "$REPO_RAW_URL/refs/heads/$REPO_BRANCH_MAIN/configuration/generic/hwa/adreno/generic-adreno.conf"
+			if ! download_file "$REPO_RAW_URL/refs/heads/$REPO_BRANCH_MAIN/configuration/generic/hwa/adreno/generic-adreno.conf"; then
+				print_failed "Fialed to download Adreno configuration"
+				print_msg "Please check your internet connection"
+				exit 1
+			fi
 			# shellcheck disable=SC1091
 			source generic-adreno.conf
 			check_and_delete "generic-adreno.conf"
 		elif [[ "$GPU_NAME" == "mali" ]]; then
 			if [[ $device_brand_name == samsung* ]]; then
-				download_file "$REPO_RAW_URL/refs/heads/$REPO_BRANCH_MAIN/configuration/generic/hwa/mali/samsung/generic-samsung-mali.conf"
+				if ! download_file "$REPO_RAW_URL/refs/heads/$REPO_BRANCH_MAIN/configuration/generic/hwa/mali/samsung/generic-samsung-mali.conf"; then
+					print_failed "Fialed to download Mali configuration"
+					print_msg "Please check your internet connection"
+					exit 1
+				fi
 				# shellcheck disable=SC1091
 				source generic-samsung-mali.conf
 				check_and_delete "generic-samsung-mali.conf"
 			else
-				download_file "$REPO_RAW_URL/refs/heads/$REPO_BRANCH_MAIN/configuration/generic/hwa/mali/generic-mali.conf"
+				if ! download_file "$REPO_RAW_URL/refs/heads/$REPO_BRANCH_MAIN/configuration/generic/hwa/mali/generic-mali.conf"; then
+					print_failed "Fialed to download Mali configuration"
+					print_msg "Please check your internet connection"
+					exit 1
+				fi
 				# shellcheck disable=SC1091
 				source generic-mali.conf
 				check_and_delete "generic-mali.conf"
 			fi
 		else
-			download_file "$REPO_RAW_URL/refs/heads/$REPO_BRANCH_MAIN/configuration/generic/hwa/generic-others.conf"
+			if ! download_file "$REPO_RAW_URL/refs/heads/$REPO_BRANCH_MAIN/configuration/generic/hwa/generic-others.conf"; then
+				print_failed "Fialed to download Others configuration"
+				print_msg "Please check your internet connection"
+				exit 1
+			fi
 			# shellcheck disable=SC1091
 			source generic-others.conf
 			check_and_delete "generic-others.conf"
 		fi
 		# setup extra config if it's lite mode install
 		if [[ "$LITE_MODE" == "1" || "$LITE_MODE" == "true" ]]; then
-			download_file "$REPO_RAW_URL/refs/heads/$REPO_BRANCH_MAIN/configuration/generic/generic-lite.conf"
+			if ! download_file "$REPO_RAW_URL/refs/heads/$REPO_BRANCH_MAIN/configuration/generic/generic-lite.conf"; then
+				print_failed "Fialed to download generic lite configuration"
+				print_msg "Please check your internet connection"
+				exit 1
+			fi
 			# shellcheck disable=SC1091
 			source generic-lite.conf
 			check_and_delete "generic-lite.conf"
@@ -2218,16 +2260,28 @@ ${NC}"
 		######################################################################
 		ask_to_chose_de
 		# download configuration
-		download_file "$REPO_RAW_URL/refs/heads/$REPO_BRANCH_MAIN/configuration/generic/generic.conf"
+		if ! download_file "$REPO_RAW_URL/refs/heads/$REPO_BRANCH_MAIN/configuration/generic/generic.conf"; then
+			print_failed "Fialed to download generic configuration"
+			print_msg "Please check your internet connection"
+			exit 1
+		fi
 		# shellcheck disable=SC1091
 		source generic.conf
-		download_file "$REPO_RAW_URL/refs/heads/$REPO_BRANCH_MAIN/configuration/generic/nohwa/generic-nohwa.conf"
+		if ! download_file "$REPO_RAW_URL/refs/heads/$REPO_BRANCH_MAIN/configuration/generic/nohwa/generic-nohwa.conf"; then
+			print_failed "Fialed to download generic no hardware acceleration configuration"
+			print_msg "Please check your internet connection"
+			exit 1
+		fi
 		# shellcheck disable=SC1091
 		source generic-nohwa.conf
 		check_and_delete "generic-nohwa.conf"
 		# setup extra config if it's lite mode install
 		if [[ "$LITE_MODE" == "1" || "$LITE_MODE" == "true" ]]; then
-			download_file "$REPO_RAW_URL/refs/heads/$REPO_BRANCH_MAIN/configuration/generic/generic-lite.conf"
+			if ! download_file "$REPO_RAW_URL/refs/heads/$REPO_BRANCH_MAIN/configuration/generic/generic-lite.conf"; then
+				print_failed "Fialed to download generic lite configuration"
+				print_msg "Please check your internet connection"
+				exit 1
+			fi
 			# shellcheck disable=SC1091
 			source generic-lite.conf
 			check_and_delete "generic-lite.conf"
@@ -3012,7 +3066,11 @@ function get_hw_acceleration_source() {
 			# shellcheck disable=SC2154
 			if [[ "$change_old_hw_installer" == "y" ]]; then
 				check_and_backup "$script_path"
-				download_file "$script_path" "$remote_url"
+				if ! download_file "$script_path" "$remote_url"; then
+					print_failed "Fialed to download hardware acceleration setup file"
+					print_msg "Please check your internet connection"
+					exit 1
+				fi
 			else
 				print_msg "Using the local hardware acceleration setup file."
 			fi
@@ -3021,7 +3079,11 @@ function get_hw_acceleration_source() {
 			print_msg "Using the local hardware acceleration setup file."
 		fi
 	else
-		download_file "$script_path" "$remote_url"
+		if ! download_file "$script_path" "$remote_url"; then
+			print_failed "Fialed to download hardware acceleration setup file"
+			print_msg "Please check your internet connection"
+			exit 1
+		fi
 	fi
 
 	chmod +x "$script_path"
@@ -3072,7 +3134,11 @@ function get_distro_container_source() {
 			# shellcheck disable=SC2154
 			if [[ "$change_old_distro_installer" == "y" ]]; then
 				check_and_backup "$script_path"
-				download_file "$script_path" "$remote_url"
+				if ! download_file "$script_path" "$remote_url"; then
+					print_failed "Fialed to download distro container setup file"
+					print_msg "Please check your internet connection"
+					exit 1
+				fi
 			else
 				print_msg "Using the local distro-container setup file"
 			fi
@@ -3081,7 +3147,11 @@ function get_distro_container_source() {
 			print_msg "Using the local distro-container setup file"
 		fi
 	else
-		download_file "$script_path" "$remote_url"
+		if ! download_file "$script_path" "$remote_url"; then
+			print_failed "Fialed to download distro container setup file"
+			print_msg "Please check your internet connection"
+			exit 1
+		fi
 	fi
 
 	chmod +x "$script_path"
@@ -3903,17 +3973,6 @@ function setup_termux_x11() {
 	print_msg "${BOLD}Configuring Termux:X11"
 	echo
 	package_install_and_check "termux-x11-nightly"
-	local repo_owner="termux"
-	local repo_name="termux-x11"
-	local latest_termux_x11_tag
-	latest_termux_x11_tag=$(get_latest_release "termux" "termux-x11")
-	local termux_x11_url="https://github.com/$repo_owner/$repo_name/releases/download/$latest_termux_x11_tag/"
-	local assets
-	assets=$(curl -s "https://api.github.com/repos/$repo_owner/$repo_name/releases/latest" | grep -oP '(?<="name": ")[^"]*')
-	deb_assets=$(echo "$assets" | grep "termux-x11.*all.deb")
-	download_file "$current_path/termux-x11.deb" "$termux_x11_url/$deb_assets"
-	apt install "$current_path/termux-x11.deb" -y
-	rm "$current_path/termux-x11.deb"
 	# "sed -i '12s/^#//' "$TERMUX_HOME/.termux/termux.properties"
 	setup_tx11start_cmd
 	setup_tx11stop_cmd
@@ -4433,7 +4492,11 @@ function setup_zsh() {
 	shell_name="zsh"
 	print_msg "${BOLD}Configuring zsh.."
 	package_install_and_check "zsh git"
-	download_file "$REPO_RAW_URL/refs/heads/$REPO_BRANCH_MAIN/other/setup-zsh"
+	if ! download_file "$REPO_RAW_URL/refs/heads/$REPO_BRANCH_MAIN/other/setup-zsh"; then
+		print_failed "Fialed to download zsh setup file"
+		print_msg "Please check your internet connection"
+		return 1
+	fi
 	chmod +x setup-zsh
 	# shellcheck disable=SC1091
 	source setup-zsh
@@ -4450,7 +4513,11 @@ function setup_bash() {
 	shell_name="bash"
 	print_msg "${BOLD}Configuring bash.."
 	package_install_and_check "git"
-	download_file "$REPO_RAW_URL/refs/heads/$REPO_BRANCH_MAIN/other/setup-bash"
+	if ! download_file "$REPO_RAW_URL/refs/heads/$REPO_BRANCH_MAIN/other/setup-bash"; then
+		print_failed "Fialed to download bash setup file"
+		print_msg "Please check your internet connection"
+		return 1
+	fi
 	chmod +x setup-bash
 	# shellcheck disable=SC1091
 	source setup-bash
@@ -5083,24 +5150,35 @@ function gui_check_up() {
 
 function change_style() {
 	if [[ ! -e "$CONFIG_FILE" ]]; then
-		echo -e "${C} It look like you haven't install the desktop yet\n Please install the desktop first${NC}"
+		echo -e "${C} It looks like you haven't installed the desktop yet\n Please install the desktop first${NC}"
 		exit 1
 	else
 		read_conf
 		gui_check_up
 		banner
-		download_file "${current_path}/styles.md" "$REPO_RAW_URL/refs/heads/$REPO_BRANCH_MAIN/docs/${de_name}_styles.md"
+
+		# Download styles list
+		if ! download_file "${current_path}/styles.md" "$REPO_RAW_URL/refs/heads/$REPO_BRANCH_MAIN/docs/${de_name}_styles.md"; then
+			print_failed "Failed to download styles list for $de_name"
+			print_msg "Please check your internet connection"
+			exit 1
+		fi
+
+		# Get current style name
 		style_name=$(grep -oP "^## $style_answer\..+?(?=(\n## \d+\.|\Z))" "${current_path}/styles.md" | sed -e "s/^## $style_answer\. //" -e "s/:$//" -e 's/^[[:space:]]*//;s/[[:space:]]*$//')
 		check_and_delete "${current_path}/styles.md"
+
 		print_msg "Your currently installed style is ${C}${BOLD}$style_name"
 		echo
 		sleep 2
 		unset style_name
+
 		questions_theme_select
 		rm -rf ~/.cache/sessions/*
 		setup_config
+
 		banner
-		print_msg "Style changed successfully"
+		print_success "Style changed successfully"
 		echo
 		print_msg "Your currently installed style is ${C}${BOLD}$style_name"
 	fi
@@ -5679,7 +5757,11 @@ function print_basic_details() {
 function add_installer() {
 	if [[ ! -e "$TERMUX_PREFIX/bin/setup-termux-desktop" ]]; then
 		print_msg "Adding setup-termux-desktop installer to bin"
-		download_file "$TERMUX_PREFIX/bin/setup-termux-desktop" "$REPO_RAW_URL/refs/heads/$REPO_BRANCH_MAIN/setup-termux-desktop"
+		if ! download_file "$TERMUX_PREFIX/bin/setup-termux-desktop" "$REPO_RAW_URL/refs/heads/$REPO_BRANCH_MAIN/setup-termux-desktop"; then
+			print_failed "Fialed to download setup-termux-desktop setup file"
+			print_msg "Please check your internet connection"
+			return 1
+		fi
 		chmod +x "$TERMUX_PREFIX/bin/setup-termux-desktop"
 	fi
 }
@@ -5711,7 +5793,13 @@ function check_for_update_and_update_installer() {
 				check_and_create_directory "$TERMUX_PREFIX/etc/termux-desktop"
 				mv "$TERMUX_PREFIX/bin/setup-termux-desktop" "$TERMUX_PREFIX/etc/termux-desktop/"
 				check_and_backup "$TERMUX_PREFIX/etc/termux-desktop/setup-termux-desktop"
-				add_installer
+				if ! add_installer; then
+					print_failed "Fialed to download new installer"
+					print_msg "Please check your internet connection"
+					check_and_restore "$TERMUX_PREFIX/etc/termux-desktop/setup-termux-desktop"
+					mv "$TERMUX_PREFIX/etc/termux-desktop/setup-termux-desktop" "$TERMUX_PREFIX/bin/setup-termux-desktop"
+					exit 1
+				fi
 				add_common_function
 				unset local_script_hash
 				local new_local_script_hash
@@ -5849,7 +5937,11 @@ function install_termux_desktop() {
 		fi
 	fi
 	if [[ "$1" == "--local-config" ]] || [[ "$1" == "--config" ]] || [[ "$1" == "-config" ]]; then
-		download_file "${current_path}/styles.md" "$REPO_RAW_URL/refs/heads/$REPO_BRANCH_MAIN/docs/${de_name}_styles.md"
+		if ! download_file "${current_path}/styles.md" "$REPO_RAW_URL/refs/heads/$REPO_BRANCH_MAIN/docs/${de_name}_styles.md"; then
+			print_failed "Fialed to download styles list for $de_name"
+			print_msg "Please check your internet connection"
+			exit 1
+		fi
 		style_name=$(grep -oP "^## $style_answer\..+?(?=(\n## \d+\.|\Z))" "${current_path}/styles.md" | sed -e "s/^## $style_answer\. //" -e "s/:$//" -e 's/^[[:space:]]*//;s/[[:space:]]*$//')
 		check_and_delete "${current_path}/styles.md"
 	fi

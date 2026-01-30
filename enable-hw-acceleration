@@ -44,12 +44,20 @@ function hw_install_required_packages() {
 		if [[ "$termux_arch" == "aarch64" || "$termux_arch" == "arm" ]]; then
 			print_msg "${BOLD}Installing vulkan-wrapper-android Driver..."
 			if [[ "$PACKAGE_MANAGER" == "pacman" ]]; then
-				download_file "vulkan-wrapper-android.pkg.tar.xz" "https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/download/vulkan-wrapper-android_25.0.0-2/vulkan-wrapper-android-25.0.0-2-${termux_arch}.pkg.tar.xz"
+				if ! download_file "vulkan-wrapper-android.pkg.tar.xz" "https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/download/vulkan-wrapper-android_25.0.0-2/vulkan-wrapper-android-25.0.0-2-${termux_arch}.pkg.tar.xz"; then
+					print_failed "Fialed to download vulkan-wrapper-android driver"
+					print_msg "Please check your internet connection"
+					return 1
+				fi
 				pacman -Syu --needed
 				pacman -U --noconfirm vulkan-wrapper-android.pkg.tar.xz
 				check_and_delete "vulkan-wrapper-android.pkg.tar.xz"
 			else
-				download_file "vulkan-wrapper-android.deb" "https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/download/vulkan-wrapper-android_25.0.0-2/vulkan-wrapper-android_25.0.0-2_${termux_arch}.deb"
+				if ! download_file "vulkan-wrapper-android.deb" "https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/download/vulkan-wrapper-android_25.0.0-2/vulkan-wrapper-android_25.0.0-2_${termux_arch}.deb"; then
+					print_failed "Fialed to download vulkan-wrapper-android driver"
+					print_msg "Please check your internet connection"
+					return 1
+				fi
 				dpkg --configure -a
 				apt --fix-broken install -y
 				apt install ./vulkan-wrapper-android.deb -y
@@ -64,7 +72,11 @@ function hw_install_required_packages() {
 		if [[ "$termux_arch" == "aarch64" ]]; then
 			print_msg "${BOLD}Installing vulkan-wrapper-android (leegao's fork) Driver..."
 			package_install_and_check "libandroid-shmem libc++ libdrm libx11 libxcb libxshmfence libwayland vulkan-loader-generic zlib zstd"
-			download_file "bionic-vulkan-wrapper.zip" "https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/download/bionic-vulkan-wrapper-0.0.5r5/vulkan-wrapper-android-leegaos-fork-${termux_arch}.zip"
+			if ! download_file "bionic-vulkan-wrapper.zip" "https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/download/bionic-vulkan-wrapper-0.0.5r5/vulkan-wrapper-android-leegaos-fork-${termux_arch}.zip"; then
+				print_failed "Fialed to download bionic-vulkan-wrapper driver"
+				print_msg "Please check your internet connection"
+				return 1
+			fi
 			unzip -o bionic-vulkan-wrapper.zip -d "$TERMUX_PREFIX/"
 			check_and_delete "bionic-vulkan-wrapper.zip"
 		else
@@ -74,7 +86,11 @@ function hw_install_required_packages() {
 	"vulkan_wrapper_android_pipetto_crypto")
 		if [[ "$termux_arch" == "aarch64" ]]; then
 			print_msg "${BOLD}Installing vulkan-wrapper-android (pipetto-crypto's fork) Driver..."
-			download_file "pipetto-crypto-vulkan-wrapper-android.deb" "https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/download/pipetto-crypto-vulkan-wrapper-android/pipetto-crypto-vulkan-wrapper-android_25.0.0-1_${termux_arch}.deb"
+			if ! download_file "pipetto-crypto-vulkan-wrapper-android.deb" "https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/download/pipetto-crypto-vulkan-wrapper-android/pipetto-crypto-vulkan-wrapper-android_25.0.0-1_${termux_arch}.deb"; then
+				print_failed "Fialed to download pipetto-crypto-vulkan-wrapper-android driver"
+				print_msg "Please check your internet connection"
+				return 1
+			fi
 			dpkg --configure -a
 			apt --fix-broken install -y
 			apt install ./pipetto-crypto-vulkan-wrapper-android.deb -y
@@ -94,12 +110,20 @@ function hw_install_required_packages() {
 		if [[ "$termux_arch" == "aarch64" || "$termux_arch" == "arm" ]]; then
 			print_msg "${BOLD}Installing freedreno kgsl..."
 			if [[ "$PACKAGE_MANAGER" == "pacman" ]]; then
-				download_file "mesa-vulkan-icd-freedreno.pkg.tar.xz" "https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/download/freedreno-kgsl-25.1/mesa-vulkan-icd-freedreno_25.1.1-2_${termux_arch}.pkg.tar.xz"
+				if ! download_file "mesa-vulkan-icd-freedreno.pkg.tar.xz" "https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/download/freedreno-kgsl-25.1/mesa-vulkan-icd-freedreno_25.1.1-2_${termux_arch}.pkg.tar.xz"; then
+					print_failed "Fialed to download mesa-vulkan-icd-freedreno driver"
+					print_msg "Please check your internet connection"
+					return 1
+				fi
 				pacman -Syu --needed
 				pacman -U --noconfirm mesa-vulkan-icd-freedreno.pkg.tar.xz
 				check_and_delete "mesa-vulkan-icd-freedreno.pkg.tar.xz"
 			else
-				download_file "mesa-vulkan-icd-freedreno.deb" "https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/download/freedreno-kgsl-25.1/mesa-vulkan-icd-freedreno_25.1.1-2_${termux_arch}.deb"
+				if ! download_file "mesa-vulkan-icd-freedreno.deb" "https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/download/freedreno-kgsl-25.1/mesa-vulkan-icd-freedreno_25.1.1-2_${termux_arch}.deb"; then
+					print_failed "Fialed to download mesa-vulkan-icd-freedreno driver"
+					print_msg "Please check your internet connection"
+					return 1
+				fi
 				dpkg --configure -a
 				apt --fix-broken install -y
 				apt install ./mesa-vulkan-icd-freedreno.deb -y
@@ -293,7 +317,11 @@ function setup_turnip_proot() {
 	create_shell_script "$save_path/install_turnip_related_packs.sh" "$install_turnip_related_packs"
 	"${selected_distro_type}"-distro login "$selected_distro" -- /bin/bash -c 'bash install_turnip_related_packs.sh'
 
-	download_file "$TERMUX_HOME/turnip.zip" "https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/download/turnip-${TURNIP_MESA_VERSION}/turnip-${TURNIP_MESA_VERSION}-${termux_arch}.zip"
+	if ! download_file "$TERMUX_HOME/turnip.zip" "https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/download/turnip-${TURNIP_MESA_VERSION}/turnip-${TURNIP_MESA_VERSION}-${termux_arch}.zip"; then
+		print_failed "Fialed to download turnip driver"
+		print_msg "Please check your internet connection"
+		return 1
+	fi
 	"${selected_distro_type}"-distro login "$selected_distro" -- /bin/bash -c "unzip -o $TERMUX_HOME/turnip.zip -d /usr"
 	check_and_delete "$TERMUX_HOME/turnip.zip"
 }
