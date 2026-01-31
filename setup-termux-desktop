@@ -2743,7 +2743,7 @@ function install_desktop() {
 		fi
 		cd ..
 		check_and_delete "gnome_packages_files"
-		package_install_and_check "gnome-terminal eog"
+		package_install_and_check "gnome-terminal eog libgtop"
 	elif [[ "$de_name" == "cinnamon" ]]; then
 		print_msg "${BOLD}Installing Cinnamon"
 		echo
