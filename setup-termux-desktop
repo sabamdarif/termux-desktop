@@ -306,11 +306,11 @@ function download_file() {
 
 		# Perform download
 		if command -v wget &>/dev/null; then
-			if wget --tries=3 --timeout=$DOWNLOAD_TIMEOUT --retry-connrefused -O "$dest" "$url" 2>/dev/null; then
+			if wget --tries=3 --timeout=$DOWNLOAD_TIMEOUT --retry-connrefused -O "$dest" "$url"; then
 				download_success=true
 			fi
 		else
-			if curl -f -L --connect-timeout $DOWNLOAD_TIMEOUT --max-time $((DOWNLOAD_TIMEOUT * 3)) "$url" -o "$dest" 2>/dev/null; then
+			if curl -f -L --connect-timeout $DOWNLOAD_TIMEOUT --max-time $((DOWNLOAD_TIMEOUT * 3)) "$url" -o "$dest"; then
 				download_success=true
 			fi
 		fi
@@ -2640,9 +2640,9 @@ function install_required_packages() {
 	echo
 
 	if [[ "$PACKAGE_MANAGER" == "pacman" ]]; then
-		package_install_and_check "wget git jq curl tar xz-utils gzip libpopt termux-am termux-api"
+		package_install_and_check "wget git jq curl tar xz-utils gzip libpopt termux-am termux-api file"
 	else
-		package_install_and_check "wget git jq curl tar xz-utils gzip libpopt termux-am x11-repo tur-repo termux-api"
+		package_install_and_check "wget git jq curl tar xz-utils gzip libpopt termux-am x11-repo tur-repo termux-api file"
 	fi
 }
 
@@ -2651,7 +2651,7 @@ function recheck_basic_packages() {
 	print_msg "${BOLD}Checking required packages..."
 	local max_retries=3
 	local retry_count=0
-	local basic_packages=("wget" "git" "jq" "curl" "tar" "gzip" "termux-am" "termux-api-start")
+	local basic_packages=("wget" "git" "jq" "curl" "tar" "gzip" "termux-am" "termux-api-start" "file")
 	local pack
 
 	while [[ "$retry_count" -le "$max_retries" ]]; do
