@@ -1039,7 +1039,7 @@ function ask_to_chose_de() {
 	echo
 	echo "${Y}4. MATE (Unstable)($total_custom_mate_setup)${NC}"
 	echo
-	echo "${Y}5. Gnome($total_custom_gnome_setup)(WIP, so expect bugs)${NC}"
+	echo "${Y}5. Gnome($total_custom_gnome_setup)${NC}"
 	echo
 	echo "${Y}6. Cinnamon($total_custom_cinnamon_setup)${NC}"
 	echo
@@ -1088,7 +1088,7 @@ function ask_to_chose_de() {
 		de_name="gnome"
 		themes_folder="$TERMUX_HOME/.themes"
 		icons_folder="$TERMUX_HOME/.icons"
-		de_startup="gnome-session-minimal"
+		de_startup="gnome-session"
 	elif [[ "$desktop_answer" == "6" ]]; then
 		de_name="cinnamon"
 		themes_folder="$TERMUX_HOME/.themes"
@@ -2743,7 +2743,7 @@ function install_desktop() {
 		fi
 		cd ..
 		check_and_delete "gnome_packages_files"
-		package_install_and_check "xfce4-terminal eog"
+		package_install_and_check "gnome-terminal eog"
 	elif [[ "$de_name" == "cinnamon" ]]; then
 		print_msg "${BOLD}Installing Cinnamon"
 		echo
@@ -4209,7 +4209,7 @@ function check_desktop_process_list() {
 		de_pid="$(pgrep -f "lxqt-session|lxqt-panel")"
 		;;
 	gnome)
-		de_pid="$(pgrep -f "gnome-session-minimal|gnome-session")"
+		de_pid="$(pgrep -f "gnome-shell|gnome-session")"
 		;;
 	cinnamon)
 		de_pid="$(pgrep -f "cinnamon-session")"
@@ -4995,7 +4995,7 @@ function remove_desktop_environments() {
 		package_check_and_remove "fluxbox xorg-xsetroot xorg-xprop lxappearance wmctrl feh firefox rofi bmon xcompmgr gtk3 gedit libxml2-utils"
 	elif [[ "$de_name" == "gnome" ]]; then
 		package_check_and_remove "gnome*"
-		package_check_and_remove "thunar xfce4-terminal"
+		package_check_and_remove "gnome-terminal nautilus eog"
 	elif [[ "$de_name" == "cinnamon" ]]; then
 		package_check_and_remove "cinnamon nemo gnome-terminal gnome-screenshot eog"
 	elif [[ "$de_name" == "plasma" ]]; then
@@ -5695,26 +5695,6 @@ function some_fixes() {
 		fi
 	fi
 
-	# some fixes for gnome and cinnamon desktop
-	if [[ "$de_name" == "gnome" ]] || [[ "$de_name" == "cinnamon" ]]; then
-		sed -i "s|<policy user=\".*\">|<policy user=\"$(whoami)\">|" "$TERMUX_PREFIX/share/dbus-1/system.d/org.freedesktop.UPower.conf"
-		if [[ "$de_name" == "gnome" ]]; then
-			cat <<-EOF >"$TERMUX_PREFIX/share/gnome-session/sessions/minimal.session"
-				[GNOME Session]
-				Name=Minimal GNOME
-				RequiredComponents=org.gnome.Shell;org.gnome.SettingsDaemon.A11ySettings;org.gnome.SettingsDaemon.Color;org.gnome.SettingsDaemon.Datetime;org.gnome.SettingsDaemon.Housekeeping;org.gnome.SettingsDaemon.Keyboard;org.gnome.SettingsDaemon.Sound;
-				DefaultProvider-wm=gnome-shell
-				DesktopName=GNOME
-			EOF
-			cat <<-EOF >"$TERMUX_PREFIX/bin/gnome-session-minimal"
-				rm -rf $TERMUX_PREFIX/var/run/dbus/pid
-				dbus-launch --config-file $TERMUX_PREFIX/share/dbus-1/system.conf
-				UPOWER_CONF_FILE_NAME=$TERMUX_PREFIX/etc/UPower/UPower.conf $TERMUX_PREFIX/libexec/upowerd -d &
-				gnome-session --session=minimal \$@
-			EOF
-			chmod +x "$TERMUX_PREFIX/bin/gnome-session-minimal"
-		fi
-	fi
 }
 
 # add the basic details into a config file
