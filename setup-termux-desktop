@@ -4998,7 +4998,7 @@ function remove_desktop_environments() {
 	elif [[ "$de_name" == "fluxbox" ]]; then
 		package_check_and_remove "fluxbox xorg-xsetroot xorg-xprop lxappearance wmctrl feh firefox rofi bmon xcompmgr gtk3 gedit libxml2-utils"
 	elif [[ "$de_name" == "gnome" ]]; then
-		package_check_and_remove "gnome*"
+		package_check_and_remove "gnome nautilus"
 		package_check_and_remove "gnome-terminal nautilus eog"
 	elif [[ "$de_name" == "cinnamon" ]]; then
 		package_check_and_remove "cinnamon nemo gnome-terminal gnome-screenshot eog"
