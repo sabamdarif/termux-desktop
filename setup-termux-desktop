@@ -1037,7 +1037,7 @@ function ask_to_chose_de() {
 	echo
 	echo "${Y}3. OPENBOX WM($total_custom_openbox_setup)${NC}"
 	echo
-	echo "${Y}4. MATE (Unstable)($total_custom_mate_setup)${NC}"
+	echo "${Y}4. MATE($total_custom_mate_setup)${NC}"
 	echo
 	echo "${Y}5. Gnome($total_custom_gnome_setup)${NC}"
 	echo
@@ -2695,8 +2695,8 @@ function install_desktop() {
 	elif [[ "$de_name" == "mate" ]]; then
 		print_msg "${BOLD}Installing MATE"
 		echo
-		package_install_and_check "mate*"
-		package_install_and_check "marco mousepad xfce4-taskmanager eog kvantum"
+		package_install_and_check "mate mate-calc mate-netbook mate-terminal mate-tweak mate-utils mate-system-monitor mate-applet-brisk-menu mate-media engrampa eom mozo pluma caja-actions caja-extensions"
+		package_install_and_check "kvantum"
 	elif [[ "$de_name" == "i3wm" ]]; then
 		print_msg "${BOLD}Installing i3WM"
 		package_install_and_check "i3 rofi mpv polybar xcompmgr feh"
@@ -2770,7 +2770,11 @@ function install_desktop() {
 		check_and_delete "plasma_packages_files"
 	fi
 	if [[ "$LITE_MODE" != "1" && "$LITE_MODE" != "true" ]]; then
-		package_install_and_check "file-roller pavucontrol gnome-font-viewer evince galculator xorg-xrdb"
+		if [[ "$de_name" == "mate" ]]; then
+			package_install_and_check "pavucontrol gnome-font-viewer evince xorg-xrdb"
+		else
+			package_install_and_check "file-roller pavucontrol gnome-font-viewer evince galculator xorg-xrdb"
+		fi
 	fi
 	# Uncomment if additional package installation is needed
 	# if [[ "$distro_add_answer" == "y" ]]; then
@@ -4979,8 +4983,8 @@ function remove_desktop_environments() {
 	elif [[ "$de_name" == "openbox" ]]; then
 		package_check_and_remove "openbox polybar xorg-xsetroot lxappearance wmctrl feh xwayland kvantum thunar firefox mpd rofi bmon xcompmgr xfce4-settings gedit"
 	elif [[ "$de_name" == "mate" ]]; then
-		package_check_and_remove "mate*"
-		package_check_and_remove "marco mousepad xfce4-taskmanager lximage-qt"
+		package_check_and_remove "mate mate-calc mate-netbook mate-terminal mate-tweak mate-utils mate-system-monitor mate-applet-brisk-menu mate-media engrampa eom mozo pluma caja-actions caja-extensions"
+		package_check_and_remove "kvantum"
 	elif [[ "$de_name" == "i3wm" ]]; then
 		package_check_and_remove "i3 rofi mpv polybar xcompmgr feh"
 	elif [[ "$de_name" == "dwm" ]]; then
