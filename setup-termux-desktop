@@ -875,22 +875,120 @@ function validate_required_vars() {
 
 	print_msg "Validating required configuration values..."
 
-	local missing_vars=()
 	for var in "${required_vars[@]}"; do
 		if [[ -z "${!var}" ]]; then
-			missing_vars+=("$var")
+			print_msg "Missing variable: $var - attempting to set it..."
+
+			case "$var" in
+			"display_number")
+				display_number=0
+				;;
+			"gui_mode")
+				question_gui_mode
+				;;
+			"de_name")
+				question_select_de_from_list
+				set_desktop_variables
+				;;
+			"de_startup")
+				question_select_de_from_list
+				set_desktop_variables
+				;;
+			"de_on_startup")
+				question_de_on_startup
+				;;
+			"enable_hw_acc")
+				question_enable_hw_acc
+				;;
+			"GPU_NAME")
+				setup_device_gpu_model
+				;;
+			"exp_termux_vulkan_hw_answer")
+				exp_vulkan_support
+				;;
+			"termux_hw_answer")
+				if [[ "$exp_termux_vulkan_hw_answer" == "freedreno_kgsl" ]] || [[ "$exp_termux_vulkan_hw_answer" == "mesa_freedreno" ]] || [[ "$exp_termux_vulkan_hw_answer" == "mesa_zink_freedreno" ]]; then
+					termux_hw_answer="${exp_termux_vulkan_hw_answer}"
+				fi
+				quetion_termux_hw_answer
+				;;
+			"themes_folder")
+				question_select_de_from_list
+				set_desktop_variables
+				;;
+			"icons_folder")
+				question_select_de_from_list
+				set_desktop_variables
+				;;
+			"installed_browser")
+				question_install_browser
+				;;
+			"installed_ide")
+				question_install_ide
+				;;
+			"installed_media_player")
+				question_install_media_player
+				;;
+			"installed_photo_editor")
+				question_install_photo_editor
+				;;
+			"installed_wine")
+				question_install_wine
+				;;
+			"chosen_shell_name")
+				question_chosen_shell_name
+				;;
+			"terminal_utility_setup_answer")
+				question_terminal_utility_setup
+				;;
+			"fm_tools")
+				question_fm_tools
+				;;
+			"distro_add_answer")
+				question_distro_add
+				;;
+			"selected_distro_type")
+				distro_type_select
+				;;
+			"selected_distro")
+				choose_distro
+				;;
+			"pd_audio_config_answer")
+				question_pd_audio_config_answer
+				;;
+			"pd_useradd_answer")
+				question_pd_useradd_answer
+				;;
+			"user_name")
+				set_account_by_type
+				;;
+			"pd_hw_answer")
+				distro_hw_questions
+				;;
+
+			# importent variables - critical if missing
+			"HOME" | "PREFIX" | "TMPDIR" | "PACKAGE_MANAGER" | "CONFIG_FILE")
+				print_failed "Critical system variable $var is not set!"
+				exit 1
+				;;
+
+			*)
+				print_failed "Unknown variable $var - no handler defined"
+				log_debug "Unknown variable: $var"
+				exit 1
+				;;
+			esac
+
+			# Verify the variable was set after handling
+			if [[ -z "${!var}" ]]; then
+				print_failed "Failed to set variable: $var"
+				log_debug "Failed to set: $var"
+				exit 1
+			fi
+
+			print_success "Successfully set: $var"
 		fi
 	done
-
-	if ((${#missing_vars[@]} > 0)); then
-		print_failed "The following required configuration values are not set:"
-		for var in "${missing_vars[@]}"; do
-			echo "  - $var"
-			log_debug "$var"
-			exit 1
-		done
-		exit 1
-	fi
 
 	print_success "All required variables are set"
 	return 0
@@ -991,7 +1089,7 @@ function questions_theme_select() {
 	fi
 }
 
-function ask_to_chose_de() {
+function question_select_de_from_list() {
 	# Setlect Desktop Environment
 	banner
 	print_msg "Importing desktop related data..."
@@ -1060,6 +1158,9 @@ function ask_to_chose_de() {
 	echo "${Y}14. WMaker($total_custom_wmaker_setup)${NC}"
 	echo
 	select_an_option 14 1 desktop_answer
+}
+
+function set_desktop_variables() {
 	# set the variables based on chosen de
 	sys_icons_folder="$TERMUX_PREFIX/share/icons"
 	sys_themes_folder="$TERMUX_PREFIX/share/themes"
@@ -1136,6 +1237,11 @@ function ask_to_chose_de() {
 		de_startup="wmaker"
 
 	fi
+}
+
+function ask_to_chose_de() {
+	question_select_de_from_list
+	set_desktop_variables
 	banner
 	questions_theme_select
 }
@@ -1162,6 +1268,7 @@ function questions_zsh_theme_select() {
 }
 
 function questions_nerd_font_select() {
+	banner
 	print_msg "Select nerd font you want to install...${B}"
 	echo
 
@@ -1202,8 +1309,7 @@ function questions_nerd_font_select() {
 	sel_base_name="${FONT_DISPLAY[$((nerd_choice - 1))]}"
 }
 
-function questions_setup_manual() {
-	ask_to_chose_de
+function question_installed_browser() {
 	banner
 	print_msg "${BOLD}Select browser you want to install"
 	echo
@@ -1223,6 +1329,9 @@ function questions_setup_manual() {
 	3) installed_browser="all" ;;
 	4) installed_browser="skip" ;;
 	esac
+}
+
+function question_installed_ide() {
 	banner
 	print_msg "${BOLD}Select IDE you want to install"
 	echo
@@ -1266,6 +1375,9 @@ function questions_setup_manual() {
 		4) installed_nvim_distro="mynvim" ;;
 		esac
 	fi
+}
+
+function question_installed_media_player() {
 	banner
 	print_msg "${BOLD}Select Media Player you want to install"
 	echo
@@ -1285,6 +1397,9 @@ function questions_setup_manual() {
 	3) installed_media_player="all" ;;
 	4) installed_media_player="skip" ;;
 	esac
+}
+
+function question_installed_photo_editor() {
 	banner
 	print_msg "${BOLD}Select Photo Editor${NC}"
 	echo
@@ -1304,6 +1419,9 @@ function questions_setup_manual() {
 	3) installed_photo_editor="all" ;;
 	4) installed_photo_editor="skip" ;;
 	esac
+}
+
+function question_installed_wine() {
 	banner
 	print_msg "${BOLD}Do you want to install wine in termux ${C}(without proot-distro)"
 	echo
@@ -1325,14 +1443,23 @@ function questions_setup_manual() {
 	3) installed_wine="wine_hangover" ;;
 	4) installed_wine="skip" ;;
 	esac
+}
+
+function question_enable_hw_acc() {
 	banner
 	confirmation_y_or_n "Do you want to Configure Hardware Acceleration" enable_hw_acc
+}
+
+function question_ext_wall_answer() {
 	banner
 	print_msg " By default, it only adds 4-5 wallpapers"
 	echo
 	print_msg "${R}This is a 1GB+ collection"
 	echo
 	confirmation_y_or_n "Do you want to add some more wallpapers" ext_wall_answer
+}
+
+function question_chosen_shell_name() {
 	banner
 	print_msg "${BOLD}Select Your shell${NC}"
 	echo
@@ -1352,13 +1479,17 @@ function questions_setup_manual() {
 	if [[ "$chosen_shell_name" == "zsh" ]]; then
 		questions_zsh_theme_select
 	fi
+}
+
+function question_terminal_utility_setup_answer() {
 	banner
 	echo
 	print_msg "${B}Know More About Terminal Utility:- https://github.com/${REPO_OWNER}/${REPO_NAME}/blob/$REPO_BRANCH_MAIN/docs/see-more.md#hammer_and_wrenchlearn-about-terminal-utilities"
 	echo
 	confirmation_y_or_n "Do you want install some terminal utility to make better terminal exprience" terminal_utility_setup_answer
-	banner
-	questions_nerd_font_select
+}
+
+function question_fm_tools() {
 	banner
 	echo -e "${R}[${C}-${R}]${B} File Manager Tools Enhancement${NC}
 
@@ -1388,6 +1519,9 @@ ${B}How to Access:${NC}
 Access these features through the 'Scripts' menu in your file manager's right-click context menu.
 ${NC}"
 	confirmation_y_or_n "Do you want File Manager Tools tailored with powerful extra features" fm_tools
+}
+
+function question_gui_mode() {
 	banner
 	print_msg "${BOLD} Select Gui Mode"
 	echo
@@ -1408,7 +1542,9 @@ ${NC}"
 		display_number="0"
 		gui_mode_name="Both"
 	fi
+}
 
+function question_de_on_startup() {
 	banner
 	confirmation_y_or_n "Do you want to start the desktop at Termux startup" de_on_startup
 	if [[ "$de_on_startup" == "y" && "$gui_mode" == "both" ]]; then
@@ -1430,6 +1566,9 @@ ${NC}"
 		fi
 
 	fi
+}
+
+function question_distro_add_answer() {
 	banner
 	echo -e "
 ${R}[${C}-${R}]${G}${BOLD} Linux Distro Container:- ${NC}
@@ -1441,6 +1580,24 @@ Also, you can launch those installed apps from Termux like other apps.
 	echo "Learn More:- https://github.com/${REPO_OWNER}/${REPO_NAME}/blob/$REPO_BRANCH_MAIN/docs/proot-container.md"
 	echo
 	confirmation_y_or_n "Do you want to add a Linux container" distro_add_answer
+}
+
+function questions_setup_manual() {
+	ask_to_chose_de
+	question_installed_browser
+	question_installed_ide
+	question_installed_media_player
+	question_installed_photo_editor
+	question_installed_wine
+	question_enable_hw_acc
+	question_ext_wall_answer
+	question_chosen_shell_name
+	question_terminal_utility_setup_answer
+	questions_nerd_font_select
+	question_fm_tools
+	question_gui_mode
+	question_de_on_startup
+	question_distro_add_answer
 }
 
 function setup_device_gpu_model() {
@@ -1477,7 +1634,6 @@ function setup_device_gpu_model() {
 		4) GPU_NAME="others" ;;
 		esac
 	fi
-
 }
 
 # distro hardware accelrration related questions
@@ -1591,7 +1747,7 @@ function exp_vulkan_support() {
 	fi
 }
 
-function exp_termux_gl_hw_support() {
+function quetion_termux_hw_answer() {
 	banner
 	echo
 	print_msg "${BOLD}It will be used to enable opengl support"
@@ -1624,6 +1780,10 @@ function exp_termux_gl_hw_support() {
 	7) exp_termux_gl_hw_answer="zink_with_mesa_zink" ;;
 	esac
 	termux_hw_answer="${exp_termux_gl_hw_answer}"
+}
+
+function exp_termux_gl_hw_support() {
+	quetion_termux_hw_answer
 	distro_hw_questions
 }
 
@@ -1820,16 +1980,17 @@ function setup_user_name_and_pass() {
 	done
 }
 
-function distro_questions() {
-	banner
-	distro_type_select
-	choose_distro
+function question_pd_audio_config_answer() {
 	banner
 	confirmation_y_or_n "Do you want to configure audio support for Linux distro container" pd_audio_config_answer
+}
+
+function question_pd_useradd_answer() {
 	banner
 	confirmation_y_or_n "Do you want to create a normal user account ${C}(Recomended)" pd_useradd_answer
-	echo
+}
 
+function set_account_by_type() {
 	if [[ "$pd_useradd_answer" == "n" ]]; then
 		print_msg "Skiping User Account Setup"
 	else
@@ -1848,6 +2009,15 @@ function distro_questions() {
 		fi
 
 	fi
+}
+
+function distro_questions() {
+	banner
+	distro_type_select
+	choose_distro
+	question_pd_audio_config_answer
+	question_pd_useradd_answer
+	set_account_by_type
 }
 
 # it set all the value that wil be used for printing the setup configuration (in print_conf_info)
