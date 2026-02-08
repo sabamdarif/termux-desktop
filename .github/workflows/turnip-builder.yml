@@ -6,6 +6,14 @@ on:
         description: "Mesa version to build (REQUIRED - no default)"
         required: true
         type: string
+      action_type:
+        description: "Choose action to perform"
+        required: true
+        default: 'release'
+        type: choice
+        options:
+          - release
+          - build_only
 
 env:
   MESA_VERSION: ${{ github.event.inputs.mesa_version}}
@@ -15,6 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       mesa_version: ${{ steps.validate.outputs.mesa_version }}
+      action_type: ${{ steps.validate.outputs.action_type }}
     steps:
       - name: Validate Mesa version
         id: validate
@@ -26,7 +35,9 @@ jobs:
             exit 1
           fi
           echo "mesa_version=$MESA_VERSION" >> $GITHUB_OUTPUT
+          echo "action_type=${{ github.event.inputs.action_type }}" >> $GITHUB_OUTPUT
           echo "Using Mesa version: $MESA_VERSION"
+          echo "Action type: ${{ github.event.inputs.action_type }}"
 
   process-aarch64:
     needs: validate-inputs
@@ -164,6 +175,7 @@ jobs:
 
   create-release:
     needs: [validate-inputs, process-aarch64, process-arm]
+    if: needs.validate-inputs.outputs.action_type == 'release'
     runs-on: ubuntu-latest
     permissions:
       contents: write
