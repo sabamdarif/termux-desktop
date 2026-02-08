@@ -124,8 +124,31 @@ jobs:
         if: steps.compare_versions.outputs.need_update == 'true'
         run: |
           echo "Triggering turnip build workflow with Mesa version: ${{ steps.get_new_version.outputs.latest_version }}"
-          gh workflow run turnip-builder.yml \
-            --field mesa_version="${{ steps.get_new_version.outputs.latest_version }}"
+
+          # Retry loop logic
+          max_retries=3
+          count=0
+          success=false
+
+          while [ $count -lt $max_retries ]; do
+            if gh workflow run turnip-builder.yml --ref main --field mesa_version="${{ steps.get_new_version.outputs.latest_version }}"; then
+              echo "✅ Workflow triggered successfully"
+              success=true
+              break
+            else
+              count=$((count + 1))
+              echo "⚠️ Failed to trigger workflow (Attempt $count/$max_retries)"
+              if [ $count -lt $max_retries ]; then
+                echo "Retrying in 10 seconds..."
+                sleep 10
+              fi
+            fi
+          done
+
+          if [ "$success" = false ]; then
+            echo "❌ Failed to trigger workflow after $max_retries attempts"
+            exit 1
+          fi
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
