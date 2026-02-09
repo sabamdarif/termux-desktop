@@ -2920,24 +2920,7 @@ function install_desktop() {
 		package_install_and_check "cinnamon nemo gnome-terminal gnome-screenshot eog"
 	elif [[ "$de_name" == "plasma" ]]; then
 		print_msg "${BOLD}Installing KDE Plasma"
-		echo
-		mkdir plasma_packages_files
-		cd plasma_packages_files || exit 1
-		if [[ "$PACKAGE_MANAGER" == "apt" ]]; then
-			download_and_extract "https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/download/kde-plasma/debs-${termux_arch}.zip"
-			dpkg --configure -a
-			apt --fix-broken install -y
-			apt install ./*deb -y
-			apt install --fix-missing -y
-		elif [[ "$PACKAGE_MANAGER" == "pacman" ]]; then
-			download_and_extract "https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/download/kde-plasma/pkgs-${termux_arch}.zip"
-			pacman -U --noconfirm ./*.pkg.tar.xz
-		else
-			print_failed "Unsupported package manger, you need APT / PACMAN"
-			exit 1
-		fi
-		cd ..
-		check_and_delete "plasma_packages_files"
+		package_install_and_check "plasma"
 	fi
 	if [[ "$LITE_MODE" != "1" && "$LITE_MODE" != "true" ]]; then
 		if [[ "$de_name" == "mate" ]]; then
