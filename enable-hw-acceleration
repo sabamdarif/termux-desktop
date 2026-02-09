@@ -44,7 +44,7 @@ function hw_install_required_packages() {
 		if [[ "$termux_arch" == "aarch64" || "$termux_arch" == "arm" ]]; then
 			print_msg "${BOLD}Installing vulkan-wrapper-android Driver..."
 			if [[ "$PACKAGE_MANAGER" == "pacman" ]]; then
-				if ! download_file "vulkan-wrapper-android.pkg.tar.xz" "https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/download/vulkan-wrapper-android_25.0.0-2/vulkan-wrapper-android-25.0.0-2-${termux_arch}.pkg.tar.xz"; then
+				if ! download_file "vulkan-wrapper-android.pkg.tar.xz" "https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/download/vulkan-wrapper-android_25.0.0-3/vulkan-wrapper-android-25.0.0-3-${termux_arch}.pkg.tar.xz"; then
 					print_failed "Fialed to download vulkan-wrapper-android driver"
 					print_msg "Please check your internet connection"
 					return 1
@@ -53,7 +53,7 @@ function hw_install_required_packages() {
 				pacman -U --noconfirm vulkan-wrapper-android.pkg.tar.xz
 				check_and_delete "vulkan-wrapper-android.pkg.tar.xz"
 			else
-				if ! download_file "vulkan-wrapper-android.deb" "https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/download/vulkan-wrapper-android_25.0.0-2/vulkan-wrapper-android_25.0.0-2_${termux_arch}.deb"; then
+				if ! download_file "vulkan-wrapper-android.deb" "https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/download/vulkan-wrapper-android_25.0.0-3/vulkan-wrapper-android_25.0.0-3_${termux_arch}.deb"; then
 					print_failed "Fialed to download vulkan-wrapper-android driver"
 					print_msg "Please check your internet connection"
 					return 1
