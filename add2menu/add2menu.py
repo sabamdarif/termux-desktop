@@ -24,16 +24,19 @@
 # Repository : https://github.com/sabamdarif/termux-desktop
 
 import os
-import sys
-import subprocess
 import re
 import shutil
+import subprocess
+import sys
 import threading
 from datetime import datetime
+
 import gi
 
 gi.require_version("Gtk", "3.0")
-from gi.repository import Gtk, GLib, Gdk, Gio, GdkPixbuf, Pango
+gi.require_version("Gdk", "3.0")
+gi.require_version("GdkPixbuf", "2.0")
+from gi.repository import Gdk, GdkPixbuf, Gio, GLib, Gtk, Pango
 
 # Icon cache to avoid repeated lookups
 ICON_CACHE = {}
@@ -330,17 +333,25 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
         self.set_default_size(600, 500)
         self.set_position(Gtk.WindowPosition.CENTER)
 
+        # Resolve PREFIX from environment (Termux root)
+        self.PREFIX = os.getenv("PREFIX", "/data/data/com.termux/files/usr")
+
         # Read configuration and set constants
         self.read_termux_desktop_config()
 
-        # Constants
-        self.PREFIX = os.getenv("PREFIX", "/data/data/com.termux/files/usr")
+        # Constants derived from PREFIX
         self.APPLICATIONS_DIR = os.path.join(self.PREFIX, "share/applications")
         self.ADDED_DIR = os.path.join(self.APPLICATIONS_DIR, "pd_added")
 
-        # Icon paths
-        self.SYSTEM_ICONS_DIR = "/data/data/com.termux/files/usr/share/icons"
-        self.USER_ICONS_DIR = "/data/data/com.termux/files/home/.icons"
+        # Icon paths derived from PREFIX
+        self.SYSTEM_ICONS_DIR = os.path.join(self.PREFIX, "share/icons")
+        self.USER_ICONS_DIR = os.path.join(
+            os.path.dirname(self.PREFIX),
+            "home/.icons",  # $HOME/.icons
+        )
+        # Prefer $HOME env var if set
+        home_dir = os.path.expanduser("~")
+        self.USER_ICONS_DIR = os.path.join(home_dir, ".icons")
 
         # Setup icon theme paths
         self.setup_icon_theme()
@@ -402,19 +413,16 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
 
     def read_termux_desktop_config(self):
         """Read termux-desktop configuration to determine distro type and settings"""
-        config_path = os.path.join(
-            self.PREFIX
-            if hasattr(self, "PREFIX")
-            else "/data/data/com.termux/files/usr",
-            "etc/termux-desktop/configuration.conf",
-        )
+        config_path = os.path.join(self.PREFIX, "etc/termux-desktop/configuration.conf")
 
         # Default values
         self.distro_add_answer = "n"
         self.selected_distro_type = "proot"
         self.selected_distro = "debian"
         self.DISTRO_NAME = "debian"
-        self.DISTRO_PATH = "/data/data/com.termux/files/usr/var/lib/proot-distro/installed-rootfs/debian"
+        self.DISTRO_PATH = os.path.join(
+            self.PREFIX, "var/lib/proot-distro/installed-rootfs/debian"
+        )
         self.use_sudo = False
 
         try:
@@ -442,14 +450,22 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
                         self.DISTRO_PATH = f"/data/local/chroot-distro/installed-rootfs/{self.DISTRO_NAME}"
                         self.use_sudo = True
                     else:  # proot
-                        self.DISTRO_PATH = f"/data/data/com.termux/files/usr/var/lib/proot-distro/installed-rootfs/{self.DISTRO_NAME}"
+                        self.DISTRO_PATH = os.path.join(
+                            self.PREFIX,
+                            "var/lib/proot-distro/installed-rootfs",
+                            self.DISTRO_NAME,
+                        )
                         self.use_sudo = False
                 else:
                     # Fallback to environment variables if distro support is disabled
                     self.DISTRO_NAME = os.getenv("distro_name", "debian")
                     self.DISTRO_PATH = os.getenv(
                         "distro_path",
-                        f"/data/data/com.termux/files/usr/var/lib/proot-distro/installed-rootfs/{self.DISTRO_NAME}",
+                        os.path.join(
+                            self.PREFIX,
+                            "var/lib/proot-distro/installed-rootfs",
+                            self.DISTRO_NAME,
+                        ),
                     )
                     self.use_sudo = False
 
@@ -462,7 +478,11 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
                 self.DISTRO_NAME = os.getenv("distro_name", "debian")
                 self.DISTRO_PATH = os.getenv(
                     "distro_path",
-                    f"/data/data/com.termux/files/usr/var/lib/proot-distro/installed-rootfs/{self.DISTRO_NAME}",
+                    os.path.join(
+                        self.PREFIX,
+                        "var/lib/proot-distro/installed-rootfs",
+                        self.DISTRO_NAME,
+                    ),
                 )
                 self.use_sudo = False
 
@@ -472,7 +492,11 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
             self.DISTRO_NAME = os.getenv("distro_name", "debian")
             self.DISTRO_PATH = os.getenv(
                 "distro_path",
-                f"/data/data/com.termux/files/usr/var/lib/proot-distro/installed-rootfs/{self.DISTRO_NAME}",
+                os.path.join(
+                    self.PREFIX,
+                    "var/lib/proot-distro/installed-rootfs",
+                    self.DISTRO_NAME,
+                ),
             )
             self.use_sudo = False
 
@@ -1350,7 +1374,7 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
         if os.path.exists(current_theme_dir):
             search_paths.append(current_theme_dir)
 
-        # Then try system icon theme
+        # Then try system icon theme (under PREFIX)
         system_theme_dir = os.path.join(self.SYSTEM_ICONS_DIR, self.current_theme_name)
         if os.path.exists(system_theme_dir):
             search_paths.append(system_theme_dir)
@@ -1370,7 +1394,7 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
             if os.path.exists(user_theme):
                 search_paths.append(user_theme)
 
-            # System theme
+            # System theme (under PREFIX)
             system_theme = os.path.join(self.SYSTEM_ICONS_DIR, theme_name)
             if os.path.exists(system_theme):
                 search_paths.append(system_theme)
@@ -1382,6 +1406,11 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
                 )
                 if os.path.exists(distro_theme):
                     search_paths.append(distro_theme)
+
+        # Try PREFIX pixmaps folder
+        prefix_pixmaps = os.path.join(self.PREFIX, "share/pixmaps")
+        if os.path.exists(prefix_pixmaps):
+            search_paths.append(prefix_pixmaps)
 
         # Try distro's pixmaps folder (skip for chroot to avoid permission errors)
         if not self.use_sudo:
@@ -1748,6 +1777,8 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
         desktop_dir = os.path.join(os.path.expanduser("~"), "Desktop")
         os.makedirs(desktop_dir, exist_ok=True)
 
+        added_files = []
+
         for name, filepath in selected:
             new_path = os.path.join(self.ADDED_DIR, os.path.basename(filepath))
             desktop_path = os.path.join(desktop_dir, os.path.basename(filepath))
@@ -1775,8 +1806,10 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
             shutil.copy2(new_path, desktop_path)
             os.chmod(desktop_path, 0o755)  # Make executable
 
-        # Update system
-        self.update_system()
+            added_files.append(os.path.basename(filepath))
+
+        # Update system, passing the list of added files for symlinking
+        self.update_system_after_add(added_files)
         return len(selected)
 
     def copy_desktop_file_with_sudo(self, source_path, dest_path):
@@ -1847,44 +1880,124 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
         """Background task to remove applications"""
         desktop_dir = os.path.join(os.path.expanduser("~"), "Desktop")
 
+        removed_files = []
+
         for _, filepath in selected:
+            filename = os.path.basename(filepath)
+
             # Remove from pd_added directory if exists
             if os.path.exists(filepath):
                 os.remove(filepath)
 
+            # Remove symlink from applications dir if exists
+            symlink_path = os.path.join(self.APPLICATIONS_DIR, filename)
+            if os.path.islink(symlink_path) or os.path.exists(symlink_path):
+                try:
+                    os.remove(symlink_path)
+                    print(f"Removed symlink: {symlink_path}")
+                except Exception as e:
+                    print(f"Error removing symlink {symlink_path}: {e}")
+
             # Remove from Desktop directory if exists
-            desktop_file = os.path.basename(filepath)
-            desktop_filepath = os.path.join(desktop_dir, desktop_file)
+            desktop_filepath = os.path.join(desktop_dir, filename)
             if os.path.exists(desktop_filepath):
                 os.remove(desktop_filepath)
 
-        # Update system
-        self.update_system()
+            removed_files.append(filename)
+
+        # Update desktop database after removals
+        self.update_desktop_database()
         return len(selected)
 
-    def update_system(self):
-        """Update desktop database and icon cache using Gio.Subprocess"""
-        # Update desktop database
-        launcher = Gio.SubprocessLauncher.new(Gio.SubprocessFlags.NONE)
-        launcher.set_cwd(self.APPLICATIONS_DIR)
-        launcher.spawnv(["/usr/bin/update-desktop-database", self.APPLICATIONS_DIR])
+    def _run_command_if_available(self, cmd_parts, description=""):
+        """Run a command only if the executable exists, using Gio.SubprocessLauncher"""
+        executable = cmd_parts[0]
+        # Resolve full path under PREFIX if not already absolute
+        if not os.path.isabs(executable):
+            candidate = os.path.join(self.PREFIX, "bin", executable)
+            if os.path.isfile(candidate) and os.access(candidate, os.X_OK):
+                executable = candidate
+            else:
+                # Also try PREFIX/sbin
+                candidate_sbin = os.path.join(self.PREFIX, "sbin", executable)
+                if os.path.isfile(candidate_sbin) and os.access(
+                    candidate_sbin, os.X_OK
+                ):
+                    executable = candidate_sbin
+                else:
+                    print(
+                        f"Skipping '{executable}': not found in PREFIX/bin or PREFIX/sbin"
+                    )
+                    return False
+        else:
+            if not (os.path.isfile(executable) and os.access(executable, os.X_OK)):
+                print(f"Skipping '{executable}': not found or not executable")
+                return False
 
-        # Update icon cache
-        launcher = Gio.SubprocessLauncher.new(Gio.SubprocessFlags.NONE)
-        launcher.spawnv(
-            [
-                "/usr/bin/gtk-update-icon-cache",
-                os.path.join(self.PREFIX, "share/icons/hicolor"),
-            ]
+        full_cmd = [executable] + cmd_parts[1:]
+        try:
+            launcher = Gio.SubprocessLauncher.new(Gio.SubprocessFlags.NONE)
+            launcher.spawnv(full_cmd)
+            if description:
+                print(f"Ran: {description} ({' '.join(full_cmd)})")
+            return True
+        except Exception as e:
+            print(f"Error running {' '.join(full_cmd)}: {e}")
+            return False
+
+    def update_system_after_add(self, added_filenames):
+        """
+        After adding desktop files to pd_added:
+          1. Create a symlink in APPLICATIONS_DIR pointing to the pd_added copy.
+          2. Run update-desktop-database on APPLICATIONS_DIR.
+          3. Optionally update the hicolor icon cache if gtk-update-icon-cache is available.
+          4. Optionally force-update the desktop menu if xdg-desktop-menu is available.
+        """
+        # 1. Symlink each newly added .desktop file into APPLICATIONS_DIR
+        for filename in added_filenames:
+            pd_added_path = os.path.join(self.ADDED_DIR, filename)
+            symlink_path = os.path.join(self.APPLICATIONS_DIR, filename)
+
+            # Remove stale symlink/file first
+            if os.path.islink(symlink_path) or os.path.exists(symlink_path):
+                try:
+                    os.remove(symlink_path)
+                except Exception as e:
+                    print(f"Could not remove existing entry at {symlink_path}: {e}")
+
+            try:
+                os.symlink(pd_added_path, symlink_path)
+                print(f"Created symlink: {symlink_path} -> {pd_added_path}")
+            except Exception as e:
+                print(f"Error creating symlink for {filename}: {e}")
+
+        # 2. Update desktop database
+        self.update_desktop_database()
+
+    def update_desktop_database(self):
+        """Run update-desktop-database on APPLICATIONS_DIR if available, then signal success."""
+        # update-desktop-database
+        self._run_command_if_available(
+            ["update-desktop-database", self.APPLICATIONS_DIR],
+            description="update-desktop-database",
         )
 
-        # Force reload of applications in desktop environment
-        launcher = Gio.SubprocessLauncher.new(Gio.SubprocessFlags.NONE)
-        launcher.spawnv(["/usr/bin/setsid", "xdg-desktop-menu", "forceupdate"])
+        # gtk-update-icon-cache (optional)
+        hicolor_dir = os.path.join(self.PREFIX, "share/icons/hicolor")
+        if os.path.isdir(hicolor_dir):
+            self._run_command_if_available(
+                ["gtk-update-icon-cache", hicolor_dir],
+                description="gtk-update-icon-cache",
+            )
 
-        # Signal success
+        # xdg-desktop-menu forceupdate (optional)
+        self._run_command_if_available(
+            ["xdg-desktop-menu", "forceupdate"],
+            description="xdg-desktop-menu forceupdate",
+        )
+
+        # Signal success back on the main thread
         GLib.idle_add(self.show_success_message)
-
         return True
 
     def show_success_message(self):
@@ -1979,8 +2092,10 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
         # Reset after a delay
         GLib.timeout_add(
             400,
-            lambda: self.status_bar.get_style_context().remove_class("launch-flash")
-            or False,
+            lambda: (
+                self.status_bar.get_style_context().remove_class("launch-flash")
+                or False
+            ),
         )
 
     def run_application(self, exec_cmd):
@@ -2135,14 +2250,14 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
             return " ".join(parts)
 
         # Try to find the program in the distro filesystem's common executable locations
-        common_paths = ["/usr/bin/", "/usr/local/bin/", "/bin/", "/usr/sbin/", "/sbin/"]
+        common_paths = ["usr/bin", "usr/local/bin", "bin", "usr/sbin", "sbin"]
 
-        # Try each common path
-        for path in common_paths:
-            full_path = os.path.join(self.DISTRO_PATH, path.lstrip("/"), parts[0])
+        # Try each common path inside DISTRO_PATH
+        for rel_path in common_paths:
+            full_path = os.path.join(self.DISTRO_PATH, rel_path, parts[0])
             if os.path.isfile(full_path) and os.access(full_path, os.X_OK):
                 # Replace with the full path but strip the distro path prefix
-                parts[0] = path + parts[0]
+                parts[0] = "/" + rel_path + "/" + parts[0]
                 break
 
         return " ".join(parts)
@@ -2374,7 +2489,7 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
         """Setup icon theme to use system and custom icon packs"""
         self.icon_theme = Gtk.IconTheme.get_default()
 
-        # Add Termux system icons path
+        # Add PREFIX system icons path
         if os.path.exists(self.SYSTEM_ICONS_DIR):
             self.icon_theme.append_search_path(self.SYSTEM_ICONS_DIR)
 
@@ -2509,6 +2624,8 @@ class Add2MenuApplication(Gtk.Application):
     def do_startup(self):
         Gtk.Application.do_startup(self)
 
+        self.connect("activate", self.on_activate)
+
         # Add application actions
         quit_action = Gio.SimpleAction.new("quit", None)
         quit_action.connect("activate", self.on_quit)
@@ -2577,7 +2694,7 @@ class Add2MenuApplication(Gtk.Application):
         except Exception as e:
             print(f"Failed to set application icon: {e}")
 
-    def do_activate(self):
+    def on_activate(self, app):
         # Get the active window or create a new one
         if not self.window:
             self.window = Add2MenuWindow(self)
@@ -2592,7 +2709,7 @@ class Add2MenuApplication(Gtk.Application):
 
         about_dialog = Gtk.AboutDialog(transient_for=self.window, modal=True)
         about_dialog.set_program_name("Add To Menu")
-        about_dialog.set_version("2.3.3")
+        about_dialog.set_version("2.3.4")
         about_dialog.set_comments(
             "A utility to add proot-distro's applications to Termux desktop"
         )

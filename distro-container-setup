@@ -802,6 +802,9 @@ function proot_distro_debian_based_app_installer() {
 		                    print_success "Adding \${C}\${desktop_files_without_ext} \${G}To Termux Menu"
 		                    cp "/usr/share/applications/\${desktop_files_with_ext}" "$TERMUX_PREFIX/share/applications/pd_added/"
 		                    sed -i 's/Exec=/Exec=pdrun /g' "$TERMUX_PREFIX/share/applications/pd_added/\${desktop_files_with_ext}"
+							ln -sf "$TERMUX_PREFIX/share/applications/pd_added/\${desktop_files_with_ext}" \
+		                           "$TERMUX_PREFIX/share/applications/\${desktop_files_with_ext}"
+							update-desktop-database $TERMUX_PREFIX/share/applications
 		                fi
 		            done
 		        fi
@@ -871,6 +874,8 @@ function proot_distro_debian_based_app_installer() {
 		            if ! dpkg -s "\$package_name" >/dev/null 2>&1; then
 		                print_success "Removing \${C}\${desktop_files_without_ext} \${G}From Termux Menu"
 		                check_and_delete "$TERMUX_PREFIX/share/applications/pd_added/\${desktop_files_with_ext}"
+						check_and_delete "$TERMUX_PREFIX/share/applications/\${desktop_files_with_ext}"
+		                update-desktop-database $TERMUX_PREFIX/share/applications
 		            else
 		                print_failed "Package \${C}\$package_name\${R} is still installed; skipping desktop removal."
 		            fi
@@ -952,6 +957,9 @@ function chroot_distro_debian_based_app_installer() {
 		                    print_success "Adding \${C}\${desktop_files_without_ext} \${G}To Termux Menu"
 		                    cp "/usr/share/applications/\${desktop_files_with_ext}" "$TERMUX_PREFIX/share/applications/pd_added/"
 		                    sed -i 's/Exec=/Exec=pdrun /g' "$TERMUX_PREFIX/share/applications/pd_added/\${desktop_files_with_ext}"
+							ln -sf "$TERMUX_PREFIX/share/applications/pd_added/\${desktop_files_with_ext}" \
+		                           "$TERMUX_PREFIX/share/applications/\${desktop_files_with_ext}"
+							update-desktop-database $TERMUX_PREFIX/share/applications
 		                fi
 		            done
 		        fi
@@ -1022,6 +1030,8 @@ function chroot_distro_debian_based_app_installer() {
 		            if ! dpkg -s "\$package_name" >/dev/null 2>&1; then
 		                print_success "Removing \${C}\${desktop_files_without_ext} \${G}From Termux Menu"
 		                check_and_delete "$TERMUX_PREFIX/share/applications/pd_added/\${desktop_files_with_ext}"
+						check_and_delete "$TERMUX_PREFIX/share/applications/\${desktop_files_with_ext}"
+		                update-desktop-database $TERMUX_PREFIX/share/applications
 		            else
 		                print_failed "Package \${C}\$package_name\${R} is still installed; skipping desktop removal."
 		            fi
@@ -1110,6 +1120,9 @@ function proot_distro_arch_based_app_installer() {
 		            print_success "Adding \${C}\${desktop_files_without_ext} \${G}To Termux Menu"
 		            cp "/usr/share/applications/\${desktop_files_with_ext}" "$TERMUX_PREFIX/share/applications/pd_added/"
 		            sed -i 's/Exec=/Exec=pdrun /g' "$TERMUX_PREFIX/share/applications/pd_added/\${desktop_files_with_ext}"
+					ln -sf "$TERMUX_PREFIX/share/applications/pd_added/\${desktop_files_with_ext}" \
+		                           "$TERMUX_PREFIX/share/applications/\${desktop_files_with_ext}"
+					update-desktop-database $TERMUX_PREFIX/share/applications
 		        done
 		    fi
 		done
@@ -1159,6 +1172,8 @@ function proot_distro_arch_based_app_installer() {
 		            desktop_files_without_ext="\${desktop_files_with_ext%.desktop}"
 		            print_success "Removing \${C}\${desktop_files_without_ext} \${G}From Termux Menu"
 		            check_and_delete $TERMUX_PREFIX/share/applications/pd_added/\${desktop_files_with_ext}
+					check_and_delete "$TERMUX_PREFIX/share/applications/\${desktop_files_with_ext}"
+		                update-desktop-database $TERMUX_PREFIX/share/applications
 		        done
 		    fi
 		done
@@ -1231,6 +1246,9 @@ function chroot_distro_arch_based_app_installer() {
 		            print_success "Adding \${C}\${desktop_files_without_ext} \${G}To Termux Menu"
 		            cp "/usr/share/applications/\${desktop_files_with_ext}" "$TERMUX_PREFIX/share/applications/pd_added/"
 		            sed -i 's/Exec=/Exec=pdrun /g' "$TERMUX_PREFIX/share/applications/pd_added/\${desktop_files_with_ext}"
+					ln -sf "$TERMUX_PREFIX/share/applications/pd_added/\${desktop_files_with_ext}" \
+		                           "$TERMUX_PREFIX/share/applications/\${desktop_files_with_ext}"
+					update-desktop-database $TERMUX_PREFIX/share/applications
 		        done
 		    fi
 		done
@@ -1280,6 +1298,8 @@ function chroot_distro_arch_based_app_installer() {
 		            desktop_files_without_ext="\${desktop_files_with_ext%.desktop}"
 		            print_success "Removing \${C}\${desktop_files_without_ext} \${G}From Termux Menu"
 		            check_and_delete $TERMUX_PREFIX/share/applications/pd_added/\${desktop_files_with_ext}
+					check_and_delete "$TERMUX_PREFIX/share/applications/\${desktop_files_with_ext}"
+		            update-desktop-database $TERMUX_PREFIX/share/applications
 		        done
 		    fi
 		done
@@ -1365,6 +1385,9 @@ function proot_distro_fedora_based_app_installer() {
 		            print_success "Adding \${C}\${desktop_file%.desktop} \${G}to Termux Menu"
 		            cp "/usr/share/applications/\$desktop_file" "$TERMUX_PREFIX/share/applications/pd_added/"
 		            sed -i 's|Exec=|Exec=pdrun |g' "$TERMUX_PREFIX/share/applications/pd_added/\$desktop_file"
+					ln -sf "$TERMUX_PREFIX/share/applications/pd_added/\${desktop_files_with_ext}" \
+		                           "$TERMUX_PREFIX/share/applications/\${desktop_files_with_ext}"
+					update-desktop-database $TERMUX_PREFIX/share/applications
 		        done
 		    else
 		        print_failed "No .desktop files found for package \${C}\$package_name\${R} in /usr/share/applications."
@@ -1436,6 +1459,8 @@ function proot_distro_fedora_based_app_installer() {
 		            if ! rpm -q "\$package_name" >/dev/null 2>&1; then
 		                print_success "Removing \${C}\${desktop_files_without_ext} \${G}From Termux Menu"
 		                check_and_delete "$TERMUX_PREFIX/share/applications/pd_added/\${desktop_files_with_ext}"
+						check_and_delete "$TERMUX_PREFIX/share/applications/\${desktop_files_with_ext}"
+		                update-desktop-database $TERMUX_PREFIX/share/applications
 		            else
 		                print_failed "Package \${C}\$package_name\${R} is still installed; skipping desktop removal."
 		            fi
@@ -1511,6 +1536,9 @@ function chroot_distro_fedora_based_app_installer() {
 		            print_success "Adding \${C}\${desktop_file%.desktop} \${G}to Termux Menu"
 		            cp "/usr/share/applications/\$desktop_file" "$TERMUX_PREFIX/share/applications/pd_added/"
 		            sed -i 's|Exec=|Exec=pdrun |g' "$TERMUX_PREFIX/share/applications/pd_added/\$desktop_file"
+					ln -sf "$TERMUX_PREFIX/share/applications/pd_added/\${desktop_files_with_ext}" \
+		                           "$TERMUX_PREFIX/share/applications/\${desktop_files_with_ext}"
+					update-desktop-database $TERMUX_PREFIX/share/applications
 		        done
 		    else
 		        print_failed "No .desktop files found for package \${C}\$package_name\${R} in /usr/share/applications."
@@ -1582,6 +1610,8 @@ function chroot_distro_fedora_based_app_installer() {
 		            if ! rpm -q "\$package_name" >/dev/null 2>&1; then
 		                print_success "Removing \${C}\${desktop_files_without_ext} \${G}From Termux Menu"
 		                check_and_delete "$TERMUX_PREFIX/share/applications/pd_added/\${desktop_files_with_ext}"
+						check_and_delete "$TERMUX_PREFIX/share/applications/\${desktop_files_with_ext}"
+		                update-desktop-database $TERMUX_PREFIX/share/applications
 		            else
 		                print_failed "Package \${C}\$package_name\${R} is still installed; skipping desktop removal."
 		            fi
