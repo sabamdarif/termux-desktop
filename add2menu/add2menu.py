@@ -1808,7 +1808,7 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
 
             added_files.append(os.path.basename(filepath))
 
-        # Update system, passing the list of added files for symlinking
+        # Update system after adding files
         self.update_system_after_add(added_files)
         return len(selected)
 
@@ -1889,15 +1889,6 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
             if os.path.exists(filepath):
                 os.remove(filepath)
 
-            # Remove symlink from applications dir if exists
-            symlink_path = os.path.join(self.APPLICATIONS_DIR, filename)
-            if os.path.islink(symlink_path) or os.path.exists(symlink_path):
-                try:
-                    os.remove(symlink_path)
-                    print(f"Removed symlink: {symlink_path}")
-                except Exception as e:
-                    print(f"Error removing symlink {symlink_path}: {e}")
-
             # Remove from Desktop directory if exists
             desktop_filepath = os.path.join(desktop_dir, filename)
             if os.path.exists(desktop_filepath):
@@ -1948,30 +1939,11 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
     def update_system_after_add(self, added_filenames):
         """
         After adding desktop files to pd_added:
-          1. Create a symlink in APPLICATIONS_DIR pointing to the pd_added copy.
-          2. Run update-desktop-database on APPLICATIONS_DIR.
-          3. Optionally update the hicolor icon cache if gtk-update-icon-cache is available.
-          4. Optionally force-update the desktop menu if xdg-desktop-menu is available.
+          1. Run update-desktop-database on APPLICATIONS_DIR.
+          2. Optionally update the hicolor icon cache if gtk-update-icon-cache is available.
+          3. Optionally force-update the desktop menu if xdg-desktop-menu is available.
         """
-        # 1. Symlink each newly added .desktop file into APPLICATIONS_DIR
-        for filename in added_filenames:
-            pd_added_path = os.path.join(self.ADDED_DIR, filename)
-            symlink_path = os.path.join(self.APPLICATIONS_DIR, filename)
-
-            # Remove stale symlink/file first
-            if os.path.islink(symlink_path) or os.path.exists(symlink_path):
-                try:
-                    os.remove(symlink_path)
-                except Exception as e:
-                    print(f"Could not remove existing entry at {symlink_path}: {e}")
-
-            try:
-                os.symlink(pd_added_path, symlink_path)
-                print(f"Created symlink: {symlink_path} -> {pd_added_path}")
-            except Exception as e:
-                print(f"Error creating symlink for {filename}: {e}")
-
-        # 2. Update desktop database
+        # Update desktop database
         self.update_desktop_database()
 
     def update_desktop_database(self):
