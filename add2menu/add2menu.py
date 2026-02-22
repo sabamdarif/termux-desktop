@@ -325,6 +325,99 @@ def main():
     sys.exit(exit_status)
 
 
+class ExecEditorDialog(Gtk.Dialog):
+    """Dialog to manually edit the Exec= command for selected applications"""
+
+    def __init__(self, parent, selected_apps):
+        """
+        Args:
+            parent: parent window
+            selected_apps: list of (app_name, filepath, original_exec) tuples
+        """
+        Gtk.Dialog.__init__(
+            self,
+            title="Edit Exec Command",
+            transient_for=parent,
+            modal=True,
+            destroy_with_parent=True,
+        )
+        self.add_buttons(
+            "Cancel",
+            Gtk.ResponseType.CANCEL,
+            "Apply",
+            Gtk.ResponseType.OK,
+        )
+        self.set_default_size(550, 400)
+        self.set_default_response(Gtk.ResponseType.OK)
+
+        content_area = self.get_content_area()
+        content_area.set_spacing(10)
+        content_area.set_margin_start(12)
+        content_area.set_margin_end(12)
+        content_area.set_margin_top(12)
+        content_area.set_margin_bottom(12)
+
+        # Info label
+        info_label = Gtk.Label(
+            label="Edit the Exec= command for each application.\n"
+            'Changes here will be used when you click "Add Selected".'
+        )
+        info_label.set_line_wrap(True)
+        info_label.set_xalign(0)
+        content_area.pack_start(info_label, False, False, 0)
+
+        # Scrolled container for the list of editors
+        scrolled = Gtk.ScrolledWindow()
+        scrolled.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
+        scrolled.set_shadow_type(Gtk.ShadowType.IN)
+        scrolled.set_vexpand(True)
+
+        list_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        list_box.set_margin_start(4)
+        list_box.set_margin_end(4)
+        list_box.set_margin_top(4)
+        list_box.set_margin_bottom(4)
+
+        self.editors = {}  # filepath -> Gtk.TextView
+
+        for app_name, filepath, exec_cmd in selected_apps:
+            # App name label
+            name_label = Gtk.Label()
+            name_label.set_markup(f"<b>{GLib.markup_escape_text(app_name)}</b>")
+            name_label.set_xalign(0)
+            name_label.set_margin_top(4)
+            list_box.pack_start(name_label, False, False, 0)
+
+            # Editable text view for the Exec command
+            frame = Gtk.Frame()
+            textview = Gtk.TextView()
+            textview.set_wrap_mode(Gtk.WrapMode.WORD_CHAR)
+            textview.override_font(Pango.FontDescription("Monospace 10"))
+            textview.get_style_context().add_class("exec-editor-textview")
+            textview.get_buffer().set_text(exec_cmd)
+            frame.add(textview)
+            list_box.pack_start(frame, False, False, 0)
+
+            self.editors[filepath] = textview
+
+        scrolled.add(list_box)
+        content_area.pack_start(scrolled, True, True, 0)
+
+        self.show_all()
+
+    def get_results(self):
+        """Return a dict of filepath -> edited exec command string"""
+        results = {}
+        for filepath, textview in self.editors.items():
+            buf = textview.get_buffer()
+            start = buf.get_start_iter()
+            end = buf.get_end_iter()
+            text = buf.get_text(start, end, False).strip()
+            if text:
+                results[filepath] = text
+        return results
+
+
 class Add2MenuWindow(Gtk.ApplicationWindow):
     def __init__(self, app):
         Gtk.ApplicationWindow.__init__(self, application=app, title="Add To Menu")
@@ -401,6 +494,10 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
         self.nogpu_action = app.lookup_action("nogpu")
         self.root_action = app.lookup_action("root")
         self.show_app_launch_log_action = app.lookup_action("show-app-launch-log")
+        self.edit_manually_action = app.lookup_action("edit-manually")
+
+        # Dictionary to store per-file Exec overrides from the editor
+        self.exec_overrides = {}
 
         # Set initial state of show-added-apps action based on current mode
         show_added_apps_action = app.lookup_action("show-added-apps")
@@ -586,6 +683,12 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
                 border-radius: 5px;
                 border: 1px solid @borders;
             }
+            /* Exec editor dialog styling */
+            .exec-editor-textview {
+                padding: 6px;
+                background-color: @theme_base_color;
+                color: @theme_fg_color;
+            }
         """
         style_provider = Gtk.CssProvider()
         style_provider.load_from_data(css.encode())
@@ -644,24 +747,37 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
         # Create app menu
         menu = Gio.Menu()
 
-        # Create menu items with icons where appropriate
+        # Create menu items with icons
         show_added_apps_item = Gio.MenuItem.new(
             "Show added apps", "app.show-added-apps"
         )
-        no_sandbox_item = Gio.MenuItem.new("Launch with --no-sandbox", "app.no-sandbox")
-        absolute_path_item = Gio.MenuItem.new("Use Absolute Paths", "app.absolute-path")
-        nogpu_item = Gio.MenuItem.new("Launch with --nogpu", "app.nogpu")
-        root_item = Gio.MenuItem.new("Launch with --root", "app.root")
+        show_added_apps_item.set_icon(Gio.ThemedIcon.new("view-list-symbolic"))
 
-        # Create terminal log item with an icon
+        no_sandbox_item = Gio.MenuItem.new("Launch with --no-sandbox", "app.no-sandbox")
+        no_sandbox_item.set_icon(Gio.ThemedIcon.new("security-low-symbolic"))
+
+        absolute_path_item = Gio.MenuItem.new("Use Absolute Paths", "app.absolute-path")
+        absolute_path_item.set_icon(Gio.ThemedIcon.new("folder-symbolic"))
+
+        nogpu_item = Gio.MenuItem.new("Launch with --nogpu", "app.nogpu")
+        nogpu_item.set_icon(Gio.ThemedIcon.new("video-display-symbolic"))
+
+        root_item = Gio.MenuItem.new("Launch with --root", "app.root")
+        root_item.set_icon(Gio.ThemedIcon.new("dialog-password-symbolic"))
+
+        edit_manually_item = Gio.MenuItem.new("Edit Manually", "app.edit-manually")
+        edit_manually_item.set_icon(Gio.ThemedIcon.new("document-edit-symbolic"))
+
         terminal_item = Gio.MenuItem.new(
             "Show app launch log", "app.show-app-launch-log"
         )
-        terminal_icon = Gio.ThemedIcon.new("utilities-terminal")
-        terminal_item.set_icon(terminal_icon)
+        terminal_item.set_icon(Gio.ThemedIcon.new("utilities-terminal-symbolic"))
 
         about_item = Gio.MenuItem.new("About Add2Menu", "app.about")
+        about_item.set_icon(Gio.ThemedIcon.new("help-about-symbolic"))
+
         quit_item = Gio.MenuItem.new("Quit", "app.quit")
+        quit_item.set_icon(Gio.ThemedIcon.new("application-exit-symbolic"))
 
         # Add items to menu
         menu.append_item(show_added_apps_item)
@@ -669,6 +785,7 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
         menu.append_item(absolute_path_item)
         menu.append_item(nogpu_item)
         menu.append_item(root_item)
+        menu.append_item(edit_manually_item)
         menu.append_item(terminal_item)
         menu.append_item(about_item)
         menu.append_item(quit_item)
@@ -1676,6 +1793,10 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
             self.absolute_path_action.set_enabled(is_add_mode)
             self.nogpu_action.set_enabled(is_add_mode)
             self.root_action.set_enabled(is_add_mode)
+            self.edit_manually_action.set_enabled(is_add_mode)
+
+            # Clear exec overrides when switching modes
+            self.exec_overrides.clear()
 
             # Enable/disable show-added-apps action (only relevant in Add mode)
             show_added_apps_action = self.app.lookup_action("show-added-apps")
@@ -1808,6 +1929,10 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
 
             added_files.append(os.path.basename(filepath))
 
+        # Clear exec overrides for processed files
+        for name, filepath in selected:
+            self.exec_overrides.pop(filepath, None)
+
         # Update system after adding files
         self.update_system_after_add(added_files)
         return len(selected)
@@ -1841,6 +1966,73 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
             print(f"Error copying desktop file with sudo: {e}")
             raise
 
+    def build_exec_command(self, original_cmd):
+        """Build the Exec command string by applying current toggle states.
+
+        Args:
+            original_cmd: the raw Exec= value from the .desktop file
+
+        Returns:
+            The constructed command string (e.g. 'pdrun --root firefox')
+        """
+        # Use pdrun for both chroot and proot since pdrun now supports both
+        new_cmd = "pdrun"
+
+        # Add --root flag if enabled
+        if self.root_action.get_state().get_boolean():
+            new_cmd += " --root"
+
+        # Add --nogpu flag if enabled
+        if self.nogpu_action.get_state().get_boolean():
+            new_cmd += " --nogpu"
+
+        # Add the original command
+        new_cmd += f" {original_cmd}"
+
+        # Add --no-sandbox at the end if enabled
+        if self.no_sandbox_action.get_state().get_boolean():
+            new_cmd += " --no-sandbox"
+
+        return new_cmd
+
+    def on_exec_editor_clicked(self):
+        """Open the Exec editor dialog for the currently selected apps"""
+        # Collect selected apps
+        selected_apps = []
+        for row in self.liststore:
+            if row[0]:  # checked
+                app_name = row[1]
+                filepath = row[2]
+                original_exec = row[4]  # original exec from the desktop file
+
+                # If there's already an override, show that; otherwise build from toggles
+                if filepath in self.exec_overrides:
+                    exec_for_editor = self.exec_overrides[filepath]
+                else:
+                    exec_for_editor = self.build_exec_command(original_exec)
+
+                selected_apps.append((app_name, filepath, exec_for_editor))
+
+        if not selected_apps:
+            self.show_message_dialog(
+                "Please select at least one application first.", "No Selection"
+            )
+            return
+
+        dialog = ExecEditorDialog(self, selected_apps)
+        response = dialog.run()
+
+        if response == Gtk.ResponseType.OK:
+            results = dialog.get_results()
+            self.exec_overrides.update(results)
+            count = len(results)
+            self.status_label.set_text(
+                f"Exec command edited for {count} application(s)"
+            )
+            GLib.timeout_add(3000, lambda: self.status_label.set_text("Ready") or False)
+
+        dialog.destroy()
+
     def read_and_modify_desktop_file(self, filepath):
         """Read desktop file and modify the Exec line for the appropriate distro type"""
         with open(filepath, "r", encoding="utf-8") as f:
@@ -1850,26 +2042,13 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
         exec_pattern = re.compile(r"Exec=(.+)")
 
         if exec_pattern.search(content):
-            # Extract the original command
-            original_cmd = exec_pattern.search(content).group(1)
-
-            # Use pdrun for both chroot and proot since pdrun now supports both
-            new_cmd = "pdrun"
-
-            # Add --root flag if enabled
-            if self.root_action.get_state().get_boolean():
-                new_cmd += " --root"
-
-            # Add --nogpu flag if enabled
-            if self.nogpu_action.get_state().get_boolean():
-                new_cmd += " --nogpu"
-
-            # Add the original command
-            new_cmd += f" {original_cmd}"
-
-            # Add --no-sandbox at the end if enabled
-            if self.no_sandbox_action.get_state().get_boolean():
-                new_cmd += " --no-sandbox"
+            # Check if there's a manual override for this file
+            if filepath in self.exec_overrides:
+                new_cmd = self.exec_overrides[filepath]
+            else:
+                # Extract the original command and build using toggle states
+                original_cmd = exec_pattern.search(content).group(1)
+                new_cmd = self.build_exec_command(original_cmd)
 
             # Replace the Exec line
             content = exec_pattern.sub(f"Exec={new_cmd}", content)
@@ -2652,6 +2831,11 @@ class Add2MenuApplication(Gtk.Application):
         )
         self.add_action(show_app_launch_log_action)
 
+        # Add edit-manually action (non-stateful, triggers the editor dialog)
+        edit_manually_action = Gio.SimpleAction.new("edit-manually", None)
+        edit_manually_action.connect("activate", self.on_edit_manually_activated)
+        self.add_action(edit_manually_action)
+
         # Add keyboard accelerators
         self.set_accels_for_action("app.quit", ["<Ctrl>Q", "<Ctrl>W"])
 
@@ -2681,9 +2865,9 @@ class Add2MenuApplication(Gtk.Application):
 
         about_dialog = Gtk.AboutDialog(transient_for=self.window, modal=True)
         about_dialog.set_program_name("Add To Menu")
-        about_dialog.set_version("2.3.4")
+        about_dialog.set_version("2.3.5")
         about_dialog.set_comments(
-            "A utility to add proot-distro's applications to Termux desktop"
+            "A utility to add proot/chroot distro's applications to Termux"
         )
         about_dialog.set_copyright(f"© {current_year} Termux-desktop (sabamdarif)")
         about_dialog.set_license_type(Gtk.License.GPL_3_0)
@@ -2740,6 +2924,11 @@ class Add2MenuApplication(Gtk.Application):
             and self.log_window.get_visible()
         ):
             self.log_window.hide()
+
+    def on_edit_manually_activated(self, action, param):
+        """Handle edit-manually action from the menu"""
+        if self.window:
+            self.window.on_exec_editor_clicked()
 
 
 if __name__ == "__main__":
