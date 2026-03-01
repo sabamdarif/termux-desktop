@@ -1469,12 +1469,15 @@ function question_chosen_shell_name() {
 	echo
 	echo "${Y}3. Custom Bash prompt${NC}"
 	echo
+	echo "${Y}4. Termux's default shell${NC}"
+	echo
 	select_an_option 4 1 chosen_shell_answer
 	# shellcheck disable=SC2154
 	case "$chosen_shell_answer" in
 	1) chosen_shell_name="zsh" ;;
 	2) chosen_shell_name="bash_with_ble" ;;
 	3) chosen_shell_name="bash" ;;
+	4) chosen_shell_name="termux_bash" ;;
 	esac
 	if [[ "$chosen_shell_name" == "zsh" ]]; then
 		questions_zsh_theme_select
@@ -2115,6 +2118,8 @@ function define_value_name() {
 		current_shell_name="Bash"
 	elif [[ "$chosen_shell_name" == "bash_with_ble" ]]; then
 		current_shell_name="Bash (With Ble.sh)"
+	elif [[ "$chosen_shell_name" == "termux_bash" ]]; then
+		current_shell_name="Bash (Termux's Default)"
 	elif [[ "$chosen_shell_name" == "zsh" ]]; then
 		if [[ "$selected_zsh_theme_name" == "td_zsh" ]]; then
 			zsh_theme_name="My Zsh Theme"
@@ -4691,6 +4696,8 @@ function setup_shell() {
 		setup_zsh
 	elif [[ "$chosen_shell_name" == "bash" ]] || [[ "$chosen_shell_name" == "bash_with_ble" ]]; then
 		setup_bash
+	elif [[ "$chosen_shell_name" == "termux_bash" ]]; then
+		return 0
 	fi
 	get_shellrc_path
 }
