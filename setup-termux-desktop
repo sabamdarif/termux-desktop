@@ -4696,8 +4696,6 @@ function setup_shell() {
 		setup_zsh
 	elif [[ "$chosen_shell_name" == "bash" ]] || [[ "$chosen_shell_name" == "bash_with_ble" ]]; then
 		setup_bash
-	elif [[ "$chosen_shell_name" == "termux_bash" ]]; then
-		return 0
 	fi
 	get_shellrc_path
 }
