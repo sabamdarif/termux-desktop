@@ -9,7 +9,7 @@
 
 - Run the Installer Script and choose your preferred hardware acceleration method during the installation.
 - If you opt for a distro container, select the hardware acceleration method for the distro as well.
-  > For Adreno GPU, you don't need to choose; it will automatically use turnip if you use ubuntu/debian
+    > For Adreno GPU, you don't need to choose; it will automatically use turnip if you use ubuntu/debian
 - Once selected, everything will be configured automatically.
 
 > [!TIP]
@@ -31,16 +31,18 @@
 
 1. Launch Termux Desktop.
 2. Run programs in Termux terminal:
-   ```bash
-   pdrun program
-   ```
 
-   - By default pdrun runs programs with GPU acceleration.
-   ```bash
-   pdrun --nogpu program
-   ```
+    ```bash
+    pdrun program
+    ```
 
-   - To run program without GPU acceleration.
+    - By default pdrun runs programs with GPU acceleration.
+
+    ```bash
+    pdrun --nogpu program
+    ```
+
+    - To run program without GPU acceleration.
 
 ![GLMark2 Results](https://raw.githubusercontent.com/sabamdarif/termux-desktop/setup-files/images/pdrun-glmark2.png)
 
@@ -59,26 +61,26 @@
 1. **Install required packages:**
    `pkg install mesa virglrenderer vulkan-loader-generic angle-android virglrenderer-android`
 2. Navigate to `$PREFIX/bin` and edit the following files using `nano` or `vim`:
-   - `vncstart`
-   - `tx11start`
-   - `pdrun`
+    - `vncstart`
+    - `tx11start`
+    - `pdrun`
 3. Look for the line at the bottom of tx11start, you will find lines similar to these:
 
-   ```bash
-   export MESA_NO_ERROR=1 MESA_GL_VERSION_OVERRIDE=4.1COMPAT MESA_GLES_VERSION_OVERRIDE=3.2 MESA_GLSL_VERSION_OVERRIDE=410 LIBGL_DRI3_DISABLE=1 EPOXY_USE_ANGLE=1 LD_LIBRARY_PATH=/data/data/com.termux/files/usr/opt/angle-android/vulkan
-   virgl_test_server --use-egl-surfaceless --use-gles &
-   sleep 1
-   XDG_RUNTIME_DIR=${TMPDIR} termux-x11 :0 &
-   sleep 1
-   am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1 &
-   sleep 1
-   env DISPLAY=:0 XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg VK_ICD_FILENAMES=/data/data/com.termux/files/usr/share/vulkan/icd.d/wrapper_icd.aarch64.json MESA_VK_WSI_PRESENT_MODE=mailbox MESA_VK_WSI_DEBUG=blit MESA_SHADER_CACHE=512MB MESA_SHADER_CACHE_DISABLE=false vblank_mode=0 GALLIUM_DRIVER=virpipe dbus-launch --exit-with-session xfce4-session > /dev/null 2>&1 &
-   ```
+    ```bash
+    export MESA_NO_ERROR=1 MESA_GL_VERSION_OVERRIDE=4.1COMPAT MESA_GLES_VERSION_OVERRIDE=3.2 MESA_GLSL_VERSION_OVERRIDE=410 LIBGL_DRI3_DISABLE=1 EPOXY_USE_ANGLE=1 LD_LIBRARY_PATH=/data/data/com.termux/files/usr/opt/angle-android/vulkan
+    virgl_test_server --use-egl-surfaceless --use-gles &
+    sleep 1
+    XDG_RUNTIME_DIR=${TMPDIR} termux-x11 :0 &
+    sleep 1
+    am start --user 0 -n com.termux.x11/com.termux.x11.MainActivity > /dev/null 2>&1 &
+    sleep 1
+    env DISPLAY=:0 XDG_CONFIG_DIRS=/data/data/com.termux/files/usr/etc/xdg VK_ICD_FILENAMES=/data/data/com.termux/files/usr/share/vulkan/icd.d/wrapper_icd.aarch64.json MESA_VK_WSI_PRESENT_MODE=mailbox MESA_VK_WSI_DEBUG=blit MESA_SHADER_CACHE=512MB MESA_SHADER_CACHE_DISABLE=false vblank_mode=0 GALLIUM_DRIVER=virpipe dbus-launch --exit-with-session xfce4-session > /dev/null 2>&1 &
+    ```
 
 - You need to change the `export`, `virgl_test_server --use-egl-surfaceless --use-gles &`, and the `GALLIUM_DRIVER=virpipe` values.
 
 - **How to get these values:**
-- [See this function](/enable-hw-acceleration#L96)
+- [See this function](/enable-hw-acceleration#L182)
 - Here, the value under `set_to_export=` replaces the word after `export` in the tx11start file
 - Here, the value under `hw_method=` replaces the `GALLIUM_DRIVER=virpipe` text
 - Here, the value under `initialize_server_method=` replaces the `virgl_test_server --use-egl-surfaceless --use-gles &`

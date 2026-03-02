@@ -79,12 +79,14 @@
 
 ### 3. Start Installation:
 
-> [!IMPORTANT]
-> **Fresh installations are recommended for best results.**
-> **If you are on Android 12 or higher, first disable Phantom Process Killer Guide:-** [Here](https://github.com/atamshkai/Phantom-Process-Killer)
-
 > [!TIP]
-> **Android 12+ users:** Disable Phantom Process Killer before installation. [Learn how](https://github.com/atamshkai/Phantom-Process-Killer)
+> **Fresh installations are recommended for best results.**
+
+> [!IMPORTANT]
+>
+> ### $\textsf{\color{#d73a49}{ANDROID 12+ USERS}}$
+>
+> #### Disable Phantom Process Killer before installation. [Learn how](/docs/disable-phantom-process-killing.md)
 
 #### One Liner:
 
@@ -92,7 +94,7 @@
 bash <(curl -Lf https://raw.githubusercontent.com/sabamdarif/termux-desktop/main/setup-termux-desktop)
 ```
 
-#### Compact Command:
+#### Or:
 
 - Link shortened using open source link shortener: https://kutt.it/
 
@@ -298,6 +300,7 @@ Special thanks to:
 - [mayTermux/myTermux](https://github.com/mayTermux/myTermux)
 - [catppuccin](https://github.com/catppuccin)
 - [MastaG/mesa-turnip-ppa](https://github.com/MastaG/mesa-turnip-ppa)
+- [agnostic-apollo/Android-Docs](https://github.com/agnostic-apollo/Android-Docs)
 
 ---
 
