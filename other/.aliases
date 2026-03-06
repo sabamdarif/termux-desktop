@@ -32,6 +32,7 @@ alias fcd="cd \$(find . -type d | fzf)"
 alias vi='nvim'
 alias vim='nvim'
 alias n='nvim'
+alias diff="delta --side-by-side --diff-so-fancy"
 if command -v batcat &>/dev/null; then
 	alias cat='batcat --theme OneHalfDark -p'
 else

@@ -4709,7 +4709,7 @@ function terminal_utility_setup() {
 		banner
 		print_msg "${C}${BOLD}Configuring Terminal Utility For Termux..."
 		echo
-		package_install_and_check "bat eza zoxide fastfetch openssh fzf"
+		package_install_and_check "bat eza zoxide fastfetch openssh fzf git-delta"
 		if [[ "$PACKAGE_MANAGER" == "apt" ]]; then
 			package_install_and_check "nala"
 		fi
@@ -4738,6 +4738,12 @@ function terminal_utility_setup() {
 		chmod +x "$TERMUX_PREFIX/bin/termux-color"
 		download_file "$TERMUX_PREFIX/bin/termux-nf" "$REPO_RAW_URL/refs/heads/$REPO_BRANCH_MAIN/other/termux-nf"
 		chmod +x "$TERMUX_PREFIX/bin/termux-nf"
+		check_and_create_directory "$TERMUX_HOME/.config/git/conf.d"
+		download_file "$TERMUX_HOME/.config/git/conf.d" "$REPO_RAW_URL/refs/heads/$REPO_BRANCH_MAIN/other/git-config.conf"
+		cat >>"${TERMUX_HOME}/.config/git/config" <<-EOF
+			[include]
+			    path = $TERMUX_HOME/.config/git/conf.d
+		EOF
 		cp "$shell_rc_file" "${shell_rc_file}-2"
 		check_and_backup "$shell_rc_file"
 		mv "${shell_rc_file}-2" "${shell_rc_file}"
