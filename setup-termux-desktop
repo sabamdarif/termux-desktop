@@ -2365,7 +2365,7 @@ ${NC}"
 		setup_device_gpu_model
 		# download configuration
 		if ! download_file "$REPO_RAW_URL/refs/heads/$REPO_BRANCH_MAIN/configuration/generic/generic.conf"; then
-			print_failed "Fialed to download generic configuration"
+			print_failed "Failed to download generic configuration"
 			print_msg "Please check your internet connection"
 			exit 1
 		fi
@@ -2376,7 +2376,7 @@ ${NC}"
 		device_brand_name=$(getprop ro.product.brand | cut -d ' ' -f 1)
 		if [[ "$GPU_NAME" == "adreno" ]]; then
 			if ! download_file "$REPO_RAW_URL/refs/heads/$REPO_BRANCH_MAIN/configuration/generic/hwa/adreno/generic-adreno.conf"; then
-				print_failed "Fialed to download Adreno configuration"
+				print_failed "Failed to download Adreno configuration"
 				print_msg "Please check your internet connection"
 				exit 1
 			fi
@@ -2386,7 +2386,7 @@ ${NC}"
 		elif [[ "$GPU_NAME" == "mali" ]]; then
 			if [[ $device_brand_name == samsung* ]]; then
 				if ! download_file "$REPO_RAW_URL/refs/heads/$REPO_BRANCH_MAIN/configuration/generic/hwa/mali/samsung/generic-samsung-mali.conf"; then
-					print_failed "Fialed to download Mali configuration"
+					print_failed "Failed to download Mali configuration"
 					print_msg "Please check your internet connection"
 					exit 1
 				fi
@@ -2395,7 +2395,7 @@ ${NC}"
 				check_and_delete "generic-samsung-mali.conf"
 			else
 				if ! download_file "$REPO_RAW_URL/refs/heads/$REPO_BRANCH_MAIN/configuration/generic/hwa/mali/generic-mali.conf"; then
-					print_failed "Fialed to download Mali configuration"
+					print_failed "Failed to download Mali configuration"
 					print_msg "Please check your internet connection"
 					exit 1
 				fi
@@ -2405,7 +2405,7 @@ ${NC}"
 			fi
 		else
 			if ! download_file "$REPO_RAW_URL/refs/heads/$REPO_BRANCH_MAIN/configuration/generic/hwa/generic-others.conf"; then
-				print_failed "Fialed to download Others configuration"
+				print_failed "Failed to download Others configuration"
 				print_msg "Please check your internet connection"
 				exit 1
 			fi
@@ -2416,7 +2416,7 @@ ${NC}"
 		# setup extra config if it's lite mode install
 		if [[ "$LITE_MODE" == "1" || "$LITE_MODE" == "true" ]]; then
 			if ! download_file "$REPO_RAW_URL/refs/heads/$REPO_BRANCH_MAIN/configuration/generic/generic-lite.conf"; then
-				print_failed "Fialed to download generic lite configuration"
+				print_failed "Failed to download generic lite configuration"
 				print_msg "Please check your internet connection"
 				exit 1
 			fi
@@ -2436,14 +2436,14 @@ ${NC}"
 		ask_to_chose_de
 		# download configuration
 		if ! download_file "$REPO_RAW_URL/refs/heads/$REPO_BRANCH_MAIN/configuration/generic/generic.conf"; then
-			print_failed "Fialed to download generic configuration"
+			print_failed "Failed to download generic configuration"
 			print_msg "Please check your internet connection"
 			exit 1
 		fi
 		# shellcheck disable=SC1091
 		source generic.conf
 		if ! download_file "$REPO_RAW_URL/refs/heads/$REPO_BRANCH_MAIN/configuration/generic/nohwa/generic-nohwa.conf"; then
-			print_failed "Fialed to download generic no hardware acceleration configuration"
+			print_failed "Failed to download generic no hardware acceleration configuration"
 			print_msg "Please check your internet connection"
 			exit 1
 		fi
@@ -2453,7 +2453,7 @@ ${NC}"
 		# setup extra config if it's lite mode install
 		if [[ "$LITE_MODE" == "1" || "$LITE_MODE" == "true" ]]; then
 			if ! download_file "$REPO_RAW_URL/refs/heads/$REPO_BRANCH_MAIN/configuration/generic/generic-lite.conf"; then
-				print_failed "Fialed to download generic lite configuration"
+				print_failed "Failed to download generic lite configuration"
 				print_msg "Please check your internet connection"
 				exit 1
 			fi
@@ -3229,7 +3229,7 @@ function get_hw_acceleration_source() {
 			if [[ "$change_old_hw_installer" == "y" ]]; then
 				check_and_backup "$script_path"
 				if ! download_file "$script_path" "$remote_url"; then
-					print_failed "Fialed to download hardware acceleration setup file"
+					print_failed "Failed to download hardware acceleration setup file"
 					print_msg "Please check your internet connection"
 					exit 1
 				fi
@@ -3242,7 +3242,7 @@ function get_hw_acceleration_source() {
 		fi
 	else
 		if ! download_file "$script_path" "$remote_url"; then
-			print_failed "Fialed to download hardware acceleration setup file"
+			print_failed "Failed to download hardware acceleration setup file"
 			print_msg "Please check your internet connection"
 			exit 1
 		fi
@@ -3297,7 +3297,7 @@ function get_distro_container_source() {
 			if [[ "$change_old_distro_installer" == "y" ]]; then
 				check_and_backup "$script_path"
 				if ! download_file "$script_path" "$remote_url"; then
-					print_failed "Fialed to download distro container setup file"
+					print_failed "Failed to download distro container setup file"
 					print_msg "Please check your internet connection"
 					exit 1
 				fi
@@ -3310,7 +3310,7 @@ function get_distro_container_source() {
 		fi
 	else
 		if ! download_file "$script_path" "$remote_url"; then
-			print_failed "Fialed to download distro container setup file"
+			print_failed "Failed to download distro container setup file"
 			print_msg "Please check your internet connection"
 			exit 1
 		fi
@@ -4655,7 +4655,7 @@ function setup_zsh() {
 	print_msg "${BOLD}Configuring zsh.."
 	package_install_and_check "zsh git"
 	if ! download_file "$REPO_RAW_URL/refs/heads/$REPO_BRANCH_MAIN/other/setup-zsh"; then
-		print_failed "Fialed to download zsh setup file"
+		print_failed "Failed to download zsh setup file"
 		print_msg "Please check your internet connection"
 		return 1
 	fi
@@ -4676,7 +4676,7 @@ function setup_bash() {
 	print_msg "${BOLD}Configuring bash.."
 	package_install_and_check "git"
 	if ! download_file "$REPO_RAW_URL/refs/heads/$REPO_BRANCH_MAIN/other/setup-bash"; then
-		print_failed "Fialed to download bash setup file"
+		print_failed "Failed to download bash setup file"
 		print_msg "Please check your internet connection"
 		return 1
 	fi
@@ -5906,7 +5906,7 @@ function add_installer() {
 	if [[ ! -e "$TERMUX_PREFIX/bin/setup-termux-desktop" ]]; then
 		print_msg "Adding setup-termux-desktop installer to bin"
 		if ! download_file "$TERMUX_PREFIX/bin/setup-termux-desktop" "$REPO_RAW_URL/refs/heads/$REPO_BRANCH_MAIN/setup-termux-desktop"; then
-			print_failed "Fialed to download setup-termux-desktop setup file"
+			print_failed "Failed to download setup-termux-desktop setup file"
 			print_msg "Please check your internet connection"
 			return 1
 		fi
@@ -5942,7 +5942,7 @@ function check_for_update_and_update_installer() {
 				mv "$TERMUX_PREFIX/bin/setup-termux-desktop" "$TERMUX_PREFIX/etc/termux-desktop/"
 				check_and_backup "$TERMUX_PREFIX/etc/termux-desktop/setup-termux-desktop"
 				if ! add_installer; then
-					print_failed "Fialed to download new installer"
+					print_failed "Failed to download new installer"
 					print_msg "Please check your internet connection"
 					check_and_restore "$TERMUX_PREFIX/etc/termux-desktop/setup-termux-desktop"
 					mv "$TERMUX_PREFIX/etc/termux-desktop/setup-termux-desktop" "$TERMUX_PREFIX/bin/setup-termux-desktop"
@@ -6086,7 +6086,7 @@ function install_termux_desktop() {
 	fi
 	if [[ "$1" == "--local-config" ]] || [[ "$1" == "--config" ]] || [[ "$1" == "-config" ]]; then
 		if ! download_file "${current_path}/styles.md" "$REPO_RAW_URL/refs/heads/$REPO_BRANCH_MAIN/docs/${de_name}_styles.md"; then
-			print_failed "Fialed to download styles list for $de_name"
+			print_failed "Failed to download styles list for $de_name"
 			print_msg "Please check your internet connection"
 			exit 1
 		fi
