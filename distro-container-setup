@@ -23,10 +23,27 @@
 
 # shellcheck disable=SC2154
 # shellcheck disable=SC2120
+
 function check_termux() {
-	if [[ -z "$PREFIX" && "$PREFIX" != *"/com.termux/"* ]]; then
-		echo "${R}[${R}☓${R}]${R}${BOLD}Please run it inside termux${NC}"
-		exit 0
+	if [ ! -f /system/build.prop ]; then
+		echo "${R}[${R}☓${R}]${R}${BOLD} Not running on Android."
+		exit 1
+	fi
+
+	local tracer_pid
+	tracer_pid=$(grep TracerPid "/proc/$$/status" | cut -d $'\t' -f 2)
+	if [ "$tracer_pid" != "0" ]; then
+		local tracer_name
+		tracer_name=$(grep Name "/proc/${tracer_pid}/status" | cut -d $'\t' -f 2)
+		if [ "$tracer_name" = "proot" ]; then
+			echo "${R}[${R}☓${R}]${R}${BOLD} Must not be executed under PRoot."
+			exit 1
+		fi
+	fi
+
+	if [[ -z "$PREFIX" || "$PREFIX" != *"/com.termux/"* ]]; then
+		echo "${R}[${R}☓${R}]${R}${BOLD} Please run this script inside Termux."
+		exit 1
 	fi
 }
 
