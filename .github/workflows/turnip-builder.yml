@@ -175,7 +175,7 @@ jobs:
                   key: ccache-turnip-arm32-${{ github.run_id }}-${{ github.run_attempt }}
 
             - name: Upload ${{ matrix.arch }} artifacts
-              uses: actions/upload-artifact@v4
+              uses: actions/upload-artifact@v7
               with:
                   name: turnip-${{ needs.validate-inputs.outputs.mesa_version }}-${{ matrix.arch }}
                   path: .github/scripts/turnip_workdir/turnip-${{ needs.validate-inputs.outputs.mesa_version }}-${{ matrix.arch }}.zip
