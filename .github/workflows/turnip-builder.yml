@@ -113,7 +113,7 @@ jobs:
 
             - name: Cache ccache (ARM64)
               if: matrix.arch == 'aarch64'
-              uses: actions/cache@v4
+              uses: actions/cache@v5
               with:
                   path: ~/.ccache
                   key: ccache-turnip-${{ runner.os }}-${{ runner.arch }}-${{ matrix.arch }}-${{ github.run_id }}-${{ github.run_attempt }}
@@ -122,7 +122,7 @@ jobs:
 
             - name: Cache ccache (ARM32)
               if: matrix.arch == 'arm'
-              uses: actions/cache@v4
+              uses: actions/cache@v5
               with:
                   path: ./.ccache-arm32
                   key: ccache-turnip-arm32-${{ github.run_id }}-${{ github.run_attempt }}
@@ -162,14 +162,14 @@ jobs:
 
             - name: Save ccache (ARM64)
               if: matrix.arch == 'aarch64'
-              uses: actions/cache/save@v4
+              uses: actions/cache/save@v5
               with:
                   path: ~/.ccache
                   key: ccache-turnip-${{ runner.os }}-${{ runner.arch }}-${{ matrix.arch }}-${{ github.run_id }}-${{ github.run_attempt }}
 
             - name: Save ccache (ARM32)
               if: matrix.arch == 'arm'
-              uses: actions/cache/save@v4
+              uses: actions/cache/save@v5
               with:
                   path: ./.ccache-arm32
                   key: ccache-turnip-arm32-${{ github.run_id }}-${{ github.run_attempt }}
