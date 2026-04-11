@@ -11,7 +11,7 @@ jobs:
             actions: write
         steps:
             - name: Checkout repository
-              uses: actions/checkout@v5
+              uses: actions/checkout@v6
             - name: Get old version
               id: get_old_version
               run: |

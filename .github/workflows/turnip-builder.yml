@@ -40,7 +40,7 @@ jobs:
         steps:
             - name: Checkout repository (for auto version detection)
               if: github.event_name == 'push' || github.event_name == 'pull_request'
-              uses: actions/checkout@v5
+              uses: actions/checkout@v6
 
             - name: Validate Mesa version
               id: validate
@@ -76,7 +76,7 @@ jobs:
                 arch: [aarch64, arm]
         steps:
             - name: Checkout repository
-              uses: actions/checkout@v5
+              uses: actions/checkout@v6
 
             - name: Set up QEMU for ARM32
               if: matrix.arch == 'arm'
@@ -195,7 +195,7 @@ jobs:
         runs-on: ubuntu-24.04-arm
         steps:
             - name: Checkout repository
-              uses: actions/checkout@v5
+              uses: actions/checkout@v6
 
             - name: Download all artifacts
               uses: actions/download-artifact@v4
