@@ -2946,23 +2946,24 @@ function ext_wall_setup() {
 	banner
 	if [[ "$ext_wall_answer" == "n" ]]; then
 		print_msg "${C}Skipping Extra Wallpapers Setup..."
-		echo
-		# if we doesn't set this to only run when CALL_FROM_CHANGE_STYLE == false then it will clone the wallpapers each time user run --change style
-		if [[ "$CALL_FROM_CHANGE_STYLE" == false ]]; then
-			print_msg "${BOLD}Installing Some Extra Wallpapers..."
-			check_and_create_directory "$TERMUX_PREFIX/share/backgrounds"
-			# download_and_extract "https://archive.org/download/wallpaper-extra.tar/wallpaper-extra.tar.gz" "$TERMUX_PREFIX/share/backgrounds/"
-			cd "$TERMUX_HOME" || exit 1
-			git clone --recursive --depth=1 -j "$(nproc)" https://github.com/$REPO_OWNER/wallpapers.git wallpapers-collection
-			cd wallpapers-collection || exit 1
-			check_and_delete ".git"
-			mv ./* "$TERMUX_PREFIX/share/backgrounds/"
-			cd "$TERMUX_HOME" || exit 1
-			check_and_delete "wallpapers-collection"
-		fi
+		return 0
 	fi
+
+	if [[ "$CALL_FROM_CHANGE_STYLE" == false ]]; then
+		print_msg "${BOLD}Installing Some Extra Wallpapers..."
+		check_and_create_directory "$TERMUX_PREFIX/share/backgrounds"
+		cd "$TERMUX_HOME" || exit 1
+		git clone --recursive --depth=1 -j "$(nproc)" https://github.com/$REPO_OWNER/wallpapers.git wallpapers-collection
+		cd wallpapers-collection || exit 1
+		check_and_delete ".git"
+		mv ./* "$TERMUX_PREFIX/share/backgrounds/"
+		cd "$TERMUX_HOME" || exit 1
+		check_and_delete "wallpapers-collection"
+	fi
+	
 	print_to_config "ext_wall_answer"
 }
+
 
 function theme_installer() {
 	log_debug "Starting theme installation" "Theme: $style_name"
