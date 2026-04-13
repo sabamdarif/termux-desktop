@@ -2949,6 +2949,7 @@ function ext_wall_setup() {
 		return 0
 	fi
 
+	# if we doesn't set this to only run when CALL_FROM_CHANGE_STYLE == false then it will clone the wallpapers each time user run --change style
 	if [[ "$CALL_FROM_CHANGE_STYLE" == false ]]; then
 		print_msg "${BOLD}Installing Some Extra Wallpapers..."
 		check_and_create_directory "$TERMUX_PREFIX/share/backgrounds"
