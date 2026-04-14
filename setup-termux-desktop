@@ -6031,7 +6031,7 @@ function install_termux_desktop() {
 	distro_container_setup
 	gui_launcher
 	terminal_utility_setup
-	if [[ "$selected_distro_type" == "proot" ]]; then
+	if [[ "$selected_distro_type" == "proot" ]]; || "$selected_distro_type" == "chroot" ]]; then
 		install_termux_desktop_appstore
 	fi
 	add_to_autostart
