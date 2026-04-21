@@ -28,6 +28,7 @@
     - [PACMAN](https://youtu.be/ditNvG5Nxj0) (pacman may be buggy, not well tested)
 - :shopping: **App Store:** An appstore to install apps
 - :package: **Container** It lets you use a proot/chroot distro as a container to install more apps than Termux normally supports
+- :joystick: **Pokémon Romhack Dev Tools:** Optional step that installs a full GBA/NDS romhack development environment (devkitPro ARM toolchain, Python decomp libraries, ROM patching tools) and adds a one-click desktop shortcut to the build shell
 - And a lot more, try it
 
 ---
@@ -36,7 +37,7 @@
 
 <div align="center">
 
-**:package: [Distro Containers](/docs/proot-container.md) • :mechanical_arm: [Hardware Acceleration](/docs/hw-acceleration.md) • :wine_glass: [Wine](/docs/wine.md#wine_glasslearn-about-wine) • :bulb: [Others](/docs/see-more.md)**
+**:package: [Distro Containers](/docs/proot-container.md) • :mechanical_arm: [Hardware Acceleration](/docs/hw-acceleration.md) • :wine_glass: [Wine](/docs/wine.md#wine_glasslearn-about-wine) • :joystick: [Romhack Dev Tools](/docs/romhack-tools.md) • :bulb: [Others](/docs/see-more.md)**
 
 </div>
 

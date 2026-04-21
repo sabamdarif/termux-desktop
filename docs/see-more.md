@@ -1,3 +1,31 @@
+## :joystick: Learn about Pokémon GBA/NDS Romhack Dev Tools:
+
+> Full documentation: [docs/romhack-tools.md](./romhack-tools.md)
+
+#### :jigsaw: Packages Installed in Termux:
+
+- **[make](https://www.gnu.org/software/make/):** Build automation for decomp projects
+- **[nasm](https://www.nasm.us):** Assembler for x86/ARM source files
+- **[clang](https://clang.llvm.org):** C/C++ compiler for native host-side tools
+- **[xdelta3](http://xdelta.org):** Create and apply binary ROM patches
+- **[Pillow](https://python-pillow.org)** _(pip)_**:** Image processing for ROM graphics and sprites
+- **[PyYAML](https://pyyaml.org)** _(pip)_**:** YAML parsing used by decomp build configs
+- **[ndspy](https://ndspy.readthedocs.io)** _(pip)_**:** Read and write NDS ROM files from Python
+
+#### :jigsaw: Packages Installed in the Linux Container (Debian / Ubuntu / Arch):
+
+- **[devkitPro](https://devkitpro.org) — gba-dev / nds-dev:** ARM cross-compiler toolchain (`arm-none-eabi-gcc`), GBA and NDS libraries (libgba, libnds), and ROM-packaging tools (grit, ndstool)
+
+#### :nerd_face: How to use them?
+
+- Edit your decomp project in **code-oss** as you would on any Linux desktop
+- Open the **"devkitPro Shell"** entry from the desktop application menu, or type your distro name (e.g. `debian`) in a terminal
+- Run `make` inside the shell — the ARM toolchain is already on `$PATH`
+- The compiled `.gba` / `.nds` ROM is written back to your project folder in Termux `$HOME`
+- Test the ROM with an Android emulator app (e.g. **[My Boy!](https://play.google.com/store/apps/details?id=com.fastemulator.gba)** for GBA, **[melonDS](https://play.google.com/store/apps/details?id=me.magnum.melonds)** for NDS)
+
+---
+
 ## :hammer_and_wrench: Learn about terminal utilities:
 
 #### :jigsaw: 1. Additional Packages to be Installed:

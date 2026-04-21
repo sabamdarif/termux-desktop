@@ -681,6 +681,74 @@ function distro_terminal_utility_setup() {
 
 #########################################################################
 #
+# Setup Pokémon GBA/NDS Romhack Tools in Distro Container
+#
+#########################################################################
+function distro_romhack_tools_setup() {
+	if [[ "$romhack_tools_answer" == "y" ]]; then
+		local devkitpro_installed=false
+		if [[ "$selected_distro" == "debian" ]] || [[ "$selected_distro" == "ubuntu" ]]; then
+			romhack_setup_content=$(
+				cat <<-'EOF'
+					pd_package_install_and_check "wget"
+					wget https://apt.devkitpro.org/install-devkitpro-pacman
+					chmod +x install-devkitpro-pacman
+					echo 'Y' | bash install-devkitpro-pacman
+					dkp-pacman -S --noconfirm gba-dev nds-dev
+					check_and_delete "install-devkitpro-pacman"
+					check_and_delete "pd_romhack_setup.sh"
+				EOF
+			)
+			create_shell_script "$save_path/pd_romhack_setup.sh" "$romhack_setup_content"
+			banner
+			print_msg "${BOLD}Installing devkitPro ARM toolchain in ${selected_distro}..."
+			echo
+			"${selected_distro_type}"-distro login "$selected_distro" -- /bin/bash -c 'bash /root/pd_romhack_setup.sh'
+			devkitpro_installed=true
+		elif [[ "$selected_distro" == "archlinux" ]]; then
+			romhack_setup_content=$(
+				cat <<-'EOF'
+					pacman-key --recv BC26F752D25B92CE272E0F44F7FD5492264BB9D0
+					pacman-key --lsign-key BC26F752D25B92CE272E0F44F7FD5492264BB9D0
+					printf '\n[dkp-libs]\nServer = https://pkg.devkitpro.org/packages\n[dkp-linux]\nServer = https://pkg.devkitpro.org/packages/linux/$arch/\n' >> /etc/pacman.conf
+					pacman -Syu --noconfirm
+					pacman -S --noconfirm gba-dev nds-dev
+					check_and_delete "pd_romhack_setup.sh"
+				EOF
+			)
+			create_shell_script "$save_path/pd_romhack_setup.sh" "$romhack_setup_content"
+			banner
+			print_msg "${BOLD}Installing devkitPro ARM toolchain in ${selected_distro}..."
+			echo
+			"${selected_distro_type}"-distro login "$selected_distro" -- /bin/bash -c 'bash /root/pd_romhack_setup.sh'
+			devkitpro_installed=true
+		elif [[ "$selected_distro" == "fedora" ]]; then
+			banner
+			print_warn "devkitPro automated installation is not supported for Fedora."
+			print_msg "Please follow the manual setup guide:${NC}\nhttps://devkitpro.org/wiki/Getting_Started"
+			echo
+		fi
+		if [[ "$devkitpro_installed" == true ]]; then
+			check_and_create_directory "$TERMUX_PREFIX/share/applications/pd_added"
+			cat <<-EOF >"$TERMUX_PREFIX/share/applications/pd_added/devkitpro-shell.desktop"
+				[Desktop Entry]
+				Version=1.0
+				Type=Application
+				Name=devkitPro Shell
+				Comment=ARM GBA/NDS cross-compiler toolchain shell
+				Exec=${selected_distro}
+				Icon=utilities-terminal
+				Terminal=true
+				Categories=Development;
+			EOF
+			update-desktop-database "$TERMUX_PREFIX/share/applications" 2>/dev/null || true
+			print_success "devkitPro Shell added to the desktop menu"
+		fi
+	fi
+}
+
+#########################################################################
+#
 # Create App Installer Shortcut
 #
 #########################################################################
@@ -2280,6 +2348,7 @@ function install_distro_container() {
 	fi
 	distro_zsh_setup
 	distro_terminal_utility_setup
+	distro_romhack_tools_setup
 	distro_create_app_installer
 	add_add_to_menu
 	add_useful_repos

@@ -851,6 +851,7 @@ function validate_required_vars() {
 		"chosen_shell_name"
 		"terminal_utility_setup_answer"
 		"fm_tools"
+		"romhack_tools_answer"
 		# Distro
 		"distro_add_answer"
 	)
@@ -958,6 +959,9 @@ function validate_required_vars() {
 				;;
 			"fm_tools")
 				question_fm_tools
+				;;
+			"romhack_tools_answer")
+				question_romhack_tools
 				;;
 			"distro_add_answer")
 				question_distro_add
@@ -1539,6 +1543,42 @@ ${NC}"
 	confirmation_y_or_n "Do you want File Manager Tools tailored with powerful extra features" fm_tools
 }
 
+function question_romhack_tools() {
+	banner
+	print_msg "${R}[${C}-${R}]${B} Pokémon GBA/NDS Romhack Development Tools${NC}
+
+${B}Overview:${NC}
+This option sets up a complete development environment for creating
+custom Pokémon ROM hacks for GBA and NDS platforms in code-oss.
+
+${B}Installed in Termux:${NC}
+   • Build System
+     - make (build automation)
+     - nasm (assembler)
+     - clang (C/C++ compiler for native tools)
+
+   • ROM Patching
+     - xdelta3 (patch creation and application)
+
+   • Python Libraries
+     - Pillow (image processing for ROM graphics)
+     - PyYAML (YAML parsing used by decomp build systems)
+     - ndspy (NDS ROM read/write library)
+
+${B}Installed in Linux Container (if configured):${NC}
+   • devkitPro ARM toolchain
+     - arm-none-eabi-gcc (GBA/NDS cross-compiler)
+     - gba-dev (GBA development libraries and tools)
+     - nds-dev (NDS development libraries and tools)
+   • 'devkitPro Shell' shortcut added to the desktop app menu
+
+${B}Usage:${NC}
+Open 'devkitPro Shell' from the desktop menu or run your
+distro name (e.g. 'debian') in the terminal to access the toolchain.
+${NC}"
+	confirmation_y_or_n "Do you want to install Pokémon GBA/NDS romhack development tools" romhack_tools_answer
+}
+
 function question_gui_mode() {
 	banner
 	print_msg "${BOLD} Select Gui Mode"
@@ -1613,6 +1653,7 @@ function questions_setup_manual() {
 	question_terminal_utility_setup_answer
 	questions_nerd_font_select
 	question_fm_tools
+	question_romhack_tools
 	question_gui_mode
 	question_de_on_startup
 	question_distro_add_answer
@@ -2170,6 +2211,13 @@ function define_value_name() {
 	elif [[ "$terminal_utility_setup_answer" == "n" ]]; then
 		terminal_utility_setup_confirmation="No"
 	fi
+	# Pokémon Romhack Dev Tools
+	# shellcheck disable=SC2154
+	if [[ "$romhack_tools_answer" == "y" ]]; then
+		romhack_tools_confirmation="Yes"
+	elif [[ "$romhack_tools_answer" == "n" ]]; then
+		romhack_tools_confirmation="No"
+	fi
 	# Nerd Font
 	# shellcheck disable=SC2154
 	if [[ "$install_type_answer" == "1" ]]; then
@@ -2313,6 +2361,7 @@ function print_conf_info() {
 	echo "${G}Customization${NC}"
 	echo "   • Extra Wallpapers: ${ext_wall_answer_confirmation}"
 	echo "   • File Manager Tools: ${fm_tools_confirmation}"
+	echo "   • Pokémon Romhack Dev Tools: ${romhack_tools_confirmation}"
 	sleep 0.015
 
 	echo "${G}Terminal Setup${NC}"
@@ -4898,6 +4947,25 @@ function install_fm_tools() {
 
 #########################################################################
 #
+# Setup Pokémon GBA/NDS Romhack Development Tools
+#
+#########################################################################
+function install_romhack_tools() {
+	if [[ "$romhack_tools_answer" == "y" ]]; then
+		banner
+		print_msg "${BOLD}Installing Pokémon GBA/NDS Romhack Development Tools..."
+		echo
+		package_install_and_check "make nasm clang xdelta3 python"
+		banner
+		print_msg "${BOLD}Installing Python romhack libraries..."
+		echo
+		python -m pip install --quiet Pillow PyYAML ndspy
+	fi
+	print_to_config "romhack_tools_answer"
+}
+
+#########################################################################
+#
 # Setup usb auto bookmarks utility
 #
 #########################################################################
@@ -6161,6 +6229,7 @@ function install_termux_desktop() {
 	add_to_autostart
 	check_desktop_process
 	install_fm_tools
+	install_romhack_tools
 	add_usb_auto_mount
 	add_auto_completion
 	some_fixes
