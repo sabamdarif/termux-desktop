@@ -7,14 +7,18 @@
 - **[make](https://www.gnu.org/software/make/):** Build automation for decomp projects
 - **[nasm](https://www.nasm.us):** Assembler for x86/ARM source files
 - **[clang](https://clang.llvm.org):** C/C++ compiler for native host-side tools
+- **[perl](https://www.perl.org):** Symbol file generation and decomp scripting
 - **[xdelta3](http://xdelta.org):** Create and apply binary ROM patches
 - **[Pillow](https://python-pillow.org)** _(pip)_**:** Image processing for ROM graphics and sprites
 - **[PyYAML](https://pyyaml.org)** _(pip)_**:** YAML parsing used by decomp build configs
 - **[ndspy](https://ndspy.readthedocs.io)** _(pip)_**:** Read and write NDS ROM files from Python
+- **[colorama](https://pypi.org/project/colorama/)** _(pip)_**:** Colored terminal output used by decomp Python tooling
 
 #### :jigsaw: Packages Installed in the Linux Container (Debian / Ubuntu / Arch):
 
 - **[devkitPro](https://devkitpro.org) — gba-dev / nds-dev:** ARM cross-compiler toolchain (`arm-none-eabi-gcc`), GBA and NDS libraries (libgba, libnds), and ROM-packaging tools (grit, ndstool)
+- **build-essential / base-devel:** Native host C/C++ compiler required to build decomp host tools (e.g. gbagfx)
+- **libpng-dev / libpng:** Required by gbagfx and other decomp tool compilations
 
 #### :nerd_face: How to use them?
 

@@ -13,11 +13,13 @@ This optional step sets up a complete development environment for creating custo
 | `make` | Build automation for decomp projects |
 | `nasm` | x86/ARM assembler |
 | `clang` | C/C++ compiler for native host tools |
+| `perl` | Symbol file generation and decomp scripting |
 | `xdelta3` | Create and apply binary ROM patches |
 | `python` | Required by decomp build systems |
 | `Pillow` _(pip)_ | Image processing for ROM graphics/sprites |
 | `PyYAML` _(pip)_ | YAML parsing used by decomp build configs |
 | `ndspy` _(pip)_ | Read and write NDS ROM files from Python |
+| `colorama` _(pip)_ | Colored terminal output used by decomp Python tooling |
 
 #### In the Linux Container (Debian / Ubuntu / Arch — when a distro is configured)
 
@@ -26,6 +28,8 @@ This optional step sets up a complete development environment for creating custo
 | `arm-none-eabi-gcc` | ARM cross-compiler for GBA/NDS target code |
 | `gba-dev` | devkitPro GBA libraries and tools (libgba, grit, etc.) |
 | `nds-dev` | devkitPro NDS libraries and tools (libnds, ndstool, etc.) |
+| `build-essential` / `base-devel` | Native host C/C++ compiler for building decomp host tools |
+| `libpng-dev` / `libpng` | Required by gbagfx and other decomp tool compilations |
 
 > **Why the container?** Termux does not provide an ARM cross-compiler in its own package repos. The [devkitPro](https://devkitpro.org) toolchain is installed inside the proot/chroot Linux container, which has access to the official devkitPro package repos.
 

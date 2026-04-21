@@ -695,6 +695,7 @@ function distro_romhack_tools_setup() {
 					chmod +x install-devkitpro-pacman
 					echo 'Y' | bash install-devkitpro-pacman
 					dkp-pacman -S --noconfirm gba-dev nds-dev
+					pd_package_install_and_check "build-essential libpng-dev"
 					check_and_delete "install-devkitpro-pacman"
 					check_and_delete "pd_romhack_setup.sh"
 				EOF
@@ -712,7 +713,7 @@ function distro_romhack_tools_setup() {
 					pacman-key --lsign-key BC26F752D25B92CE272E0F44F7FD5492264BB9D0
 					printf '\n[dkp-libs]\nServer = https://pkg.devkitpro.org/packages\n[dkp-linux]\nServer = https://pkg.devkitpro.org/packages/linux/$arch/\n' >> /etc/pacman.conf
 					pacman -Syu --noconfirm
-					pacman -S --noconfirm gba-dev nds-dev
+					pacman -S --noconfirm gba-dev nds-dev base-devel libpng
 					check_and_delete "pd_romhack_setup.sh"
 				EOF
 			)
@@ -725,7 +726,8 @@ function distro_romhack_tools_setup() {
 		elif [[ "$selected_distro" == "fedora" ]]; then
 			banner
 			print_warn "devkitPro automated installation is not supported for Fedora."
-			print_msg "Please follow the manual setup guide:${NC}\nhttps://devkitpro.org/wiki/Getting_Started"
+			print_msg "Please follow the manual setup guide at:"
+			print_msg "https://devkitpro.org/wiki/Getting_Started"
 			echo
 		fi
 		if [[ "$devkitpro_installed" == true ]]; then

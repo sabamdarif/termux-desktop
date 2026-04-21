@@ -4955,11 +4955,11 @@ function install_romhack_tools() {
 		banner
 		print_msg "${BOLD}Installing Pokémon GBA/NDS Romhack Development Tools..."
 		echo
-		package_install_and_check "make nasm clang xdelta3 python"
+		package_install_and_check "make nasm clang perl xdelta3 python"
 		banner
 		print_msg "${BOLD}Installing Python romhack libraries..."
 		echo
-		python -m pip install --quiet Pillow PyYAML ndspy
+		python -m pip install --quiet Pillow PyYAML ndspy colorama
 	fi
 	print_to_config "romhack_tools_answer"
 }
