@@ -763,6 +763,21 @@ function distro_romhack_tools_setup() {
 			echo
 		fi
 		if [[ "$devkitpro_installed" == true ]]; then
+			poryscript_setup_content=$(
+				cat <<-'EOF'
+					wget -q --show-progress -O /usr/local/bin/poryscript \
+					    "https://github.com/sabamdarif/termux-desktop/releases/download/poryscript-prebuilt/poryscript-linux-arm64"
+					chmod +x /usr/local/bin/poryscript
+					check_and_delete "pd_poryscript_setup.sh"
+				EOF
+			)
+			create_shell_script "$save_path/pd_poryscript_setup.sh" "$poryscript_setup_content"
+			banner
+			print_msg "${BOLD}Installing Poryscript scripting compiler in ${selected_distro}..."
+			echo
+			"${selected_distro_type}"-distro login "$selected_distro" -- /bin/bash -c 'bash /root/pd_poryscript_setup.sh'
+		fi
+		if [[ "$devkitpro_installed" == true ]]; then
 			check_and_create_directory "$TERMUX_PREFIX/share/applications/pd_added"
 			cat <<-EOF >"$TERMUX_PREFIX/share/applications/pd_added/devkitpro-shell.desktop"
 				[Desktop Entry]

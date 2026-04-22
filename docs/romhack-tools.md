@@ -31,6 +31,7 @@ This optional step sets up a complete development environment for creating custo
 | `build-essential` / `base-devel` | Native host C/C++ compiler for building decomp host tools |
 | `libpng-dev` / `libpng` | Required by gbagfx and other decomp tool compilations |
 | `Porymap` _(pre-built ARM64 binary)_ | Visual map and tileset editor for Gen 3 decomp projects. Downloaded automatically during setup — no compilation required |
+| `Poryscript` _(pre-built ARM64 binary)_ | High-level scripting language compiled to native Gen 3 scripts. Used by most active pokeemerald projects. Invoked automatically by `make` |
 
 > **Why the container?** Termux does not provide an ARM cross-compiler in its own package repos. The [devkitPro](https://devkitpro.org) toolchain is installed inside the proot/chroot Linux container, which has access to the official devkitPro package repos.
 
@@ -72,7 +73,8 @@ Android device
 
 1. **Edit** source files in code-oss as you would on any desktop Linux
 2. **Open "Porymap"** from the desktop menu to edit maps and tilesets visually
-3. **Open "devkitPro Shell"** from the desktop menu (or type your distro name in a terminal)
+3. Write event scripts as `.pory` files — **Poryscript** compiles them automatically during `make`
+4. **Open "devkitPro Shell"** from the desktop menu (or type your distro name in a terminal)
 4. Navigate to your project and **run `make`**
 5. The compiled `.gba` / `.nds` ROM is written to your project folder
 6. **Test** with an Android emulator app ([My Boy!](https://play.google.com/store/apps/details?id=com.fastemulator.gba) for GBA, [melonDS](https://play.google.com/store/apps/details?id=me.magnum.melonds) for NDS) — they access the same storage
@@ -103,6 +105,7 @@ The default in the generic config is `n` (opt-in).
 
 - [devkitPro Getting Started](https://devkitpro.org/wiki/Getting_Started)
 - [Porymap documentation](https://huderlem.github.io/porymap/)
+- [Poryscript documentation](https://github.com/huderlem/poryscript#readme)
 - [pokeemerald decomp (GBA)](https://github.com/pret/pokeemerald)
 - [pokeheartgold decomp (NDS)](https://github.com/pret/pokeheartgold)
 - [ndspy documentation](https://ndspy.readthedocs.io)

@@ -20,6 +20,7 @@
 - **build-essential / base-devel:** Native host C/C++ compiler required to build decomp host tools (e.g. gbagfx)
 - **libpng-dev / libpng:** Required by gbagfx and other decomp tool compilations
 - **[Porymap](https://huderlem.github.io/porymap/)** _(pre-built ARM64 binary)_**:** Visual map and tileset editor for Gen 3 decomp projects (pokeemerald / pokefirered / pokeruby)
+- **[Poryscript](https://github.com/huderlem/poryscript)** _(pre-built ARM64 binary)_**:** High-level scripting compiler for Gen 3 decomp projects — translates `.pory` scripts to native pokeemerald script format
 
 #### :nerd_face: How to use them?
 

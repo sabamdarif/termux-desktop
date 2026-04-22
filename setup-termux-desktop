@@ -1571,6 +1571,7 @@ ${B}Installed in Linux Container (if configured):${NC}
      - gba-dev (GBA development libraries and tools)
      - nds-dev (NDS development libraries and tools)
    • Porymap (visual map editor — pre-built ARM64 binary, auto-installed)
+   • Poryscript (scripting compiler — pre-built ARM64 binary, auto-installed)
    • Desktop shortcuts added for installed tools
 
 ${B}Usage:${NC}

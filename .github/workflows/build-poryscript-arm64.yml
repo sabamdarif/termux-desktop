@@ -1,13 +1,13 @@
-name: Build Porymap Linux ARM64
+name: Build Poryscript Linux ARM64
 
 on:
     schedule:
-        # Check for a new stable Porymap release once a day at 06:00 UTC
-        - cron: '0 6 * * *'
+        # Check for a new stable Poryscript release once a day at 06:30 UTC
+        - cron: '30 6 * * *'
     workflow_dispatch:
         inputs:
-            porymap_ref:
-                description: "Porymap git ref to build (tag/branch — leave blank to use latest stable release)"
+            poryscript_ref:
+                description: "Poryscript git ref to build (tag/branch — leave blank to use latest stable release)"
                 required: false
                 default: ""
             force_rebuild:
@@ -20,29 +20,29 @@ permissions:
 
 jobs:
     # -----------------------------------------------------------------------
-    # 1. Detect whether a new stable Porymap release exists
+    # 1. Detect whether a new stable Poryscript release exists
     # -----------------------------------------------------------------------
     check-version:
-        name: Check latest Porymap release
+        name: Check latest Poryscript release
         runs-on: ubuntu-latest
         if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
         outputs:
             needs_build: ${{ steps.compare.outputs.needs_build }}
-            porymap_ref: ${{ steps.compare.outputs.porymap_ref }}
+            poryscript_ref: ${{ steps.compare.outputs.poryscript_ref }}
 
         steps:
-            - name: Get latest stable Porymap release (no pre-releases)
+            - name: Get latest stable Poryscript release (no pre-releases)
               id: upstream
               run: |
                   LATEST=$(curl -fsSL \
                       -H "Accept: application/vnd.github+json" \
-                      "https://api.github.com/repos/huderlem/porymap/releases/latest" \
+                      "https://api.github.com/repos/huderlem/poryscript/releases/latest" \
                       | jq -r '.tag_name')
                   if [ -z "$LATEST" ] || [ "$LATEST" = "null" ]; then
-                      echo "ERROR: Could not fetch latest Porymap release"
+                      echo "ERROR: Could not fetch latest Poryscript release"
                       exit 1
                   fi
-                  echo "Latest stable Porymap release: $LATEST"
+                  echo "Latest stable Poryscript release: $LATEST"
                   echo "tag=$LATEST" >> "$GITHUB_OUTPUT"
 
             - name: Get currently built version from prebuilt release
@@ -51,8 +51,8 @@ jobs:
                   BUILT=$(curl -fsSL \
                       -H "Accept: application/vnd.github+json" \
                       -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-                      "https://api.github.com/repos/${{ github.repository }}/releases/tags/porymap-prebuilt" \
-                      | jq -r '.assets[] | select(.name == "porymap-version.txt") | .browser_download_url') || true
+                      "https://api.github.com/repos/${{ github.repository }}/releases/tags/poryscript-prebuilt" \
+                      | jq -r '.assets[] | select(.name == "poryscript-version.txt") | .browser_download_url') || true
                   if [ -n "$BUILT" ]; then
                       VERSION=$(curl -fsSL "$BUILT")
                       echo "Currently built version: $VERSION"
@@ -68,17 +68,16 @@ jobs:
                   UPSTREAM="${{ steps.upstream.outputs.tag }}"
                   CURRENT="${{ steps.current.outputs.version }}"
                   FORCE="${{ github.event.inputs.force_rebuild }}"
-                  MANUAL_REF="${{ github.event.inputs.porymap_ref }}"
+                  MANUAL_REF="${{ github.event.inputs.poryscript_ref }}"
 
-                  # Manual dispatch with explicit ref always builds
                   if [ -n "$MANUAL_REF" ]; then
                       echo "Manual ref provided: $MANUAL_REF — forcing build"
-                      echo "needs_build=true"  >> "$GITHUB_OUTPUT"
-                      echo "porymap_ref=$MANUAL_REF" >> "$GITHUB_OUTPUT"
+                      echo "needs_build=true" >> "$GITHUB_OUTPUT"
+                      echo "poryscript_ref=$MANUAL_REF" >> "$GITHUB_OUTPUT"
                       exit 0
                   fi
 
-                  echo "porymap_ref=$UPSTREAM" >> "$GITHUB_OUTPUT"
+                  echo "poryscript_ref=$UPSTREAM" >> "$GITHUB_OUTPUT"
 
                   if [ "$UPSTREAM" != "$CURRENT" ] || [ "$FORCE" = "true" ]; then
                       echo "New version detected ($CURRENT → $UPSTREAM) or force=true — will build"
@@ -101,50 +100,45 @@ jobs:
             - name: Install build dependencies
               run: |
                   sudo apt-get update
-                  sudo apt-get install -y \
-                      build-essential git \
-                      qt6-base-dev qt6-declarative-dev libqt6charts6-dev \
-                      libgl1-mesa-dev
+                  sudo apt-get install -y golang-go git
 
-            - name: Clone Porymap
+            - name: Clone Poryscript
               run: |
-                  git clone --depth 1 --branch "${{ needs.check-version.outputs.porymap_ref }}" \
-                      https://github.com/huderlem/porymap porymap-src
+                  git clone --depth 1 --branch "${{ needs.check-version.outputs.poryscript_ref }}" \
+                      https://github.com/huderlem/poryscript poryscript-src
 
-            - name: Build Porymap
+            - name: Build Poryscript
               run: |
-                  cd porymap-src
-                  qmake6
-                  make -j$(nproc)
-                  strip porymap
+                  cd poryscript-src
+                  go build -ldflags="-s -w" -o poryscript .
 
             - name: Prepare artifacts
               run: |
-                  cp porymap-src/porymap porymap-linux-arm64
-                  echo "${{ needs.check-version.outputs.porymap_ref }}" > porymap-version.txt
+                  cp poryscript-src/poryscript poryscript-linux-arm64
+                  echo "${{ needs.check-version.outputs.poryscript_ref }}" > poryscript-version.txt
 
             - name: Publish to GitHub Releases
               uses: softprops/action-gh-release@v2
               with:
-                  tag_name: porymap-prebuilt
-                  name: "Porymap Linux ARM64 (pre-built binary)"
+                  tag_name: poryscript-prebuilt
+                  name: "Poryscript Linux ARM64 (pre-built binary)"
                   body: |
-                      Pre-built Porymap binary for **Linux ARM64**, for use inside termux-desktop proot/chroot containers.
+                      Pre-built Poryscript binary for **Linux ARM64**, for use inside termux-desktop proot/chroot containers.
 
                       | Field | Value |
                       |---|---|
-                      | **Porymap version** | `${{ needs.check-version.outputs.porymap_ref }}` |
+                      | **Poryscript version** | `${{ needs.check-version.outputs.poryscript_ref }}` |
                       | **Architecture** | `aarch64` (ARM64) |
                       | **Built on** | `ubuntu-24.04-arm` (GitHub-hosted runner) |
-                      | **Qt version** | Qt 6 (dynamically linked) |
+                      | **Language** | Go (statically linked) |
 
-                      ### Requirements inside the container
-                      Qt6 runtime libraries are installed automatically by `distro-container-setup` when `romhack_tools_answer=y`.
+                      ### Usage inside the container
+                      The binary is installed to `/usr/local/bin/poryscript` and is available from any shell or Makefile inside the proot/chroot container.
 
                       ---
                       _This release is updated automatically by CI. Do not open pull requests against this tag._
                   files: |
-                      porymap-linux-arm64
-                      porymap-version.txt
+                      poryscript-linux-arm64
+                      poryscript-version.txt
                   make_latest: false
                   token: ${{ secrets.GITHUB_TOKEN }}
