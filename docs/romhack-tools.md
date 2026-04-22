@@ -30,6 +30,7 @@ This optional step sets up a complete development environment for creating custo
 | `nds-dev` | devkitPro NDS libraries and tools (libnds, ndstool, etc.) |
 | `build-essential` / `base-devel` | Native host C/C++ compiler for building decomp host tools |
 | `libpng-dev` / `libpng` | Required by gbagfx and other decomp tool compilations |
+| `Porymap` _(pre-built ARM64 binary)_ | Visual map and tileset editor for Gen 3 decomp projects. Downloaded automatically during setup — no compilation required |
 
 > **Why the container?** Termux does not provide an ARM cross-compiler in its own package repos. The [devkitPro](https://devkitpro.org) toolchain is installed inside the proot/chroot Linux container, which has access to the official devkitPro package repos.
 
@@ -39,15 +40,17 @@ This optional step sets up a complete development environment for creating custo
 
 ### Desktop Menu Shortcut
 
-When a Linux container is configured and the toolchain is installed successfully, a **"devkitPro Shell"** entry is automatically added to the Termux desktop application menu.
+When a Linux container is configured and the toolchain is installed successfully, two entries are automatically added to the Termux desktop application menu:
 
-Clicking it opens your container's terminal shell with the devkitPro environment already loaded — `arm-none-eabi-gcc`, `make`, `grit`, `ndstool` and all other toolchain binaries are immediately available without any manual setup.
+- **devkitPro Shell** — opens your container's terminal with the full ARM toolchain on `$PATH`. Use this to run `make` and compile your ROM.
+- **Porymap** — launches the Porymap map/tileset editor directly as a graphical window. Requires the X11 display server to be running (start it with `tx11start` or the Termux:x11 app).
 
-You can also open it from the terminal at any time:
+You can also open either tool from the terminal at any time:
 
 ```bash
 # Replace 'debian' with your configured distro name
-debian
+debian --devkitpro  # open devkitPro Shell
+pdrun porymap       # launch Porymap
 ```
 
 ---
@@ -68,10 +71,11 @@ Android device
 ```
 
 1. **Edit** source files in code-oss as you would on any desktop Linux
-2. **Open "devkitPro Shell"** from the desktop menu (or type your distro name in a terminal)
-3. Navigate to your project and **run `make`**
-4. The compiled `.gba` / `.nds` ROM is written to your project folder
-5. **Test** with an Android emulator app ([My Boy!](https://play.google.com/store/apps/details?id=com.fastemulator.gba) for GBA, [melonDS](https://play.google.com/store/apps/details?id=me.magnum.melonds) for NDS) — they access the same storage
+2. **Open "Porymap"** from the desktop menu to edit maps and tilesets visually
+3. **Open "devkitPro Shell"** from the desktop menu (or type your distro name in a terminal)
+4. Navigate to your project and **run `make`**
+5. The compiled `.gba` / `.nds` ROM is written to your project folder
+6. **Test** with an Android emulator app ([My Boy!](https://play.google.com/store/apps/details?id=com.fastemulator.gba) for GBA, [melonDS](https://play.google.com/store/apps/details?id=me.magnum.melonds) for NDS) — they access the same storage
 
 ---
 
@@ -83,7 +87,9 @@ When running the setup script, answer **`y`** when prompted:
 Do you want to install Pokémon GBA/NDS romhack development tools (y/n)
 ```
 
-To enable it via a pre-made config file, add the following line:
+Porymap is installed automatically as part of this step — no separate prompt is shown.
+
+To enable via a pre-made config file:
 
 ```
 romhack_tools_answer=y
@@ -96,6 +102,7 @@ The default in the generic config is `n` (opt-in).
 ### Resources
 
 - [devkitPro Getting Started](https://devkitpro.org/wiki/Getting_Started)
+- [Porymap documentation](https://huderlem.github.io/porymap/)
 - [pokeemerald decomp (GBA)](https://github.com/pret/pokeemerald)
 - [pokeheartgold decomp (NDS)](https://github.com/pret/pokeheartgold)
 - [ndspy documentation](https://ndspy.readthedocs.io)

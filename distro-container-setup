@@ -687,6 +687,7 @@ function distro_terminal_utility_setup() {
 function distro_romhack_tools_setup() {
 	if [[ "$romhack_tools_answer" == "y" ]]; then
 		local devkitpro_installed=false
+		local porymap_installed=false
 		if [[ "$selected_distro" == "debian" ]] || [[ "$selected_distro" == "ubuntu" ]]; then
 			romhack_setup_content=$(
 				cat <<-'EOF'
@@ -706,6 +707,22 @@ function distro_romhack_tools_setup() {
 			echo
 			"${selected_distro_type}"-distro login "$selected_distro" -- /bin/bash -c 'bash /root/pd_romhack_setup.sh'
 			devkitpro_installed=true
+			porymap_setup_content=$(
+				cat <<-'EOF'
+					apt-get install -y wget libqt6widgets6 libqt6charts6 libqt6opengl6 libqt6network6 qt6-qpa-plugins \
+					    || apt-get install -y wget qt6-base-dev libqt6charts6-dev
+					wget -q --show-progress -O /usr/local/bin/porymap \
+					    "https://github.com/sabamdarif/termux-desktop/releases/download/porymap-prebuilt/porymap-linux-arm64"
+					chmod +x /usr/local/bin/porymap
+					check_and_delete "pd_porymap_setup.sh"
+				EOF
+			)
+			create_shell_script "$save_path/pd_porymap_setup.sh" "$porymap_setup_content"
+			banner
+			print_msg "${BOLD}Installing Porymap map editor in ${selected_distro}..."
+			echo
+			"${selected_distro_type}"-distro login "$selected_distro" -- /bin/bash -c 'bash /root/pd_porymap_setup.sh'
+			porymap_installed=true
 		elif [[ "$selected_distro" == "archlinux" ]]; then
 			romhack_setup_content=$(
 				cat <<-'EOF'
@@ -723,6 +740,21 @@ function distro_romhack_tools_setup() {
 			echo
 			"${selected_distro_type}"-distro login "$selected_distro" -- /bin/bash -c 'bash /root/pd_romhack_setup.sh'
 			devkitpro_installed=true
+			porymap_setup_content=$(
+				cat <<-'EOF'
+					pacman -S --noconfirm qt6-base qt6-charts wget
+					wget -q --show-progress -O /usr/local/bin/porymap \
+					    "https://github.com/sabamdarif/termux-desktop/releases/download/porymap-prebuilt/porymap-linux-arm64"
+					chmod +x /usr/local/bin/porymap
+					check_and_delete "pd_porymap_setup.sh"
+				EOF
+			)
+			create_shell_script "$save_path/pd_porymap_setup.sh" "$porymap_setup_content"
+			banner
+			print_msg "${BOLD}Installing Porymap map editor in ${selected_distro}..."
+			echo
+			"${selected_distro_type}"-distro login "$selected_distro" -- /bin/bash -c 'bash /root/pd_porymap_setup.sh'
+			porymap_installed=true
 		elif [[ "$selected_distro" == "fedora" ]]; then
 			banner
 			print_warn "devkitPro automated installation is not supported for Fedora."
@@ -738,13 +770,29 @@ function distro_romhack_tools_setup() {
 				Type=Application
 				Name=devkitPro Shell
 				Comment=ARM GBA/NDS cross-compiler toolchain shell
-				Exec=${selected_distro}
+				Exec=${selected_distro} --devkitpro
 				Icon=utilities-terminal
 				Terminal=true
 				Categories=Development;
 			EOF
 			update-desktop-database "$TERMUX_PREFIX/share/applications" 2>/dev/null || true
 			print_success "devkitPro Shell added to the desktop menu"
+		fi
+		if [[ "$porymap_installed" == true ]]; then
+			check_and_create_directory "$TERMUX_PREFIX/share/applications/pd_added"
+			cat <<-EOF >"$TERMUX_PREFIX/share/applications/pd_added/porymap.desktop"
+				[Desktop Entry]
+				Version=1.0
+				Type=Application
+				Name=Porymap
+				Comment=Pokémon GBA decomp map editor (pokeemerald / pokefirered / pokeruby)
+				Exec=pdrun porymap
+				Icon=applications-development
+				Terminal=false
+				Categories=Development;
+			EOF
+			update-desktop-database "$TERMUX_PREFIX/share/applications" 2>/dev/null || true
+			print_success "Porymap added to the desktop menu"
 		fi
 	fi
 }
@@ -1770,6 +1818,7 @@ function add_chroot_distro_function_caller() {
 			remove <packagename>     - remove packages and also remove them to termux desktop
 			update                   - update the Linux distro
 			-r                       - login as root
+			--devkitpro              - open a devkitPro ARM toolchain shell
 			--remove                 - complitely remove the Linux distro and delete all files and data related to it
 			HELP_EOF
 		}
@@ -1777,6 +1826,9 @@ function add_chroot_distro_function_caller() {
 		case \$1 in
 		--root|-r)
 		    chroot-distro login \$(usb_bind_args) "${selected_distro}" $termux_home_link
+		    ;;
+		--devkitpro)
+		    chroot-distro login \$(usb_bind_args) --user "$final_user_name" "${selected_distro}" --shared-tmp $termux_home_link
 		    ;;
 		--remove | --uninstall)
 		    remove_distro_container
@@ -1849,6 +1901,7 @@ function add_proot_distro_function_caller() {
 			remove <packagename>     - remove packages and also remove them to termux desktop
 			update                   - update the Linux distro
 			-r                       - login as root
+			--devkitpro              - open a devkitPro ARM toolchain shell
 			--remove                 - complitely remove the Linux distro and delete all files and data related to it
 			HELP_EOF
 		}
@@ -1856,6 +1909,9 @@ function add_proot_distro_function_caller() {
 		case \$1 in
 		--root|-r)
 		    proot-distro login \$(usb_bind_args) "$selected_distro" $termux_home_link
+		    ;;
+		--devkitpro)
+		    proot-distro login \$(usb_bind_args) --user "$final_user_name" "$selected_distro" --shared-tmp $termux_home_link
 		    ;;
 		--remove | --uninstall)
 		    remove_distro_container

@@ -19,6 +19,7 @@
 - **[devkitPro](https://devkitpro.org) — gba-dev / nds-dev:** ARM cross-compiler toolchain (`arm-none-eabi-gcc`), GBA and NDS libraries (libgba, libnds), and ROM-packaging tools (grit, ndstool)
 - **build-essential / base-devel:** Native host C/C++ compiler required to build decomp host tools (e.g. gbagfx)
 - **libpng-dev / libpng:** Required by gbagfx and other decomp tool compilations
+- **[Porymap](https://huderlem.github.io/porymap/)** _(pre-built ARM64 binary)_**:** Visual map and tileset editor for Gen 3 decomp projects (pokeemerald / pokefirered / pokeruby)
 
 #### :nerd_face: How to use them?
 

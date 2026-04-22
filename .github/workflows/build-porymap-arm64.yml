@@ -1,0 +1,149 @@
+name: Build Porymap Linux ARM64
+
+on:
+    schedule:
+        # Check for a new stable Porymap release once a day at 06:00 UTC
+        - cron: '0 6 * * *'
+    workflow_dispatch:
+        inputs:
+            porymap_ref:
+                description: "Porymap git ref to build (tag/branch — leave blank to use latest stable release)"
+                required: false
+                default: ""
+            force_rebuild:
+                description: "Rebuild even if the version hasn't changed"
+                type: boolean
+                default: false
+
+permissions:
+    contents: write
+
+jobs:
+    # -----------------------------------------------------------------------
+    # 1. Detect whether a new stable Porymap release exists
+    # -----------------------------------------------------------------------
+    check-version:
+        name: Check latest Porymap release
+        runs-on: ubuntu-latest
+        outputs:
+            needs_build: ${{ steps.compare.outputs.needs_build }}
+            porymap_ref: ${{ steps.compare.outputs.porymap_ref }}
+
+        steps:
+            - name: Get latest stable Porymap release (no pre-releases)
+              id: upstream
+              run: |
+                  LATEST=$(curl -fsSL \
+                      -H "Accept: application/vnd.github+json" \
+                      "https://api.github.com/repos/huderlem/porymap/releases/latest" \
+                      | jq -r '.tag_name')
+                  if [ -z "$LATEST" ] || [ "$LATEST" = "null" ]; then
+                      echo "ERROR: Could not fetch latest Porymap release"
+                      exit 1
+                  fi
+                  echo "Latest stable Porymap release: $LATEST"
+                  echo "tag=$LATEST" >> "$GITHUB_OUTPUT"
+
+            - name: Get currently built version from prebuilt release
+              id: current
+              run: |
+                  BUILT=$(curl -fsSL \
+                      -H "Accept: application/vnd.github+json" \
+                      -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+                      "https://api.github.com/repos/${{ github.repository }}/releases/tags/porymap-prebuilt" \
+                      | jq -r '.assets[] | select(.name == "porymap-version.txt") | .browser_download_url') || true
+                  if [ -n "$BUILT" ]; then
+                      VERSION=$(curl -fsSL "$BUILT")
+                      echo "Currently built version: $VERSION"
+                      echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+                  else
+                      echo "No existing prebuilt release found — will build."
+                      echo "version=" >> "$GITHUB_OUTPUT"
+                  fi
+
+            - name: Determine whether a build is needed
+              id: compare
+              run: |
+                  UPSTREAM="${{ steps.upstream.outputs.tag }}"
+                  CURRENT="${{ steps.current.outputs.version }}"
+                  FORCE="${{ github.event.inputs.force_rebuild }}"
+                  MANUAL_REF="${{ github.event.inputs.porymap_ref }}"
+
+                  # Manual dispatch with explicit ref always builds
+                  if [ -n "$MANUAL_REF" ]; then
+                      echo "Manual ref provided: $MANUAL_REF — forcing build"
+                      echo "needs_build=true"  >> "$GITHUB_OUTPUT"
+                      echo "porymap_ref=$MANUAL_REF" >> "$GITHUB_OUTPUT"
+                      exit 0
+                  fi
+
+                  echo "porymap_ref=$UPSTREAM" >> "$GITHUB_OUTPUT"
+
+                  if [ "$UPSTREAM" != "$CURRENT" ] || [ "$FORCE" = "true" ]; then
+                      echo "New version detected ($CURRENT → $UPSTREAM) or force=true — will build"
+                      echo "needs_build=true" >> "$GITHUB_OUTPUT"
+                  else
+                      echo "Already up-to-date ($CURRENT) — skipping build"
+                      echo "needs_build=false" >> "$GITHUB_OUTPUT"
+                  fi
+
+    # -----------------------------------------------------------------------
+    # 2. Build on a native ARM64 runner and publish the release
+    # -----------------------------------------------------------------------
+    build:
+        name: Build (linux/arm64)
+        needs: check-version
+        if: needs.check-version.outputs.needs_build == 'true'
+        runs-on: ubuntu-24.04-arm
+
+        steps:
+            - name: Install build dependencies
+              run: |
+                  sudo apt-get update
+                  sudo apt-get install -y \
+                      build-essential git \
+                      qt6-base-dev qt6-declarative-dev libqt6charts6-dev \
+                      libgl1-mesa-dev
+
+            - name: Clone Porymap
+              run: |
+                  git clone --depth 1 --branch "${{ needs.check-version.outputs.porymap_ref }}" \
+                      https://github.com/huderlem/porymap porymap-src
+
+            - name: Build Porymap
+              run: |
+                  cd porymap-src
+                  qmake6
+                  make -j$(nproc)
+                  strip porymap
+
+            - name: Prepare artifacts
+              run: |
+                  cp porymap-src/porymap porymap-linux-arm64
+                  echo "${{ needs.check-version.outputs.porymap_ref }}" > porymap-version.txt
+
+            - name: Publish to GitHub Releases
+              uses: softprops/action-gh-release@v2
+              with:
+                  tag_name: porymap-prebuilt
+                  name: "Porymap Linux ARM64 (pre-built binary)"
+                  body: |
+                      Pre-built Porymap binary for **Linux ARM64**, for use inside termux-desktop proot/chroot containers.
+
+                      | Field | Value |
+                      |---|---|
+                      | **Porymap version** | `${{ needs.check-version.outputs.porymap_ref }}` |
+                      | **Architecture** | `aarch64` (ARM64) |
+                      | **Built on** | `ubuntu-24.04-arm` (GitHub-hosted runner) |
+                      | **Qt version** | Qt 6 (dynamically linked) |
+
+                      ### Requirements inside the container
+                      Qt6 runtime libraries are installed automatically by `distro-container-setup` when `romhack_tools_answer=y`.
+
+                      ---
+                      _This release is updated automatically by CI. Do not open pull requests against this tag._
+                  files: |
+                      porymap-linux-arm64
+                      porymap-version.txt
+                  make_latest: false
+                  token: ${{ secrets.GITHUB_TOKEN }}

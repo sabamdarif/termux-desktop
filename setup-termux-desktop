@@ -1570,11 +1570,13 @@ ${B}Installed in Linux Container (if configured):${NC}
      - arm-none-eabi-gcc (GBA/NDS cross-compiler)
      - gba-dev (GBA development libraries and tools)
      - nds-dev (NDS development libraries and tools)
-   • 'devkitPro Shell' shortcut added to the desktop app menu
+   • Porymap (visual map editor — pre-built ARM64 binary, auto-installed)
+   • Desktop shortcuts added for installed tools
 
 ${B}Usage:${NC}
-Open 'devkitPro Shell' from the desktop menu or run your
-distro name (e.g. 'debian') in the terminal to access the toolchain.
+Open 'devkitPro Shell' or 'Porymap' from the desktop menu.
+Run your distro name (e.g. 'debian') in the terminal to access
+the toolchain directly.
 ${NC}"
 	confirmation_y_or_n "Do you want to install Pokémon GBA/NDS romhack development tools" romhack_tools_answer
 }
