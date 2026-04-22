@@ -1556,6 +1556,7 @@ ${B}Installed in Termux:${NC}
      - make (build automation)
      - nasm (assembler)
      - clang (C/C++ compiler for native tools)
+     - perl (symbol file generation and decomp scripting)
 
    • ROM Patching
      - xdelta3 (patch creation and application)

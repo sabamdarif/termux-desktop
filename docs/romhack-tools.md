@@ -75,9 +75,9 @@ Android device
 2. **Open "Porymap"** from the desktop menu to edit maps and tilesets visually
 3. Write event scripts as `.pory` files — **Poryscript** compiles them automatically during `make`
 4. **Open "devkitPro Shell"** from the desktop menu (or type your distro name in a terminal)
-4. Navigate to your project and **run `make`**
-5. The compiled `.gba` / `.nds` ROM is written to your project folder
-6. **Test** with an Android emulator app ([My Boy!](https://play.google.com/store/apps/details?id=com.fastemulator.gba) for GBA, [melonDS](https://play.google.com/store/apps/details?id=me.magnum.melonds) for NDS) — they access the same storage
+5. Navigate to your project and **run `make`**
+6. The compiled `.gba` / `.nds` ROM is written to your project folder
+7. **Test** with an Android emulator app ([My Boy!](https://play.google.com/store/apps/details?id=com.fastemulator.gba) for GBA, [melonDS](https://play.google.com/store/apps/details?id=me.magnum.melonds) for NDS) — they access the same storage
 
 ---
 
