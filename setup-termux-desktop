@@ -3834,12 +3834,8 @@ function setup_tx11start_cmd() {
 				  fi
 				
 				  if ! pulseaudio --check >/dev/null 2>&1; then
-				    # In debug mode, print useful diagnostics
-				    if $use_debug; then
-				      echo "[ERROR] pulseaudio failed to start (likely already running or stale runtime state)." >&2
-				      echo "[DEBUG] Existing pulseaudio processes:" >&2
+				      print_failed "pulseaudio failed to start (likely already running or stale runtime state)." >&2
 				      pgrep -a pulseaudio >&2 || true
-				    fi
 				    exit 1
 				  fi
 				
