@@ -4805,6 +4805,7 @@ function terminal_utility_setup() {
 		download_file "$TERMUX_PREFIX/bin/termux-ssh" "$REPO_RAW_URL/refs/heads/$REPO_BRANCH_MAIN/other/termux-ssh" && chmod +x "$TERMUX_PREFIX/bin/termux-ssh"
 		download_file "$TERMUX_PREFIX/bin/termux-fastest-repo" "$REPO_RAW_URL/refs/heads/$REPO_BRANCH_MAIN/other/termux-fastest-repo"
 		chmod +x "$TERMUX_PREFIX/bin/termux-fastest-repo"
+		sed -i "/^source \"\$TERMUX_PREFIX\/bin\/termux-setup-package-manager\"/i source $TERMUX_PREFIX/etc/termux-desktop/common_functions || exit 1" $TERMUX_PREFIX/bin/termux-fastest-repo
 		download_file "$TERMUX_PREFIX/bin/termux-color" "$REPO_RAW_URL/refs/heads/$REPO_BRANCH_MAIN/other/termux-color"
 		chmod +x "$TERMUX_PREFIX/bin/termux-color"
 		download_file "$TERMUX_PREFIX/bin/termux-nf" "$REPO_RAW_URL/refs/heads/$REPO_BRANCH_MAIN/other/termux-nf"
