@@ -25,7 +25,7 @@
 
 # Set distro_name from environment variable or default to "debian"
 distro_name="${distro_name:-debian}"
-distro_path="/data/data/com.termux/files/usr/var/lib/proot-distro/installed-rootfs/${distro_name}"
+distro_path="/data/data/com.termux/files/usr/var/lib/proot-distro/containers/${distro_name}/rootfs"
 
 # Function to list displayable .desktop files
 list_desktop_files_with_name() {

@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/data/data/com.termux/files/usr/bin/env python3
 #
 # Add To Menu
 # A simple GTK3 app to add programs from the installed proot-distro
@@ -518,7 +518,7 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
         self.selected_distro = "debian"
         self.DISTRO_NAME = "debian"
         self.DISTRO_PATH = os.path.join(
-            self.PREFIX, "var/lib/proot-distro/installed-rootfs/debian"
+            self.PREFIX, "var/lib/proot-distro/containers/debian/rootfs"
         )
         self.use_sudo = False
 
@@ -549,8 +549,9 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
                     else:  # proot
                         self.DISTRO_PATH = os.path.join(
                             self.PREFIX,
-                            "var/lib/proot-distro/installed-rootfs",
+                            "var/lib/proot-distro/containers",
                             self.DISTRO_NAME,
+                            "rootfs",
                         )
                         self.use_sudo = False
                 else:
@@ -560,8 +561,9 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
                         "distro_path",
                         os.path.join(
                             self.PREFIX,
-                            "var/lib/proot-distro/installed-rootfs",
+                            "var/lib/proot-distro/containers",
                             self.DISTRO_NAME,
+                            "rootfs",
                         ),
                     )
                     self.use_sudo = False
@@ -577,8 +579,9 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
                     "distro_path",
                     os.path.join(
                         self.PREFIX,
-                        "var/lib/proot-distro/installed-rootfs",
+                        "var/lib/proot-distro/containers",
                         self.DISTRO_NAME,
+                        "rootfs",
                     ),
                 )
                 self.use_sudo = False
@@ -591,8 +594,9 @@ class Add2MenuWindow(Gtk.ApplicationWindow):
                 "distro_path",
                 os.path.join(
                     self.PREFIX,
-                    "var/lib/proot-distro/installed-rootfs",
+                    "var/lib/proot-distro/containers",
                     self.DISTRO_NAME,
+                    "rootfs",
                 ),
             )
             self.use_sudo = False

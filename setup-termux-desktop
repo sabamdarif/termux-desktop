@@ -5582,7 +5582,7 @@ function change_distro() {
 					exit 0
 				fi
 			else
-				if [[ ! -d "$TERMUX_PREFIX/var/lib/proot-distro/installed-rootfs/$selected_distro" ]]; then
+				if [[ ! -d "$TERMUX_PREFIX/var/lib/proot-distro/containers/$selected_distro/rootfs" ]]; then
 					print_failed "${selected_distro} isn't installed"
 					add_distro_again
 					exit 0
