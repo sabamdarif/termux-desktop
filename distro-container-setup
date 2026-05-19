@@ -238,13 +238,6 @@ function setup_distro() {
 #########################################################################
 
 function pd_package_install_and_check() {
-	# Check for --root flag
-	local use_sudo=true
-	if [[ "$1" == "--root" ]]; then
-		use_sudo=false
-		shift
-	fi
-
 	# shellcheck disable=SC2206
 	packs_list=($@)
 
@@ -261,34 +254,16 @@ function pd_package_install_and_check() {
 		# Install package and handle errors
 		install_failed=false
 		if [[ "$ID" == "debian" ]] || [[ "$ID" == "ubuntu" ]]; then
-			if $use_sudo; then
-				if ! sudo apt install "$package_name" -y; then
-					install_failed=true
-				fi
-			else
-				if ! apt install "$package_name" -y; then
-					install_failed=true
-				fi
+			if ! apt install "$package_name" -y; then
+				install_failed=true
 			fi
 		elif [[ "$ID" == arch* ]]; then
-			if $use_sudo; then
-				if ! sudo pacman -Sy --noconfirm "$package_name"; then
-					install_failed=true
-				fi
-			else
-				if ! pacman -Sy --noconfirm "$package_name"; then
-					install_failed=true
-				fi
+			if ! pacman -Sy --noconfirm "$package_name"; then
+				install_failed=true
 			fi
 		elif [[ "$ID" == "fedora" ]]; then
-			if $use_sudo; then
-				if ! sudo dnf install "$package_name" -y; then
-					install_failed=true
-				fi
-			else
-				if ! dnf install "$package_name" -y; then
-					install_failed=true
-				fi
+			if ! dnf install "$package_name" -y; then
+				install_failed=true
 			fi
 		fi
 
@@ -296,60 +271,31 @@ function pd_package_install_and_check() {
 		if $install_failed; then
 			print_failed "${BOLD} Error detected during installation of: ${C}$package_name${NC}"
 			if [[ "$ID" == "debian" ]] || [[ "$ID" == "ubuntu" ]]; then
-				if $use_sudo; then
-					sudo apt --fix-broken install -y
-					sudo dpkg --configure -a
-					sudo apt install "$package_name" -y
-				else
-					apt --fix-broken install -y
-					dpkg --configure -a
-					apt install "$package_name" -y
-				fi
+				apt --fix-broken install -y
+				dpkg --configure -a
+				apt install "$package_name" -y
 			elif [[ "$ID" == arch* ]]; then
-				if $use_sudo; then
-					sudo pacman -Syu --noconfirm
-					sudo pacman -Sy --noconfirm "$package_name"
-				else
-					pacman -Syu --noconfirm
-					pacman -Sy --noconfirm "$package_name"
-				fi
+				pacman -Syu --noconfirm
+				pacman -Sy --noconfirm "$package_name"
 			elif [[ "$ID" == "fedora" ]]; then
-				if $use_sudo; then
-					sudo dnf --refresh install -y
-					sudo rpm --rebuilddb
-					sudo dnf install "$package_name" -y
-				else
-					dnf --refresh install -y
-					rpm --rebuilddb
-					dnf install "$package_name" -y
-				fi
+				dnf --refresh install -y
+				rpm --rebuilddb
+				dnf install "$package_name" -y
 			fi
 		fi
 
 		# Reinstall if necessary
 		if [[ "$ID" == "debian" ]] || [[ "$ID" == "ubuntu" ]]; then
 			if ! dpkg -s "$package_name" >/dev/null 2>&1; then
-				if $use_sudo; then
-					sudo apt install "$package_name" -y
-				else
-					apt install "$package_name" -y
-				fi
+				apt install "$package_name" -y
 			fi
 		elif [[ "$ID" == arch* ]]; then
 			if ! pacman -Qi "$package_name" >/dev/null 2>&1; then
-				if $use_sudo; then
-					sudo pacman -Sy --noconfirm "$package_name"
-				else
-					pacman -Sy --noconfirm "$package_name"
-				fi
+				pacman -Sy --noconfirm "$package_name"
 			fi
 		elif [[ "$ID" == "fedora" ]]; then
 			if ! rpm -q "$package_name" >/dev/null 2>&1; then
-				if $use_sudo; then
-					sudo dnf install "$package_name" -y
-				else
-					dnf install "$package_name" -y
-				fi
+				dnf install "$package_name" -y
 			fi
 		fi
 
@@ -675,7 +621,7 @@ function distro_terminal_utility_setup() {
 		banner
 		print_msg "Configuring Terminal Utility For ${selected_distro}..."
 		echo
-		"${selected_distro_type}"-distro login --user "$final_user_name" "$selected_distro" -- /bin/bash -c 'bash /root/pd_setup.sh'
+		"${selected_distro_type}"-distro login "$selected_distro" -- /bin/bash -c 'bash /root/pd_setup.sh'
 	fi
 }
 
