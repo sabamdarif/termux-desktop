@@ -4104,7 +4104,7 @@ function setup_tx11stop_cmd() {
 			    de_startup="$de_startup"
 			fi
 
-			termux_x11_pid=\$(pgrep -f "/system/bin/app_process / com.termux.x11.Loader :${display_number}")
+			termux_x11_pid=\$(pgrep -f com.termux.x11)
 			de_pid=\$(pgrep -f \$de_startup)
 			if [[ -n "\$termux_x11_pid" ]] || [[ -n "\$de_pid" ]]; then
 			kill -9 "\$termux_x11_pid" > /dev/null 2>&1
@@ -4160,7 +4160,7 @@ function setup_tx11stop_cmd() {
 			    de_startup="$de_startup"
 			fi
 
-			termux_x11_pid=\$(pgrep -f "/system/bin/app_process / com.termux.x11.Loader :${display_number}")
+			termux_x11_pid=\$(pgrep -f com.termux.x11)
 			de_pid=\$(pgrep -f \$de_startup)
 			if [[ -n "\$termux_x11_pid" ]] || [[ -n "\$de_pid" ]]; then
 			kill -9 "\$termux_x11_pid" > /dev/null 2>&1
@@ -4487,7 +4487,7 @@ function check_desktop_process() {
 		log_debug "$(cat "$TERMUX_PREFIX/bin/tx11start")"
 		termux-reload-settings
 		local termux_x11_pid
-		termux_x11_pid=$(pgrep -f "app_process -Xnoimage-dex2oat / com.termux.x11.Loader :${display_number}")
+		termux_x11_pid=$(pgrep -f com.termux.x11)
 		if [[ -n "$termux_x11_pid" ]]; then
 			print_success "Termux:X11 Working"
 		else
@@ -4524,7 +4524,7 @@ function check_desktop_process() {
 			# Wait a bit for the process to stop
 			sleep 2
 			unset termux_x11_pid
-			termux_x11_pid=$(pgrep -f "app_process -Xnoimage-dex2oat / com.termux.x11.Loader :${display_number}")
+			termux_x11_pid=$(pgrep -f com.termux.x11)
 			if [[ -z "$termux_x11_pid" ]]; then
 				print_success "Tx11stop command working"
 			else
@@ -5085,7 +5085,7 @@ function add_tx11_autostart() {
 	else
 		cat <<-EOF >>"$shell_rc_file"
 			# Start Termux:X11
-			termux_x11_pid=\$(pgrep -f "app_process -Xnoimage-dex2oat / com.termux.x11.Loader :${display_number}")
+			termux_x11_pid=\$(pgrep -f com.termux.x11)
 			if [ -z "\$termux_x11_pid" ]; then
 			echo "${G}Starting Termux:x11...${NC}"
 			tx11start
@@ -5375,7 +5375,7 @@ function remove_termux_desktop() {
 #########################################################################
 
 function gui_check_up() {
-	termux_x11_pid=$(pgrep -f "app_process -Xnoimage-dex2oat / com.termux.x11.Loader :${display_number}")
+	termux_x11_pid=$(pgrep -f com.termux.x11)
 	vnc_server_pid=$(pgrep -f "vncserver")
 	de_pid=$(pgrep -f "$de_startup")
 	if [[ -n "$termux_x11_pid" ]] || [[ -n "$de_pid" ]] || [[ -n "$vnc_server_pid" ]] >/dev/null 2>&1; then
