@@ -1952,7 +1952,7 @@ function distro_app_launch_setup() {
 				if [ "\$use_nogpu" = true ]; then
 				  gpu_env="env LIBGL_ALWAYS_SOFTWARE=1 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe"
 				else
-				  gpu_env="env $selected_pd_hw_method"
+				  gpu_env="env \$selected_pd_hw_method"
 				fi
 
 				"${selected_distro_type}"-distro login \$(usb_bind_args) \$user_arg "$selected_distro" --shared-tmp $termux_home_link -- env DISPLAY=\$(echo \$DISPLAY) XDG_RUNTIME_DIR=\${TMPDIR} \$gpu_env sh -lc 'umask 022; exec "\$@"' _ "\${args[@]}"
@@ -2001,7 +2001,7 @@ function distro_app_launch_setup() {
 				if [ "\$use_nogpu" = true ]; then
 				  gpu_env="env LIBGL_ALWAYS_SOFTWARE=1 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe"
 				else
-				  gpu_env="env $selected_pd_hw_method"
+				  gpu_env="env \$selected_pd_hw_method"
 				fi
 
 				"${selected_distro_type}"-distro login \$(usb_bind_args) \$user_arg "$selected_distro" --shared-tmp $termux_home_link -- env DISPLAY=\$(echo \$DISPLAY) XDG_RUNTIME_DIR=\${TMPDIR} \$gpu_env sh -lc 'umask 022; exec "\$@"' _ "\${args[@]}"
