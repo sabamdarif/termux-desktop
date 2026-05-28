@@ -96,7 +96,7 @@ bash <(curl -Lf https://raw.githubusercontent.com/sabamdarif/termux-desktop/main
 
 #### Or:
 
-- Link shortened using open source link shortener: https://kutt.it/
+- Link shortened using open source link shortener: https://kutt.to/
 
 ```bash
 bash <(curl -Lf kutt.to/setup-termux-desktop)
