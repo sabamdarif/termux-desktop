@@ -1873,11 +1873,6 @@ function hw_questions() {
 function distro_type_select() {
 	print_msg "${BOLD}Select the distro type"
 	echo " "
-	print_msg "Installation Method:${NC}
-• chroot-distro: Requires root and you first need to flash the sabamdarif/chroot-distro module\n
-• proot-distro: Doesn't require root and no additional setup needed\n
-• To know more look at the following links\n
-"
 	echo "${G}chroot-distro:- ${B}https://github.com/sabamdarif/chroot-distro${NC}"
 	echo " "
 	echo "${G}proot-distro:- ${B}https://github.com/termux/proot-distro${NC}"
@@ -5453,12 +5448,7 @@ function do_hw_changes() {
 		source "${current_path}/distro-container-setup"
 
 		# set the required variables for pdrun
-		if [[ "$selected_distro_type" == "chroot" ]]; then
-			termux_home_link=" "
-		else
-			# shellcheck disable=SC2034
-			termux_home_link="--termux-home"
-		fi
+		termux_home_link="--shared-home"
 		final_user_name="$user_name"
 
 		distro_app_launch_setup
@@ -5575,18 +5565,10 @@ function change_distro() {
 				fi
 			fi
 
-			if [[ "$selected_distro_type" == "chroot" ]]; then
-				if ! timeout 3s su -c "ls /data/local/chroot-distro/installed-rootfs/$selected_distro" >/dev/null 2>&1; then
-					print_failed "${selected_distro} isn't installed"
-					add_distro_again
-					exit 0
-				fi
-			else
-				if [[ ! -d "$TERMUX_PREFIX/var/lib/proot-distro/containers/$selected_distro/rootfs" ]]; then
-					print_failed "${selected_distro} isn't installed"
-					add_distro_again
-					exit 0
-				fi
+			if [[ ! -d "$TERMUX_PREFIX/var/lib/${selected_distro_type}-distro/containers/$selected_distro/rootfs" ]]; then
+				print_failed "${selected_distro} isn't installed"
+				add_distro_again
+				exit 0
 			fi
 
 			print_msg "Your currently installed distro is: ${C}${BOLD}${selected_distro}"

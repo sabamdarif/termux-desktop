@@ -78,17 +78,6 @@ function check_root_access() {
 	return 1
 }
 
-function check_chroot_file() {
-	if ! check_su_access; then
-		return 1
-	fi
-
-	if su -c 'ls /system/bin/chroot-distro' >/dev/null 2>&1; then
-		return 0
-	fi
-	return 1
-}
-
 function setup_chroot_distro() {
 	print_msg "Checking if you have root access or not"
 	package_install_and_check "sudo"
@@ -113,94 +102,10 @@ function setup_chroot_distro() {
 			fi
 		fi
 	done
-	print_msg "Checking access to chroot-distro"
-	retry_count=0
-	while [ $retry_count -lt $max_retries ]; do
-		if check_chroot_file; then
-			print_success "chroot-distro binary exist"
-			break
-		else
-			((retry_count++))
-
-			if [ $retry_count -lt $max_retries ]; then
-				print_failed "Cannot access /system/bin/chroot-distro file"
-				print_msg "Please flash:- ${B}https://github.com/sabamdarif/chroot-distro"
-				print_msg "Want to check again (Attempt $retry_count/$max_retries)"
-				wait_for_keypress
-			else
-				print_failed "Failed to access chroot-distro after $max_retries attempts"
-				print_msg "Exiting..."
-				exit 1
-			fi
-		fi
-	done
-	print_msg "Creating a chroot-distro launcher..."
-	cat <<-'EOF' >"$TERMUX_PREFIX/bin/chroot-distro"
-		#!/data/data/com.termux/files/usr/bin/bash
-
-		function check_su_access() {
-		    if command -v su >/dev/null 2>&1; then
-		        if su -c true >/dev/null 2>&1; then
-		            return 0
-		        fi
-		    fi
-		    return 1
-		}
-
-		function check_chroot_file() {
-		    if ! check_su_access; then
-		        return 1
-		    fi
-
-		    if su -c 'ls /system/bin/chroot-distro' >/dev/null 2>&1; then
-		        return 0
-		    fi
-		    return 1
-		}
-
-
-		function wait_for_keypress() {
-		    read -n1 -s -r -p " Press any key to continue, CTRL+c to cancel..."
-		    echo
-		}
-
-		function checkup() {
-		    local retry_count
-		    local max_retries
-		    retry_count=0
-		    max_retries=3
-		    while [ $retry_count -lt $max_retries ]; do
-		        if check_chroot_file; then
-		            break
-		        else
-		            ((retry_count++))
-		            if [ $retry_count -lt $max_retries ]; then
-		                echo "Cannot access /system/bin/chroot-distro file"
-		                echo "Please flash:- ${B}https://github.com/sabamdarif/chroot-distro${NC}"
-		                echo "Want to check again (Attempt $retry_count/$max_retries)"
-		                wait_for_keypress
-		            else
-		                echo "Failed to access chroot-distro after $max_retries attempts"
-		                echo "Exiting..."
-		                exit 1
-		            fi
-		        fi
-		    done
-		}
-
-		checkup
-
-		# Fix: Use printf to properly escape arguments and pass them to su
-		args=""
-		for arg in "$@"; do
-		    # Escape single quotes in arguments and wrap each argument in single quotes
-		    escaped_arg=$(printf '%s' "$arg" | sed "s/'/'\\\\''/g")
-		    args="$args '$escaped_arg'"
-		done
-
-		su -c "/system/bin/chroot-distro $args"
-	EOF
-	chmod +x "$TERMUX_PREFIX/bin/chroot-distro"
+	print_msg "Installing chroot-distro..."
+	package_install_and_check "python python-pip"
+	pip install chroot-distro
+	banner
 	chroot-distro install "$selected_distro"
 	print_to_config "selected_distro"
 }
@@ -208,10 +113,8 @@ function setup_chroot_distro() {
 function set_distro_paths {
 	banner
 	print_msg "Setiing up distro related paths"
-	if [[ "$selected_distro_type" == "proot" ]]; then
-		distro_path="$TERMUX_PREFIX/var/lib/proot-distro/containers/$selected_distro/rootfs"
-	elif [[ "$selected_distro_type" == "chroot" ]]; then
-		distro_path="/data/local/chroot-distro/installed-rootfs/$selected_distro"
+	if [[ "$selected_distro_type" == "proot" ]] || [[ "$selected_distro_type" == "chroot" ]]; then
+		distro_path="$TERMUX_PREFIX/var/lib/${selected_distro_type}-distro/containers/$selected_distro/rootfs"
 	else
 		print_failed "Unable to determine what distro type to use"
 		print_msg "Fallback to:- proot-distro"
@@ -859,8 +762,8 @@ function proot_distro_debian_based_app_installer() {
 		    #################################################
 		    ############### Handle update part ##############
 		    #################################################
-		    proot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp --termux-home -- env DISPLAY=:"$display_number" sudo apt update
-		    proot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp --termux-home -- env DISPLAY=:"$display_number" sudo apt-file update
+		    proot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp --shared-home -- env DISPLAY=:"$display_number" sudo apt update
+		    proot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp --shared-home -- env DISPLAY=:"$display_number" sudo apt-file update
 		}
 	TOP_EOF
 }
@@ -1149,7 +1052,7 @@ function proot_distro_arch_based_app_installer() {
 		    #################################################
 		    ############### Handle update part ##############
 		    #################################################
-		    proot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp --termux-home -- env DISPLAY=:"$display_number" sudo pacman -Su
+		    proot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp --shared-home -- env DISPLAY=:"$display_number" sudo pacman -Su
 		}
 	TOP_EOF
 }
@@ -1434,7 +1337,7 @@ function proot_distro_fedora_based_app_installer() {
 		    #################################################
 		    ############### Handle update part ##############
 		    #################################################
-		    proot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp --termux-home -- env DISPLAY=:"$display_number" sudo dnf update
+		    proot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp --shared-home -- env DISPLAY=:"$display_number" sudo dnf update
 		}
 	TOP_EOF
 }
@@ -2213,11 +2116,7 @@ libdrm mesa-libgbm libxcomposite libxdamage libxcb libxshmfence"
 function install_distro_container() {
 	set_distro_paths
 	setup_distro
-	if [[ "$selected_distro_type" == "chroot" ]]; then
-		termux_home_link=" "
-	else
-		termux_home_link="--termux-home"
-	fi
+	termux_home_link="--shared-home"
 	distro_basic_task
 	if [[ "$CALL_FROM_CHANGE_DISTRO" == false ]]; then
 		if [[ "$enable_hw_acc" == "y" ]]; then
@@ -2242,7 +2141,7 @@ function install_distro_container() {
 #########################################################################
 
 function chroot_disro_container_install_check() {
-	if [[ -f "$TERMUX_PREFIX/bin/$selected_distro" ]] && su -c "ls /data/local/chroot-distro/installed-rootfs/$selected_distro" &>/dev/null; then
+	if [[ -f "$TERMUX_PREFIX/bin/$selected_distro" ]]; then
 		echo
 		print_success "${BOLD} $selected_distro container setup successfully"
 	else
@@ -2253,7 +2152,7 @@ function chroot_disro_container_install_check() {
 			echo
 			print_msg "Trying again... (Attempt $((retry_count + 1)) of $max_retries)"
 			install_distro_container
-			if [[ -f "$TERMUX_PREFIX/bin/$selected_distro" ]] && su -c "ls /data/local/chroot-distro/installed-rootfs/$selected_distro" &>/dev/null; then
+			if [[ -f "$TERMUX_PREFIX/bin/$selected_distro" ]]; then
 				echo
 				print_success "${BOLD} $selected_distro container setup successfully"
 				break
