@@ -361,18 +361,18 @@ function update_distro_repo() {
 	print_msg "${BOLD}Updating $selected_distro And Installing Required Packages"
 	echo
 	if [[ "$selected_distro" == "debian" ]] || [[ "$selected_distro" == "ubuntu" ]]; then
-		"${selected_distro_type}"-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:"$display_number" apt update
-		"${selected_distro_type}"-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:"$display_number" apt upgrade -y -o Dpkg::Options::="--force-confnew"
-		"${selected_distro_type}"-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:"$display_number" apt install sudo apt-file -y
+		"${selected_distro_type}"-distro login "$selected_distro" -- apt update
+		"${selected_distro_type}"-distro login "$selected_distro" -- apt upgrade -y -o Dpkg::Options::="--force-confnew"
+		"${selected_distro_type}"-distro login "$selected_distro" -- apt install sudo apt-file -y
 	elif [[ "$selected_distro" == "archlinux" ]]; then
-		"${selected_distro_type}"-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:"$display_number" pacman -Syu --noconfirm
-		"${selected_distro_type}"-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:"$display_number" pacman -S --noconfirm sudo
+		"${selected_distro_type}"-distro login "$selected_distro" -- pacman -Syu --noconfirm
+		"${selected_distro_type}"-distro login "$selected_distro" -- pacman -S --noconfirm sudo
 	elif [[ "$selected_distro" == "fedora" ]]; then
 		"${selected_distro_type}"-distro login "$selected_distro" -- /bin/bash -c "echo 'max_parallel_downloads=10' >> '/etc/dnf/dnf.conf'"
 		"${selected_distro_type}"-distro login "$selected_distro" -- /bin/bash -c "echo 'fastestmirror=True/' >> '/etc/dnf/dnf.conf'"
-		"${selected_distro_type}"-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:"$display_number" dnf update -y
-		"${selected_distro_type}"-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:"$display_number" dnf upgrade -y
-		"${selected_distro_type}"-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:"$display_number" dnf install sudo -y
+		"${selected_distro_type}"-distro login "$selected_distro" -- dnf update -y
+		"${selected_distro_type}"-distro login "$selected_distro" -- dnf upgrade -y
+		"${selected_distro_type}"-distro login "$selected_distro" -- dnf install sudo -y
 	fi
 	if [[ "$selected_distro_type" == "proot" ]]; then
 		chmod -R +w "$distro_path/"
@@ -384,8 +384,8 @@ function update_distro_repo() {
 ###################
 function set_distro_time_zone() {
 	timezone=$(getprop persist.sys.timezone)
-	"${selected_distro_type}"-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:"$display_number" rm /etc/localtime
-	"${selected_distro_type}"-distro login "$selected_distro" --shared-tmp -- env DISPLAY=:"$display_number" cp "/usr/share/zoneinfo/$timezone" /etc/localtime
+	"${selected_distro_type}"-distro login "$selected_distro" -- rm /etc/localtime
+	"${selected_distro_type}"-distro login "$selected_distro" -- cp "/usr/share/zoneinfo/$timezone" /etc/localtime
 }
 
 ###################
@@ -677,9 +677,9 @@ function proot_distro_debian_based_app_installer() {
 		check_and_delete 'packinstall.sh'
 		EOF
 		    # Make the script executable
-		    proot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "chmod +x /root/packinstall.sh"
+		    proot-distro login "${selected_distro}" -- /bin/bash -c "chmod +x /root/packinstall.sh"
 		    # Execute the script with all arguments
-		    proot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "export DISPLAY=:${display_number}; export XDG_RUNTIME_DIR=${TMPDIR}; bash /root/packinstall.sh \$*"
+		    proot-distro login "${selected_distro}" -- /bin/bash -c "export DISPLAY=:${display_number}; export XDG_RUNTIME_DIR=${TMPDIR}; bash /root/packinstall.sh \$*"
 		}
 
 		package_uninstall_and_remove_from_menu() {
@@ -751,10 +751,10 @@ function proot_distro_debian_based_app_installer() {
 		EOF
 
 		    # Make the script executable
-		    proot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "chmod +x /root/packremove.sh"
+		    proot-distro login "${selected_distro}" -- /bin/bash -c "chmod +x /root/packremove.sh"
 
 		    # Execute the script with all arguments
-		    proot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "export DISPLAY=:${display_number}; export XDG_RUNTIME_DIR=$TERMUX_PREFIX/tmp; bash /root/packremove.sh \$1 \${*:2}"
+		    proot-distro login "${selected_distro}" -- /bin/bash -c "export DISPLAY=:${display_number}; export XDG_RUNTIME_DIR=$TERMUX_PREFIX/tmp; bash /root/packremove.sh \$1 \${*:2}"
 
 		}
 
@@ -762,8 +762,8 @@ function proot_distro_debian_based_app_installer() {
 		    #################################################
 		    ############### Handle update part ##############
 		    #################################################
-		    proot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp --shared-home -- env DISPLAY=:"$display_number" sudo apt update
-		    proot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp --shared-home -- env DISPLAY=:"$display_number" sudo apt-file update
+		    proot-distro login --user "$final_user_name" "$selected_distro" --shared-home -- sudo apt update
+		    proot-distro login --user "$final_user_name" "$selected_distro" --shared-home -- sudo apt-file update
 		}
 	TOP_EOF
 }
@@ -829,9 +829,9 @@ function chroot_distro_debian_based_app_installer() {
 		check_and_delete 'packinstall.sh'
 		EOF
 		    # Make the script executable
-		    chroot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "chmod +x /root/packinstall.sh"
+		    chroot-distro login "${selected_distro}" -- /bin/bash -c "chmod +x /root/packinstall.sh"
 		    # Execute the script with all arguments
-		    chroot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "export DISPLAY=:${display_number}; export XDG_RUNTIME_DIR=${TMPDIR}; bash /root/packinstall.sh \$*"
+		    chroot-distro login "${selected_distro}" -- /bin/bash -c "export XDG_RUNTIME_DIR=${TMPDIR}; bash /root/packinstall.sh \$*"
 
 		}
 
@@ -904,9 +904,9 @@ function chroot_distro_debian_based_app_installer() {
 		EOF
 
 		    # Make the script executable
-		    chroot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "chmod +x /root/packremove.sh"
+		    chroot-distro login "${selected_distro}" -- /bin/bash -c "chmod +x /root/packremove.sh"
 		    # Execute the script with all arguments
-		    chroot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "export DISPLAY=:${display_number}; export XDG_RUNTIME_DIR=$TERMUX_PREFIX/tmp; bash /root/packremove.sh \$1 \${*:2}"
+		    chroot-distro login "${selected_distro}" -- /bin/bash -c "export XDG_RUNTIME_DIR=$TERMUX_PREFIX/tmp; bash /root/packremove.sh \$1 \${*:2}"
 
 		}
 
@@ -914,8 +914,8 @@ function chroot_distro_debian_based_app_installer() {
 		    #################################################
 		    ############### Handle update part ##############
 		    #################################################
-		    chroot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp -- env DISPLAY=:"$display_number" sudo apt update
-		    chroot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp -- env DISPLAY=:"$display_number" sudo apt-file update
+		    chroot-distro login --user "$final_user_name" "$selected_distro" -- sudo apt update
+		    chroot-distro login --user "$final_user_name" "$selected_distro" -- sudo apt-file update
 
 		}
 	TOP_EOF
@@ -958,7 +958,7 @@ function proot_distro_arch_based_app_installer() {
 		    done
 
 		    # Install the packages using the package manager
-		    proot-distro login "${selected_distro}" --shared-tmp -- env DISPLAY=:${display_number} sudo pacman -S"\${options[@]}" --noconfirm "\${packages[@]}"
+		    proot-distro login "${selected_distro}" -- sudo pacman -S"\${options[@]}" --noconfirm "\${packages[@]}"
 
 		    # Create the packinstall.sh script
 		    cat <<EOF >"${save_root_path}/packinstall.sh"
@@ -988,7 +988,7 @@ function proot_distro_arch_based_app_installer() {
 		EOF
 
 		    # Execute the script with all arguments
-		    proot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "export DISPLAY=:${display_number}; export XDG_RUNTIME_DIR=${TMPDIR}; bash /root/packinstall.sh"
+		    proot-distro login "${selected_distro}" -- /bin/bash -c "export XDG_RUNTIME_DIR=${TMPDIR}; bash /root/packinstall.sh"
 
 		    # Update icon cache and desktop database
 		    gtk-update-icon-cache
@@ -1038,10 +1038,10 @@ function proot_distro_arch_based_app_installer() {
 		EOF
 
 		    # Execute the script with all arguments
-		    proot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "export DISPLAY=:${display_number}; export XDG_RUNTIME_DIR=${TMPDIR}; bash /root/packremove.sh"
+		    proot-distro login "${selected_distro}" -- /bin/bash -c "export XDG_RUNTIME_DIR=${TMPDIR}; bash /root/packremove.sh"
 
 		    # Remove the packages using the package manager
-		    proot-distro login "${selected_distro}" --shared-tmp -- env DISPLAY=:${display_number} sudo pacman -R"\${options[@]}" --noconfirm "\${packages[@]}"
+		    proot-distro login "${selected_distro}" -- sudo pacman -R"\${options[@]}" --noconfirm "\${packages[@]}"
 
 		    # Update icon cache and desktop database
 		    gtk-update-icon-cache
@@ -1052,7 +1052,7 @@ function proot_distro_arch_based_app_installer() {
 		    #################################################
 		    ############### Handle update part ##############
 		    #################################################
-		    proot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp --shared-home -- env DISPLAY=:"$display_number" sudo pacman -Su
+		    proot-distro login --user "$final_user_name" "$selected_distro" --shared-home -- sudo pacman -Su
 		}
 	TOP_EOF
 }
@@ -1081,7 +1081,7 @@ function chroot_distro_arch_based_app_installer() {
 		    done
 
 		    # Install the packages using the package manager
-		    chroot-distro login "${selected_distro}" --shared-tmp -- env DISPLAY=:${display_number} sudo pacman -S"\${options[@]}" --noconfirm "\${packages[@]}"
+		    chroot-distro login "${selected_distro}" -- sudo pacman -S"\${options[@]}" --noconfirm "\${packages[@]}"
 
 		    # Create the packinstall.sh script
 		    sudo tee "${save_root_path}/packinstall.sh" >/dev/null <<'EOF'
@@ -1111,7 +1111,7 @@ function chroot_distro_arch_based_app_installer() {
 		EOF
 
 		    # Execute the script with all arguments
-		    chroot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "export DISPLAY=:${display_number}; export XDG_RUNTIME_DIR=${TMPDIR}; bash /root/packinstall.sh"
+		    chroot-distro login "${selected_distro}" -- /bin/bash -c "export XDG_RUNTIME_DIR=${TMPDIR}; bash /root/packinstall.sh"
 
 		    # Update icon cache and desktop database
 		    gtk-update-icon-cache
@@ -1161,10 +1161,10 @@ function chroot_distro_arch_based_app_installer() {
 		EOF
 
 		    # Execute the script with all arguments
-		    chroot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "export DISPLAY=:${display_number}; export XDG_RUNTIME_DIR=${TMPDIR}; bash /root/packremove.sh"
+		    chroot-distro login "${selected_distro}" -- /bin/bash -c "export XDG_RUNTIME_DIR=${TMPDIR}; bash /root/packremove.sh"
 
 		    # Remove the packages using the package manager
-		    chroot-distro login "${selected_distro}" --shared-tmp -- env DISPLAY=:${display_number} sudo pacman -R"\${options[@]}" --noconfirm "\${packages[@]}"
+		    chroot-distro login "${selected_distro}" -- sudo pacman -R"\${options[@]}" --noconfirm "\${packages[@]}"
 
 		    # Update icon cache and desktop database
 		    gtk-update-icon-cache
@@ -1175,7 +1175,7 @@ function chroot_distro_arch_based_app_installer() {
 		    #################################################
 		    ############### Handle update part ##############
 		    #################################################
-		    chroot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp -- env DISPLAY=:"$display_number" sudo pacman -Su
+		    chroot-distro login --user "$final_user_name" "$selected_distro" -- sudo pacman -Su
 		}
 	TOP_EOF
 
@@ -1249,9 +1249,9 @@ function proot_distro_fedora_based_app_installer() {
 		check_and_delete 'packinstall.sh'
 		EOF
 		    # Make the script executable
-		    proot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "chmod +x /root/packinstall.sh"
+		    proot-distro login "${selected_distro}" -- /bin/bash -c "chmod +x /root/packinstall.sh"
 		    # Execute the script with all arguments
-		    proot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "export DISPLAY=:${display_number}; export XDG_RUNTIME_DIR=${TMPDIR}; bash /root/packinstall.sh \$*"
+		    proot-distro login "${selected_distro}" -- /bin/bash -c "export XDG_RUNTIME_DIR=${TMPDIR}; bash /root/packinstall.sh \$*"
 
 		    # Update icon cache and desktop database
 		    gtk-update-icon-cache
@@ -1323,10 +1323,10 @@ function proot_distro_fedora_based_app_installer() {
 		EOF
 
 		    # Make the script executable
-		    proot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "chmod +x /root/packremove.sh"
+		    proot-distro login "${selected_distro}" -- /bin/bash -c "chmod +x /root/packremove.sh"
 
 		    # Execute the script with all arguments
-		    proot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "export DISPLAY=:${display_number}; export XDG_RUNTIME_DIR=$TERMUX_PREFIX/tmp; bash /root/packremove.sh \$1 \${*:2}"
+		    proot-distro login "${selected_distro}" -- /bin/bash -c "export XDG_RUNTIME_DIR=$TERMUX_PREFIX/tmp; bash /root/packremove.sh \$1 \${*:2}"
 
 		    # Update icon cache and desktop database
 		    gtk-update-icon-cache
@@ -1337,7 +1337,7 @@ function proot_distro_fedora_based_app_installer() {
 		    #################################################
 		    ############### Handle update part ##############
 		    #################################################
-		    proot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp --shared-home -- env DISPLAY=:"$display_number" sudo dnf update
+		    proot-distro login --user "$final_user_name" "$selected_distro" --shared-home -- sudo dnf update
 		}
 	TOP_EOF
 }
@@ -1397,9 +1397,9 @@ function chroot_distro_fedora_based_app_installer() {
 		check_and_delete 'packinstall.sh'
 		EOF
 		    # Make the script executable
-		    chroot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "chmod +x /root/packinstall.sh"
+		    chroot-distro login "${selected_distro}" -- /bin/bash -c "chmod +x /root/packinstall.sh"
 		    # Execute the script with all arguments
-		    chroot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "export DISPLAY=:${display_number}; export XDG_RUNTIME_DIR=${TMPDIR}; bash /root/packinstall.sh \$*"
+		    chroot-distro login "${selected_distro}" -- /bin/bash -c "export XDG_RUNTIME_DIR=${TMPDIR}; bash /root/packinstall.sh \$*"
 
 		    # Update icon cache and desktop database
 		    gtk-update-icon-cache
@@ -1471,10 +1471,10 @@ function chroot_distro_fedora_based_app_installer() {
 		EOF
 
 		    # Make the script executable
-		    chroot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "chmod +x /root/packremove.sh"
+		    chroot-distro login "${selected_distro}" -- /bin/bash -c "chmod +x /root/packremove.sh"
 
 		    # Execute the script with all arguments
-		    chroot-distro login "${selected_distro}" --shared-tmp -- /bin/bash -c "export DISPLAY=:${display_number}; export XDG_RUNTIME_DIR=$TERMUX_PREFIX/tmp; bash /root/packremove.sh \$1 \${*:2}"
+		    chroot-distro login "${selected_distro}" -- /bin/bash -c "export XDG_RUNTIME_DIR=$TERMUX_PREFIX/tmp; bash /root/packremove.sh \$1 \${*:2}"
 
 		    # Update icon cache and desktop database
 		    gtk-update-icon-cache
@@ -1485,7 +1485,7 @@ function chroot_distro_fedora_based_app_installer() {
 		    #################################################
 		    ############### Handle update part ##############
 		    #################################################
-		    chroot-distro login --user "$final_user_name" "$selected_distro" --shared-tmp -- env DISPLAY=:"$display_number" sudo dnf update
+		    chroot-distro login --user "$final_user_name" "$selected_distro" -- sudo dnf update
 		}
 	TOP_EOF
 
