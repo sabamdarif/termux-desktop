@@ -103,7 +103,7 @@ function setup_chroot_distro() {
 		fi
 	done
 	print_msg "Installing chroot-distro..."
-	package_install_and_check "python python-pip"
+	package_install_and_check "python python-pip mount-utils"
 	pip install chroot-distro
 	banner
 	chroot-distro install "$selected_distro"
