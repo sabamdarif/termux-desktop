@@ -2035,8 +2035,9 @@ function distro_app_launch_setup() {
 #########################################################################
 
 function add_useful_repos() {
+	local added_repo_list=""
+	print_msg "Adding some useful repos..."
 	if [[ "$selected_distro" == "ubuntu" ]] || [[ "$selected_distro" == "debian" ]]; then
-		print_msg "Adding some useful repos..."
 		added_repo_list=$(
 			cat <<-EOF
 				# Install necessary packages without prompts
@@ -2050,12 +2051,11 @@ function add_useful_repos() {
 
 				# Add the VS Code repository non-interactively
 				echo "deb [arch=amd64,arm64,armhf signed-by=/etc/apt/keyrings/packages.microsoft.gpg] https://packages.microsoft.com/repos/code stable main" | sudo tee /etc/apt/sources.list.d/vscode.list > /dev/null
+
+				check_and_delete "run_add_useful_repos.sh"
 			EOF
-			create_shell_script "$save_path/run_add_useful_repos.sh" "$added_repo_list"
-			"${selected_distro_type}"-distro login "$selected_distro" -- /bin/bash -c "bash /root/run_add_useful_repos.sh"
 		)
 	elif [[ "$selected_distro" == "fedora" ]]; then
-		print_msg "Adding some useful repos..."
 		added_repo_list=$(
 			cat <<-EOF
 				# Import Microsoft GPG key
@@ -2066,11 +2066,13 @@ function add_useful_repos() {
 
 				# Update the package list
 				dnf check-update -y
+
+				check_and_delete "run_add_useful_repos.sh"
 			EOF
-			create_shell_script "$save_path/run_add_useful_repos.sh" "$added_repo_list"
-			"${selected_distro_type}"-distro login "$selected_distro" -- /bin/bash -c "bash /root/run_add_useful_repos.sh"
 		)
 	fi
+	create_shell_script "$save_path/run_add_useful_repos.sh" "$added_repo_list"
+	"${selected_distro_type}"-distro login "$selected_distro" -- /bin/bash -c "bash /root/run_add_useful_repos.sh"
 }
 
 function install_some_required_pack() {
