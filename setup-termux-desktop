@@ -211,6 +211,9 @@ function print_msg() {
 }
 
 function wait_for_keypress() {
+	if [[ "$NON_INTERACTIVE" == "true" ]]; then
+		return 0
+	fi
 	read -n1 -s -r -p "${R}[${C}-${R}]${G} Press any key to continue, CTRL+c to cancel...${NC}"
 	echo
 }
@@ -2551,11 +2554,16 @@ function update_sys() {
 		print_msg "${BOLD}Updating System...."
 		pacman -Syu --noconfirm
 	else
-		print_msg "Do you want to run a speed test to find the fastest repo for you?"
-		echo "The speed test will check all mirrors in all"
-		echo "mirror groups, or only the group you selected."
-		echo "This process may take some time."
-		confirmation_y_or_n "Do you want to continue" confirmation_speedtest
+		if [[ "$NON_INTERACTIVE" == "true" ]]; then
+			confirmation_speedtest="n"
+			print_msg "Skipping speed test in non-interactive mode."
+		else
+			print_msg "Do you want to run a speed test to find the fastest repo for you?"
+			echo "The speed test will check all mirrors in all"
+			echo "mirror groups, or only the group you selected."
+			echo "This process may take some time."
+			confirmation_y_or_n "Do you want to continue" confirmation_speedtest
+		fi
 		# shellcheck disable=SC2154
 		if [[ "$confirmation_speedtest" == "y" ]]; then
 			chose_mirror
@@ -3180,17 +3188,21 @@ function setup_folder() {
 	banner
 	print_msg "${BOLD}Configuring Storage..."
 	echo
-	while true; do
-		termux-setup-storage
-		sleep 4
-		if [[ -d ~/storage ]]; then
-			print_success "Storage configured successfully"
-			break
-		else
-			print_failed "Storage permission denied"
-		fi
-		sleep 3
-	done
+	if [[ "$NON_INTERACTIVE" == "true" && -d ~/storage ]]; then
+		print_success "Storage already configured, skipping setup."
+	else
+		while true; do
+			termux-setup-storage
+			sleep 4
+			if [[ -d ~/storage ]]; then
+				print_success "Storage configured successfully"
+				break
+			else
+				print_failed "Storage permission denied"
+			fi
+			sleep 3
+		done
+	fi
 	cd "$TERMUX_HOME" || return
 	termux-reload-settings
 	directories=(Music Pictures Videos)
@@ -3204,6 +3216,10 @@ function setup_folder() {
 }
 
 function setup_mic_permission() {
+	if [[ "$NON_INTERACTIVE" == "true" ]]; then
+		print_msg "Skipping mic permission prompt in non-interactive mode."
+		return 0
+	fi
 	if [[ "$IS_TERMUX_API_INSTALLED" == true ]]; then
 		print_msg "Setting up mic permission..."
 		echo
@@ -6143,6 +6159,7 @@ function install_termux_desktop() {
 		fi
 	fi
 	if [[ "$1" == "--local-config" ]] || [[ "$1" == "--config" ]] || [[ "$1" == "-config" ]]; then
+		export NON_INTERACTIVE="true"
 		if ! download_file "${current_path}/styles.md" "$REPO_RAW_URL/refs/heads/$REPO_BRANCH_MAIN/docs/${de_name}_styles.md"; then
 			print_failed "Failed to download styles list for $de_name"
 			print_msg "Please check your internet connection"
