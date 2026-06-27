@@ -1590,6 +1590,12 @@ function question_de_on_startup() {
 	fi
 }
 
+function question_enable_mic() {
+	banner
+	confirmation_y_or_n "Do you want to enable microphone access" enable_mic
+	print_to_config "enable_mic"
+}
+
 function question_distro_add_answer() {
 	banner
 	print_msg "
@@ -1619,6 +1625,7 @@ function questions_setup_manual() {
 	question_fm_tools
 	question_gui_mode
 	question_de_on_startup
+	question_enable_mic
 	question_distro_add_answer
 }
 
@@ -2069,6 +2076,11 @@ function define_value_name() {
 	elif [[ "$de_on_startup" == "n" ]]; then
 		autostart_value="No"
 	fi
+	if [[ "$enable_mic" == "y" ]]; then
+		is_mic_enabled="Yes"
+	elif [[ "$enable_mic" == "n" ]]; then
+		is_mic_enabled="No"
+	fi
 	# browser
 	if [[ "$installed_browser" == "firefox" ]]; then
 		browser_name="Firefox"
@@ -2299,6 +2311,7 @@ function print_conf_info() {
 	echo "   • Desktop Style: ${style_answer}) ${style_name}"
 	echo "   • GUI Access: ${gui_mode_name}"
 	echo "   • Auto-start: ${autostart_value}"
+	echo "   • Microphone Enabled: ${is_mic_enabled}"
 	sleep 0.015
 
 	echo "${G}Applications${NC}"
@@ -3743,6 +3756,8 @@ function setup_tx11start_cmd() {
 
 			source $TERMUX_PREFIX/etc/termux-desktop/common_functions
 
+			read_conf
+
 			initialize_server_cmd="${initialize_server_method}"
 
 			# This code block is taken from:- https://github.com/termux/proot-distro/blob/master/proot-distro.sh#L172C1-L184C1
@@ -3841,8 +3856,10 @@ function setup_tx11start_cmd() {
 
 				  if \$use_debug; then
 				    pulseaudio --start --exit-idle-time=-1
+					pacmd load-module module-native-protocol-tcp auth-ip-acl=127.0.0.1 auth-anonymous=1
 				  else
 				    pulseaudio --start --exit-idle-time=-1 >/dev/null 2>&1
+					pacmd load-module module-native-protocol-tcp auth-ip-acl=127.0.0.1 auth-anonymous=1 >/dev/null 2>&1
 				  fi
 
 				  if ! pulseaudio --check >/dev/null 2>&1; then
@@ -3851,12 +3868,12 @@ function setup_tx11start_cmd() {
 				    exit 1
 				  fi
 
-				  if \$use_debug; then
-				    pacmd load-module module-native-protocol-tcp auth-ip-acl=127.0.0.1 auth-anonymous=1
-				    pactl load-module module-sles-source
-				  else
-				    pacmd load-module module-native-protocol-tcp auth-ip-acl=127.0.0.1 auth-anonymous=1 >/dev/null 2>&1
-				    pactl load-module module-sles-source >/dev/null 2>&1
+				  if [[ "\$enable_mic" == "y" ]]; then
+					  if \$use_debug; then
+						  pactl load-module module-sles-source
+					  else
+						  pactl load-module module-sles-source >/dev/null 2>&1
+					  fi
 				  fi
 				fi
 
@@ -3927,6 +3944,8 @@ function setup_tx11start_cmd() {
 			#!/data/data/com.termux/files/usr/bin/bash
 
 			source $TERMUX_PREFIX/etc/termux-desktop/common_functions
+
+			read_conf
 
 			# This code block is taken from:- https://github.com/termux/proot-distro/blob/master/proot-distro.sh#L172C1-L184C1
 			TRACER_PID=\$(grep TracerPid "/proc/\$\$/status" | cut -d \$'\t' -f 2)
@@ -4016,15 +4035,29 @@ function setup_tx11start_cmd() {
 			          rm -rf $TERMUX_HOME/.config/pulse/*-runtime/ >/dev/null 2>&1
 			      fi
 
+				  if ! pulseaudio --check >/dev/null 2>&1; then
+				      print_failed "pulseaudio failed to start (likely already running or stale runtime state)." >&2
+				      pgrep -a pulseaudio >&2 || true
+				    exit 1
+				  fi
+
 			      # pulseaudio --start --load="module-aaudio-sink" --exit-idle-time=-1
-			      pulseaudio --start --exit-idle-time=-1
-			      pacmd load-module module-native-protocol-tcp auth-ip-acl=127.0.0.1 auth-anonymous=1
 			      if \$use_debug; then
-			        pactl load-module module-sles-source
-			      else
-			        pactl load-module module-sles-source >/dev/null 2>&1
-			      fi
-			    fi
+				    pulseaudio --start --exit-idle-time=-1
+					pacmd load-module module-native-protocol-tcp auth-ip-acl=127.0.0.1 auth-anonymous=1
+				  else
+				    pulseaudio --start --exit-idle-time=-1 >/dev/null 2>&1
+					pacmd load-module module-native-protocol-tcp auth-ip-acl=127.0.0.1 auth-anonymous=1 >/dev/null 2>&1
+				  fi
+
+				  if [[ "\$enable_mic" == "y" ]]; then
+					  if \$use_debug; then
+						  pactl load-module module-sles-source
+					  else
+						  pactl load-module module-sles-source >/dev/null 2>&1
+					  fi
+				  fi
+				fi
 
 			    # Construct X11 command
 			    # x11_cmd="XDG_RUNTIME_DIR=\${XDG_RUNTIME_DIR} termux-x11 :0" # Comment this because i found that the sound doesn't working if i set this XDG_RUNTIME_DIR=\${XDG_RUNTIME_DIR}
