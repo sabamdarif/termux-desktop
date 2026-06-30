@@ -801,7 +801,12 @@ function read_conf() {
 	validate_required_vars
 }
 
-# Use atomic write pattern to prevent background execution issues
+# add a config entry with it's value in the termux-desktop configuration file.
+# alwaays use it like this :-
+# don't add the print_to_config in the question function
+# always use this in the setup function
+# because, then the config value will only print to the configuration file
+# if the user uses the custom install option it will not work in the case of generic setup.
 function print_to_config() {
 	local var_name="$1"
 	local var_value="${2:-${!var_name}}"
@@ -1593,7 +1598,6 @@ function question_de_on_startup() {
 function question_enable_mic() {
 	banner
 	confirmation_y_or_n "Do you want to enable microphone access" enable_mic
-	print_to_config "enable_mic"
 }
 
 function question_distro_add_answer() {
@@ -3756,7 +3760,12 @@ function setup_tx11start_cmd() {
 
 			source $TERMUX_PREFIX/etc/termux-desktop/common_functions
 
-			read_conf
+			if [[ ! -f "$CONFIG_FILE" ]]; then
+				print_failed " Configuration file $CONFIG_FILE not found"
+			exit 0
+			fi
+			# shellcheck disable=SC1090
+			source "$CONFIG_FILE"
 
 			initialize_server_cmd="${initialize_server_method}"
 
@@ -3945,7 +3954,12 @@ function setup_tx11start_cmd() {
 
 			source $TERMUX_PREFIX/etc/termux-desktop/common_functions
 
-			read_conf
+			if [[ ! -f "$CONFIG_FILE" ]]; then
+				print_failed " Configuration file $CONFIG_FILE not found"
+			exit 0
+			fi
+			# shellcheck disable=SC1090
+			source "$CONFIG_FILE"
 
 			# This code block is taken from:- https://github.com/termux/proot-distro/blob/master/proot-distro.sh#L172C1-L184C1
 			TRACER_PID=\$(grep TracerPid "/proc/\$\$/status" | cut -d \$'\t' -f 2)
@@ -4243,6 +4257,7 @@ function setup_termux_x11() {
 	# "sed -i '12s/^#//' "$TERMUX_HOME/.termux/termux.properties"
 	setup_tx11start_cmd
 	setup_tx11stop_cmd
+	print_to_config "enable_mic"
 }
 
 function gui_termux_x11() {
