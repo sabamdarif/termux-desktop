@@ -3859,8 +3859,10 @@ function setup_tx11start_cmd() {
 
 				  if \$use_debug; then
 				    rm -rf "$TERMUX_HOME/.config/pulse/"*-runtime/
+					rm -rf "\$TMPDIR/pulse/"
 				  else
 				    rm -rf "$TERMUX_HOME/.config/pulse/"*-runtime/ >/dev/null 2>&1
+					rm -rf "\$TMPDIR/pulse/" >/dev/null 2>&1
 				  fi
 
 				  if \$use_debug; then
@@ -4045,8 +4047,10 @@ function setup_tx11start_cmd() {
 
 			      if \$use_debug; then
 			          rm -rf $TERMUX_HOME/.config/pulse/*-runtime/
+					  rm -rf "\$TMPDIR/pulse/"
 			      else
 			          rm -rf $TERMUX_HOME/.config/pulse/*-runtime/ >/dev/null 2>&1
+					  rm -rf "\$TMPDIR/pulse/" >/dev/null 2>&1
 			      fi
 
 				  if ! pulseaudio --check >/dev/null 2>&1; then
