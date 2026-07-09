@@ -54,7 +54,11 @@ function setup_proot_distro() {
 	print_msg "${BOLD}Setting up Selected Linux Distro: ${C}${selected_distro}"
 	echo
 	print_to_config "selected_distro"
-	pd install "$selected_distro"
+	if [[ "$selected_distro" == "archlinux" ]]; then
+		pd install danhunsaker/archlinuxarm --name archlinux
+	else
+		pd install "$selected_distro"
+	fi
 }
 
 function check_su_access() {
@@ -103,10 +107,14 @@ function setup_chroot_distro() {
 		fi
 	done
 	print_msg "Installing chroot-distro..."
-	package_install_and_check "python python-pip mount-utils"
+	package_install_and_check "python python-pip"
 	pip install chroot-distro
 	banner
-	chroot-distro install "$selected_distro"
+	if [[ "$selected_distro" == "archlinux" ]]; then
+		chroot-distro install danhunsaker/archlinuxarm --name archlinux
+	else
+		chroot-distro install "$selected_distro"
+	fi
 	print_to_config "selected_distro"
 }
 
