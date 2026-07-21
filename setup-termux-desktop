@@ -3849,13 +3849,19 @@ function setup_tx11start_cmd() {
 				if [[ "\$1" != "--help" && "\$1" != "-h" ]]; then
 				  termux-wake-lock
 
+				  # Kill any existing pulseaudio gracefully first, then wait briefly
+				  # before force-killing, so we don't leave inconsistent state behind.
 				  if \$use_debug; then
-				    pulseaudio -k 2>&1 || true
-				    pkill -9 pulseaudio 2>&1 || true
+				    pulseaudio --kill 2>&1 || true
 				  else
-				    pulseaudio -k >/dev/null 2>&1 || true
-				    pkill -9 pulseaudio >/dev/null 2>&1 || true
+				    pulseaudio --kill >/dev/null 2>&1 || true
 				  fi
+
+				  for i in 1 2 3; do
+				    pulseaudio --check >/dev/null 2>&1 || break
+				    sleep 0.5
+				  done
+				  pkill -9 pulseaudio >/dev/null 2>&1 || true
 
 				  if \$use_debug; then
 				    rm -rf "$TERMUX_HOME/.config/pulse/"*-runtime/
@@ -3873,8 +3879,19 @@ function setup_tx11start_cmd() {
 					pacmd load-module module-native-protocol-tcp auth-ip-acl=127.0.0.1 auth-anonymous=1 >/dev/null 2>&1
 				  fi
 
-				  if ! pulseaudio --check >/dev/null 2>&1; then
-				      print_failed "pulseaudio failed to start (likely already running or stale runtime state)." >&2
+				  # pulseaudio --start forks into the background — give it a few
+				  # seconds to actually come up instead of checking immediately.
+				  pulse_ready=false
+				  for i in 1 2 3 4 5; do
+				    if pulseaudio --check >/dev/null 2>&1; then
+				      pulse_ready=true
+				      break
+				    fi
+				    sleep 1
+				  done
+
+				  if ! \$pulse_ready; then
+				      print_failed "pulseaudio failed to start." >&2
 				      pgrep -a pulseaudio >&2 || true
 				    exit 1
 				  fi
@@ -4037,13 +4054,19 @@ function setup_tx11start_cmd() {
 			    if [[ "\$1" != "--help" ]]; then
 			      termux-wake-lock
 
+				  # Kill any existing pulseaudio gracefully first, then wait briefly
+				  # before force-killing, so we don't leave inconsistent state behind.
 				  if \$use_debug; then
-				    pulseaudio -k 2>&1 || true
-				    pkill -9 pulseaudio 2>&1 || true
+				    pulseaudio --kill 2>&1 || true
 				  else
-				    pulseaudio -k >/dev/null 2>&1 || true
-				    pkill -9 pulseaudio >/dev/null 2>&1 || true
+				    pulseaudio --kill >/dev/null 2>&1 || true
 				  fi
+
+				  for i in 1 2 3; do
+				    pulseaudio --check >/dev/null 2>&1 || break
+				    sleep 0.5
+				  done
+				  pkill -9 pulseaudio >/dev/null 2>&1 || true
 
 			      if \$use_debug; then
 			          rm -rf $TERMUX_HOME/.config/pulse/*-runtime/
@@ -4053,12 +4076,6 @@ function setup_tx11start_cmd() {
 					  rm -rf "\$TMPDIR/pulse/" >/dev/null 2>&1
 			      fi
 
-				  if ! pulseaudio --check >/dev/null 2>&1; then
-				      print_failed "pulseaudio failed to start (likely already running or stale runtime state)." >&2
-				      pgrep -a pulseaudio >&2 || true
-				    exit 1
-				  fi
-
 			      # pulseaudio --start --load="module-aaudio-sink" --exit-idle-time=-1
 			      if \$use_debug; then
 				    pulseaudio --start --exit-idle-time=-1
@@ -4066,6 +4083,23 @@ function setup_tx11start_cmd() {
 				  else
 				    pulseaudio --start --exit-idle-time=-1 >/dev/null 2>&1
 					pacmd load-module module-native-protocol-tcp auth-ip-acl=127.0.0.1 auth-anonymous=1 >/dev/null 2>&1
+				  fi
+
+				  # pulseaudio --start forks into the background — give it a few
+				  # seconds to actually come up instead of checking immediately.
+				  pulse_ready=false
+				  for i in 1 2 3 4 5; do
+				    if pulseaudio --check >/dev/null 2>&1; then
+				      pulse_ready=true
+				      break
+				    fi
+				    sleep 1
+				  done
+
+				  if ! \$pulse_ready; then
+				      print_failed "pulseaudio failed to start." >&2
+				      pgrep -a pulseaudio >&2 || true
+				    exit 1
 				  fi
 
 				  if [[ "\$enable_mic" == "y" ]]; then
