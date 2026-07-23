@@ -124,10 +124,11 @@ function hw_install_required_packages() {
 		package_install_and_check "mesa-zink-vulkan-icd-freedreno"
 		;;
 	"freedreno_kgsl")
+		FREEDRENO_KGSL_VERSION="26.2.0"
 		if [[ "$termux_arch" == "aarch64" || "$termux_arch" == "arm" ]]; then
 			print_msg "${BOLD}Installing freedreno kgsl..."
 			if [[ "$PACKAGE_MANAGER" == "pacman" ]]; then
-				if ! download_file "mesa-vulkan-icd-freedreno.pkg.tar.xz" "https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/download/freedreno-kgsl-25.1/mesa-vulkan-icd-freedreno_25.1.1-2_${termux_arch}.pkg.tar.xz"; then
+				if ! download_file "mesa-vulkan-icd-freedreno.pkg.tar.xz" "https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/download/freedreno-kgsl-${FREEDRENO_KGSL_VERSION}/mesa-vulkan-icd-freedreno_${FREEDRENO_KGSL_VERSION}_${termux_arch}.pkg.tar.xz"; then
 					print_failed "Fialed to download mesa-vulkan-icd-freedreno driver"
 					print_msg "Please check your internet connection"
 					return 1
@@ -136,7 +137,7 @@ function hw_install_required_packages() {
 				pacman -U --noconfirm mesa-vulkan-icd-freedreno.pkg.tar.xz
 				check_and_delete "mesa-vulkan-icd-freedreno.pkg.tar.xz"
 			else
-				if ! download_file "mesa-vulkan-icd-freedreno.deb" "https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/download/freedreno-kgsl-25.1/mesa-vulkan-icd-freedreno_25.1.1-2_${termux_arch}.deb"; then
+				if ! download_file "mesa-vulkan-icd-freedreno.deb" "https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/download/freedreno-kgsl-${FREEDRENO_KGSL_VERSION}/mesa-vulkan-icd-freedreno_${FREEDRENO_KGSL_VERSION}_${termux_arch}.deb"; then
 					print_failed "Fialed to download mesa-vulkan-icd-freedreno driver"
 					print_msg "Please check your internet connection"
 					return 1
@@ -245,7 +246,7 @@ function setup_hw_environment_variables() {
 		;;
 	"freedreno_kgsl")
 		# shellcheck disable=SC2034
-		set_to_export="MESA_NO_ERROR=1 MESA_LOADER_DRIVER_OVERRIDE=kgsl MESA_GL_VERSION_OVERRIDE=3.3 vblank_mode=0"
+		set_to_export="MESA_NO_ERROR=1 MESA_LOADER_DRIVER_OVERRIDE=kgsl MESA_GL_VERSION_OVERRIDE=3.3 vblank_mode=3 MESA_VK_WSI_PRESENT_MODE=mailbox"
 		# shellcheck disable=SC2034
 		initialize_server_method=" "
 		pd_hw_method="${set_to_export}"
