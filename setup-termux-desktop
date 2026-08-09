@@ -1259,7 +1259,6 @@ function set_desktop_variables() {
 		themes_folder="$TERMUX_HOME/.themes"
 		icons_folder="$TERMUX_HOME/.icons"
 		de_startup="wmaker"
-
 	fi
 }
 
@@ -2920,7 +2919,11 @@ function install_desktop() {
 	elif [[ "$de_name" == "openbox" ]]; then
 		print_msg "${BOLD}Installing Openbox WM"
 		echo
-		package_install_and_check "openbox polybar xorg-xsetroot xorg-xprop lxappearance wmctrl feh firefox rofi bmon xcompmgr gtk3 gedit libxml2-utils kvantum"
+		package_install_and_check "openbox polybar xorg-xsetroot xorg-xprop lxappearance wmctrl feh rofi bmon xcompmgr gtk3 gedit libxml2-utils kvantum"
+		if [[ "$style_answer" != "0" ]]; then
+			print_msg "The openbox theme ${style_answer} is configured with firefox so installing firefox"
+			package_install_and_check "firefox"
+		fi
 	elif [[ "$de_name" == "mate" ]]; then
 		print_msg "${BOLD}Installing MATE"
 		echo
@@ -5314,7 +5317,10 @@ function remove_desktop_environments() {
 	elif [[ "$de_name" == "lxqt" ]]; then
 		package_check_and_remove "lxqt xorg-xsetroot papirus-icon-theme xwayland kvantum"
 	elif [[ "$de_name" == "openbox" ]]; then
-		package_check_and_remove "openbox polybar xorg-xsetroot lxappearance wmctrl feh xwayland kvantum thunar firefox mpd rofi bmon xcompmgr xfce4-settings gedit"
+		package_check_and_remove "openbox polybar xorg-xsetroot lxappearance wmctrl feh xwayland kvantum thunar mpd rofi bmon xcompmgr xfce4-settings gedit"
+		if [[ "$style_answer" != "0" ]]; then
+			package_check_and_remove "firefox"
+		fi
 	elif [[ "$de_name" == "mate" ]]; then
 		package_check_and_remove "mate mate-calc mate-netbook mate-terminal mate-tweak mate-utils mate-system-monitor mate-applet-brisk-menu mate-media engrampa eom mozo pluma caja-actions caja-extensions"
 		package_check_and_remove "kvantum"
