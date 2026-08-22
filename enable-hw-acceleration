@@ -125,10 +125,11 @@ function hw_install_required_packages() {
 		;;
 	"freedreno_kgsl")
 		FREEDRENO_KGSL_VERSION="26.2.0"
+		FREEDRENO_KGSL_PKGREL="1"
 		if [[ "$termux_arch" == "aarch64" || "$termux_arch" == "arm" ]]; then
 			print_msg "${BOLD}Installing freedreno kgsl..."
 			if [[ "$PACKAGE_MANAGER" == "pacman" ]]; then
-				if ! download_file "mesa-vulkan-icd-freedreno.pkg.tar.xz" "https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/download/freedreno-kgsl-${FREEDRENO_KGSL_VERSION}/mesa-vulkan-icd-freedreno_${FREEDRENO_KGSL_VERSION}_${termux_arch}.pkg.tar.xz"; then
+				if ! download_file "mesa-vulkan-icd-freedreno.pkg.tar.xz" "https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/download/freedreno-kgsl-${FREEDRENO_KGSL_VERSION}/mesa-vulkan-icd-freedreno-${FREEDRENO_KGSL_VERSION}-${FREEDRENO_KGSL_PKGREL}-${termux_arch}.pkg.tar.xz"; then
 					print_failed "Fialed to download mesa-vulkan-icd-freedreno driver"
 					print_msg "Please check your internet connection"
 					return 1
@@ -137,7 +138,7 @@ function hw_install_required_packages() {
 				pacman -U --noconfirm mesa-vulkan-icd-freedreno.pkg.tar.xz
 				check_and_delete "mesa-vulkan-icd-freedreno.pkg.tar.xz"
 			else
-				if ! download_file "mesa-vulkan-icd-freedreno.deb" "https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/download/freedreno-kgsl-${FREEDRENO_KGSL_VERSION}/mesa-vulkan-icd-freedreno_${FREEDRENO_KGSL_VERSION}_${termux_arch}.deb"; then
+				if ! download_file "mesa-vulkan-icd-freedreno.deb" "https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/download/freedreno-kgsl-${FREEDRENO_KGSL_VERSION}/mesa-vulkan-icd-freedreno_${FREEDRENO_KGSL_VERSION}-${FREEDRENO_KGSL_PKGREL}_${termux_arch}.deb"; then
 					print_failed "Fialed to download mesa-vulkan-icd-freedreno driver"
 					print_msg "Please check your internet connection"
 					return 1
