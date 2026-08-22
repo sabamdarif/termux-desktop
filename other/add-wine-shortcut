@@ -23,13 +23,11 @@ function check_termux() {
 	fi
 }
 
-if [[ "$wine_answer" == "3" ]]; then
-	if [[ ! -f "$TERMUX_PREFIX/bin/wine" ]]; then
-		wine_cmd="wine"
-	else
-		wine_cmd="hangover-wine"
-	fi
-else
+if [[ "$installed_wine" == "stock" ]]; then
+	wine_cmd="wine-stable"
+elif [[ "$installed_wine" == "wine_hangover" ]]; then
+	wine_cmd="hangover-wine"
+elif [[ "$installed_wine" == "mobox" ]]; then
 	wine_cmd="wine"
 fi
 
