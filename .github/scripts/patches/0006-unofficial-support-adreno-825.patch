@@ -1,11 +1,11 @@
 FROM:- https://github.com/whitebelyash/mesa-tu8/commit/5295a445d06ad616b614dda3f8a129e1a56605f8
 
 diff --git a/src/freedreno/common/freedreno_devices.py b/src/freedreno/common/freedreno_devices.py
-index 80bc917..d21ab24 100644
+index 72518f4..9979327 100644
 --- a/src/freedreno/common/freedreno_devices.py
 +++ b/src/freedreno/common/freedreno_devices.py
-@@ -1257,6 +1257,23 @@ a8xx_base = GPUProps(
-         has_dual_wave_dispatch = True,
+@@ -1318,6 +1318,23 @@ a8xx_base = GPUProps(
+         max_storage_buffer_range_bytes = (1 << 31) - 1,
      )
  
 +a8xx_825 = GPUProps(
@@ -28,7 +28,7 @@ index 80bc917..d21ab24 100644
  # For a8xx, the chicken bit and most other non-ctx reg
  # programming moves into the kernel, and what remains
  # should be easier to share between devices
-@@ -1399,6 +1416,28 @@ add_gpus([
+@@ -1460,6 +1477,28 @@ add_gpus([
          raw_magic_regs = a8xx_base_raw_magic_regs,
      ))
  
@@ -57,3 +57,4 @@ index 80bc917..d21ab24 100644
  add_gpus([
          GPUId(chip_id=0xffff44050A31, name="Adreno (TM) 840"),
      ], A6xxGPUInfo(
+

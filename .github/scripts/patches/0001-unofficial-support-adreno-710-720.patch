@@ -7,9 +7,11 @@ https://github.com/KreitinnSoftware/MiceWine-RootFS-Generator/commit/6e9d54ab5d2
 Upstream issue:
 https://gitlab.freedesktop.org/mesa/mesa/-/issues/13036
 
+diff --git a/src/freedreno/common/freedreno_devices.py b/src/freedreno/common/freedreno_devices.py
+index b2ba8d9..72518f4 100644
 --- a/src/freedreno/common/freedreno_devices.py
 +++ b/src/freedreno/common/freedreno_devices.py
-@@ -1171,6 +1171,46 @@ add_gpus([
+@@ -1010,6 +1010,46 @@ add_gpus([
          raw_magic_regs = a730_raw_magic_regs,
      ))
  
@@ -56,9 +58,11 @@ https://gitlab.freedesktop.org/mesa/mesa/-/issues/13036
  add_gpus([
          GPUId(chip_id=0x07030001, name="FD730"), # KGSL, no speedbin data
          GPUId(chip_id=0xffff07030001, name="FD730"), # Default no-speedbin fallback
+diff --git a/src/freedreno/drm-shim/freedreno_noop.c b/src/freedreno/drm-shim/freedreno_noop.c
+index f989928..8b8ccbe 100644
 --- a/src/freedreno/drm-shim/freedreno_noop.c
 +++ b/src/freedreno/drm-shim/freedreno_noop.c
-@@ -261,6 +261,16 @@ static const struct msm_device_info device_infos[] = {
+@@ -298,6 +298,16 @@ static const struct msm_device_info device_infos[] = {
        .chip_id = 0x00b207002000,
        .gmem_size = 128 * 1024,
     },
@@ -75,3 +79,4 @@ https://gitlab.freedesktop.org/mesa/mesa/-/issues/13036
     {
        .gpu_id = 730,
        .chip_id = 0x07030001,
+

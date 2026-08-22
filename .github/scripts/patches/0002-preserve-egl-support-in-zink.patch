@@ -18,11 +18,12 @@ the 'switch was flipped' to the new codepath, so to speak, locking vanilla mesa'
 support away from the Zink+Turnip+Termux:X11 codepath unless some kind of intervention
 is performed, such as this patch.
 
-diff --git a/.github/scripts/turnip_workdir/mesa-25.3.0/src/egl/drivers/dri2/platform_x11_dri3.c b/.github/scripts/turnip_workdir/mesa-25.3.0/src/egl/drivers/dri2/platform_x11_dri3.c
-index 894ae6d..df2c5f5 100644
---- a/.github/scripts/turnip_workdir/mesa-25.3.0/src/egl/drivers/dri2/platform_x11_dri3.c
-+++ b/.github/scripts/turnip_workdir/mesa-25.3.0/src/egl/drivers/dri2/platform_x11_dri3.c
-@@ -535,7 +535,7 @@ dri3_x11_connect(struct dri2_egl_display *dri2_dpy, bool swrast)
+
+diff --git a/src/egl/drivers/dri2/platform_x11_dri3.c b/src/egl/drivers/dri2/platform_x11_dri3.c
+index 2c4353a..3c5a90a 100644
+--- a/src/egl/drivers/dri2/platform_x11_dri3.c
++++ b/src/egl/drivers/dri2/platform_x11_dri3.c
+@@ -537,7 +537,7 @@ dri3_x11_connect(struct dri2_egl_display *dri2_dpy, bool swrast)
              _eglLog(_EGL_WARNING, "DRI3: Failed to initialize");
        }
  
@@ -31,10 +32,10 @@ index 894ae6d..df2c5f5 100644
     }
  
     loader_get_user_preferred_fd(&dri2_dpy->fd_render_gpu,
-diff --git a/.github/scripts/turnip_workdir/mesa-25.3.0/src/egl/main/eglapi.c b/.github/scripts/turnip_workdir/mesa-25.3.0/src/egl/main/eglapi.c
-index 61afc1e..3277a6a 100644
---- a/.github/scripts/turnip_workdir/mesa-25.3.0/src/egl/main/eglapi.c
-+++ b/.github/scripts/turnip_workdir/mesa-25.3.0/src/egl/main/eglapi.c
+diff --git a/src/egl/main/eglapi.c b/src/egl/main/eglapi.c
+index fb5a8b6..df575b5 100644
+--- a/src/egl/main/eglapi.c
++++ b/src/egl/main/eglapi.c
 @@ -684,7 +684,7 @@ eglInitialize(EGLDisplay dpy, EGLint *major, EGLint *minor)
                   "Found 'LIBGL_ALWAYS_SOFTWARE' set, will use a CPU renderer");
  

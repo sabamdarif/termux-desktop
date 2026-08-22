@@ -6,11 +6,11 @@ force-disabled in Zink in Turnip on Adreno devices, while using the about:config
 gfx.webrender.all=true and gfx.x11-egl.force-disabled=true,
 and doing this prevents the artifacts from occurring.
 
-diff --git a/.github/scripts/turnip_workdir/mesa-25.3.0/src/gallium/drivers/zink/zink_screen.c b/.github/scripts/turnip_workdir/mesa-25.3.0/src/gallium/drivers/zink/zink_screen.c
-index dae8bb7..30b61a6 100644
---- a/.github/scripts/turnip_workdir/mesa-25.3.0/src/gallium/drivers/zink/zink_screen.c
-+++ b/.github/scripts/turnip_workdir/mesa-25.3.0/src/gallium/drivers/zink/zink_screen.c
-@@ -3117,10 +3117,12 @@ init_driver_workarounds(struct zink_screen *screen)
+diff --git a/src/gallium/drivers/zink/zink_screen.c b/src/gallium/drivers/zink/zink_screen.c
+index c11c6a2..c88c8c9 100644
+--- a/src/gallium/drivers/zink/zink_screen.c
++++ b/src/gallium/drivers/zink/zink_screen.c
+@@ -3177,10 +3177,12 @@ init_driver_workarounds(struct zink_screen *screen)
     case VK_DRIVER_ID_MESA_LLVMPIPE:
     case VK_DRIVER_ID_MESA_NVK:
     case VK_DRIVER_ID_NVIDIA_PROPRIETARY:
