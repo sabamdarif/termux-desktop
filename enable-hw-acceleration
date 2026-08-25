@@ -23,6 +23,24 @@
 
 # shellcheck disable=SC2154
 
+#########################################################################
+#
+# Distro Side Mesa (Turnip + Fryzek's KGSL)
+#
+#########################################################################
+
+# lfdevs/mesa-for-android-container tag the distro side driver was built from
+MESA_FREEDRENO_VERSION="26.3.0-devel-20260824"
+# it get installed in it's own prefix so the distro's mesa stays untouched,
+# that way one build works on every distro and removing it is just a rm -rf
+MESA_FREEDRENO_PREFIX="/opt/mesa-freedreno"
+
+# Pipetto-crypto/mesa VERSION-build_number tag
+PIPETTO_CRYPTO_VERSION_BUILD_TAG="25.0.0-2"
+
+# xMeM/mesa/tree/wrapper VERSION-build_number tag
+ORIGINAL_VULKAN_WRAPPER_ANDROID_VERSION_BUILD_TAG="25.0.0-3"
+
 function check_termux() {
 	if [ ! -f /system/build.prop ]; then
 		echo "${R}[${R}☓${R}]${R}${BOLD} Not running on Android."
@@ -46,6 +64,86 @@ function check_termux() {
 	fi
 }
 
+# every vulkan wrapper driver is installed the same way, only the release tag
+# and the file names are different
+function install_vulkan_wrapper_driver() {
+	local release_tag="$1"
+	local pkg_base_name="$2"
+	local deb_file_name="$3"
+	local pacman_file_name="$4"
+	local download_url
+
+	if [[ "$termux_arch" != "aarch64" && "$termux_arch" != "arm" ]]; then
+		print_failed "${pkg_base_name} Driver isn't supported on your device"
+		return 1
+	fi
+
+	print_msg "${BOLD}Installing ${pkg_base_name} Driver..."
+	if [[ "$PACKAGE_MANAGER" == "pacman" ]]; then
+		if [[ -z "$pacman_file_name" ]]; then
+			print_failed "${pkg_base_name} Driver isn't available for pacman yet"
+			return 1
+		fi
+		download_url="https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/download/${release_tag}/${pacman_file_name}"
+		if ! download_file "${pkg_base_name}.pkg.tar.xz" "$download_url"; then
+			print_failed "Failed to download ${pkg_base_name} driver"
+			print_msg "Please check your internet connection"
+			return 1
+		fi
+		pacman -Syu --needed
+		pacman -U --noconfirm "${pkg_base_name}.pkg.tar.xz"
+		check_and_delete "${pkg_base_name}.pkg.tar.xz"
+	else
+		download_url="https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/download/${release_tag}/${deb_file_name}"
+		if ! download_file "${pkg_base_name}.deb" "$download_url"; then
+			print_failed "Failed to download ${pkg_base_name} driver"
+			print_msg "Please check your internet connection"
+			return 1
+		fi
+		dpkg --configure -a
+		apt --fix-broken install -y
+		apt install ./"${pkg_base_name}.deb" -y
+		apt install --fix-missing -y
+		check_and_delete "${pkg_base_name}.deb"
+	fi
+}
+
+# Turnip + Fryzek's KGSL, one package with the native adreno vulkan driver and
+# the native adreno opengl driver in it
+function install_freedreno_kgsl_driver() {
+	FREEDRENO_KGSL_VERSION="26.2.0"
+	FREEDRENO_KGSL_PKGREL="1"
+	local release_tag="freedreno-kgsl-${FREEDRENO_KGSL_VERSION}"
+
+	if [[ "$termux_arch" != "aarch64" && "$termux_arch" != "arm" ]]; then
+		print_failed "Turnip + Fryzek's KGSL isn't supported on your device"
+		return 1
+	fi
+
+	print_msg "${BOLD}Installing Turnip + Fryzek's KGSL..."
+	if [[ "$PACKAGE_MANAGER" == "pacman" ]]; then
+		if ! download_file "mesa-vulkan-icd-freedreno.pkg.tar.xz" "https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/download/${release_tag}/mesa-vulkan-icd-freedreno-${FREEDRENO_KGSL_VERSION}-${FREEDRENO_KGSL_PKGREL}-${termux_arch}.pkg.tar.xz"; then
+			print_failed "Failed to download mesa-vulkan-icd-freedreno driver"
+			print_msg "Please check your internet connection"
+			return 1
+		fi
+		pacman -Syu --needed
+		pacman -U --noconfirm mesa-vulkan-icd-freedreno.pkg.tar.xz
+		check_and_delete "mesa-vulkan-icd-freedreno.pkg.tar.xz"
+	else
+		if ! download_file "mesa-vulkan-icd-freedreno.deb" "https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/download/${release_tag}/mesa-vulkan-icd-freedreno_${FREEDRENO_KGSL_VERSION}-${FREEDRENO_KGSL_PKGREL}_${termux_arch}.deb"; then
+			print_failed "Failed to download mesa-vulkan-icd-freedreno driver"
+			print_msg "Please check your internet connection"
+			return 1
+		fi
+		dpkg --configure -a
+		apt --fix-broken install -y
+		apt install ./mesa-vulkan-icd-freedreno.deb -y
+		apt install --fix-missing -y
+		check_and_delete "mesa-vulkan-icd-freedreno.deb"
+	fi
+}
+
 function hw_install_required_packages() {
 	banner
 	print_msg "Remove old driver packages and files if installed..."
@@ -53,103 +151,41 @@ function hw_install_required_packages() {
 	check_and_delete "$TERMUX_PREFIX/opt/angle-android/vulkan/libGLESv1_CM.so.1"
 	check_and_delete "$TERMUX_PREFIX/opt/angle-android/vulkan/libGLESv2.so.2"
 	check_and_delete "$TERMUX_PREFIX/share/vulkan/icd.d/wrapper_icd.aarch64.json"
+	check_and_delete "$TERMUX_PREFIX/share/vulkan/icd.d/wrapper_icd.armv7.json"
 	check_and_delete "$TERMUX_PREFIX/lib/libadrenotools.so $TERMUX_PREFIX/lib/libfile_redirect_hook.so $TERMUX_PREFIX/lib/libgsl_alloc_hook.so $TERMUX_PREFIX/lib/libhook_impl.so $TERMUX_PREFIX/lib/libmain_hook.so $TERMUX_PREFIX/lib/libvulkan_wrapper.so"
-	package_check_and_remove "vulkan-wrapper-android virglrenderer virglrenderer-android angle-android mesa-vulkan-icd-freedreno mesa-zink-vulkan-icd-freedreno mesa-vulkan-icd-freedreno-dri3"
+	package_check_and_remove "vulkan-wrapper-android pipetto-crypto-vulkan-wrapper-android virglrenderer virglrenderer-android angle-android mesa-vulkan-icd-freedreno mesa-zink-vulkan-icd-freedreno"
 
 	case "$exp_termux_vulkan_hw_answer" in
 	"vulkan_wrapper_android")
-		if [[ "$termux_arch" == "aarch64" || "$termux_arch" == "arm" ]]; then
-			print_msg "${BOLD}Installing vulkan-wrapper-android Driver..."
-			if [[ "$PACKAGE_MANAGER" == "pacman" ]]; then
-				if ! download_file "vulkan-wrapper-android.pkg.tar.xz" "https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/download/vulkan-wrapper-android_25.0.0-3/vulkan-wrapper-android-25.0.0-3-${termux_arch}.pkg.tar.xz"; then
-					print_failed "Fialed to download vulkan-wrapper-android driver"
-					print_msg "Please check your internet connection"
-					return 1
-				fi
-				pacman -Syu --needed
-				pacman -U --noconfirm vulkan-wrapper-android.pkg.tar.xz
-				check_and_delete "vulkan-wrapper-android.pkg.tar.xz"
-			else
-				if ! download_file "vulkan-wrapper-android.deb" "https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/download/vulkan-wrapper-android_25.0.0-3/vulkan-wrapper-android_25.0.0-3_${termux_arch}.deb"; then
-					print_failed "Fialed to download vulkan-wrapper-android driver"
-					print_msg "Please check your internet connection"
-					return 1
-				fi
-				dpkg --configure -a
-				apt --fix-broken install -y
-				apt install ./vulkan-wrapper-android.deb -y
-				apt install --fix-missing -y
-				check_and_delete "vulkan-wrapper-android.deb"
-			fi
-		else
-			print_failed "vulkan-wrapper-android Driver isn't supported on your device"
-		fi
-		;;
-	"vulkan_wrapper_android_leegaos_fork")
-		if [[ "$termux_arch" == "aarch64" ]]; then
-			print_msg "${BOLD}Installing vulkan-wrapper-android (leegao's fork) Driver..."
-			package_install_and_check "libandroid-shmem libc++ libdrm libx11 libxcb libxshmfence libwayland vulkan-loader-generic zlib zstd"
-			if ! download_file "bionic-vulkan-wrapper.zip" "https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/download/bionic-vulkan-wrapper-0.0.5r5/vulkan-wrapper-android-leegaos-fork-${termux_arch}.zip"; then
-				print_failed "Fialed to download bionic-vulkan-wrapper driver"
-				print_msg "Please check your internet connection"
-				return 1
-			fi
-			unzip -o bionic-vulkan-wrapper.zip -d "$TERMUX_PREFIX/"
-			check_and_delete "bionic-vulkan-wrapper.zip"
-		else
-			print_failed "vulkan-wrapper-android Driver isn't supported on your device"
-		fi
+		install_vulkan_wrapper_driver \
+			"vulkan-wrapper-android_${ORIGINAL_VULKAN_WRAPPER_ANDROID_VERSION_BUILD_TAG}" \
+			"vulkan-wrapper-android" \
+			"vulkan-wrapper-android_${ORIGINAL_VULKAN_WRAPPER_ANDROID_VERSION_BUILD_TAG}_${termux_arch}.deb" \
+			"vulkan-wrapper-android-${ORIGINAL_VULKAN_WRAPPER_ANDROID_VERSION_BUILD_TAG}-${termux_arch}.pkg.tar.xz"
 		;;
 	"vulkan_wrapper_android_pipetto_crypto")
-		if [[ "$termux_arch" == "aarch64" ]]; then
-			print_msg "${BOLD}Installing vulkan-wrapper-android (pipetto-crypto's fork) Driver..."
-			if ! download_file "pipetto-crypto-vulkan-wrapper-android.deb" "https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/download/pipetto-crypto-vulkan-wrapper-android/pipetto-crypto-vulkan-wrapper-android_25.0.0-1_${termux_arch}.deb"; then
-				print_failed "Fialed to download pipetto-crypto-vulkan-wrapper-android driver"
-				print_msg "Please check your internet connection"
-				return 1
-			fi
-			dpkg --configure -a
-			apt --fix-broken install -y
-			apt install ./pipetto-crypto-vulkan-wrapper-android.deb -y
-			apt install --fix-missing -y
-			check_and_delete "pipetto-crypto-vulkan-wrapper-android.deb"
-		else
-			print_failed "vulkan-wrapper-android Driver isn't supported on your device"
-		fi
+		install_vulkan_wrapper_driver \
+			"pipetto-crypto-vulkan-wrapper-android_${PIPETTO_CRYPTO_VERSION_BUILD_TAG}" \
+			"pipetto-crypto-vulkan-wrapper-android" \
+			"pipetto-crypto-vulkan-wrapper-android_${PIPETTO_CRYPTO_VERSION_BUILD_TAG}_${termux_arch}.deb" \
+			"pipetto-crypto-vulkan-wrapper-android-${PIPETTO_CRYPTO_VERSION_BUILD_TAG}-${termux_arch}.pkg.tar.xz"
 		;;
 	"mesa_freedreno")
-		package_install_and_check "mesa-vulkan-icd-freedreno"
-		;;
-	"mesa_zink_freedreno")
-		package_install_and_check "mesa-zink-vulkan-icd-freedreno"
+		# the zink build in tur is mesa 22.0.5 and it's freedreno icd is pinned
+		# to that exact version, so those two have to be installed as a pair
+		if [[ "$termux_hw_answer" == "zink" ]] ||
+			[[ "$termux_hw_answer" == "zink_virgl" ]] ||
+			[[ "$termux_hw_answer" == "zink_with_mesa_zink" ]]; then
+			package_install_and_check "mesa-zink-vulkan-icd-freedreno"
+		else
+			package_install_and_check "mesa-vulkan-icd-freedreno"
+		fi
 		;;
 	"freedreno_kgsl")
-		FREEDRENO_KGSL_VERSION="26.2.0"
-		FREEDRENO_KGSL_PKGREL="1"
-		if [[ "$termux_arch" == "aarch64" || "$termux_arch" == "arm" ]]; then
-			print_msg "${BOLD}Installing freedreno kgsl..."
-			if [[ "$PACKAGE_MANAGER" == "pacman" ]]; then
-				if ! download_file "mesa-vulkan-icd-freedreno.pkg.tar.xz" "https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/download/freedreno-kgsl-${FREEDRENO_KGSL_VERSION}/mesa-vulkan-icd-freedreno-${FREEDRENO_KGSL_VERSION}-${FREEDRENO_KGSL_PKGREL}-${termux_arch}.pkg.tar.xz"; then
-					print_failed "Fialed to download mesa-vulkan-icd-freedreno driver"
-					print_msg "Please check your internet connection"
-					return 1
-				fi
-				pacman -Syu --needed
-				pacman -U --noconfirm mesa-vulkan-icd-freedreno.pkg.tar.xz
-				check_and_delete "mesa-vulkan-icd-freedreno.pkg.tar.xz"
-			else
-				if ! download_file "mesa-vulkan-icd-freedreno.deb" "https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/download/freedreno-kgsl-${FREEDRENO_KGSL_VERSION}/mesa-vulkan-icd-freedreno_${FREEDRENO_KGSL_VERSION}-${FREEDRENO_KGSL_PKGREL}_${termux_arch}.deb"; then
-					print_failed "Fialed to download mesa-vulkan-icd-freedreno driver"
-					print_msg "Please check your internet connection"
-					return 1
-				fi
-				dpkg --configure -a
-				apt --fix-broken install -y
-				apt install ./mesa-vulkan-icd-freedreno.deb -y
-				apt install --fix-missing -y
-				check_and_delete "mesa-vulkan-icd-freedreno.deb"
-			fi
-		fi
+		install_freedreno_kgsl_driver
+		;;
+	"skip")
+		print_msg "No vulkan driver will be installed, opengl will come from virgl..."
 		;;
 	esac
 	print_to_config "exp_termux_vulkan_hw_answer"
@@ -166,6 +202,12 @@ function hw_install_required_packages() {
 		;;
 	"virgl_vulkan")
 		package_install_and_check "mesa virglrenderer vulkan-loader-generic angle-android virglrenderer-android"
+		;;
+	"skip")
+		# no opengl driver was selected, mesa is still needed for it's software
+		# renderer (llvmpipe) and the generic loader is what reads
+		# VK_ICD_FILENAMES so the vulkan driver stays usable
+		package_install_and_check "mesa vulkan-loader-generic"
 		;;
 	*)
 		print_msg "No extra driver packages needed..."
@@ -235,19 +277,20 @@ function setup_hw_environment_variables() {
 		initialize_server_method=" "
 		pd_hw_method="${set_to_export}"
 		;;
-	"mesa_freedreno")
-		set_to_export="MESA_NO_ERROR=1 GALLIUM_DRIVER=zink vblank_mode=0"
-		initialize_server_method=" "
-		pd_hw_method="${set_to_export}"
-		;;
-	"mesa_zink_freedreno")
-		set_to_export="MESA_NO_ERROR=1 GALLIUM_DRIVER=zink vblank_mode=0"
-		initialize_server_method=" "
-		pd_hw_method="${set_to_export}"
-		;;
 	"freedreno_kgsl")
 		# shellcheck disable=SC2034
 		set_to_export="MESA_NO_ERROR=1 MESA_LOADER_DRIVER_OVERRIDE=kgsl MESA_GL_VERSION_OVERRIDE=3.3 vblank_mode=3 MESA_VK_WSI_PRESENT_MODE=mailbox"
+		# shellcheck disable=SC2034
+		initialize_server_method=" "
+		pd_hw_method="${set_to_export}"
+		;;
+	"skip")
+		# only opengl falls back to mesa's software renderer here, the vulkan
+		# driver stays active because the launchers still export
+		# gpu_environment_variable, that is what makes this different from
+		# --nogpu which turns off vulkan as well
+		# shellcheck disable=SC2034
+		set_to_export="MESA_NO_ERROR=1 LIBGL_ALWAYS_SOFTWARE=1 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe"
 		# shellcheck disable=SC2034
 		initialize_server_method=" "
 		pd_hw_method="${set_to_export}"
@@ -257,19 +300,16 @@ function setup_hw_environment_variables() {
 	print_to_config "termux_hw_answer"
 
 	case "$pd_hw_answer" in
-	"zink")
-		pd_hw_method="GALLIUM_DRIVER=zink MESA_GL_VERSION_OVERRIDE=4.0"
-		;;
 	"virgl")
 		pd_hw_method="GALLIUM_DRIVER=virpipe MESA_GL_VERSION_OVERRIDE=4.0"
 		;;
 	"turnip")
-		# shellcheck disable=SC2034
-		pd_hw_method="VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/freedreno_icd.${termux_arch}.json MESA_LOADER_DRIVER_OVERRIDE=zink TU_DEBUG=noconform"
+		pd_hw_method="VK_ICD_FILENAMES=${MESA_FREEDRENO_PREFIX}/share/vulkan/icd.d/freedreno_icd.${termux_arch}.json LD_LIBRARY_PATH=${MESA_FREEDRENO_PREFIX}/lib LIBGL_DRIVERS_PATH=${MESA_FREEDRENO_PREFIX}/lib/dri MESA_LOADER_DRIVER_OVERRIDE=zink TU_DEBUG=noconform"
 		;;
-	# "freedreno_kgsl")
-	#     pd_hw_method="MESA_LOADER_DRIVER_OVERRIDE=kgsl MESA_GL_VERSION_OVERRIDE=3.3"
-	#     ;;
+	"freedreno_kgsl")
+		# shellcheck disable=SC2034
+		pd_hw_method="VK_ICD_FILENAMES=${MESA_FREEDRENO_PREFIX}/share/vulkan/icd.d/freedreno_icd.${termux_arch}.json LD_LIBRARY_PATH=${MESA_FREEDRENO_PREFIX}/lib LIBGL_DRIVERS_PATH=${MESA_FREEDRENO_PREFIX}/lib/dri MESA_LOADER_DRIVER_OVERRIDE=kgsl MESA_GL_VERSION_OVERRIDE=3.3 vblank_mode=3 MESA_VK_WSI_PRESENT_MODE=mailbox"
+		;;
 	*)
 		print_msg "Uses The Previous Selection For Distro"
 		echo
@@ -283,7 +323,7 @@ function setup_hw_environment_variables() {
 }
 
 function setup_gpu_specific_environment_variables() {
-	if [[ "$exp_termux_vulkan_hw_answer" == "vulkan_wrapper_android" ]] || [[ "$exp_termux_vulkan_hw_answer" == "vulkan_wrapper_android_leegaos_fork" ]] || [[ "$exp_termux_vulkan_hw_answer" == "vulkan_wrapper_android_pipetto_crypto" ]]; then
+	if [[ "$exp_termux_vulkan_hw_answer" == "vulkan_wrapper_android" ]] || [[ "$exp_termux_vulkan_hw_answer" == "vulkan_wrapper_android_pipetto_crypto" ]]; then
 		local icd_cpu_arch
 		if [[ "$termux_arch" == "aarch64" ]]; then
 			icd_cpu_arch="aarch64"
@@ -301,31 +341,28 @@ function setup_gpu_specific_environment_variables() {
 			gpu_environment_variable="VK_ICD_FILENAMES=$TERMUX_PREFIX/share/vulkan/icd.d/wrapper_icd.${icd_cpu_arch}.json MESA_SHADER_CACHE=512MB MESA_SHADER_CACHE_DISABLE=false vblank_mode=0"
 		fi
 	fi
-
-	if [[ "$exp_termux_vulkan_hw_answer" == "vulkan_wrapper_android_leegaos_fork" ]]; then
-		gpu_environment_variable+=" WRAPPER_LOG_LEVEL=none WRAPPER_CMD_LOG_LEVEL=none"
-	fi
 }
 
 #########################################################################
 #
-# Setup Turnip
+# Setup The Distro Side Driver (Turnip / Fryzek's KGSL)
 #
 #########################################################################
 
-function setup_turnip_proot() {
+# it install one build that carry both the native adreno vulkan driver (Turnip)
+# and the native adreno opengl driver (Fryzek's KGSL), which one get used is
+# decided by pd_hw_method
+function setup_mesa_freedreno_proot() {
 	banner
-	print_msg "${BOLD}Installing required packages for turnip..."
+	print_msg "${BOLD}Installing required packages for the distro side driver..."
 	echo
 	if [[ "$selected_distro" == "debian" ]] || [[ "$selected_distro" == "ubuntu" ]]; then
-		turnip_related_packs="xdg-desktop-portal libgl1 libgl1-mesa-dri libvulkan1 mesa-vulkan-drivers libvulkan1"
+		turnip_related_packs="xdg-desktop-portal libgl1 libgl1-mesa-dri libvulkan1 mesa-vulkan-drivers"
 	elif [[ "$selected_distro" == "fedora" ]]; then
 		turnip_related_packs="xdg-desktop-portal mesa-libGL mesa-dri-drivers vulkan-loader mesa-vulkan-drivers"
 	elif [[ "$selected_distro" == "archlinux" ]]; then
 		turnip_related_packs="xdg-desktop-portal mesa vulkan-icd-loader vulkan-mesa-layers"
 	fi
-
-	TURNIP_MESA_VERSION="26.2.0"
 
 	install_turnip_related_packs=$(
 		cat <<-EOF
@@ -336,13 +373,13 @@ function setup_turnip_proot() {
 	create_shell_script "$save_path/install_turnip_related_packs.sh" "$install_turnip_related_packs"
 	"${selected_distro_type}"-distro login "$selected_distro" -- /bin/bash -c 'bash install_turnip_related_packs.sh'
 
-	if ! download_file "$TERMUX_HOME/turnip.zip" "https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/download/turnip-${TURNIP_MESA_VERSION}/turnip-${TURNIP_MESA_VERSION}-${termux_arch}.zip"; then
-		print_failed "Fialed to download turnip driver"
+	if ! download_file "$TERMUX_HOME/mesa-freedreno.zip" "https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/download/mesa-freedreno-${MESA_FREEDRENO_VERSION}/mesa-freedreno-${MESA_FREEDRENO_VERSION}-${termux_arch}.zip"; then
+		print_failed "Failed to download the distro side driver"
 		print_msg "Please check your internet connection"
 		return 1
 	fi
-	"${selected_distro_type}"-distro login "$selected_distro" -- /bin/bash -c "unzip -o $TERMUX_HOME/turnip.zip -d /"
-	check_and_delete "$TERMUX_HOME/turnip.zip"
+	"${selected_distro_type}"-distro login "$selected_distro" -- /bin/bash -c "unzip -o $TERMUX_HOME/mesa-freedreno.zip -d / && ldconfig || true"
+	check_and_delete "$TERMUX_HOME/mesa-freedreno.zip"
 }
 
 check_termux
@@ -353,7 +390,7 @@ function run_hw_acceleration_setup_main() {
 	hw_install_required_packages
 	setup_hw_environment_variables
 	setup_gpu_specific_environment_variables
-	if [[ "$pd_hw_answer" == "turnip" ]]; then
-		setup_turnip_proot
+	if [[ "$pd_hw_answer" == "turnip" ]] || [[ "$pd_hw_answer" == "freedreno_kgsl" ]]; then
+		setup_mesa_freedreno_proot
 	fi
 }

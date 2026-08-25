@@ -831,6 +831,42 @@ function print_to_config() {
 	log_debug "$var_name = $var_value"
 }
 
+# the answers the current menus can produce. anything else sitting in the config
+# file was written by an older version, and instead of silently doing something
+# unexpected with it the question get asked again
+function is_valid_hw_answer() {
+	local var_name="$1"
+	local value="$2"
+	case "$var_name" in
+	"exp_termux_vulkan_hw_answer")
+		case "$value" in
+		vulkan_wrapper_android | vulkan_wrapper_android_pipetto_crypto | mesa_freedreno | freedreno_kgsl | skip)
+			return 0
+			;;
+		esac
+		;;
+	"termux_hw_answer")
+		case "$value" in
+		zink_with_mesa | zink_with_mesa_zink | zink | zink_virgl | virgl | virgl_angle | virgl_vulkan | freedreno_kgsl | skip)
+			return 0
+			;;
+		esac
+		;;
+	"pd_hw_answer")
+		case "$value" in
+		virgl | turnip | freedreno_kgsl)
+			return 0
+			;;
+		esac
+		;;
+	*)
+		# nothing to check for the rest
+		return 0
+		;;
+	esac
+	return 1
+}
+
 function validate_required_vars() {
 	local required_vars=(
 		# Basic system variables
@@ -900,6 +936,11 @@ function validate_required_vars() {
 	print_msg "Validating required configuration values..."
 
 	for var in "${required_vars[@]}"; do
+		if [[ -n "${!var}" ]] && ! is_valid_hw_answer "$var" "${!var}"; then
+			print_warn "$var is set to '${!var}' which isn't supported anymore"
+			unset "$var"
+		fi
+
 		if [[ -z "${!var}" ]]; then
 			print_msg "Missing variable: $var - attempting to set it..."
 
@@ -929,12 +970,14 @@ function validate_required_vars() {
 				;;
 			"exp_termux_vulkan_hw_answer")
 				exp_vulkan_support
+				# the opengl answer and the distro answer are both derived from
+				# it, so they get asked again further down this same loop
+				unset termux_hw_answer pd_hw_answer
 				;;
 			"termux_hw_answer")
-				if [[ "$exp_termux_vulkan_hw_answer" == "freedreno_kgsl" ]] || [[ "$exp_termux_vulkan_hw_answer" == "mesa_freedreno" ]] || [[ "$exp_termux_vulkan_hw_answer" == "mesa_zink_freedreno" ]]; then
-					termux_hw_answer="${exp_termux_vulkan_hw_answer}"
+				if ! resolve_termux_hw_answer; then
+					quetion_termux_hw_answer
 				fi
-				quetion_termux_hw_answer
 				;;
 			"themes_folder")
 				question_select_de_from_list
@@ -1153,6 +1196,12 @@ function question_select_de_from_list() {
 	banner
 	print_msg "Select Desktop Environment"
 	echo " "
+	echo "Select the desktop environment you want to install."
+	echo "The number each desktop environment represents"
+	echo "How many custom theme they have available"
+	echo "Here:- https://github.com/sabamdarif/termux-desktop#2-currently-supported-desktop-environments-and-window-managers"
+	echo "Click on the blue link see their preview"
+	echo " "
 	echo "${Y}1. XFCE($total_custom_xfce_setup)${NC}"
 	echo
 	echo "${Y}2. LXQT($total_custom_lxqt_setup)${NC}"
@@ -1161,7 +1210,7 @@ function question_select_de_from_list() {
 	echo
 	echo "${Y}4. MATE($total_custom_mate_setup)${NC}"
 	echo
-	echo "${Y}5. Gnome($total_custom_gnome_setup)${NC}"
+	echo "${Y}5. Gnome($total_custom_gnome_setup)(buggy)${NC}"
 	echo
 	echo "${Y}6. Cinnamon($total_custom_cinnamon_setup)${NC}"
 	echo
@@ -1601,8 +1650,7 @@ function question_enable_mic() {
 
 function question_distro_add_answer() {
 	banner
-	print_msg "
-${R}[${C}-${R}]${G}${BOLD} Linux Distro Container:- ${NC}
+	print_msg "Linux Distro Container:- ${NC}
 
 It will help you to install apps that aren't available in Termux.
 So it will set up a Linux distro container and add options to install those apps.
@@ -1672,53 +1720,51 @@ function setup_device_gpu_model() {
 }
 
 # distro hardware accelrration related questions
+# NOTE: when the termux side selection already decides what the distro should
+# use then it get derived here, it doesn't ask the same thing again
 function distro_hw_questions() {
-	if [[ "$distro_add_answer" == "y" ]]; then
-		case "$termux_hw_answer" in
-		"virgl" | "virgl_vulkan")
-			if [[ "$GPU_NAME" == "adreno" ]]; then
-				banner
-				print_msg "${BOLD}Select Hardware Acceleration Driver For Linux Container"
-				echo "${Y}1. VirGL + ANGLE (GPU Passthrough via virpipe)${NC}"
-				echo
-				echo "${Y}2. Turnip (Native Adreno Vulkan Driver)${NC}"
-				echo
-				select_an_option 2 1 pd_hw_answer_num
-				# shellcheck disable=SC2154
-				case "$pd_hw_answer_num" in
-				1) pd_hw_answer="virgl" ;;
-				2) pd_hw_answer="turnip" ;;
-				esac
-				pd_hw_answer=$([ "$pd_hw_answer_num" == "1" ] && echo "virgl" || echo "turnip")
-			else
-				pd_hw_answer="virgl"
-			fi
-			;;
-		"freedreno_kgsl" | "mesa_freedreno" | "mesa_zink_freedreno")
-			pd_hw_answer="turnip"
-			;;
-		*)
-			banner
-			print_msg "${BOLD}Select Hardware Acceleration Driver For Linux Container"
-			echo
-			print_msg "If You Skip It, It Will Use The Previous Selection"
-			echo
-			echo "${Y}1. Mesa Zink (Vulkan-to-OpenGL Translation)${NC}"
-			echo
-			echo "${Y}2. VirGL (GPU Passthrough via virpipe)${NC}"
-			echo
-			echo "${Y}3. Turnip (Native Adreno Vulkan Driver)${NC}"
-			echo
-			select_an_option 3 1 pd_hw_answer_num
-
-			case "$pd_hw_answer_num" in
-			1) pd_hw_answer="zink" ;;
-			2) pd_hw_answer="virgl" ;;
-			3) pd_hw_answer="turnip" ;;
-			esac
-			;;
-		esac
+	if [[ "$distro_add_answer" != "y" ]]; then
+		return 0
 	fi
+
+	# these ship the native adreno drivers, so the distro uses the same thing
+	case "$exp_termux_vulkan_hw_answer" in
+	"freedreno_kgsl")
+		pd_hw_answer="freedreno_kgsl"
+		return 0
+		;;
+	"mesa_freedreno")
+		pd_hw_answer="turnip"
+		return 0
+		;;
+	esac
+
+	# a wrapper driver (or no vulkan driver at all) decides nothing for the
+	# distro as it has it's own mesa, and the distro's vulkan loader can't load
+	# a bionic wrapper icd from inside proot. so virgl is the only real choice
+	# there, except on adreno where the native drivers can still be used
+	if [[ "$GPU_NAME" != "adreno" ]]; then
+		pd_hw_answer="virgl"
+		return 0
+	fi
+
+	banner
+	print_msg "${BOLD}Select Hardware Acceleration Driver For Linux Container"
+	echo
+	echo "${Y}1. VirGL (GPU Passthrough via virpipe)${NC}"
+	echo
+	echo "${Y}2. Turnip (Native Adreno Vulkan Driver)${NC}"
+	echo
+	echo "${Y}3. Turnip + Fryzek's KGSL (Native Adreno Vulkan + OpenGL)${NC}"
+	echo
+	select_an_option 3 2 pd_hw_answer_num
+
+	# shellcheck disable=SC2154
+	case "$pd_hw_answer_num" in
+	1) pd_hw_answer="virgl" ;;
+	2) pd_hw_answer="turnip" ;;
+	3) pd_hw_answer="freedreno_kgsl" ;;
+	esac
 }
 
 # hardware accelrration related questions
@@ -1730,69 +1776,35 @@ function exp_vulkan_support() {
 	echo
 	print_msg "${BOLD}Select the vulkan driver"
 	echo
-	if [[ "${termux_arch}" == "aarch64" ]]; then
-		print_msg "For most of the device No.1 vulkan-wrapper-android will work:${NC}
-• No.1 vulkan-wrapper-android: Works for most devices\n
-• No.3 pipetto-crypto's fork: Better choice if you have Mali and No.1 didn't work well\n
-• No.4 freedreno: Better choice for Adreno devices\n
-• No.6 mesa-vulkan-icd-freedreno (Kgsl): Gives freedreno access to OpenGL but it's experimental and unmaintained\n
+	print_msg "All of them give real vulkan support:${NC}
+• No.1 Android Vulkan Wrapper: works on most of the devices\n
+• No.2 pipetto-crypto's fork: better choice if you have Mali and No.1 didn't work well\n
+• No.3 Turnip: better choice for Adreno, it needs zink for opengl\n
+• No.4 Turnip + Fryzek's KGSL: best choice for Adreno, it gives vulkan and opengl both (but it's not that stable)\n
+• No.5 Skip: no vulkan at all, opengl will come from virgl\n
 "
-		echo
-		echo "${Y}1. vulkan-wrapper-android${NC}"
-		echo
-		echo "${Y}2. vulkan-wrapper-android (leegao's fork)${NC}"
-		echo
-		echo "${Y}3. vulkan-wrapper-android (pipetto-crypto's fork)${NC}"
-		echo
-		echo "${Y}4. mesa-vulkan-icd-freedreno (Turnip) (adreno only)${NC}"
-		echo
-		echo "${Y}5. mesa-zink-vulkan-icd-freedreno (Turnip) (adreno only)${NC}"
-		echo
-		echo "${Y}6. mesa-vulkan-icd-freedreno (Kgsl) (adreno only)${NC}"
-		echo
-		echo "${Y}7. will use the old virgl way${NC}"
-		echo
-		select_an_option 7 1 exp_termux_vulkan_hw_answer_num
+	echo
+	echo "${Y}1. Android Vulkan Wrapper${NC}"
+	echo
+	echo "${Y}2. Android Vulkan Wrapper (pipetto-crypto's fork)${NC}"
+	echo
+	echo "${Y}3. Turnip (Native Adreno Vulkan Driver) (adreno only)${NC}"
+	echo
+	echo "${Y}4. Turnip + Fryzek's KGSL (Native Adreno Vulkan + OpenGL) (adreno only)${NC}"
+	echo
+	echo "${Y}5. Skip (No Vulkan Driver, OpenGL Only)${NC}"
+	echo
+	select_an_option 5 1 exp_termux_vulkan_hw_answer_num
 
-		# set gpu api name
-		# shellcheck disable=SC2154
-		case "$exp_termux_vulkan_hw_answer_num" in
-		1) exp_termux_vulkan_hw_answer="vulkan_wrapper_android" ;;
-		2) exp_termux_vulkan_hw_answer="vulkan_wrapper_android_leegaos_fork" ;;
-		3) exp_termux_vulkan_hw_answer="vulkan_wrapper_android_pipetto_crypto" ;;
-		4) exp_termux_vulkan_hw_answer="mesa_freedreno" ;;
-		5) exp_termux_vulkan_hw_answer="mesa_zink_freedreno" ;;
-		6) exp_termux_vulkan_hw_answer="freedreno_kgsl" ;;
-		7) exp_termux_vulkan_hw_answer="skip" ;;
-		esac
-	else
-		print_msg "For most of the device No.1 vulkan-wrapper-android will work:${NC}
-• No.1 vulkan-wrapper-android: Works for most devices\n
-• No.2 freedreno: Better choice for Adreno devices\n
-• No.4 mesa-vulkan-icd-freedreno (Kgsl): Gives freedreno access to OpenGL but it's experimental and unmaintained\n
-"
-		echo
-		echo "${Y}1. vulkan-wrapper-android${NC}"
-		echo
-		echo "${Y}2. mesa-vulkan-icd-freedreno (Turnip) (adreno only)${NC}"
-		echo
-		echo "${Y}3. mesa-zink-vulkan-icd-freedreno (Turnip) (adreno only)${NC}"
-		echo
-		echo "${Y}4. mesa-vulkan-icd-freedreno (Kgsl) (adreno only)${NC}"
-		echo
-		echo "${Y}5. will use the old virgl way${NC}"
-		echo
-		select_an_option 5 1 exp_termux_vulkan_hw_answer_num
-
-		# set gpu api name
-		case "$exp_termux_vulkan_hw_answer_num" in
-		1) exp_termux_vulkan_hw_answer="vulkan_wrapper_android" ;;
-		2) exp_termux_vulkan_hw_answer="mesa_freedreno" ;;
-		3) exp_termux_vulkan_hw_answer="mesa_zink_freedreno" ;;
-		4) exp_termux_vulkan_hw_answer="freedreno_kgsl" ;;
-		5) exp_termux_vulkan_hw_answer="skip" ;;
-		esac
-	fi
+	# set gpu api name
+	# shellcheck disable=SC2154
+	case "$exp_termux_vulkan_hw_answer_num" in
+	1) exp_termux_vulkan_hw_answer="vulkan_wrapper_android" ;;
+	2) exp_termux_vulkan_hw_answer="vulkan_wrapper_android_pipetto_crypto" ;;
+	3) exp_termux_vulkan_hw_answer="mesa_freedreno" ;;
+	4) exp_termux_vulkan_hw_answer="freedreno_kgsl" ;;
+	5) exp_termux_vulkan_hw_answer="skip" ;;
+	esac
 }
 
 function quetion_termux_hw_answer() {
@@ -1800,86 +1812,90 @@ function quetion_termux_hw_answer() {
 	echo
 	print_msg "${BOLD}It will be used to enable opengl support"
 	echo
-	echo "${Y}1. Mesa Zink (Vulkan-to-OpenGL) + VirGL Server${NC}"
-	echo
-	echo "${Y}2. VirGL (GPU Passthrough via virpipe)${NC}"
-	echo
-	echo "${Y}3. VirGL + ANGLE OpenGL Backend${NC}"
-	echo
-	echo "${Y}4. VirGL + ANGLE Vulkan Backend${NC}"
-	echo
-	echo "${Y}5. Mesa Zink + VirGL (Vulkan-to-OpenGL via VirGL)${NC}"
-	echo
-	echo "${Y}6. Mesa Zink Direct (Native Vulkan-to-OpenGL)${NC}"
-	echo
-	echo "${Y}7. Mesa Zink Direct with Mesa-zink (Native Vulkan-to-OpenGL)${NC}"
-	echo
-	select_an_option 7 1 exp_termux_gl_hw_answer_num
+	if [[ "$exp_termux_vulkan_hw_answer" == "skip" ]]; then
+		# without a vulkan driver zink has nothing to translate opengl to,
+		# so only the virgl based hacks are left here
+		print_msg "You didn't select any vulkan driver, so opengl will come from virgl"
+		echo
+		echo "${Y}1. VirGL (GPU Passthrough via virpipe)${NC}"
+		echo
+		echo "${Y}2. VirGL + ANGLE OpenGL Backend${NC}"
+		echo
+		echo "${Y}3. VirGL + ANGLE Vulkan Backend${NC}"
+		echo
+		select_an_option 3 1 exp_termux_gl_hw_answer_num
 
-	# set gpu api name
-	# shellcheck disable=SC2154
-	case "$exp_termux_gl_hw_answer_num" in
-	1) exp_termux_gl_hw_answer="zink" ;;
-	2) exp_termux_gl_hw_answer="virgl" ;;
-	3) exp_termux_gl_hw_answer="virgl_angle" ;;
-	4) exp_termux_gl_hw_answer="virgl_vulkan" ;;
-	5) exp_termux_gl_hw_answer="zink_virgl" ;;
-	6) exp_termux_gl_hw_answer="zink_with_mesa" ;;
-	7) exp_termux_gl_hw_answer="zink_with_mesa_zink" ;;
-	esac
-	termux_hw_answer="${exp_termux_gl_hw_answer}"
-}
-
-function exp_termux_gl_hw_support() {
-	quetion_termux_hw_answer
-	distro_hw_questions
-}
-
-#NOTE: it first call exp_vulkan_support then if user select vulkan_wrapper_android the it will go for exp_termux_gl_hw_answer (as name suggest it setup the opengl driver for termux) and user type 4=skip then it will go for everything using virgl option (it's kind of same as exp_termux_gl_hw_answer), then when it done for termux part it will call distro_hw_questions to setup hwa for the selected proot-distro
-function hw_questions() {
-	banner
-	exp_vulkan_support
-	# this part is for those need some hack or some other driver alongside it
-	# to get the opengl access
-	if [[ "$exp_termux_vulkan_hw_answer" == "vulkan_wrapper_android" ]] || [[ "$exp_termux_vulkan_hw_answer" == "vulkan_wrapper_android_leegaos_fork" ]]; then
-		exp_termux_gl_hw_support
-	# this part is for those can give us opengl access either through zink
-	# or have a native opengl driver inside it
-	elif [[ "$exp_termux_vulkan_hw_answer" == "freedreno_kgsl" ]] || [[ "$exp_termux_vulkan_hw_answer" == "mesa_freedreno" ]] || [[ "$exp_termux_vulkan_hw_answer" == "mesa_zink_freedreno" ]]; then
-		termux_hw_answer="${exp_termux_vulkan_hw_answer}"
-		distro_hw_questions
-	# this will run if you select skip and don't want to use those
-	# android-vulkan-wrapper / bionic-vulkan-wrapper / turnip / kgsl
-	elif [[ "$exp_termux_vulkan_hw_answer" == "skip" ]]; then
-		print_msg "${BOLD}First Read This"
+		# shellcheck disable=SC2154
+		case "$exp_termux_gl_hw_answer_num" in
+		1) exp_termux_gl_hw_answer="virgl" ;;
+		2) exp_termux_gl_hw_answer="virgl_angle" ;;
+		3) exp_termux_gl_hw_answer="virgl_vulkan" ;;
+		esac
+	else
+		print_msg "Zink uses the vulkan driver you selected, the VirGL ones don't:${NC}
+• No.1 Zink: try this one first\n
+• No.2 Zink(mesa-zink driver from tur) (legacy Mesa 22 build)\n
+• No.5 to No.7 VirGL: use them when zink doesn't work on your device\n
+• No.8 Skip: no opengl driver, opengl will be software rendered (llvmpipe)\n
+"
 		echo
-		print_msg "${B}This:- https://github.com/${REPO_OWNER}/${REPO_NAME}/blob/$REPO_BRANCH_MAIN/docs/hw-acceleration.md"
+		echo "${Y}1. Zink (OpenGL Over Your Vulkan Driver)${NC}"
 		echo
-		print_msg "${BOLD}Select Hardware Acceleration API"
+		echo "${Y}2. Zink (Legacy Mesa 22 Build)${NC}"
 		echo
-		echo "${Y}1. Mesa Zink (Vulkan-to-OpenGL) + VirGL Server${NC}"
+		echo "${Y}3. Zink + VirGL Server${NC}"
 		echo
-		echo "${Y}2. VirGL (GPU Passthrough via virpipe)${NC}"
+		echo "${Y}4. Zink Inside The VirGL Server${NC}"
 		echo
-		echo "${Y}3. VirGL + ANGLE OpenGL Backend${NC}"
+		echo "${Y}5. VirGL (GPU Passthrough via virpipe)${NC}"
 		echo
-		echo "${Y}4. VirGL + ANGLE Vulkan Backend${NC}"
+		echo "${Y}6. VirGL + ANGLE OpenGL Backend${NC}"
 		echo
-		echo "${Y}5. Mesa Zink + VirGL (Vulkan-to-OpenGL via VirGL)${NC}"
+		echo "${Y}7. VirGL + ANGLE Vulkan Backend${NC}"
 		echo
-		select_an_option 5 1 termux_hw_answer_num
+		echo "${Y}8. Skip (No OpenGL Driver, Software Rendering)${NC}"
+		echo
+		select_an_option 8 1 exp_termux_gl_hw_answer_num
 
 		# set gpu api name
 		# shellcheck disable=SC2154
-		case "$termux_hw_answer_num" in
-		1) termux_hw_answer="zink" ;;
-		2) termux_hw_answer="virgl" ;;
-		3) termux_hw_answer="virgl_angle" ;;
-		4) termux_hw_answer="virgl_vulkan" ;;
-		5) termux_hw_answer="zink_virgl" ;;
+		case "$exp_termux_gl_hw_answer_num" in
+		1) exp_termux_gl_hw_answer="zink_with_mesa" ;;
+		2) exp_termux_gl_hw_answer="zink_with_mesa_zink" ;;
+		3) exp_termux_gl_hw_answer="zink" ;;
+		4) exp_termux_gl_hw_answer="zink_virgl" ;;
+		5) exp_termux_gl_hw_answer="virgl" ;;
+		6) exp_termux_gl_hw_answer="virgl_angle" ;;
+		7) exp_termux_gl_hw_answer="virgl_vulkan" ;;
+		8) exp_termux_gl_hw_answer="skip" ;;
 		esac
-		distro_hw_questions
 	fi
+	termux_hw_answer="${exp_termux_gl_hw_answer}"
+}
+
+# some vulkan driver selections already decide how opengl will work, in that
+# case the opengl question is pointless so it get skipped
+# returns 0 when termux_hw_answer was set from the vulkan answer
+function resolve_termux_hw_answer() {
+	if [[ "$exp_termux_vulkan_hw_answer" == "freedreno_kgsl" ]]; then
+		# it ships Fryzek's kgsl gallium driver, so opengl is native here
+		termux_hw_answer="freedreno_kgsl"
+		return 0
+	fi
+	return 1
+}
+
+#NOTE: it first call exp_vulkan_support to select the vulkan driver, then unless
+# that driver already gives us opengl (freedreno kgsl) it call
+# quetion_termux_hw_answer to setup the opengl driver for termux, and at the end
+# distro_hw_questions to setup hwa for the selected proot-distro
+function hw_questions() {
+	banner
+	exp_vulkan_support
+	if ! resolve_termux_hw_answer; then
+		quetion_termux_hw_answer
+	fi
+	distro_hw_questions
 }
 
 # distro related questions
@@ -2201,33 +2217,37 @@ function define_value_name() {
 	fi
 	# Vulkan Driver
 	if [[ "$exp_termux_vulkan_hw_answer" == "vulkan_wrapper_android" ]]; then
-		vulkan_driver_name="Vulkak Wrapper Android"
-	elif [[ "$exp_termux_vulkan_hw_answer" == "vulkan_wrapper_android_leegaos_fork" ]]; then
-		vulkan_driver_name="Vulkan Wrapper Android (leegao's fork)"
+		vulkan_driver_name="Android Vulkan Wrapper"
+	elif [[ "$exp_termux_vulkan_hw_answer" == "vulkan_wrapper_android_pipetto_crypto" ]]; then
+		vulkan_driver_name="Android Vulkan Wrapper (pipetto-crypto's fork)"
 	elif [[ "$exp_termux_vulkan_hw_answer" == "mesa_freedreno" ]]; then
-		vulkan_driver_name="Mesa ICD Freedreno"
-	elif [[ "$exp_termux_vulkan_hw_answer" == "mesa_zink_freedreno" ]]; then
-		vulkan_driver_name="Mesa Zink ICD Freedreno"
+		vulkan_driver_name="Turnip"
+	elif [[ "$exp_termux_vulkan_hw_answer" == "freedreno_kgsl" ]]; then
+		vulkan_driver_name="Turnip (with Fryzek's KGSL)"
+	elif [[ "$exp_termux_vulkan_hw_answer" == "skip" ]]; then
+		vulkan_driver_name="Not Installed"
 	else
 		vulkan_driver_name="Might Not Support"
 	fi
 	# OpenGL Driver
-	if [[ "$termux_hw_answer" == "zink" ]]; then
-		opengl_driver_name="Zink"
-	elif [[ "$termux_hw_answer" == "virgl" ]]; then
-		opengl_driver_name="Virgl"
-	elif [[ "$termux_hw_answer" == "virgl_angle" ]]; then
-		opengl_driver_name="Virgl Angle"
-	elif [[ "$termux_hw_answer" == "virgl_vulkan" ]]; then
-		opengl_driver_name="VIRGL ANGLE (Vulkan)"
-	elif [[ "$termux_hw_answer" == "zink_virgl" ]]; then
-		opengl_driver_name="OpenGL ES (ZINK VIRGL)"
-	elif [[ "$termux_hw_answer" == "zink_with_mesa" ]]; then
-		opengl_driver_name="The vulkan-wrapper-android Driver With Mesa"
+	if [[ "$termux_hw_answer" == "zink_with_mesa" ]]; then
+		opengl_driver_name="Zink (Mesa)"
 	elif [[ "$termux_hw_answer" == "zink_with_mesa_zink" ]]; then
-		opengl_driver_name="The vulkan-wrapper-android Driver With Mesa-Zink"
-	elif [[ "$termux_hw_answer" == "freedreno" ]]; then
-		opengl_driver_name="Freedreno"
+		opengl_driver_name="Zink (Legacy Mesa 22)"
+	elif [[ "$termux_hw_answer" == "zink" ]]; then
+		opengl_driver_name="Zink + VirGL Server"
+	elif [[ "$termux_hw_answer" == "zink_virgl" ]]; then
+		opengl_driver_name="Zink Inside The VirGL Server"
+	elif [[ "$termux_hw_answer" == "virgl" ]]; then
+		opengl_driver_name="VirGL"
+	elif [[ "$termux_hw_answer" == "virgl_angle" ]]; then
+		opengl_driver_name="VirGL + ANGLE (OpenGL Backend)"
+	elif [[ "$termux_hw_answer" == "virgl_vulkan" ]]; then
+		opengl_driver_name="VirGL + ANGLE (Vulkan Backend)"
+	elif [[ "$termux_hw_answer" == "freedreno_kgsl" ]]; then
+		opengl_driver_name="Freedreno (Fryzek's KGSL)"
+	elif [[ "$termux_hw_answer" == "skip" ]]; then
+		opengl_driver_name="Not Installed (Software Rendering)"
 	else
 		opengl_driver_name="Might Not Support"
 	fi
@@ -2270,36 +2290,22 @@ function define_value_name() {
 		distro_hw_acc_confirmation="Disabled"
 	fi
 	# Distro Vulkan Driver
-	if [[ "$pd_hw_answer" == "zink" ]]; then
+	if [[ "$pd_hw_answer" == "virgl" ]]; then
 		distro_vulkan_driver="Not Supported"
-	elif [[ "$pd_hw_answer" == "virgl" ]]; then
-		distro_vulkan_driver="Not Supported"
-	elif [[ "$pd_hw_answer" == "turnip" ]]; then
+	elif [[ "$pd_hw_answer" == "turnip" ]] || [[ "$pd_hw_answer" == "freedreno_kgsl" ]]; then
 		distro_vulkan_driver="Turnip"
-	elif [[ "$pd_hw_answer" == "freedreno" ]]; then
-		distro_vulkan_driver="Freedreno"
 	else
 		distro_vulkan_driver="Unable to select"
 	fi
 	# Distro OpenGL Driver
-	if [[ "$pd_hw_answer" == "zink" ]]; then
-		distro_opengl_driver="Zink"
-	elif [[ "$pd_hw_answer" == "virgl" ]]; then
-		distro_opengl_driver="Virgl"
-	elif [[ "$pd_hw_answer" == "virgl" ]]; then
-		distro_opengl_driver="Virgl"
+	if [[ "$pd_hw_answer" == "virgl" ]]; then
+		distro_opengl_driver="VirGL"
 	elif [[ "$pd_hw_answer" == "turnip" ]]; then
-		distro_opengl_driver="Turnip"
-	elif [[ "$pd_hw_answer" == "freedreno" ]]; then
-		distro_opengl_driver="Freedreno"
+		distro_opengl_driver="Zink (Over Turnip)"
+	elif [[ "$pd_hw_answer" == "freedreno_kgsl" ]]; then
+		distro_opengl_driver="Freedreno (Fryzek's KGSL)"
 	else
 		distro_opengl_driver="Unable to select"
-	fi
-	# Distro Terminal Utilities
-	if [[ "$terminal_utility_setup_answer" == "y" ]]; then
-		distro_terminal_utility_setup_confirmation="Yes"
-	elif [[ "$terminal_utility_setup_answer" == "n" ]]; then
-		distro_terminal_utility_setup_confirmation="No"
 	fi
 }
 
@@ -2359,7 +2365,6 @@ function print_conf_info() {
 		echo "   • Vulkan Driver: ${distro_vulkan_driver}"
 		echo "   • OpenGL Driver: ${distro_opengl_driver}"
 	fi
-	echo "   • Terminal Utilities: ${distro_terminal_utility_setup_confirmation}"
 	sleep 0.015
 	# Re-enable keyboard interruptions
 	trap - SIGINT SIGTSTP
@@ -3243,7 +3248,7 @@ function setup_mic_permission() {
 	if [[ "$IS_TERMUX_API_INSTALLED" == true ]]; then
 		print_msg "Setting up mic permission..."
 		echo
-		print_msg "Please grant mic permission"
+		print_msg "Please grant mic permission (if asked)"
 		echo
 		sleep 2
 		termux-microphone-record -l 1 -f /dev/null >/dev/null 2>&1 &
@@ -3564,7 +3569,7 @@ function setup_vncstart_cmd() {
 			            echo "[☓] Invalid option: \$1"
 			            show_vncstart_help
 			        else
-			            export ${set_to_export}
+			            export ${set_to_export} ${gpu_environment_variable}
 			            if [[ -n "\${initialize_server_cmd// /}" ]]; then
 							eval "\$initialize_server_cmd" &
 						fi
@@ -4905,7 +4910,7 @@ function terminal_utility_setup() {
 		download_file "$TERMUX_PREFIX/bin/termux-ssh" "$REPO_RAW_URL/refs/heads/$REPO_BRANCH_MAIN/other/termux-ssh" && chmod +x "$TERMUX_PREFIX/bin/termux-ssh"
 		download_file "$TERMUX_PREFIX/bin/termux-fastest-repo" "$REPO_RAW_URL/refs/heads/$REPO_BRANCH_MAIN/other/termux-fastest-repo"
 		chmod +x "$TERMUX_PREFIX/bin/termux-fastest-repo"
-		sed -i "/^source \"\$TERMUX_PREFIX\/bin\/termux-setup-package-manager\"/i source $TERMUX_PREFIX/etc/termux-desktop/common_functions || exit 1" $TERMUX_PREFIX/bin/termux-fastest-repo
+		sed -i "/^source \"\$TERMUX_PREFIX\/bin\/termux-setup-package-manager\"/i source $TERMUX_PREFIX/etc/termux-desktop/common_functions || exit 1" "$TERMUX_PREFIX/bin/termux-fastest-repo"
 		download_file "$TERMUX_PREFIX/bin/termux-color" "$REPO_RAW_URL/refs/heads/$REPO_BRANCH_MAIN/other/termux-color"
 		chmod +x "$TERMUX_PREFIX/bin/termux-color"
 		download_file "$TERMUX_PREFIX/bin/termux-nf" "$REPO_RAW_URL/refs/heads/$REPO_BRANCH_MAIN/other/termux-nf"
