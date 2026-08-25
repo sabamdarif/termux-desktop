@@ -6,7 +6,12 @@ BLUE='\033[0;34m'
 YELLOW='\033[1;33m'
 NC='\033[0m'
 
-WORKDIR="$(pwd)/turnip_workdir"
+WORKDIR="$(pwd)/mesa_adreno_workdir"
+
+MESA_GIT_URL="https://github.com/lfdevs/mesa-for-android-container.git"
+# the drivers get installed in their own prefix so nothing the distro owns get
+# overwritten, that way one build works on every distro
+INSTALL_PREFIX="/opt/mesa-adreno"
 
 log_info() {
 	echo -e "${BLUE}[INFO]${NC} $1"
@@ -25,23 +30,24 @@ log_error() {
 }
 
 SCRIPT_DIR="$(dirname "$(realpath "$0")")"
-PATCHES_DIR="$SCRIPT_DIR/patches"
 
-if [ -z "${MESA_VERSION}" ]; then
-	log_error "MESA_VERSION environment variable is required but not provided"
-	log_error "Please set MESA_VERSION before running this script"
+if [ -z "${MESA_ADRENO_TAG}" ]; then
+	log_error "MESA_ADRENO_TAG environment variable is required but not provided"
+	log_error "Please set MESA_ADRENO_TAG before running this script"
 	echo ""
 	echo "Example usage:"
-	echo "  MESA_VERSION=25.1.5 $0 aarch64"
+	echo "  MESA_ADRENO_TAG=mesa-26.3.0-devel-20260824 $0 aarch64"
 	exit 1
 fi
 
-MESA_ARCHIVE_URL="https://archive.mesa3d.org/mesa-${MESA_VERSION}.tar.xz"
+# the release assets and the pin inside enable-hw-acceleration drop the
+# "mesa-" prefix, so mesa-26.3.0-devel-20260824 becomes 26.3.0-devel-20260824
+MESA_ADRENO_VERSION="${MESA_ADRENO_TAG#mesa-}"
 
 BUILD_ARCHITECTURES=()
 
 show_usage() {
-	echo "Usage: MESA_VERSION=x.x.x $0 [architecture]"
+	echo "Usage: MESA_ADRENO_TAG=mesa-x.x.x-devel-xxxxxxxx $0 [architecture]"
 	echo ""
 	echo "Arguments:"
 	echo "  aarch64    Build only for ARM64 (64-bit) - native build"
@@ -49,22 +55,23 @@ show_usage() {
 	echo "  <none>     Build for aarch64 only (default)"
 	echo ""
 	echo "Environment Variables:"
-	echo "  MESA_VERSION    Mesa version to build (REQUIRED - no default)"
+	echo "  MESA_ADRENO_TAG    Tag of lfdevs/mesa-for-android-container to build"
+	echo "                     (REQUIRED - no default). Use a mesa-* tag, the"
+	echo "                     turnip-* tags don't carry the KGSL gallium driver."
 	echo ""
 	echo "Examples:"
-	echo "  MESA_VERSION=25.1.5 $0              # Build for aarch64"
-	echo "  MESA_VERSION=25.1.5 $0 aarch64      # Build for ARM64"
-	echo "  MESA_VERSION=25.1.5 $0 arm          # Build for ARM32 (QEMU)"
+	echo "  MESA_ADRENO_TAG=mesa-26.3.0-devel-20260824 $0 aarch64"
+	echo "  MESA_ADRENO_TAG=mesa-26.3.0-devel-20260824 $0 arm"
 	echo ""
-	echo "Patches:"
-	echo "  The script will automatically apply patches from the 'patches' directory"
-	echo "  located in the same directory as this script. Patches are applied in"
-	echo "  numerical order (0001, 0002, 0003, etc.)"
+	echo "Output:"
+	echo "  mesa-adreno-<version>-<arch>.zip, it carry both the native adreno"
+	echo "  vulkan driver (Turnip) and the native adreno opengl driver"
+	echo "  (Fryzek's KGSL) installed under ${INSTALL_PREFIX}"
 	exit 1
 }
 
 parse_arguments() {
-	log_info "Using Mesa version: $MESA_VERSION"
+	log_info "Using tag: $MESA_ADRENO_TAG (version $MESA_ADRENO_VERSION)"
 
 	if [ $# -eq 0 ]; then
 		# No arguments - build for aarch64 only
@@ -99,99 +106,19 @@ prepare_mesa() {
 	log_info "Preparing Mesa source..."
 
 	cd "$WORKDIR"
-	local archive_file="mesa-${MESA_VERSION}.tar.xz"
-	local extracted_dir="mesa-${MESA_VERSION}"
-
-	if [ ! -f "$archive_file" ]; then
-		log_info "Downloading Mesa $MESA_VERSION archive..."
-		curl -L "$MESA_ARCHIVE_URL" \
-			--output "$archive_file" \
-			--progress-bar
-
-		if [ ! -f "$archive_file" ]; then
-			log_error "Failed to download Mesa archive"
-			exit 1
-		fi
-		log_success "Mesa archive downloaded"
-	else
-		log_info "Using existing Mesa archive: $archive_file"
-	fi
 
 	if [ -d mesa ]; then
 		log_warning "Removing existing Mesa directory"
 		rm -rf mesa
 	fi
 
-	log_info "Extracting Mesa archive..."
-	tar -xf "$archive_file"
-
-	if [ -d "$extracted_dir" ]; then
-		mv "$extracted_dir" mesa
-	else
-		log_error "Extracted directory not found: $extracted_dir"
-		exit 1
-	fi
+	log_info "Cloning $MESA_GIT_URL at $MESA_ADRENO_TAG..."
+	# every patch this project used to carry is already in this fork, so there
+	# is nothing to apply on top of it anymore
+	git clone --depth 1 --branch "$MESA_ADRENO_TAG" "$MESA_GIT_URL" mesa
 
 	cd mesa
-
-	log_success "Mesa $MESA_VERSION prepared"
-}
-
-apply_patches() {
-	log_info "Checking for patches in: $PATCHES_DIR"
-
-	if [ ! -d "$PATCHES_DIR" ]; then
-		log_info "No patches directory found, skipping patch application"
-		return 0
-	fi
-
-	cd "$WORKDIR/mesa"
-
-	local patch_files=()
-	while IFS= read -r -d '' patch_file; do
-		patch_files+=("$patch_file")
-	done < <(find "$PATCHES_DIR" -name "*.patch" -type f -print0 | sort -z)
-
-	if [ ${#patch_files[@]} -eq 0 ]; then
-		log_info "No patch files found in patches directory, skipping patch application"
-		return 0
-	fi
-
-	log_info "Found ${#patch_files[@]} patch file(s) to apply"
-
-	for patch_file in "${patch_files[@]}"; do
-		local patch_name
-		patch_name=$(basename "$patch_file")
-		log_info "Applying patch: $patch_name"
-
-		if git apply --check "$patch_file" >/dev/null 2>&1; then
-			if git apply "$patch_file"; then
-				log_success "Successfully applied patch: $patch_name"
-			else
-				log_error "Failed to apply patch: $patch_name"
-				log_error "Patch application failed, exiting"
-				exit 1
-			fi
-		else
-			log_warning "Git apply check failed for $patch_name, trying patch command"
-			if patch -p1 --dry-run <"$patch_file" >/dev/null 2>&1; then
-				if patch -p1 <"$patch_file"; then
-					log_success "Successfully applied patch: $patch_name"
-				else
-					log_error "Failed to apply patch: $patch_name"
-					log_error "Patch application failed, exiting"
-					exit 1
-				fi
-			else
-				log_error "Patch $patch_name cannot be applied (dry-run failed)"
-				log_error "This may indicate the patch is incompatible with Mesa version $MESA_VERSION"
-				log_error "Patch application failed, exiting"
-				exit 1
-			fi
-		fi
-	done
-
-	log_success "All patches applied successfully"
+	log_success "Mesa source prepared ($(git describe --tags --always))"
 }
 
 build_for_architecture() {
@@ -205,7 +132,7 @@ build_for_architecture() {
 }
 
 build_aarch64() {
-	log_info "Building Turnip for aarch64 (native)..."
+	log_info "Building the adreno drivers for aarch64 (native)..."
 
 	cd "$WORKDIR/mesa"
 
@@ -224,35 +151,27 @@ build_aarch64() {
 		log_info "Using ccache directory: $CCACHE_DIR"
 	fi
 
-	# Use LLVM 20 if available, otherwise use system default
-	local llvm_config=""
-	if [ -f "/usr/lib/llvm-20/bin/llvm-config" ]; then
-		llvm_config="/usr/lib/llvm-20/bin/llvm-config"
-		export LLVM_CONFIG="$llvm_config"
-		log_info "Using LLVM 20: $llvm_config"
-	fi
-
-	# Minimal Turnip-only configuration
+	# gallium freedreno (Fryzek's KGSL backend) gives native opengl, vulkan
+	# freedreno (Turnip) gives native vulkan. llvmpipe is left out on purpose:
+	# it would pin a libLLVM version and the distro's own mesa already provide
+	# software rendering for the --nogpu fallback
 	CC="ccache gcc" CXX="ccache g++" meson setup "$build_dir" \
-		--prefix=/usr \
+		--prefix="$INSTALL_PREFIX" \
 		-Dplatforms=x11,wayland \
-		-Dgallium-drivers= \
+		-Dgallium-drivers=freedreno,zink,virgl \
 		-Dgallium-va=disabled \
 		-Dgallium-mediafoundation=disabled \
 		-Dvulkan-drivers=freedreno \
 		-Dvulkan-layers= \
-		-Dgles1=disabled \
-		-Dgles2=disabled \
-		-Dopengl=false \
-		-Dgbm=disabled \
-		-Dglx=disabled \
-		-Dxlib-lease=disabled \
 		-Dfreedreno-kmds=kgsl \
-		-Degl=disabled \
+		-Degl=enabled \
+		-Dgles1=disabled \
+		-Dgles2=enabled \
+		-Dglx=dri \
 		-Dglvnd=disabled \
+		-Dllvm=disabled \
 		-Dintel-rt=disabled \
 		-Dmicrosoft-clc=disabled \
-		-Dllvm=disabled \
 		-Dvalgrind=disabled \
 		-Dbuild-tests=false \
 		-Dlibunwind=disabled \
@@ -267,7 +186,7 @@ build_aarch64() {
 }
 
 build_arm32() {
-	log_info "Building Turnip for ARM32 using QEMU..."
+	log_info "Building the adreno drivers for ARM32 using QEMU..."
 
 	cd "$WORKDIR"
 
@@ -302,7 +221,7 @@ WORKDIR /build
 EOF
 
 	log_info "Building Docker image for ARM32..."
-	docker build -f Dockerfile.arm32 -t mesa-arm32-builder:latest .
+	docker build -f Dockerfile.arm32 -t mesa-adreno-arm32-builder:latest .
 
 	log_info "Running ARM32 build in Docker container..."
 	docker run --rm \
@@ -310,7 +229,7 @@ EOF
 		-v "$WORKDIR/mesa:/build/mesa" \
 		-v "$ccache_dir:/root/.ccache" \
 		-e CCACHE_DIR=/root/.ccache \
-		mesa-arm32-builder:latest \
+		mesa-adreno-arm32-builder:latest \
 		bash -c "
 			set -e
 			cd /build/mesa
@@ -321,25 +240,22 @@ EOF
 
 			# Configure Mesa
 			CC='ccache gcc' CXX='ccache g++' meson setup build-arm \
-				--prefix=/usr \
+				--prefix=$INSTALL_PREFIX \
 				-Dplatforms=x11,wayland \
-				-Dgallium-drivers= \
+				-Dgallium-drivers=freedreno,zink,virgl \
 				-Dgallium-va=disabled \
 				-Dgallium-mediafoundation=disabled \
 				-Dvulkan-drivers=freedreno \
 				-Dvulkan-layers= \
-				-Dgles1=disabled \
-				-Dgles2=disabled \
-				-Dopengl=false \
-				-Dgbm=disabled \
-				-Dglx=disabled \
-				-Dxlib-lease=disabled \
 				-Dfreedreno-kmds=kgsl \
-				-Degl=disabled \
+				-Degl=enabled \
+				-Dgles1=disabled \
+				-Dgles2=enabled \
+				-Dglx=dri \
 				-Dglvnd=disabled \
+				-Dllvm=disabled \
 				-Dintel-rt=disabled \
 				-Dmicrosoft-clc=disabled \
-				-Dllvm=disabled \
 				-Dvalgrind=disabled \
 				-Dbuild-tests=false \
 				-Dlibunwind=disabled \
@@ -360,12 +276,7 @@ EOF
 			chmod -R 777 /build/mesa/install-arm
 		"
 
-	if [ $? -eq 0 ]; then
-		log_success "ARM32 build completed successfully"
-	else
-		log_error "ARM32 build failed"
-		exit 1
-	fi
+	log_success "ARM32 build completed successfully"
 
 	# Cleanup
 	rm -f Dockerfile.arm32
@@ -374,9 +285,9 @@ EOF
 package_architecture() {
 	local arch="$1"
 
-	log_info "Packaging Turnip for $arch..."
+	log_info "Packaging the adreno drivers for $arch..."
 
-	local package_dir="$WORKDIR/turnip_package_${arch}"
+	local package_dir="$WORKDIR/mesa_adreno_package_${arch}"
 	mkdir -p "$package_dir"
 	rm -rf "${package_dir:?}"/*
 
@@ -398,6 +309,23 @@ package_architecture() {
 		DESTDIR="$package_dir" meson install -C "build-aarch64"
 		log_success "Packaged Mesa installation for $arch"
 	fi
+
+	# enable-hw-acceleration point VK_ICD_FILENAMES at
+	# freedreno_icd.<termux arch>.json, meson names the file after the build
+	# machine cpu (armv7l and so on) so add an alias when they don't match
+	local icd_dir="${package_dir}${INSTALL_PREFIX}/share/vulkan/icd.d"
+	local expected_icd="${icd_dir}/freedreno_icd.${arch}.json"
+	if [ -d "$icd_dir" ] && [ ! -f "$expected_icd" ]; then
+		local found_icd
+		found_icd="$(find "$icd_dir" -name 'freedreno_icd.*.json' | head -1)"
+		if [ -n "$found_icd" ]; then
+			cp "$found_icd" "$expected_icd"
+			log_info "Added ICD alias $(basename "$expected_icd") from $(basename "$found_icd")"
+		else
+			log_error "No freedreno ICD found in $icd_dir"
+			return 1
+		fi
+	fi
 }
 
 create_package() {
@@ -405,8 +333,8 @@ create_package() {
 
 	log_info "Creating zip package for $arch..."
 
-	local package_name="turnip-${MESA_VERSION}-${arch}"
-	local package_dir="$WORKDIR/turnip_package_${arch}"
+	local package_name="mesa-adreno-${MESA_ADRENO_VERSION}-${arch}"
+	local package_dir="$WORKDIR/mesa_adreno_package_${arch}"
 
 	cd "$package_dir"
 
@@ -428,14 +356,15 @@ create_package() {
 main() {
 	parse_arguments "$@"
 
-	log_info "Starting Turnip builder for architectures: ${BUILD_ARCHITECTURES[*]} (Mesa $MESA_VERSION)"
+	log_info "Starting the adreno driver builder for architectures: ${BUILD_ARCHITECTURES[*]}"
+	log_info "Source: $MESA_GIT_URL @ $MESA_ADRENO_TAG"
+	log_info "Install prefix: $INSTALL_PREFIX"
 	log_info "Build mode: Native for ARM64, QEMU for ARM32"
 
 	mkdir -p "$WORKDIR"
 	cd "$WORKDIR"
 
 	prepare_mesa
-	apply_patches
 
 	local successful_builds=()
 	local failed_builds=()
@@ -469,7 +398,7 @@ main() {
 	if [ ${#successful_builds[@]} -gt 0 ]; then
 		log_success "Successfully built and packaged: ${successful_builds[*]}"
 		for arch in "${successful_builds[@]}"; do
-			local package_name="turnip-${MESA_VERSION}-${arch}.zip"
+			local package_name="mesa-adreno-${MESA_ADRENO_VERSION}-${arch}.zip"
 			log_info "  → $WORKDIR/$package_name"
 		done
 	fi

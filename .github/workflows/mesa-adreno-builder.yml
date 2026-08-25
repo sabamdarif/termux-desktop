@@ -1,19 +1,17 @@
-name: Build Turnip
+name: Build Mesa Adreno (Turnip + Fryzek's KGSL)
 on:
     push:
         paths:
-            - ".github/workflows/turnip-builder.yml"
-            - ".github/scripts/turnip.sh"
-            - ".github/scripts/patches/**"
+            - ".github/workflows/mesa-adreno-builder.yml"
+            - ".github/scripts/mesa-adreno.sh"
     pull_request:
         paths:
-            - ".github/workflows/turnip-builder.yml"
-            - ".github/scripts/turnip.sh"
-            - ".github/scripts/patches/**"
+            - ".github/workflows/mesa-adreno-builder.yml"
+            - ".github/scripts/mesa-adreno.sh"
     workflow_dispatch:
         inputs:
-            mesa_version:
-                description: "Mesa version to build (REQUIRED - no default)"
+            mesa_adreno_tag:
+                description: "lfdevs/mesa-for-android-container tag to build, e.g. mesa-26.3.0-devel-20260824 (REQUIRED - no default)"
                 required: true
                 type: string
             action_type:
@@ -25,9 +23,6 @@ on:
                     - release
                     - build_only
 
-env:
-    MESA_VERSION: ${{ github.event.inputs.mesa_version || '' }}
-
 permissions:
     contents: write
 
@@ -35,37 +30,51 @@ jobs:
     validate-inputs:
         runs-on: ubuntu-latest
         outputs:
-            mesa_version: ${{ steps.validate.outputs.mesa_version }}
+            mesa_adreno_tag: ${{ steps.validate.outputs.mesa_adreno_tag }}
+            mesa_adreno_version: ${{ steps.validate.outputs.mesa_adreno_version }}
             action_type: ${{ steps.validate.outputs.action_type }}
         steps:
-            - name: Checkout repository (for auto version detection)
-              if: github.event_name == 'push' || github.event_name == 'pull_request'
+            - name: Checkout repository
               uses: actions/checkout@v7
 
-            - name: Validate Mesa version
+            - name: Validate tag
               id: validate
               run: |
                   if [ "${{ github.event_name }}" = "push" ] || [ "${{ github.event_name }}" = "pull_request" ]; then
-                    # For push/PR events, extract TURNIP_MESA_VERSION from enable-hw-acceleration
-                    MESA_VERSION=$(grep -oP 'TURNIP_MESA_VERSION="\K[^"]+' enable-hw-acceleration 2>/dev/null || echo "")
-                    if [ -z "$MESA_VERSION" ]; then
-                      echo "ERROR: Could not extract TURNIP_MESA_VERSION from enable-hw-acceleration"
+                    # For push/PR events, extract the pin from enable-hw-acceleration
+                    MESA_ADRENO_VERSION=$(grep -oP 'MESA_ADRENO_VERSION="\K[^"]+' enable-hw-acceleration 2>/dev/null || echo "")
+                    if [ -z "$MESA_ADRENO_VERSION" ]; then
+                      echo "ERROR: Could not extract MESA_ADRENO_VERSION from enable-hw-acceleration"
                       exit 1
                     fi
+                    MESA_ADRENO_TAG="mesa-${MESA_ADRENO_VERSION}"
                     ACTION_TYPE="build_only"
-                    echo "Auto-triggered build — detected Mesa version: $MESA_VERSION"
+                    echo "Auto-triggered build — detected tag: $MESA_ADRENO_TAG"
                   else
-                    MESA_VERSION="${{ env.MESA_VERSION }}"
-                    if [ -z "$MESA_VERSION" ]; then
-                      echo "ERROR: MESA_VERSION is required but not provided"
-                      echo "Please specify a Mesa version when triggering this workflow manually"
+                    MESA_ADRENO_TAG="${{ github.event.inputs.mesa_adreno_tag }}"
+                    if [ -z "$MESA_ADRENO_TAG" ]; then
+                      echo "ERROR: mesa_adreno_tag is required but not provided"
                       exit 1
                     fi
+                    case "$MESA_ADRENO_TAG" in
+                      mesa-*) ;;
+                      turnip-*)
+                        echo "ERROR: turnip-* tags only carry the Turnip driver, they don't have"
+                        echo "       the KGSL gallium driver in them. Use a mesa-* tag."
+                        exit 1
+                        ;;
+                      *)
+                        echo "ERROR: expected a mesa-* tag, got: $MESA_ADRENO_TAG"
+                        exit 1
+                        ;;
+                    esac
+                    MESA_ADRENO_VERSION="${MESA_ADRENO_TAG#mesa-}"
                     ACTION_TYPE="${{ github.event.inputs.action_type }}"
                   fi
-                  echo "mesa_version=$MESA_VERSION" >> $GITHUB_OUTPUT
+                  echo "mesa_adreno_tag=$MESA_ADRENO_TAG" >> $GITHUB_OUTPUT
+                  echo "mesa_adreno_version=$MESA_ADRENO_VERSION" >> $GITHUB_OUTPUT
                   echo "action_type=$ACTION_TYPE" >> $GITHUB_OUTPUT
-                  echo "Using Mesa version: $MESA_VERSION"
+                  echo "Using tag: $MESA_ADRENO_TAG (version $MESA_ADRENO_VERSION)"
                   echo "Action type: $ACTION_TYPE"
 
     build-ubuntu-arm64:
@@ -116,18 +125,18 @@ jobs:
               uses: actions/cache@v6
               with:
                   path: ~/.ccache
-                  key: ccache-turnip-${{ runner.os }}-${{ runner.arch }}-${{ matrix.arch }}-${{ github.run_id }}-${{ github.run_attempt }}
+                  key: ccache-mesa-adreno-${{ runner.os }}-${{ runner.arch }}-${{ matrix.arch }}-${{ github.run_id }}-${{ github.run_attempt }}
                   restore-keys: |
-                      ccache-turnip-${{ runner.os }}-${{ runner.arch }}-${{ matrix.arch }}-
+                      ccache-mesa-adreno-${{ runner.os }}-${{ runner.arch }}-${{ matrix.arch }}-
 
             - name: Cache ccache (ARM32)
               if: matrix.arch == 'arm'
               uses: actions/cache@v6
               with:
                   path: ./.ccache-arm32
-                  key: ccache-turnip-arm32-${{ github.run_id }}-${{ github.run_attempt }}
+                  key: ccache-mesa-adreno-arm32-${{ github.run_id }}-${{ github.run_attempt }}
                   restore-keys: |
-                      ccache-turnip-arm32-
+                      ccache-mesa-adreno-arm32-
 
             - name: Configure ccache (ARM64)
               if: matrix.arch == 'aarch64'
@@ -138,14 +147,14 @@ jobs:
                   ccache --zero-stats
                   ccache --show-stats
 
-            - name: Build Turnip for ${{ matrix.arch }}
+            - name: Build for ${{ matrix.arch }}
               env:
-                  MESA_VERSION: ${{ needs.validate-inputs.outputs.mesa_version }}
+                  MESA_ADRENO_TAG: ${{ needs.validate-inputs.outputs.mesa_adreno_tag }}
                   CCACHE_DIR: ~/.ccache
               run: |
                   cd .github/scripts
-                  chmod +x turnip.sh
-                  MESA_VERSION="${MESA_VERSION}" ./turnip.sh ${{ matrix.arch }}
+                  chmod +x mesa-adreno.sh
+                  MESA_ADRENO_TAG="${MESA_ADRENO_TAG}" ./mesa-adreno.sh ${{ matrix.arch }}
 
             - name: Show ccache stats (ARM64)
               if: matrix.arch == 'aarch64'
@@ -165,28 +174,28 @@ jobs:
               uses: actions/cache/save@v6
               with:
                   path: ~/.ccache
-                  key: ccache-turnip-${{ runner.os }}-${{ runner.arch }}-${{ matrix.arch }}-${{ github.run_id }}-${{ github.run_attempt }}
+                  key: ccache-mesa-adreno-${{ runner.os }}-${{ runner.arch }}-${{ matrix.arch }}-${{ github.run_id }}-${{ github.run_attempt }}
 
             - name: Save ccache (ARM32)
               if: matrix.arch == 'arm'
               uses: actions/cache/save@v6
               with:
                   path: ./.ccache-arm32
-                  key: ccache-turnip-arm32-${{ github.run_id }}-${{ github.run_attempt }}
+                  key: ccache-mesa-adreno-arm32-${{ github.run_id }}-${{ github.run_attempt }}
 
             - name: Upload ${{ matrix.arch }} artifacts
               uses: actions/upload-artifact@v7
               with:
-                  name: turnip-${{ needs.validate-inputs.outputs.mesa_version }}-${{ matrix.arch }}
-                  path: .github/scripts/turnip_workdir/turnip-${{ needs.validate-inputs.outputs.mesa_version }}-${{ matrix.arch }}.zip
+                  name: mesa-adreno-${{ needs.validate-inputs.outputs.mesa_adreno_version }}-${{ matrix.arch }}
+                  path: .github/scripts/mesa_adreno_workdir/mesa-adreno-${{ needs.validate-inputs.outputs.mesa_adreno_version }}-${{ matrix.arch }}.zip
                   retention-days: 30
 
             - name: Cleanup build directory
               if: always()
               run: |
                   # Use sudo to remove files created by Docker (owned by root)
-                  if [ -d .github/scripts/turnip_workdir ]; then
-                    sudo rm -rf .github/scripts/turnip_workdir
+                  if [ -d .github/scripts/mesa_adreno_workdir ]; then
+                    sudo rm -rf .github/scripts/mesa_adreno_workdir
                   fi
 
     create-release:
@@ -207,9 +216,14 @@ jobs:
               run: |
                   set -euo pipefail
 
-                  MESA_VERSION="${{ needs.validate-inputs.outputs.mesa_version }}"
+                  VERSION="${{ needs.validate-inputs.outputs.mesa_adreno_version }}"
+                  TAG="${{ needs.validate-inputs.outputs.mesa_adreno_tag }}"
 
-                  echo "## Turnip Mesa ${MESA_VERSION} - Android Vulkan Drivers" > release_body.md
+                  echo "## Mesa Adreno ${VERSION} - Turnip + Fryzek's KGSL" > release_body.md
+                  echo "" >> release_body.md
+                  echo "Built from [lfdevs/mesa-for-android-container](https://github.com/lfdevs/mesa-for-android-container) at \`${TAG}\`" >> release_body.md
+                  echo "" >> release_body.md
+                  echo "One build for the Linux container that carry both the native Adreno Vulkan driver (Turnip) and the native Adreno OpenGL driver (Fryzek's KGSL). It install under \`/opt/mesa-adreno\` so nothing the distro owns get overwritten, and it works on any distro." >> release_body.md
                   echo "" >> release_body.md
                   echo "Built for Android ARM64 and ARM32 architectures" >> release_body.md
                   echo "" >> release_body.md
@@ -227,55 +241,44 @@ jobs:
 
             - name: Validate artifacts exist
               run: |
-                  MESA_VERSION="${{ needs.validate-inputs.outputs.mesa_version }}"
-                  AARCH64_ARTIFACT="./artifacts/turnip-${MESA_VERSION}-aarch64/turnip-${MESA_VERSION}-aarch64.zip"
-                  ARM_ARTIFACT="./artifacts/turnip-${MESA_VERSION}-arm/turnip-${MESA_VERSION}-arm.zip"
+                  VERSION="${{ needs.validate-inputs.outputs.mesa_adreno_version }}"
+                  AARCH64_ARTIFACT="./artifacts/mesa-adreno-${VERSION}-aarch64/mesa-adreno-${VERSION}-aarch64.zip"
+                  ARM_ARTIFACT="./artifacts/mesa-adreno-${VERSION}-arm/mesa-adreno-${VERSION}-arm.zip"
 
                   echo "Checking for required artifacts..."
-                  echo "Expected aarch64 artifact: $AARCH64_ARTIFACT"
-                  echo "Expected arm artifact: $ARM_ARTIFACT"
+                  for artifact in "$AARCH64_ARTIFACT" "$ARM_ARTIFACT"; do
+                    if [ ! -f "$artifact" ]; then
+                      echo "ERROR: artifact not found: $artifact"
+                      echo "Available files in ./artifacts/:"
+                      find ./artifacts/ -type f || true
+                      exit 1
+                    fi
+                    echo "✅ $artifact ($(ls -lh "$artifact" | awk '{print $5}'))"
+                  done
 
-                  if [ ! -f "$AARCH64_ARTIFACT" ]; then
-                    echo "ERROR: aarch64 artifact not found: $AARCH64_ARTIFACT"
-                    echo "Available files in ./artifacts/:"
-                    find ./artifacts/ -type f || true
-                    exit 1
-                  fi
-
-                  if [ ! -f "$ARM_ARTIFACT" ]; then
-                    echo "ERROR: arm artifact not found: $ARM_ARTIFACT"
-                    echo "Available files in ./artifacts/:"
-                    find ./artifacts/ -type f || true
-                    exit 1
-                  fi
-
-                  echo "✅ Both artifacts found successfully"
-                  echo "aarch64 artifact size: $(ls -lh "$AARCH64_ARTIFACT" | awk '{print $5}')"
-                  echo "arm artifact size: $(ls -lh "$ARM_ARTIFACT" | awk '{print $5}')"
-
-            - name: Update Mesa version in enable-hw-acceleration file
+            - name: Update the pin in enable-hw-acceleration
               run: |
-                  sed -i 's/TURNIP_MESA_VERSION="[^"]*"/TURNIP_MESA_VERSION="${{ needs.validate-inputs.outputs.mesa_version }}"/g' enable-hw-acceleration
-                  echo "Updated TURNIP_MESA_VERSION to: ${{ needs.validate-inputs.outputs.mesa_version }}"
-                  grep "TURNIP_MESA_VERSION" enable-hw-acceleration
+                  VERSION="${{ needs.validate-inputs.outputs.mesa_adreno_version }}"
+                  sed -i "s/MESA_ADRENO_VERSION=\"[^\"]*\"/MESA_ADRENO_VERSION=\"${VERSION}\"/g" enable-hw-acceleration
+                  grep "MESA_ADRENO_VERSION" enable-hw-acceleration
 
             - name: Commit and push version update
               run: |
                   git config --local user.email "github-actions[bot]@users.noreply.github.com"
                   git config --local user.name "GitHub Action"
                   git add enable-hw-acceleration
-                  git commit -m "bump(turnip): ${{ needs.validate-inputs.outputs.mesa_version }}" || exit 0
+                  git commit -m "bump(mesa-adreno): ${{ needs.validate-inputs.outputs.mesa_adreno_version }}" || exit 0
                   git push
 
             - name: Create Release
               uses: softprops/action-gh-release@v3
               with:
-                  tag_name: turnip-${{ needs.validate-inputs.outputs.mesa_version }}
-                  name: Turnip ${{ needs.validate-inputs.outputs.mesa_version }}
+                  tag_name: mesa-adreno-${{ needs.validate-inputs.outputs.mesa_adreno_version }}
+                  name: Mesa Adreno ${{ needs.validate-inputs.outputs.mesa_adreno_version }}
                   body_path: release_body.md
                   draft: false
                   prerelease: false
                   make_latest: true
                   files: |
-                      ./artifacts/turnip-${{ needs.validate-inputs.outputs.mesa_version }}-aarch64/turnip-${{ needs.validate-inputs.outputs.mesa_version }}-aarch64.zip
-                      ./artifacts/turnip-${{ needs.validate-inputs.outputs.mesa_version }}-arm/turnip-${{ needs.validate-inputs.outputs.mesa_version }}-arm.zip
+                      ./artifacts/mesa-adreno-${{ needs.validate-inputs.outputs.mesa_adreno_version }}-aarch64/mesa-adreno-${{ needs.validate-inputs.outputs.mesa_adreno_version }}-aarch64.zip
+                      ./artifacts/mesa-adreno-${{ needs.validate-inputs.outputs.mesa_adreno_version }}-arm/mesa-adreno-${{ needs.validate-inputs.outputs.mesa_adreno_version }}-arm.zip
