@@ -300,6 +300,7 @@ Special thanks to:
 - [mayTermux/myTermux](https://github.com/mayTermux/myTermux)
 - [catppuccin](https://github.com/catppuccin)
 - [MastaG/mesa-turnip-ppa](https://github.com/MastaG/mesa-turnip-ppa)
+- [lfdevs/mesa-for-android-container](https://github.com/lfdevs/mesa-for-android-container)
 - [agnostic-apollo/Android-Docs](https://github.com/agnostic-apollo/Android-Docs)
 
 ---
