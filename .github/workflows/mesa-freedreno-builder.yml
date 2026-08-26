@@ -1,0 +1,309 @@
+name: Build Mesa Freedreno (Turnip + Fryzek's KGSL)
+on:
+    push:
+        branches:
+            - main
+        paths:
+            - ".github/workflows/mesa-freedreno-builder.yml"
+            - ".github/scripts/mesa-freedreno.sh"
+    pull_request:
+        paths:
+            - ".github/workflows/mesa-freedreno-builder.yml"
+            - ".github/scripts/mesa-freedreno.sh"
+    workflow_dispatch:
+        inputs:
+            mesa_freedreno_tag:
+                description: "lfdevs/mesa-for-android-container tag to build, e.g. mesa-26.3.0-devel-20260824 (REQUIRED - no default)"
+                required: true
+                type: string
+            action_type:
+                description: "Choose action to perform"
+                required: true
+                default: "release"
+                type: choice
+                options:
+                    - release
+                    - build_only
+
+permissions:
+    contents: write
+
+jobs:
+    validate-inputs:
+        runs-on: ubuntu-latest
+        outputs:
+            mesa_freedreno_tag: ${{ steps.validate.outputs.mesa_freedreno_tag }}
+            mesa_freedreno_version: ${{ steps.validate.outputs.mesa_freedreno_version }}
+            action_type: ${{ steps.validate.outputs.action_type }}
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v7
+
+            - name: Validate tag
+              id: validate
+              run: |
+                  if [ "${{ github.event_name }}" = "push" ] || [ "${{ github.event_name }}" = "pull_request" ]; then
+                    # For push/PR events, extract the pin from enable-hw-acceleration
+                    MESA_FREEDRENO_VERSION=$(grep -oP 'MESA_FREEDRENO_VERSION="\K[^"]+' enable-hw-acceleration 2>/dev/null || echo "")
+                    if [ -z "$MESA_FREEDRENO_VERSION" ]; then
+                      echo "ERROR: Could not extract MESA_FREEDRENO_VERSION from enable-hw-acceleration"
+                      exit 1
+                    fi
+                    MESA_FREEDRENO_TAG="mesa-${MESA_FREEDRENO_VERSION}"
+                    ACTION_TYPE="build_only"
+                    echo "Auto-triggered build — detected tag: $MESA_FREEDRENO_TAG"
+                  else
+                    MESA_FREEDRENO_TAG="${{ github.event.inputs.mesa_freedreno_tag }}"
+                    if [ -z "$MESA_FREEDRENO_TAG" ]; then
+                      echo "ERROR: mesa_freedreno_tag is required but not provided"
+                      exit 1
+                    fi
+                    case "$MESA_FREEDRENO_TAG" in
+                      mesa-*) ;;
+                      turnip-*)
+                        echo "ERROR: turnip-* tags only carry the Turnip driver, they don't have"
+                        echo "       the KGSL gallium driver in them. Use a mesa-* tag."
+                        exit 1
+                        ;;
+                      *)
+                        echo "ERROR: expected a mesa-* tag, got: $MESA_FREEDRENO_TAG"
+                        exit 1
+                        ;;
+                    esac
+                    MESA_FREEDRENO_VERSION="${MESA_FREEDRENO_TAG#mesa-}"
+                    ACTION_TYPE="${{ github.event.inputs.action_type }}"
+                  fi
+                  echo "mesa_freedreno_tag=$MESA_FREEDRENO_TAG" >> $GITHUB_OUTPUT
+                  echo "mesa_freedreno_version=$MESA_FREEDRENO_VERSION" >> $GITHUB_OUTPUT
+                  echo "action_type=$ACTION_TYPE" >> $GITHUB_OUTPUT
+                  echo "Using tag: $MESA_FREEDRENO_TAG (version $MESA_FREEDRENO_VERSION)"
+                  echo "Action type: $ACTION_TYPE"
+
+    build:
+        # the display name keep the job id out of the check name, it read as
+        # "Build Mesa Freedreno (Turnip + Fryzek's KGSL) / aarch64" instead
+        name: ${{ matrix.arch }}
+        needs: validate-inputs
+        runs-on: ubuntu-24.04-arm
+        strategy:
+            fail-fast: false
+            matrix:
+                arch: [aarch64, arm]
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v7
+
+            - name: Install dependencies (ARM64 native)
+              if: matrix.arch == 'aarch64'
+              run: |
+                  sudo sed -i 's/^Types: deb$/Types: deb deb-src/' /etc/apt/sources.list.d/ubuntu.sources
+                  sudo apt update
+                  sudo apt build-dep -y mesa
+                  sudo apt install -y \
+                    git ccache \
+                    clang clang-tools llvm llvm-dev \
+                    ninja-build patchelf unzip curl \
+                    python3-pip python3-mako python3-lxml python3-rnc2rng flex bison \
+                    zip cmake glslang-tools
+
+                  # Upgrade meson to latest version
+                  sudo apt remove -y meson || true
+                  sudo pip3 install --upgrade meson --break-system-packages
+
+                  # Verify meson version
+                  echo "Installed Meson version:"
+                  meson --version
+
+            - name: Install dependencies (ARM32 cross)
+              if: matrix.arch == 'arm'
+              run: |
+                  set -e
+                  sudo sed -i 's/^Types: deb$/Types: deb deb-src/' /etc/apt/sources.list.d/ubuntu.sources
+                  # the runner only list arm64, armhf come out of the same ports archive
+                  if grep -q '^Architectures:' /etc/apt/sources.list.d/ubuntu.sources; then
+                    sudo sed -i 's/^Architectures:.*/Architectures: arm64 armhf/' /etc/apt/sources.list.d/ubuntu.sources
+                  fi
+                  sudo dpkg --add-architecture armhf
+                  cat /etc/apt/sources.list.d/ubuntu.sources
+                  sudo apt update
+
+                  # the cross toolchain, plus the tools that run on the runner cpu.
+                  # qemu-user-static is only there as the meson exe_wrapper, in case
+                  # some build step want to run what it just compiled
+                  # noble has no pkg-config-arm-linux-gnueabihf. the triplet
+                  # wrapper only ship inside pkgconf:armhf, which is an arm32
+                  # binary this runner can't execute, so the meson cross file
+                  # point plain pkg-config at the armhf pkgconfig dir instead
+                  sudo apt install -y \
+                    crossbuild-essential-armhf \
+                    pkgconf \
+                    qemu-user-static \
+                    git ccache \
+                    ninja-build patchelf unzip curl \
+                    python3-pip python3-mako python3-lxml python3-rnc2rng flex bison \
+                    zip cmake glslang-tools \
+                    libwayland-dev libwayland-bin wayland-protocols
+
+                  # the armhf side of every mesa build dependency
+                  if ! sudo apt build-dep -y -a armhf mesa; then
+                    echo "::warning::apt build-dep -a armhf mesa failed, falling back to a curated list"
+                    sudo apt install -y \
+                      libdrm-dev:armhf libx11-dev:armhf libxext-dev:armhf \
+                      libxfixes-dev:armhf libxdamage-dev:armhf libxshmfence-dev:armhf \
+                      libxxf86vm-dev:armhf libxrandr-dev:armhf libx11-xcb-dev:armhf \
+                      libxcb1-dev:armhf libxcb-dri2-0-dev:armhf libxcb-dri3-dev:armhf \
+                      libxcb-glx0-dev:armhf libxcb-present-dev:armhf \
+                      libxcb-randr0-dev:armhf libxcb-shm0-dev:armhf \
+                      libxcb-sync-dev:armhf libxcb-xfixes0-dev:armhf \
+                      libwayland-dev:armhf libwayland-egl-backend-dev:armhf \
+                      libexpat1-dev:armhf zlib1g-dev:armhf libzstd-dev:armhf \
+                      libudev-dev:armhf
+                  fi
+
+                  # Upgrade meson to latest version
+                  sudo apt remove -y meson || true
+                  sudo pip3 install --upgrade meson --break-system-packages
+
+                  echo "Installed Meson version:"
+                  meson --version
+                  arm-linux-gnueabihf-gcc --version | head -1
+
+            - name: Cache ccache
+              uses: actions/cache@v6
+              with:
+                  path: ~/.ccache
+                  key: ccache-mesa-freedreno-${{ runner.os }}-${{ runner.arch }}-${{ matrix.arch }}-${{ github.run_id }}-${{ github.run_attempt }}
+                  restore-keys: |
+                      ccache-mesa-freedreno-${{ runner.os }}-${{ runner.arch }}-${{ matrix.arch }}-
+
+            - name: Configure ccache
+              run: |
+                  export CCACHE_DIR="$HOME/.ccache"
+                  ccache --max-size=2G
+                  ccache --show-config
+                  ccache --zero-stats
+                  ccache --show-stats
+
+            - name: Build for ${{ matrix.arch }}
+              env:
+                  MESA_FREEDRENO_TAG: ${{ needs.validate-inputs.outputs.mesa_freedreno_tag }}
+                  # the script can still build arm32 inside a qemu container, the CI
+                  # never does, it cross compile on the runner instead
+                  MESA_FREEDRENO_ARM32_MODE: cross
+              run: |
+                  # has to be exported here, an env: value is taken literally so
+                  # ccache would treat "~/.ccache" as a relative path
+                  export CCACHE_DIR="$HOME/.ccache"
+                  cd .github/scripts
+                  chmod +x mesa-freedreno.sh
+                  MESA_FREEDRENO_TAG="${MESA_FREEDRENO_TAG}" ./mesa-freedreno.sh ${{ matrix.arch }}
+
+            - name: Show ccache stats
+              run: |
+                  export CCACHE_DIR="$HOME/.ccache"
+                  ccache --show-stats
+
+            - name: Save ccache
+              uses: actions/cache/save@v6
+              with:
+                  path: ~/.ccache
+                  key: ccache-mesa-freedreno-${{ runner.os }}-${{ runner.arch }}-${{ matrix.arch }}-${{ github.run_id }}-${{ github.run_attempt }}
+
+            - name: Upload ${{ matrix.arch }} artifacts
+              uses: actions/upload-artifact@v7
+              with:
+                  name: mesa-freedreno-${{ needs.validate-inputs.outputs.mesa_freedreno_version }}-${{ matrix.arch }}
+                  path: .github/scripts/mesa_freedreno_workdir/mesa-freedreno-${{ needs.validate-inputs.outputs.mesa_freedreno_version }}-${{ matrix.arch }}.zip
+                  retention-days: 30
+
+            - name: Cleanup build directory
+              if: always()
+              run: |
+                  if [ -d .github/scripts/mesa_freedreno_workdir ]; then
+                    sudo rm -rf .github/scripts/mesa_freedreno_workdir
+                  fi
+
+    create-release:
+        needs: [validate-inputs, build]
+        if: needs.validate-inputs.outputs.action_type == 'release'
+        runs-on: ubuntu-24.04-arm
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v7
+
+            - name: Download all artifacts
+              uses: actions/download-artifact@v8
+              with:
+                  path: ./artifacts
+
+            - name: Build release notes with checksums
+              shell: bash
+              run: |
+                  set -euo pipefail
+
+                  VERSION="${{ needs.validate-inputs.outputs.mesa_freedreno_version }}"
+                  TAG="${{ needs.validate-inputs.outputs.mesa_freedreno_tag }}"
+
+                  echo "## Mesa Freedreno ${VERSION} - Turnip + Fryzek's KGSL" > release_body.md
+                  echo "" >> release_body.md
+                  echo "Built from [lfdevs/mesa-for-android-container](https://github.com/lfdevs/mesa-for-android-container) at \`${TAG}\`" >> release_body.md
+                  echo "" >> release_body.md
+                  echo "One build for the Linux container that carry both the native Adreno Vulkan driver (Turnip) and the native Adreno OpenGL driver (Fryzek's KGSL). It install under \`/opt/mesa-freedreno\` so nothing the distro owns get overwritten, and it works on any distro." >> release_body.md
+                  echo "" >> release_body.md
+                  echo "Built for Android ARM64 and ARM32 architectures" >> release_body.md
+                  echo "" >> release_body.md
+                  echo "### Checksums" >> release_body.md
+                  echo '```plaintext' >> release_body.md
+
+                  find ./artifacts -name "*.zip" -type f -exec sha256sum {} \; | \
+                    awk '{print $1 "  " $2}' | \
+                    sed 's|./artifacts/[^/]*/||' | \
+                    sort -k2,2 >> release_body.md
+
+                  echo '```' >> release_body.md
+
+                  cat release_body.md
+
+            - name: Validate artifacts exist
+              run: |
+                  VERSION="${{ needs.validate-inputs.outputs.mesa_freedreno_version }}"
+                  AARCH64_ARTIFACT="./artifacts/mesa-freedreno-${VERSION}-aarch64/mesa-freedreno-${VERSION}-aarch64.zip"
+                  ARM_ARTIFACT="./artifacts/mesa-freedreno-${VERSION}-arm/mesa-freedreno-${VERSION}-arm.zip"
+
+                  echo "Checking for required artifacts..."
+                  for artifact in "$AARCH64_ARTIFACT" "$ARM_ARTIFACT"; do
+                    if [ ! -f "$artifact" ]; then
+                      echo "ERROR: artifact not found: $artifact"
+                      echo "Available files in ./artifacts/:"
+                      find ./artifacts/ -type f || true
+                      exit 1
+                    fi
+                    echo "✅ $artifact ($(ls -lh "$artifact" | awk '{print $5}'))"
+                  done
+
+            - name: Update the pin in enable-hw-acceleration
+              run: |
+                  VERSION="${{ needs.validate-inputs.outputs.mesa_freedreno_version }}"
+                  sed -i "s/MESA_FREEDRENO_VERSION=\"[^\"]*\"/MESA_FREEDRENO_VERSION=\"${VERSION}\"/g" enable-hw-acceleration
+                  grep "MESA_FREEDRENO_VERSION" enable-hw-acceleration
+
+            - name: Commit and push version update
+              run: |
+                  git config --local user.email "github-actions[bot]@users.noreply.github.com"
+                  git config --local user.name "GitHub Action"
+                  git add enable-hw-acceleration
+                  git commit -m "bump(mesa-freedreno): ${{ needs.validate-inputs.outputs.mesa_freedreno_version }}" || exit 0
+                  git push
+
+            - name: Create Release
+              uses: softprops/action-gh-release@v3
+              with:
+                  tag_name: mesa-freedreno-${{ needs.validate-inputs.outputs.mesa_freedreno_version }}
+                  name: Mesa Freedreno ${{ needs.validate-inputs.outputs.mesa_freedreno_version }}
+                  body_path: release_body.md
+                  draft: false
+                  prerelease: false
+                  make_latest: true
+                  files: |
+                      ./artifacts/mesa-freedreno-${{ needs.validate-inputs.outputs.mesa_freedreno_version }}-aarch64/mesa-freedreno-${{ needs.validate-inputs.outputs.mesa_freedreno_version }}-aarch64.zip
+                      ./artifacts/mesa-freedreno-${{ needs.validate-inputs.outputs.mesa_freedreno_version }}-arm/mesa-freedreno-${{ needs.validate-inputs.outputs.mesa_freedreno_version }}-arm.zip
