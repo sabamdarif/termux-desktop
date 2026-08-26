@@ -41,6 +41,8 @@ jobs:
 
             - name: Validate tag
               id: validate
+              env:
+                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
               run: |
                   if [ "${{ github.event_name }}" = "push" ] || [ "${{ github.event_name }}" = "pull_request" ]; then
                     # For push/PR events, extract the pin from enable-hw-acceleration
@@ -50,8 +52,21 @@ jobs:
                       exit 1
                     fi
                     MESA_FREEDRENO_TAG="mesa-${MESA_FREEDRENO_VERSION}"
-                    ACTION_TYPE="build_only"
                     echo "Auto-triggered build — detected tag: $MESA_FREEDRENO_TAG"
+                    # a pull request only ever build. a push to main also publish,
+                    # but only when the pinned version has no release yet, so
+                    # editing the workflow or the script don't re-release
+                    # something that is already out there
+                    if [ "${{ github.event_name }}" != "push" ]; then
+                      ACTION_TYPE="build_only"
+                    elif gh release view "mesa-freedreno-${MESA_FREEDRENO_VERSION}" \
+                         --repo "${{ github.repository }}" >/dev/null 2>&1; then
+                      ACTION_TYPE="build_only"
+                      echo "Release mesa-freedreno-${MESA_FREEDRENO_VERSION} already exist, build only"
+                    else
+                      ACTION_TYPE="release"
+                      echo "No release for mesa-freedreno-${MESA_FREEDRENO_VERSION} yet, this run will publish one"
+                    fi
                   else
                     MESA_FREEDRENO_TAG="${{ github.event.inputs.mesa_freedreno_tag }}"
                     if [ -z "$MESA_FREEDRENO_TAG" ]; then
