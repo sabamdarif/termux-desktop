@@ -230,8 +230,11 @@ function check_and_create_directory() {
 
 # first check then delete
 function check_and_delete() {
+	log_debug "Starting delete for: $*"
+	# shellcheck disable=SC2206
+	local files_folders_list=($@)
 	local files_folders
-	for files_folders in "$@"; do
+	for files_folders in "${files_folders_list[@]}"; do
 		if [[ -e "$files_folders" ]]; then
 			rm -rf "$files_folders" >/dev/null 2>&1 || {
 				log_error "Failed to delete: $files_folders"
@@ -5035,8 +5038,8 @@ function install_fm_tools() {
 		check_and_create_directory "$TERMUX_HOME/.local/share/nautilus/scripts"
 		package_install_and_check "axel bzip2 cabextract cpio cups curl ffmpeg file-roller filelight go-findimagedupes ghex git gnupg gzip id3v2 imagemagick inetutils libarchive exiftool liblzma sox lrzip lz4 lzip lzop mediainfo mp3gain nmap openssl optipng p7zip pandoc perl poppler qpdf rdfind rhash squashfs-tools-ng tar tesseract texlive-bin unar unrar unzip xclip xorriso xz-utils zip zpaq zstd"
 		git clone https://github.com/cfgnunes/nautilus-scripts.git
-		check_and_delete "nautilus-scripts/Security\ and\ recovery/File\ carving\ (via Foremost)"
-		check_and_delete "nautilus-scripts/Security\ and\ recovery/File\ carving\ (via PhotoRec)"
+		rm -rf "nautilus-scripts/Security and recovery/File carving (via Foremost)" \
+			"nautilus-scripts/Security and recovery/File carving (via PhotoRec)"
 		cd nautilus-scripts || return 1
 		bash install.sh -n
 		cd .. || return 1
@@ -5385,6 +5388,7 @@ function remove_termux_desktop() {
 				check_and_restore "$TERMUX_PREFIX/etc/motd-playstore"
 				check_and_restore "$TERMUX_PREFIX/etc/motd.sh"
 				check_and_restore "$TERMUX_HOME/.termux/colors.properties"
+				check_and_delete "$TERMUX_PREFIX/etc/termux-login.sh"
 				check_and_restore "$TERMUX_PREFIX/etc/termux-login.sh"
 				package_check_and_remove "nerdfix fontconfig-utils bat eza"
 			fi
@@ -6195,11 +6199,10 @@ function reset_changes() {
 			check_and_delete "add2menu distro setup-termux-desktop tx11start tx11stop vncstart vncstop"
 			# shellcheck disable=SC2164
 			cd "$TERMUX_HOME"
-			if grep -q "motd.sh$" "$TERMUX_PREFIX/etc/termux-login.sh"; then
-				sed -i "s|.*motd\.sh$|# |" "$TERMUX_PREFIX/etc/termux-login.sh"
-				termux-reload-settings
-			fi
-			rm "$TERMUX_PREFIX/share/applications/wine-*.desktop" >/dev/null 2>&1
+			check_and_delete "$TERMUX_PREFIX/etc/termux-login.sh"
+			check_and_restore "$TERMUX_PREFIX/etc/termux-login.sh"
+			termux-reload-settings
+			check_and_delete "$TERMUX_PREFIX/share/applications/wine-*.desktop"
 			check_and_delete "$TERMUX_DESKTOP_PATH"
 			check_and_delete "$TERMUX_PREFIX/bin/tx11start $TERMUX_PREFIX/bin/tx11stop $TERMUX_PREFIX/bin/vncstop $TERMUX_PREFIX/bin/vncstart $TERMUX_PREFIX/bin/gui $TERMUX_PREFIX/bin/pdrun"
 		fi
