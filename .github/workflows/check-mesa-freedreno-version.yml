@@ -1,4 +1,4 @@
-name: Check for mesa adreno update
+name: Check for mesa freedreno update
 on:
     schedule:
         - cron: "0 0 * * 0" # runs weekly on Sunday at midnight UTC
@@ -20,13 +20,13 @@ jobs:
 
                   # Method 1: read the pin from enable-hw-acceleration
                   if [ -f "enable-hw-acceleration" ]; then
-                    echo "Found enable-hw-acceleration file, attempting to read MESA_ADRENO_VERSION..."
-                    old_version=$(grep -oP 'MESA_ADRENO_VERSION="\K[^"]+' enable-hw-acceleration | head -1)
+                    echo "Found enable-hw-acceleration file, attempting to read MESA_FREEDRENO_VERSION..."
+                    old_version=$(grep -oP 'MESA_FREEDRENO_VERSION="\K[^"]+' enable-hw-acceleration | head -1)
                     if [ -n "$old_version" ]; then
                       echo "Successfully read version from file: $old_version"
                     else
-                      echo "Failed to extract MESA_ADRENO_VERSION from enable-hw-acceleration"
-                      grep -n "MESA_ADRENO_VERSION" enable-hw-acceleration || echo "No MESA_ADRENO_VERSION found in file"
+                      echo "Failed to extract MESA_FREEDRENO_VERSION from enable-hw-acceleration"
+                      grep -n "MESA_FREEDRENO_VERSION" enable-hw-acceleration || echo "No MESA_FREEDRENO_VERSION found in file"
                     fi
                   else
                     echo "enable-hw-acceleration file not found"
@@ -36,8 +36,8 @@ jobs:
                   if [ -z "$old_version" ]; then
                     echo "Falling back to GitHub releases method..."
                     old_version=$(gh api repos/${{ github.repository }}/releases --paginate \
-                      --jq '.[] | select(.tag_name | startswith("mesa-adreno-")) | .tag_name' | \
-                      sed 's/mesa-adreno-//' | \
+                      --jq '.[] | select(.tag_name | startswith("mesa-freedreno-")) | .tag_name' | \
+                      sed 's/mesa-freedreno-//' | \
                       sort -Vr | \
                       head -1)
                     if [ -n "$old_version" ]; then
@@ -46,14 +46,14 @@ jobs:
                   fi
 
                   if [ -z "$old_version" ]; then
-                    echo "ERROR: Unable to determine the current mesa adreno version using any method"
-                    echo "- enable-hw-acceleration file not found or doesn't contain MESA_ADRENO_VERSION"
-                    echo "- No mesa-adreno-* releases found in GitHub repository"
+                    echo "ERROR: Unable to determine the current mesa freedreno version using any method"
+                    echo "- enable-hw-acceleration file not found or doesn't contain MESA_FREEDRENO_VERSION"
+                    echo "- No mesa-freedreno-* releases found in GitHub repository"
                     exit 1
                   fi
 
                   echo "old_version=$old_version" >> $GITHUB_OUTPUT
-                  echo "Current mesa adreno version: $old_version"
+                  echo "Current mesa freedreno version: $old_version"
               env:
                   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -101,7 +101,7 @@ jobs:
                     echo "Current version ($old_version) is newer than latest ($latest_version), no update needed"
                   fi
 
-            - name: Trigger mesa adreno build
+            - name: Trigger mesa freedreno build
               if: steps.compare_versions.outputs.need_update == 'true'
               run: |
                   echo "Triggering the build workflow with tag: ${{ steps.get_new_version.outputs.latest_tag }}"
@@ -112,7 +112,7 @@ jobs:
                   success=false
 
                   while [ $count -lt $max_retries ]; do
-                    if gh workflow run mesa-adreno-builder.yml --ref main --field mesa_adreno_tag="${{ steps.get_new_version.outputs.latest_tag }}"; then
+                    if gh workflow run mesa-freedreno-builder.yml --ref main --field mesa_freedreno_tag="${{ steps.get_new_version.outputs.latest_tag }}"; then
                       echo "✅ Workflow triggered successfully"
                       success=true
                       break
