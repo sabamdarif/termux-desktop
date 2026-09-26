@@ -111,9 +111,10 @@ function install_vulkan_wrapper_driver() {
 # Turnip + Fryzek's KGSL, one package with the native adreno vulkan driver and
 # the native adreno opengl driver in it
 function install_freedreno_kgsl_driver() {
-	FREEDRENO_KGSL_VERSION="26.2.0"
-	FREEDRENO_KGSL_PKGREL="1"
+	FREEDRENO_KGSL_VERSION="26.3.0"
 	local release_tag="freedreno-kgsl-${FREEDRENO_KGSL_VERSION}"
+	local freedreno_pkg_file_name="mesa-vulkan-icd-freedreno-${FREEDRENO_KGSL_VERSION}-${termux_arch}.pkg.tar.xz"
+	local freedreno_deb_file_name="mesa-vulkan-icd-freedreno_${FREEDRENO_KGSL_VERSION}_${termux_arch}.deb"
 
 	if [[ "$termux_arch" != "aarch64" && "$termux_arch" != "arm" ]]; then
 		print_failed "Turnip + Fryzek's KGSL isn't supported on your device"
@@ -122,7 +123,7 @@ function install_freedreno_kgsl_driver() {
 
 	print_msg "${BOLD}Installing Turnip + Fryzek's KGSL..."
 	if [[ "$PACKAGE_MANAGER" == "pacman" ]]; then
-		if ! download_file "mesa-vulkan-icd-freedreno.pkg.tar.xz" "https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/download/${release_tag}/mesa-vulkan-icd-freedreno-${FREEDRENO_KGSL_VERSION}-${FREEDRENO_KGSL_PKGREL}-${termux_arch}.pkg.tar.xz"; then
+		if ! download_file "mesa-vulkan-icd-freedreno.pkg.tar.xz" "https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/download/${release_tag}/${freedreno_pkg_file_name}"; then
 			print_failed "Failed to download mesa-vulkan-icd-freedreno driver"
 			print_msg "Please check your internet connection"
 			return 1
@@ -131,7 +132,7 @@ function install_freedreno_kgsl_driver() {
 		pacman -U --noconfirm mesa-vulkan-icd-freedreno.pkg.tar.xz
 		check_and_delete "mesa-vulkan-icd-freedreno.pkg.tar.xz"
 	else
-		if ! download_file "mesa-vulkan-icd-freedreno.deb" "https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/download/${release_tag}/mesa-vulkan-icd-freedreno_${FREEDRENO_KGSL_VERSION}-${FREEDRENO_KGSL_PKGREL}_${termux_arch}.deb"; then
+		if ! download_file "mesa-vulkan-icd-freedreno.deb" "https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/download/${release_tag}/${freedreno_deb_file_name}"; then
 			print_failed "Failed to download mesa-vulkan-icd-freedreno driver"
 			print_msg "Please check your internet connection"
 			return 1
