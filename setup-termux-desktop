@@ -4815,15 +4815,20 @@ function install_termux_desktop_appstore() {
 
 function get_shellrc_path() {
 	if [[ -z "$shell_name" ]]; then
-		shell_name=$(basename "$SHELL")
+		case "$chosen_shell_name" in
+		zsh) shell_name="zsh" ;;
+		bash | bash_with_ble | termux_bash) shell_name="bash" ;;
+		*) shell_name=$(basename "$SHELL") ;;
+		esac
 	fi
 	if [[ "$shell_name" == "bash" ]]; then
 		shell_rc_file="$TERMUX_HOME/.bashrc"
 	elif [[ "$shell_name" == "zsh" ]]; then
 		shell_rc_file="$TERMUX_HOME/.zshrc"
 	else
-		print_failed "Unable to get shellrc path"
-		exit 1
+		print_warn "Unsupported shell '${shell_name}', falling back to bash"
+		shell_name="bash"
+		shell_rc_file="$TERMUX_HOME/.bashrc"
 	fi
 }
 
