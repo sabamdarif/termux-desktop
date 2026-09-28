@@ -2923,7 +2923,7 @@ function install_desktop() {
 	elif [[ "$de_name" == "lxqt" ]]; then
 		print_msg "${BOLD}Installing Lxqt Desktop"
 		echo
-		package_install_and_check "lxqt openbox gtk3 papirus-icon-theme xorg-xsetroot kvantum"
+		package_install_and_check "lxqt openbox gtk3 papirus-icon-theme xorg-xsetroot kvantum gvfs"
 	elif [[ "$de_name" == "openbox" ]]; then
 		print_msg "${BOLD}Installing Openbox WM"
 		echo
@@ -5323,7 +5323,7 @@ function remove_desktop_environments() {
 	if [[ "$de_name" == "xfce" ]]; then
 		package_check_and_remove "xfce4 xfce4-goodies xfce4-pulseaudio-plugin xfce4-battery-plugin xfce4-docklike-plugin xfce4-notifyd-static kvantum gtk2-engines-murrine"
 	elif [[ "$de_name" == "lxqt" ]]; then
-		package_check_and_remove "lxqt xorg-xsetroot papirus-icon-theme xwayland kvantum"
+		package_check_and_remove "lxqt xorg-xsetroot papirus-icon-theme xwayland kvantum gvfs"
 	elif [[ "$de_name" == "openbox" ]]; then
 		package_check_and_remove "openbox polybar xorg-xsetroot lxappearance wmctrl feh xwayland kvantum thunar mpd rofi bmon xcompmgr xfce4-settings gedit"
 		if [[ "$style_answer" != "0" ]]; then
