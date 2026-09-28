@@ -3238,9 +3238,14 @@ function setup_folder() {
 		check_and_create_directory "/sdcard/$dir"
 	done
 	check_and_create_directory "$TERMUX_HOME/Desktop"
-	ln -s "$TERMUX_HOME/storage/shared/Music" "$TERMUX_HOME/"
-	ln -s "$TERMUX_HOME/storage/shared/Pictures" "$TERMUX_HOME/"
-	ln -s "$TERMUX_HOME/storage/shared/Videos" "$TERMUX_HOME/"
+	for dir in "${directories[@]}"; do
+		link="$TERMUX_HOME/$dir"
+		if [[ -L "$link" || ! -e "$link" ]]; then
+			ln -sfn "$TERMUX_HOME/storage/shared/$dir" "$link"
+		else
+			print_warn "Skipping symlink: '${link}' already exists as a real folder"
+		fi
+	done
 }
 
 function setup_mic_permission() {
