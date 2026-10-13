@@ -25,6 +25,7 @@
 source "$TERMUX_PREFIX/bin/termux-setup-package-manager" || exit 1
 
 MIRROR_BASE_DIR="$TERMUX_PREFIX/etc/termux/mirrors"
+CHOSEN_MIRRORS_GROUP="$TERMUX_PREFIX/etc/termux/chosen_mirrors_group"
 TEMP_DIR="$TERMUX_PREFIX/tmp"
 SPEED_RESULT_FILE="$TEMP_DIR/mirror_speeds.txt"
 
@@ -43,8 +44,8 @@ mkdir -p "$TEMP_DIR" || exit $?
 
 unlink_and_link() {
 	MIRROR_PATH="$1"
-	if [ -L "$TERMUX_PREFIX/etc/termux/chosen_mirrors" ]; then
-		unlink "$TERMUX_PREFIX/etc/termux/chosen_mirrors"
+	if [ -L "$TERMUX_PREFIX/etc/termux/chosen_mirrors" ] || [ -e "$TERMUX_PREFIX/etc/termux/chosen_mirrors" ]; then
+		rm -rf "$TERMUX_PREFIX/etc/termux/chosen_mirrors"
 	fi
 	ln -s "${MIRROR_PATH}" "$TERMUX_PREFIX/etc/termux/chosen_mirrors"
 }
@@ -80,18 +81,45 @@ test_mirror_speed() {
 	start_time=$(date +%s%3N)
 
 	# Use curl with a 10 second timeout, follow redirects, silent mode
-	if curl -s -L --connect-timeout 5 --max-time 10 -o /dev/null "$test_url"; then
+	if curl -s -L --connect-timeout 5 --max-time 10 -o "$TEMP_DIR/release.$$" "$test_url"; then
 		end_time=$(date +%s%3N)
 		# Calculate duration in milliseconds (as an integer)
 		duration=$((end_time - start_time))
 		# Convert to seconds with two decimal places using awk
 		speed=$(awk "BEGIN {printf \"%.2f\", $duration/1000}")
 
-		echo "done - ${speed}s"
-		echo "$mirror_file|$mirror_name|$speed" >>"$SPEED_RESULT_FILE"
+		# Check if the mirror serves outdated packages (issue #352):
+		# the Release file is only valid for 7 days after its Date
+		release_date=$(sed -n 's/^Date: //p' "$TEMP_DIR/release.$$" | tr -d '\r')
+		release_epoch=$(date -d "$release_date" +%s 2>/dev/null || echo 0)
+		now_epoch=$(date +%s)
+		rm -f "$TEMP_DIR/release.$$"
+
+		if [ "$release_epoch" -le 0 ]; then
+			echo "skipped (cannot verify freshness)"
+			echo "$mirror_file|$mirror_name|999.99|invalid|0" >>"$SPEED_RESULT_FILE"
+		elif [ $((now_epoch - release_epoch)) -gt $((7 * 24 * 60 * 60)) ]; then
+			echo "skipped (outdated: Release is $(((now_epoch - release_epoch) / 86400)) days old)"
+			echo "$mirror_file|$mirror_name|999.99|outdated|$((now_epoch - release_epoch))" >>"$SPEED_RESULT_FILE"
+		else
+			echo "done - ${speed}s"
+			echo "$mirror_file|$mirror_name|$speed|ok|$((now_epoch - release_epoch))" >>"$SPEED_RESULT_FILE"
+		fi
 	else
 		echo "failed (timeout or error)"
-		echo "$mirror_file|$mirror_name|999.99" >>"$SPEED_RESULT_FILE"
+		echo "$mirror_file|$mirror_name|999.99|failed|0" >>"$SPEED_RESULT_FILE"
+		rm -f "$TEMP_DIR/release.$$"
+	fi
+}
+
+format_age() {
+	local age=$1
+	if [ "$age" -lt 3600 ]; then
+		echo "$((age / 60))m ago"
+	elif [ "$age" -lt 86400 ]; then
+		echo "$((age / 3600))h ago"
+	else
+		echo "$((age / 86400))d ago"
 	fi
 }
 
@@ -202,48 +230,42 @@ select_mirror_by_speed() {
 
 	# Display a simple table of results in console
 	echo
-	printf "%-35s | %-10s | %s\n" "MIRROR" "SPEED (s)" "DESCRIPTION"
-	echo "--------------------------------|------------|-------------------------"
+	printf "%-35s | %-10s | %-10s | %s\n" "MIRROR" "SPEED (s)" "UPDATED" "DESCRIPTION"
+	echo "--------------------------------|------------|------------|-------------------------"
 
 	# Read the sorted results
-	while IFS='|' read -r mirror_path mirror_name speed; do
-		# Skip mirrors that failed (999.99)
+	while IFS='|' read -r mirror_path mirror_name speed status age; do
+		# Failed/outdated mirrors are excluded from selection
 		if [ "$speed" = "999.99" ]; then
-			mirror_desc="Failed to connect"
-			printf "%-35s | %-10s | %s\n" "$mirror_name" "FAILED" "$mirror_desc"
-		else
-			mirror_desc="$(get_mirror_description "$mirror_path")"
-			printf "%-35s | %-10s | %s\n" "$mirror_name" "${speed}s" "$mirror_desc"
+			case "$status" in
+			outdated) printf "%-35s | %-10s | %-10s | %s\n" "$mirror_name" "OUTDATED" "$(format_age "$age")" "Serves outdated packages" ;;
+			invalid) printf "%-35s | %-10s | %-10s | %s\n" "$mirror_name" "INVALID" "unknown" "Cannot verify freshness" ;;
+			*) printf "%-35s | %-10s | %-10s | %s\n" "$mirror_name" "FAILED" "unknown" "Failed to connect" ;;
+			esac
+			continue
 		fi
 
-		# Format description for dialog display
-		if [ "$speed" = "999.99" ]; then
-			mirror_desc="Failed to connect"
-		else
-			mirror_desc="✓ Speed: ${speed}s - $(get_mirror_description "$mirror_path")"
-		fi
+		mirror_desc="$(get_mirror_description "$mirror_path")"
+		printf "%-35s | %-10s | %-10s | %s\n" "$mirror_name" "${speed}s" "$(format_age "$age")" "$mirror_desc"
 
 		# Add to the options array
-		MIRRORS+=("$mirror_name" "$mirror_desc" "off")
+		MIRRORS+=("$mirror_name" "✓ ${speed}s, updated $(format_age "$age") - $mirror_desc" "off")
 	done <"$SPEED_RESULT_FILE"
+
+	if [ ${#MIRRORS[@]} -eq 0 ]; then
+		echo "No mirrors were successfully tested. Exiting."
+		exit 1
+	fi
 
 	echo
 	echo "Press Enter to continue to mirror selection..."
 	read -r
 
-	# Mark the first (fastest) mirror as selected by default
-	if [ ${#MIRRORS[@]} -gt 0 ]; then
-		MIRRORS[2]="on"
-	else
-		echo "No mirrors were successfully tested. Exiting."
-		exit 1
-	fi
-
 	local TEMPFILE
 	TEMPFILE="$(mktemp "$TEMP_DIR/mirror.XXXXXX")"
 	dialog \
 		--title "termux-fastest-repo" --clear \
-		--radiolist "Select your preferred mirror (sorted fastest to slowest).\nSelect with space." 0 0 0 \
+		--checklist "Select one or more mirrors (sorted fastest to slowest).\nSelected mirrors will be used as fallbacks for each other.\nSelect with space." 0 0 0 \
 		"${MIRRORS[@]}" --and-widget \
 		2>"$TEMPFILE"
 	retval=$?
@@ -265,24 +287,43 @@ select_mirror_by_speed() {
 	selected_mirror="$(cat "$TEMPFILE")"
 	rm "$TEMPFILE"
 
-	# Find the mirror path from the selected name
+	# Find the mirror paths from the selected names
 	selected_path=""
-	while IFS='|' read -r mirror_path mirror_name speed; do
-		if [ "$mirror_name" = "$selected_mirror" ]; then
-			selected_path="$mirror_path"
-			break
-		fi
-	done <"$SPEED_RESULT_FILE"
+	for name in $(echo "$selected_mirror" | tr -d '"'); do
+		while IFS='|' read -r mirror_path mirror_name speed status age; do
+			if [ "$mirror_name" = "$name" ] && [ "$speed" != "999.99" ]; then
+				selected_path="${selected_path}${selected_path:+ }${mirror_path}"
+				break
+			fi
+		done <"$SPEED_RESULT_FILE"
+	done
 
-	if [ -n "$selected_path" ]; then
-		echo "[*] Mirror $selected_mirror selected"
-		unlink_and_link "$selected_path"
-		echo "[*] pkg --check-mirror update"
-		TERMUX_APP_PACKAGE_MANAGER=apt pkg --check-mirror update
-	else
-		echo "[!] Error: Could not find path for selected mirror."
+	if [ -z "$selected_path" ]; then
+		echo "No mirror selected. Exiting."
 		exit 1
 	fi
+
+	# shellcheck disable=SC2086
+	set -- $selected_path
+	if [ $# -eq 1 ]; then
+		echo "[*] Mirror $1 selected"
+		unlink_and_link "$1"
+	else
+		# Multiple mirrors selected: build a custom mirror group so pkg
+		# rotates between them and falls back if one goes down (issue #352).
+		# Note: pkg finds group members with "find -type f", so copy the
+		# mirror files instead of symlinking them (symlinks are skipped).
+		echo "[*] $# mirrors selected, creating mirror group"
+		rm -rf "$CHOSEN_MIRRORS_GROUP"
+		mkdir -p "$CHOSEN_MIRRORS_GROUP"
+		for mirror_file in "$@"; do
+			cp "$mirror_file" "$CHOSEN_MIRRORS_GROUP/$(basename "$mirror_file")"
+		done
+		unlink_and_link "$CHOSEN_MIRRORS_GROUP"
+	fi
+
+	echo "[*] pkg --check-mirror update"
+	TERMUX_APP_PACKAGE_MANAGER=apt pkg --check-mirror update
 }
 
 # Main function
@@ -303,7 +344,7 @@ main() {
 	test_selected_mirrors
 	select_mirror_by_speed
 
-	echo "Mirror has been updated successfully!"
+	echo "Mirror selection has been updated successfully!"
 }
 
 # Run the script
