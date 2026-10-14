@@ -71,7 +71,7 @@ readonly DOWNLOAD_TIMEOUT=15
 readonly TERMUX_DESKTOP_PATH="$TERMUX_PREFIX/etc/termux-desktop"
 readonly CONFIG_FILE="$TERMUX_DESKTOP_PATH/configuration.conf"
 readonly LOG_FILE="$TERMUX_HOME/termux-desktop.log"
-readonly LATEST_APPSTORE_VERSION="1.1.1"
+readonly LATEST_APPSTORE_VERSION="1.2.0"
 CALL_FROM_CHANGE_DISTRO=false
 CALL_FROM_CHANGE_STYLE=false
 IS_TERMUX_API_INSTALLED=false
@@ -4796,18 +4796,18 @@ function install_termux_desktop_appstore() {
 	echo
 	cd "$TMPDIR" || return
 	if [[ "$PACKAGE_MANAGER" == "pacman" ]]; then
-		download_file "https://github.com/sabamdarif/Termux-AppStore/releases/download/v${LATEST_APPSTORE_VERSION}/termux-appstore-${LATEST_APPSTORE_VERSION}-0-${termux_arch}.pkg.tar.xz"
+		download_file "https://github.com/sabamdarif/Termux-AppStore/releases/download/v${LATEST_APPSTORE_VERSION}/termux-appstore-${LATEST_APPSTORE_VERSION}-0-any.pkg.tar.xz"
 		update_sys
-		pacman -U --noconfirm "termux-appstore-${LATEST_APPSTORE_VERSION}-0-${termux_arch}.pkg.tar.xz"
-		check_and_delete "termux-appstore-${LATEST_APPSTORE_VERSION}-0-${termux_arch}.pkg.tar.xz"
+		pacman -U --noconfirm "termux-appstore-${LATEST_APPSTORE_VERSION}-0-any.pkg.tar.xz"
+		check_and_delete "termux-appstore-${LATEST_APPSTORE_VERSION}-0-any.pkg.tar.xz"
 	else
-		download_file "https://github.com/sabamdarif/Termux-AppStore/releases/download/v${LATEST_APPSTORE_VERSION}/termux-appstore_${LATEST_APPSTORE_VERSION}_${termux_arch}.deb"
+		download_file "https://github.com/sabamdarif/Termux-AppStore/releases/download/v${LATEST_APPSTORE_VERSION}/termux-appstore_${LATEST_APPSTORE_VERSION}_all.deb"
 		update_sys
 		dpkg --configure -a
 		apt --fix-broken install -y
-		apt install ./"termux-appstore_${LATEST_APPSTORE_VERSION}_${termux_arch}.deb" -y
+		apt install ./"termux-appstore_${LATEST_APPSTORE_VERSION}_all.deb" -y
 		apt install --fix-missing -y
-		check_and_delete "termux-appstore_${LATEST_APPSTORE_VERSION}_${termux_arch}.deb"
+		check_and_delete "termux-appstore_${LATEST_APPSTORE_VERSION}_all.deb"
 	fi
 	cd "$TERMUX_HOME" || return
 }
