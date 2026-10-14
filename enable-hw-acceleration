@@ -244,43 +244,43 @@ function hw_install_required_packages() {
 function setup_hw_environment_variables() {
 	case "$termux_hw_answer" in
 	"zink")
-		set_to_export="MESA_NO_ERROR=1 GALLIUM_DRIVER=zink MESA_GL_VERSION_OVERRIDE=4.3COMPAT MESA_GLES_VERSION_OVERRIDE=3.2 ZINK_DESCRIPTORS=lazy"
+		set_to_export="GALLIUM_DRIVER=zink MESA_GLES_VERSION_OVERRIDE=3.2 ZINK_DESCRIPTORS=lazy"
 		initialize_server_method="virgl_test_server --use-egl-surfaceless --use-gles"
 		pd_hw_method="${set_to_export}"
 		;;
 	"virgl")
-		set_to_export="MESA_NO_ERROR=1 GALLIUM_DRIVER=virpipe MESA_GL_VERSION_OVERRIDE=4.3COMPAT MESA_GLES_VERSION_OVERRIDE=3.2 LIBGL_DRI3_DISABLE=1"
+		set_to_export="GALLIUM_DRIVER=virpipe MESA_GLES_VERSION_OVERRIDE=3.2 LIBGL_DRI3_DISABLE=1"
 		initialize_server_method="virgl_test_server_android"
 		pd_hw_method="${set_to_export}"
 		;;
 	"virgl_angle")
-		set_to_export="MESA_NO_ERROR=1 GALLIUM_DRIVER=virpipe MESA_GL_VERSION_OVERRIDE=4.3COMPAT MESA_GLES_VERSION_OVERRIDE=3.2 LIBGL_DRI3_DISABLE=1"
+		set_to_export="GALLIUM_DRIVER=virpipe MESA_GLES_VERSION_OVERRIDE=3.2 LIBGL_DRI3_DISABLE=1"
 		initialize_server_method="virgl_test_server_android --angle-gl"
 		pd_hw_method="${set_to_export}"
 		;;
 	"virgl_vulkan")
-		set_to_export="MESA_NO_ERROR=1 GALLIUM_DRIVER=virpipe MESA_GL_VERSION_OVERRIDE=4.1COMPAT MESA_GLES_VERSION_OVERRIDE=3.2 MESA_GLSL_VERSION_OVERRIDE=410 LIBGL_DRI3_DISABLE=1 EPOXY_USE_ANGLE=1 LD_LIBRARY_PATH=$TERMUX_PREFIX/opt/angle-android/vulkan"
+		set_to_export="GALLIUM_DRIVER=virpipe MESA_GLES_VERSION_OVERRIDE=3.2 MESA_GLSL_VERSION_OVERRIDE=410 LIBGL_DRI3_DISABLE=1 EPOXY_USE_ANGLE=1 LD_LIBRARY_PATH=$TERMUX_PREFIX/opt/angle-android/vulkan"
 		initialize_server_method="virgl_test_server --use-egl-surfaceless --use-gles"
 		pd_hw_method="${set_to_export}"
 		;;
 	"zink_virgl")
-		set_to_export="MESA_NO_ERROR=1 GALLIUM_DRIVER=virpipe MESA_GL_VERSION_OVERRIDE=4.3COMPAT MESA_GLES_VERSION_OVERRIDE=3.2 ZINK_DESCRIPTORS=lazy"
+		set_to_export="GALLIUM_DRIVER=virpipe MESA_GLES_VERSION_OVERRIDE=3.2 ZINK_DESCRIPTORS=lazy"
 		initialize_server_method="virgl_test_server --use-egl-surfaceless --use-gles"
 		pd_hw_method="${set_to_export}"
 		;;
 	"zink_with_mesa")
-		set_to_export="MESA_NO_ERROR=1 GALLIUM_DRIVER=zink MESA_GL_VERSION_OVERRIDE=4.3COMPAT MESA_GLES_VERSION_OVERRIDE=3.2"
+		set_to_export="GALLIUM_DRIVER=zink MESA_GLES_VERSION_OVERRIDE=3.2"
 		initialize_server_method=" "
 		pd_hw_method="${set_to_export}"
 		;;
 	"zink_with_mesa_zink")
-		set_to_export="MESA_NO_ERROR=1 GALLIUM_DRIVER=zink MESA_GL_VERSION_OVERRIDE=4.3COMPAT MESA_GLES_VERSION_OVERRIDE=3.2"
+		set_to_export="GALLIUM_DRIVER=zink MESA_GLES_VERSION_OVERRIDE=3.2"
 		initialize_server_method=" "
 		pd_hw_method="${set_to_export}"
 		;;
 	"freedreno_kgsl")
 		# shellcheck disable=SC2034
-		set_to_export="MESA_NO_ERROR=1 MESA_LOADER_DRIVER_OVERRIDE=kgsl MESA_GL_VERSION_OVERRIDE=3.3 vblank_mode=3 MESA_VK_WSI_PRESENT_MODE=mailbox"
+		set_to_export="MESA_LOADER_DRIVER_OVERRIDE=kgsl vblank_mode=3 MESA_VK_WSI_PRESENT_MODE=mailbox"
 		# shellcheck disable=SC2034
 		initialize_server_method=" "
 		pd_hw_method="${set_to_export}"
@@ -291,7 +291,7 @@ function setup_hw_environment_variables() {
 		# gpu_environment_variable, that is what makes this different from
 		# --nogpu which turns off vulkan as well
 		# shellcheck disable=SC2034
-		set_to_export="MESA_NO_ERROR=1 LIBGL_ALWAYS_SOFTWARE=1 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe"
+		set_to_export="LIBGL_ALWAYS_SOFTWARE=1 MESA_LOADER_DRIVER_OVERRIDE=llvmpipe GALLIUM_DRIVER=llvmpipe"
 		# shellcheck disable=SC2034
 		initialize_server_method=" "
 		pd_hw_method="${set_to_export}"
@@ -302,14 +302,14 @@ function setup_hw_environment_variables() {
 
 	case "$pd_hw_answer" in
 	"virgl")
-		pd_hw_method="GALLIUM_DRIVER=virpipe MESA_GL_VERSION_OVERRIDE=4.0"
+		pd_hw_method="GALLIUM_DRIVER=virpipe"
 		;;
 	"turnip")
 		pd_hw_method="VK_ICD_FILENAMES=${MESA_FREEDRENO_PREFIX}/share/vulkan/icd.d/freedreno_icd.${termux_arch}.json LD_LIBRARY_PATH=${MESA_FREEDRENO_PREFIX}/lib LIBGL_DRIVERS_PATH=${MESA_FREEDRENO_PREFIX}/lib/dri MESA_LOADER_DRIVER_OVERRIDE=zink TU_DEBUG=noconform"
 		;;
 	"freedreno_kgsl")
 		# shellcheck disable=SC2034
-		pd_hw_method="VK_ICD_FILENAMES=${MESA_FREEDRENO_PREFIX}/share/vulkan/icd.d/freedreno_icd.${termux_arch}.json LD_LIBRARY_PATH=${MESA_FREEDRENO_PREFIX}/lib LIBGL_DRIVERS_PATH=${MESA_FREEDRENO_PREFIX}/lib/dri MESA_LOADER_DRIVER_OVERRIDE=kgsl MESA_GL_VERSION_OVERRIDE=3.3 vblank_mode=3 MESA_VK_WSI_PRESENT_MODE=mailbox"
+		pd_hw_method="VK_ICD_FILENAMES=${MESA_FREEDRENO_PREFIX}/share/vulkan/icd.d/freedreno_icd.${termux_arch}.json LD_LIBRARY_PATH=${MESA_FREEDRENO_PREFIX}/lib LIBGL_DRIVERS_PATH=${MESA_FREEDRENO_PREFIX}/lib/dri MESA_LOADER_DRIVER_OVERRIDE=kgsl vblank_mode=3 MESA_VK_WSI_PRESENT_MODE=mailbox"
 		;;
 	*)
 		print_msg "Uses The Previous Selection For Distro"
