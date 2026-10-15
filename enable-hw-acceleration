@@ -113,8 +113,9 @@ function install_vulkan_wrapper_driver() {
 function install_freedreno_kgsl_driver() {
 	FREEDRENO_KGSL_VERSION="26.3.0"
 	local release_tag="freedreno-kgsl-${FREEDRENO_KGSL_VERSION}"
-	local freedreno_pkg_file_name="mesa-vulkan-icd-freedreno-${FREEDRENO_KGSL_VERSION}-${termux_arch}.pkg.tar.xz"
-	local freedreno_deb_file_name="mesa-vulkan-icd-freedreno_${FREEDRENO_KGSL_VERSION}_${termux_arch}.deb"
+	local freedreno_pkg_file_name="pkg_mesa-vulkan-icd-freedreno-${FREEDRENO_KGSL_VERSION}-${termux_arch}.zip"
+	local freedreno_deb_file_name="debs_mesa-vulkan-icd-freedreno_${FREEDRENO_KGSL_VERSION}_${termux_arch}.zip"
+	local base_url="https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/download/${release_tag}"
 
 	if [[ "$termux_arch" != "aarch64" && "$termux_arch" != "arm" ]]; then
 		print_failed "Turnip + Fryzek's KGSL isn't supported on your device"
@@ -123,25 +124,24 @@ function install_freedreno_kgsl_driver() {
 
 	print_msg "${BOLD}Installing Turnip + Fryzek's KGSL..."
 	if [[ "$PACKAGE_MANAGER" == "pacman" ]]; then
-		if ! download_file "mesa-vulkan-icd-freedreno.pkg.tar.xz" "https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/download/${release_tag}/${freedreno_pkg_file_name}"; then
-			print_failed "Failed to download mesa-vulkan-icd-freedreno driver"
-			print_msg "Please check your internet connection"
-			return 1
-		fi
-		pacman -Syu --needed
-		pacman -U --noconfirm mesa-vulkan-icd-freedreno.pkg.tar.xz
-		check_and_delete "mesa-vulkan-icd-freedreno.pkg.tar.xz"
+		cd "$TMPDIR" || return 1
+		check_and_create_directory "pkg_fryzek_install"
+		cd pkg_fryzek_install || return 1
+		download_and_extract "${base_url}/${freedreno_pkg_file_name}" || return 1
+		pacman -Syu --noconfirm
+		pacman -U --noconfirm ./*.pkg.tar.xz
+		cd "$TMPDIR" || return 1
+		check_and_delete "pkg_fryzek_install"
 	else
-		if ! download_file "mesa-vulkan-icd-freedreno.deb" "https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/download/${release_tag}/${freedreno_deb_file_name}"; then
-			print_failed "Failed to download mesa-vulkan-icd-freedreno driver"
-			print_msg "Please check your internet connection"
-			return 1
-		fi
+		cd "$TMPDIR" || return 1
+		check_and_create_directory "deb_fryzek_install"
+		cd deb_fryzek_install || return 1
+		download_and_extract "${base_url}/${freedreno_deb_file_name}" || return 1
 		dpkg --configure -a
 		apt --fix-broken install -y
-		apt install ./mesa-vulkan-icd-freedreno.deb -y
-		apt install --fix-missing -y
-		check_and_delete "mesa-vulkan-icd-freedreno.deb"
+		apt install --allow-downgrades -y ./*.deb
+		cd "$TMPDIR" || return 1
+		check_and_delete "deb_fryzek_install"
 	fi
 }
 
@@ -280,7 +280,7 @@ function setup_hw_environment_variables() {
 		;;
 	"freedreno_kgsl")
 		# shellcheck disable=SC2034
-		set_to_export="MESA_NO_ERROR=1 MESA_LOADER_DRIVER_OVERRIDE=kgsl MESA_GL_VERSION_OVERRIDE=3.3 vblank_mode=3 MESA_VK_WSI_PRESENT_MODE=mailbox"
+		set_to_export="MESA_LOADER_DRIVER_OVERRIDE=kgsl vblank_mode=3 MESA_VK_WSI_PRESENT_MODE=mailbox"
 		# shellcheck disable=SC2034
 		initialize_server_method=" "
 		pd_hw_method="${set_to_export}"
@@ -309,7 +309,7 @@ function setup_hw_environment_variables() {
 		;;
 	"freedreno_kgsl")
 		# shellcheck disable=SC2034
-		pd_hw_method="VK_ICD_FILENAMES=${MESA_FREEDRENO_PREFIX}/share/vulkan/icd.d/freedreno_icd.${termux_arch}.json LD_LIBRARY_PATH=${MESA_FREEDRENO_PREFIX}/lib LIBGL_DRIVERS_PATH=${MESA_FREEDRENO_PREFIX}/lib/dri MESA_LOADER_DRIVER_OVERRIDE=kgsl MESA_GL_VERSION_OVERRIDE=3.3 vblank_mode=3 MESA_VK_WSI_PRESENT_MODE=mailbox"
+		pd_hw_method="VK_ICD_FILENAMES=${MESA_FREEDRENO_PREFIX}/share/vulkan/icd.d/freedreno_icd.${termux_arch}.json LD_LIBRARY_PATH=${MESA_FREEDRENO_PREFIX}/lib LIBGL_DRIVERS_PATH=${MESA_FREEDRENO_PREFIX}/lib/dri MESA_LOADER_DRIVER_OVERRIDE=kgsl vblank_mode=3 MESA_VK_WSI_PRESENT_MODE=mailbox"
 		;;
 	*)
 		print_msg "Uses The Previous Selection For Distro"
