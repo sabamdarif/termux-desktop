@@ -4794,22 +4794,25 @@ function install_termux_desktop_appstore() {
 	banner
 	print_msg "Setting up AppStore..."
 	echo
-	cd "$TMPDIR" || return
+	cd "$TMPDIR" || return 1
+	local base_url="https://github.com/sabamdarif/Termux-AppStore/releases/download/v${LATEST_APPSTORE_VERSION}"
+
 	if [[ "$PACKAGE_MANAGER" == "pacman" ]]; then
-		download_file "https://github.com/sabamdarif/Termux-AppStore/releases/download/v${LATEST_APPSTORE_VERSION}/termux-appstore-${LATEST_APPSTORE_VERSION}-0-any.pkg.tar.xz"
+		local pkg_file="termux-appstore-${LATEST_APPSTORE_VERSION}-0-any.pkg.tar.xz"
+		download_file "${base_url}/${pkg_file}" || return 1
 		update_sys
-		pacman -U --noconfirm "termux-appstore-${LATEST_APPSTORE_VERSION}-0-any.pkg.tar.xz"
-		check_and_delete "termux-appstore-${LATEST_APPSTORE_VERSION}-0-any.pkg.tar.xz"
+		pacman -U --noconfirm "./${pkg_file}"
+		check_and_delete "$pkg_file"
 	else
-		download_file "https://github.com/sabamdarif/Termux-AppStore/releases/download/v${LATEST_APPSTORE_VERSION}/termux-appstore_${LATEST_APPSTORE_VERSION}_all.deb"
+		local deb_file="termux-appstore_${LATEST_APPSTORE_VERSION}_all.deb"
+		download_file "${base_url}/${deb_file}" || return 1
 		update_sys
 		dpkg --configure -a
 		apt --fix-broken install -y
-		apt install ./"termux-appstore_${LATEST_APPSTORE_VERSION}_all.deb" -y
-		apt install --fix-missing -y
-		check_and_delete "termux-appstore_${LATEST_APPSTORE_VERSION}_all.deb"
+		apt install -y "./${deb_file}"
+		check_and_delete "$deb_file"
 	fi
-	cd "$TERMUX_HOME" || return
+	cd "$TERMUX_HOME" || return 1
 }
 
 #########################################################################
