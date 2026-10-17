@@ -7,7 +7,7 @@ _tx11start_completions() {
 	cur="${COMP_WORDS[COMP_CWORD]}"
 	prev="${COMP_WORDS[COMP_CWORD - 1]}"
 
-	opts="--help --nogpu --nodbus --legacy --debug --xstartup"
+	opts="--help --nogpu --legacy --debug --xstartup"
 
 	# Stop suggesting options if --help is already present
 	if [[ " ${COMP_WORDS[*]} " =~ " --help " ]]; then

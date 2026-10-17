@@ -128,7 +128,6 @@ Options:
 - `--xstartup`: Start the user-specified xstartup.
 - `--nogpu`: Disable GPU acceleration.
 - `--legacy`: Enable legacy drawing.
-- `--nodbus`: Start without using dbus-launch.
 - Combine options for specific configurations (e.g., `tx11start --nogpu --legacy`).
 - `--help`: Show help.
 
@@ -139,11 +138,7 @@ Options:
 - `tx11start --xstartup cinnamon-session` _to start cinnamon even if you setup with xfce or anything else_
 - `tx11start --nogpu` _to start Termux:X11 without gpu acceleration_
 - `tx11start --nogpu --legacy` _to start Termux:X11 without gpu acceleration and *-legacy-drawing*_
-- `tx11start --nodbus` _to start Termux:X11 without dbus-launch_
-- `tx11start --nodbus --nogpu` _to start Termux:X11 without gpu acceleration and dbus_
-- `tx11start --nodbus --nogpu --legacy` _to start Termux:X11 without gpu acceleration and dbus and with *-legacy-drawing*_
-- `tx11start --nodbus --legacy` _to start Termux:X11 without dbus and use *-legacy-drawing* (nodbus and gpu)_
-- `tx11start --legacy` _to start Termux:X11 with *-legacy-drawing* (with dbus and gpu)_
+- `tx11start --legacy` _to start Termux:X11 with *-legacy-drawing* (with gpu)_
 - `tx11start --debug --OTHER-PARAMETERS` _To see log of that command_
     > tx11start --debug --nogpu _To see tx11start --nogpu's log_
 

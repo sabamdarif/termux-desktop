@@ -3801,7 +3801,6 @@ function setup_tx11start_cmd() {
 
 			    # Initialize flags
 			    use_nogpu=false
-			    use_nodbus=false
 			    use_legacy=false
 			    use_debug=false
 			    de_startup="$de_startup"
@@ -3811,7 +3810,6 @@ function setup_tx11start_cmd() {
 					cat <<HELP_EOF
 					tx11start                               - start Termux:X11 with GPU acceleration
 					tx11start --nogpu                       - start without GPU acceleration
-					tx11start --nodbus                      - start without dbus
 					tx11start --legacy                      - start with -legacy-drawing
 					tx11start --debug                       - show debug log
 					tx11start --xstartup "xstartup-name"    - launch another desktop environment
@@ -3832,9 +3830,6 @@ function setup_tx11start_cmd() {
 			          ;;
 			      --nogpu | --no-gpu)
 			        use_nogpu=true
-			        ;;
-			      --nodbus | --no-dbus)
-			        use_nodbus=true
 			        ;;
 			      --legacy)
 			        use_legacy=true
@@ -3965,19 +3960,31 @@ function setup_tx11start_cmd() {
 			    fi
 			    sleep 1
 
-			    # Start the desktop environment
-			    if \$use_nodbus; then
-			      if \$use_debug; then
-			        env DISPLAY=:${display_number} XDG_CONFIG_DIRS=$TERMUX_PREFIX/etc/xdg \$de_startup &
-			      else
-			        env DISPLAY=:${display_number} XDG_CONFIG_DIRS=$TERMUX_PREFIX/etc/xdg \$de_startup >/dev/null 2>&1 &
-			      fi
+			    # Kill any stale system dbus-daemon before starting a new one
+			    dbus_pid_file="$TERMUX_PREFIX/var/run/dbus/pid"
+			    if [[ -f "\$dbus_pid_file" ]]; then
+			        dbus_pid=\$(cat "\$dbus_pid_file")
+			        if [[ "\$dbus_pid" =~ ^[0-9]+\$ ]] && (( dbus_pid > 0 )); then
+			            if \$use_debug; then
+			                print_msg "Killing stale system dbus-daemon (pid \$dbus_pid)"
+			            fi
+			            kill "\$dbus_pid" >/dev/null 2>&1
+			        fi
+			        rm -f "\$dbus_pid_file"
+			    fi
+			    mkdir -p "$TERMUX_PREFIX/var/run/dbus"
+			    if \$use_debug; then
+			        print_msg "Starting system dbus-daemon..."
+			        dbus-daemon --system --fork
 			    else
-			      if \$use_debug; then
-			        env DISPLAY=:${display_number} XDG_CONFIG_DIRS=$TERMUX_PREFIX/etc/xdg dbus-launch --exit-with-session \$de_startup &
-			      else
-			        env DISPLAY=:${display_number} XDG_CONFIG_DIRS=$TERMUX_PREFIX/etc/xdg dbus-launch --exit-with-session \$de_startup >/dev/null 2>&1 &
-			      fi
+			        dbus-daemon --system --fork >/dev/null 2>&1
+			    fi
+
+			    # Start the desktop environment
+			    if \$use_debug; then
+			      env DISPLAY=:${display_number} XDG_CONFIG_DIRS=$TERMUX_PREFIX/etc/xdg dbus-launch --exit-with-session \$de_startup &
+			    else
+			      env DISPLAY=:${display_number} XDG_CONFIG_DIRS=$TERMUX_PREFIX/etc/xdg dbus-launch --exit-with-session \$de_startup >/dev/null 2>&1 &
 			    fi
 
 		EOF
@@ -4010,7 +4017,6 @@ function setup_tx11start_cmd() {
 			unset TRACER_PID
 
 			    # Initialize flags
-			    use_nodbus=false
 			    use_legacy=false
 			    use_debug=false
 			    de_startup="$de_startup"
@@ -4019,7 +4025,6 @@ function setup_tx11start_cmd() {
 				function show_tx11start_help() {
 					cat <<HELP_EOF
 					tx11start                               - start Termux:X11
-					tx11start --nodbus                      - start without dbus
 					tx11start --legacy                      - start with -legacy-drawing
 					tx11start --debug                       - show debug log
 					tx11start --xstartup "xstartup-name"    - launch another desktop environment
@@ -4038,9 +4043,6 @@ function setup_tx11start_cmd() {
 			          de_startup="\$1"
 			          echo "\$de_startup" > "$TERMUX_HOME/.xstartup"
 			          ;;
-			      --nodbus | --no-dbus)
-			        use_nodbus=true
-			        ;;
 			      --legacy)
 			        use_legacy=true
 			        ;;
@@ -4151,19 +4153,31 @@ function setup_tx11start_cmd() {
 			    fi
 			    sleep 1
 
-			    # Start the desktop environment
-			    if \$use_nodbus; then
-			      if \$use_debug; then
-			        env DISPLAY=:${display_number} XDG_CONFIG_DIRS=$TERMUX_PREFIX/etc/xdg \$de_startup &
-			      else
-			        env DISPLAY=:${display_number} XDG_CONFIG_DIRS=$TERMUX_PREFIX/etc/xdg \$de_startup >/dev/null 2>&1 &
-			      fi
+			    # Kill any stale system dbus-daemon before starting a new one
+			    dbus_pid_file="$TERMUX_PREFIX/var/run/dbus/pid"
+			    if [[ -f "\$dbus_pid_file" ]]; then
+			        dbus_pid=\$(cat "\$dbus_pid_file")
+			        if [[ "\$dbus_pid" =~ ^[0-9]+\$ ]] && (( dbus_pid > 0 )); then
+			            if \$use_debug; then
+			                print_msg "Killing stale system dbus-daemon (pid \$dbus_pid)"
+			            fi
+			            kill "\$dbus_pid" >/dev/null 2>&1
+			        fi
+			        rm -f "\$dbus_pid_file"
+			    fi
+			    mkdir -p "$TERMUX_PREFIX/var/run/dbus"
+			    if \$use_debug; then
+			        print_msg "Starting system dbus-daemon..."
+			        dbus-daemon --system --fork
 			    else
-			      if \$use_debug; then
-			        env DISPLAY=:${display_number} XDG_CONFIG_DIRS=$TERMUX_PREFIX/etc/xdg dbus-launch --exit-with-session \$de_startup &
-			      else
-			        env DISPLAY=:${display_number} XDG_CONFIG_DIRS=$TERMUX_PREFIX/etc/xdg dbus-launch --exit-with-session \$de_startup >/dev/null 2>&1 &
-			      fi
+			        dbus-daemon --system --fork >/dev/null 2>&1
+			    fi
+
+			    # Start the desktop environment
+			    if \$use_debug; then
+			      env DISPLAY=:${display_number} XDG_CONFIG_DIRS=$TERMUX_PREFIX/etc/xdg dbus-launch --exit-with-session \$de_startup &
+			    else
+			      env DISPLAY=:${display_number} XDG_CONFIG_DIRS=$TERMUX_PREFIX/etc/xdg dbus-launch --exit-with-session \$de_startup >/dev/null 2>&1 &
 			    fi
 
 		EOF

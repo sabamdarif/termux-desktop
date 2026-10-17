@@ -9,7 +9,6 @@ _tx11start() {
         '--help[Show help information]'
         '--xstartup[Start the user specified xstartup]'
         '--nogpu[Start without GPU acceleration]'
-        '--nodbus[Start without dbus]'
         '--legacy[Start with -legacy-drawing]'
         '--debug[Show debug log]'
     )
