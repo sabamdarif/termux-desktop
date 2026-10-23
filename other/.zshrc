@@ -62,34 +62,34 @@ autoload -Uz zmv
 # -----------------------------------------------------------------------------
 # Auto-install Zinit if not present
 if [[ ! -f $HOME/.local/share/zinit/zinit.git/zinit.zsh ]]; then
-    # Only show output if not using instant prompt
-    if [[ -z "$P9K_INSTANT_PROMPT" ]]; then
-        print -P "%F{33}Installing %F{220}ZDHARMA-CONTINUUM%F{220} Initiative Plugin Manager...%f"
+	# Only show output if not using instant prompt
+	if [[ -z "$P9K_INSTANT_PROMPT" ]]; then
+		print -P "%F{33}Installing %F{220}ZDHARMA-CONTINUUM%F{220} Initiative Plugin Manager...%f"
 
-        # Create directory structure
-        if command mkdir -p "$HOME/.local/share/zinit" && command chmod g-rwX "$HOME/.local/share/zinit"; then
-            # Try to clone the repository
-            if command git clone https://github.com/zdharma-continuum/zinit "$HOME/.local/share/zinit/zinit.git"; then
-                print -P "%F{33}Installation successful.%f"
-            else
-                print -P "%F{160}Git clone failed. Please check your internet connection and try again.%f"
-                return 1
-            fi
-        else
-            print -P "%F{160}Failed to create zinit directory.%f"
-            return 1
-        fi
-    else
-        # Silent installation during instant prompt
-        command mkdir -p "$HOME/.local/share/zinit" && command chmod g-rwX "$HOME/.local/share/zinit"
-        command git clone https://github.com/zdharma-continuum/zinit "$HOME/.local/share/zinit/zinit.git" >/dev/null 2>&1
-    fi
+		# Create directory structure
+		if command mkdir -p "$HOME/.local/share/zinit" && command chmod g-rwX "$HOME/.local/share/zinit"; then
+			# Try to clone the repository
+			if command git clone https://github.com/zdharma-continuum/zinit "$HOME/.local/share/zinit/zinit.git"; then
+				print -P "%F{33}Installation successful.%f"
+			else
+				print -P "%F{160}Git clone failed. Please check your internet connection and try again.%f"
+				return 1
+			fi
+		else
+			print -P "%F{160}Failed to create zinit directory.%f"
+			return 1
+		fi
+	else
+		# Silent installation during instant prompt
+		command mkdir -p "$HOME/.local/share/zinit" && command chmod g-rwX "$HOME/.local/share/zinit"
+		command git clone https://github.com/zdharma-continuum/zinit "$HOME/.local/share/zinit/zinit.git" >/dev/null 2>&1
+	fi
 fi
 
 # Load Zinit
 source "$HOME/.local/share/zinit/zinit.git/zinit.zsh"
 autoload -Uz _zinit
-(( ${+_comps} )) && _comps[zinit]=_zinit
+((${+_comps})) && _comps[zinit]=_zinit
 
 # -----------------------------------------------------------------------------
 # ZINIT CONFIGURATION
@@ -112,35 +112,35 @@ ZI_REPO='zdharma-continuum'
 # -----------------------------------------------------------------------------
 # Load useful Oh My Zsh library functions and plugins
 zi for is-snippet \
-    OMZL::{compfix,completion,git,key-bindings}.zsh \
-    PZT::modules/{history}
+	OMZL::{compfix,completion,git,key-bindings}.zsh \
+	PZT::modules/{history}
 
 # Load completions for specific tools
 zi as'completion' for \
-    OMZP::{pip/_pip,terraform/_terraform}
+	OMZP::{pip/_pip,terraform/_terraform}
 
 # -----------------------------------------------------------------------------
 # ZINIT ANNEXES
 # -----------------------------------------------------------------------------
 # Load useful Zinit extensions
 zi light-mode for \
-    "$ZI_REPO"/zinit-annex-{binary-symlink,patch-dl,submods}
+	"$ZI_REPO"/zinit-annex-{binary-symlink,patch-dl,submods}
 
 # -----------------------------------------------------------------------------
 # PYTHON CONFIGURATION
 # -----------------------------------------------------------------------------
 # Custom pip completion function
 function _pip_completion() {
-    local words cword
-    read -Ac words
-    read -cn cword
-    reply=(
-        $(
-            COMP_WORDS="$words[*]"
-            COMP_CWORD=$(( cword-1 ))
-            PIP_AUTO_COMPLETE=1 $words 2>/dev/null
-        )
-    )
+	local words cword
+	read -Ac words
+	read -cn cword
+	reply=(
+		$(
+			COMP_WORDS="$words[*]"
+			COMP_CWORD=$((cword - 1))
+			PIP_AUTO_COMPLETE=1 $words 2>/dev/null
+		)
+	)
 }
 compctl -K _pip_completion pip3
 
@@ -153,7 +153,7 @@ zi ice zsh-users/zsh-completions
 
 # Auto-suggestions - Suggests commands as you type based on history
 zi ice atload'_zsh_autosuggest_start' \
-    atinit'
+	atinit'
 ZSH_AUTOSUGGEST_BUFFER_MAX_SIZE=50
 bindkey "^_" autosuggest-execute
 bindkey "^ " autosuggest-accept'
@@ -161,14 +161,23 @@ zi light zsh-users/zsh-autosuggestions
 
 # Fast syntax highlighting - Real-time command syntax validation
 zi light-mode for \
-    $ZI_REPO/fast-syntax-highlighting
-
+	$ZI_REPO/fast-syntax-highlighting
 
 # FZF history search - Fuzzy search through command history
 zi ice joshskidmore/zsh-fzf-history-search
 
-# Zsh autocomplete - Real-time type-ahead autocompletion
+# this ia a temporary fix for the isssu:-
+# https://github.com/marlonrichert/zsh-autocomplete/issues/901
+#
+# where the Real time completion stopped working after latest update
+#
+# and it will be removed after this pr get merged:-
+# https://github.com/marlonrichert/zsh-autocomplete/pull/903
 zi ice atload'
+local _za_dir="${XDG_CACHE_HOME:-$HOME/.cache}/zsh/zasync"
+[[ -d $_za_dir ]] && fpath=( "$_za_dir" ${fpath[@]} )
+builtin autoload -Uz ~/.local/share/zinit/plugins/marlonrichert---zsh-autocomplete/Completions/_autocomplete__*~*.zwc(D-:)
+unset _za_dir
 bindkey              "^I" menu-select
 bindkey -M menuselect "$terminfo[kcbt]" reverse-menu-complete'
 zi light marlonrichert/zsh-autocomplete
@@ -187,8 +196,8 @@ zi light marlonrichert/zsh-autocomplete
 #       zicompinit; zicdreplay
 #       _zsh_highlight_bind_widgets
 #       _zsh_autosuggest_bind_widgets' \
-    #     as'null' id-as'zinit/cleanup' lucid nocd wait \
-    #   $ZI_REPO/null
+#     as'null' id-as'zinit/cleanup' lucid nocd wait \
+#   $ZI_REPO/null
 #
 
 unset ZI_REPO ZI_REPO
