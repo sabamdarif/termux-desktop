@@ -4609,7 +4609,7 @@ function check_desktop_process() {
 	if [[ -f "${PREFIX}/bin/tx11start" ]]; then
 		print_success "Found tx11start file."
 		print_msg "Starting Termux:X11 for checkup..."
-		termux-x11 :"${display_number}" -xstartup xfce4-session >/dev/null 2>&1 &
+		termux-x11 :"${display_number}" -xstartup "${de_startup}" >/dev/null 2>&1 &
 		sleep 10
 		log_debug "$(cat "$TERMUX_PREFIX/bin/tx11start")"
 		termux-reload-settings
@@ -5231,6 +5231,11 @@ function add_tx11_autostart() {
 
 function add_to_autostart() {
 	print_to_config "de_on_startup"
+	# shell_rc_file is normally set by setup_shell during a fresh install, but
+	# on paths like --change de the shell isn't set up again, so resolve it here
+	if [[ -z "$shell_rc_file" ]]; then
+		get_shellrc_path
+	fi
 	if [[ "$de_on_startup" == "y" ]]; then
 		if [[ "$default_gui_mode" == "vnc" ]]; then
 			add_vnc_autostart
