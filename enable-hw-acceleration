@@ -30,7 +30,7 @@
 #########################################################################
 
 # lfdevs/mesa-for-android-container tag the distro side driver was built from
-MESA_FREEDRENO_VERSION="26.3.0-devel-20260824"
+MESA_FREEDRENO_VERSION="27.0.0-devel-20261025"
 # it get installed in it's own prefix so the distro's mesa stays untouched,
 # that way one build works on every distro and removing it is just a rm -rf
 MESA_FREEDRENO_PREFIX="/opt/mesa-freedreno"
