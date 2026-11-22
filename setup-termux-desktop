@@ -1787,9 +1787,9 @@ function exp_vulkan_support() {
 • No.5 Skip: no vulkan at all, opengl will come from virgl\n
 "
 	echo
-	echo "${Y}1. Android Vulkan Wrapper${NC}"
+	echo "${Y}1. Android Vulkan ICD Wrapper${NC}"
 	echo
-	echo "${Y}2. Android Vulkan Wrapper (pipetto-crypto's fork)${NC}"
+	echo "${Y}2. Android Vulkan ICD Wrapper (pipetto-crypto's fork)${NC}"
 	echo
 	echo "${Y}3. Turnip (Native Adreno Vulkan Driver) (adreno only)${NC}"
 	echo

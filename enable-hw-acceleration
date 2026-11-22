@@ -35,9 +35,6 @@ MESA_FREEDRENO_VERSION="27.0.0-devel-20261025"
 # that way one build works on every distro and removing it is just a rm -rf
 MESA_FREEDRENO_PREFIX="/opt/mesa-freedreno"
 
-# Pipetto-crypto/mesa VERSION-build_number tag
-PIPETTO_CRYPTO_VERSION_BUILD_TAG="25.0.0-2"
-
 # xMeM/mesa/tree/wrapper VERSION-build_number tag
 ORIGINAL_VULKAN_WRAPPER_ANDROID_VERSION_BUILD_TAG="25.0.0-3"
 
@@ -154,7 +151,8 @@ function hw_install_required_packages() {
 	check_and_delete "$TERMUX_PREFIX/share/vulkan/icd.d/wrapper_icd.aarch64.json"
 	check_and_delete "$TERMUX_PREFIX/share/vulkan/icd.d/wrapper_icd.armv7.json"
 	check_and_delete "$TERMUX_PREFIX/lib/libadrenotools.so $TERMUX_PREFIX/lib/libfile_redirect_hook.so $TERMUX_PREFIX/lib/libgsl_alloc_hook.so $TERMUX_PREFIX/lib/libhook_impl.so $TERMUX_PREFIX/lib/libmain_hook.so $TERMUX_PREFIX/lib/libvulkan_wrapper.so"
-	package_check_and_remove "vulkan-wrapper-android pipetto-crypto-vulkan-wrapper-android virglrenderer virglrenderer-android angle-android mesa-vulkan-icd-freedreno mesa-zink-vulkan-icd-freedreno"
+	# will remove pipetto-crypto-vulkan-wrapper-android in future
+	package_check_and_remove "vulkan-wrapper-android pipetto-crypto-vulkan-wrapper-android pipetto-crypto-vulkan-icd-wrapper virglrenderer virglrenderer-android angle-android mesa-vulkan-icd-freedreno mesa-zink-vulkan-icd-freedreno"
 
 	case "$exp_termux_vulkan_hw_answer" in
 	"vulkan_wrapper_android")
@@ -165,11 +163,7 @@ function hw_install_required_packages() {
 			"vulkan-wrapper-android-${ORIGINAL_VULKAN_WRAPPER_ANDROID_VERSION_BUILD_TAG}-${termux_arch}.pkg.tar.xz"
 		;;
 	"vulkan_wrapper_android_pipetto_crypto")
-		install_vulkan_wrapper_driver \
-			"pipetto-crypto-vulkan-wrapper-android_${PIPETTO_CRYPTO_VERSION_BUILD_TAG}" \
-			"pipetto-crypto-vulkan-wrapper-android" \
-			"pipetto-crypto-vulkan-wrapper-android_${PIPETTO_CRYPTO_VERSION_BUILD_TAG}_${termux_arch}.deb" \
-			"pipetto-crypto-vulkan-wrapper-android-${PIPETTO_CRYPTO_VERSION_BUILD_TAG}-${termux_arch}.pkg.tar.xz"
+		package_install_and_check "pipetto-crypto-vulkan-icd-wrapper"
 		;;
 	"mesa_freedreno")
 		# the zink build in tur is mesa 22.0.5 and it's freedreno icd is pinned
