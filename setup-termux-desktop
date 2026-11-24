@@ -5063,7 +5063,7 @@ function install_fm_tools() {
 		print_msg "${BOLD}Installing File Manager Tools..."
 		check_and_backup "$TERMUX_HOME/.local/share/nautilus/scripts"
 		check_and_create_directory "$TERMUX_HOME/.local/share/nautilus/scripts"
-		package_install_and_check "axel bzip2 cabextract cpio curl dar dnsutils exiftool ffmpeg filelight ghex ghostscript git gnupg gzip id3v2 imagemagick inetutils jq lhasa libarchive liblzma lrzip lz4 lzip lzop mediainfo mp3gain nmap openssl optipng p7zip pandoc pdfcpu perl poppler qpdf rdfind rhash rsync sox squashfs-tools-ng tar tesseract texlive-bin tmux unrar xclip xorriso xxd xz-utils zip zpaq zstd"
+		package_install_and_check "axel bzip2 cabextract cpio curl dar exiftool ffmpeg filelight ghex ghostscript git gnupg gzip id3v2 imagemagick jq lhasa libarchive liblzma lrzip lz4 lzip lzop mediainfo mp3gain openssl optipng p7zip pandoc pdfcpu perl poppler qpdf rdfind rhash rsync sox squashfs-tools-ng tar tesseract tmux unrar xclip xorriso xxd xz-utils zpaq zstd"
 		git clone https://github.com/cfgnunes/nautilus-scripts.git
 		cd nautilus-scripts || return 1
 		bash install.sh -n
