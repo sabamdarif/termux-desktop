@@ -4754,17 +4754,17 @@ function media_player_installer() {
 	banner
 	print_to_config "installed_media_player"
 	if [[ ${installed_media_player} == "vlc" ]]; then
-		package_install_and_check "vlc-qt-static"
+		package_install_and_check "vlc-qt"
 	elif [[ ${installed_media_player} == "mpv" ]]; then
 		package_install_and_check "mpv"
 	elif [[ ${installed_media_player} == "all" ]]; then
-		package_install_and_check "vlc-qt-static mpv"
+		package_install_and_check "vlc-qt mpv"
 	elif [[ ${installed_media_player} == "skip" ]]; then
 		print_msg "${C}Skipping Media Player Installation..."
 		echo
 		sleep 2
 	else
-		package_install_and_check "vlc-qt-static"
+		package_install_and_check "vlc-qt"
 	fi
 }
 
@@ -5063,7 +5063,7 @@ function install_fm_tools() {
 		print_msg "${BOLD}Installing File Manager Tools..."
 		check_and_backup "$TERMUX_HOME/.local/share/nautilus/scripts"
 		check_and_create_directory "$TERMUX_HOME/.local/share/nautilus/scripts"
-		package_install_and_check "axel bzip2 cabextract cpio curl dar exiftool ffmpeg filelight ghex ghostscript git gnupg gzip id3v2 imagemagick jq lhasa libarchive liblzma lrzip lz4 lzip lzop mediainfo mp3gain openssl optipng p7zip pandoc pdfcpu perl poppler qpdf rdfind rhash rsync sox squashfs-tools-ng tar tesseract tmux unrar xclip xorriso xxd xz-utils zpaq zstd"
+		package_install_and_check "axel bzip2 cabextract cpio curl dar exiftool ffmpeg filelight ghex ghostscript git gnupg gzip id3v2 imagemagick jq lhasa libarchive liblzma lrzip lz4 lzip lzop mediainfo mp3gain openssl optipng 7zip pandoc pdfcpu perl poppler qpdf rdfind rhash rsync sox squashfs-tools-ng tar tesseract tmux unrar xclip xorriso xxd xz-utils zpaq zstd"
 		git clone https://github.com/cfgnunes/nautilus-scripts.git
 		cd nautilus-scripts || return 1
 		bash install.sh -n
@@ -5442,11 +5442,11 @@ function remove_termux_desktop() {
 			fi
 			#remove media player
 			if [[ "$installed_media_player" == "vlc" ]]; then
-				package_check_and_remove "vlc-qt-static"
+				package_check_and_remove "vlc-qt"
 			elif [[ "$installed_media_player" == "audacious" ]]; then
 				package_check_and_remove "audacious"
 			elif [[ "$installed_media_player" == "both" ]]; then
-				package_check_and_remove "vlc-qt-static audacious"
+				package_check_and_remove "vlc-qt audacious"
 			fi
 			#remove photo editor
 			if [[ "$installed_photo_editor" == "gimp" ]]; then
