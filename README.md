@@ -11,6 +11,10 @@
 
 ![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/sabamdarif/termux-desktop/total?style=for-the-badge)
 
+<br>
+
+<a href="https://trendshift.io/repositories/22536?utm_source=trendshift-badge&amp;utm_medium=badge&amp;utm_campaign=badge-trendshift-22536" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/trendshift/repositories/22536/daily?language=Shell" alt="sabamdarif%2Ftermux-desktop | Trendshift" width="250" height="55"/></a>
+
 </div>
 
 ---
@@ -69,7 +73,7 @@
 | Desktop Environments         | Window Managers                    |
 | ---------------------------- | ---------------------------------- |
 | [Xfce](/docs/xfce_styles.md) | [Openbox](/docs/openbox_styles.md) |
-| [LXQt](/docs/lxqt_styles.md) | [i3](/docs/i3_styles.md)           |
+| [LXQt](/docs/lxqt_styles.md) | [i3](/docs/i3wm_styles.md)         |
 | MATE                         | dwm                                |
 | GNOME                        | bspwm                              |
 | Cinnamon                     | Awesome                            |
